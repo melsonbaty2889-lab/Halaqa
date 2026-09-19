@@ -1,5 +1,6 @@
+/* src/components/UI/CustomDatePicker.jsx */
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2, Repeat } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import C from '@/theme/colors';
 import CustomSelect from './CustomSelect';
@@ -11,8 +12,7 @@ import {
   setSavedHijriOffset,
   toArNums,
   toUrNums,
-  calculateAge,
-  hijriToGregorian
+  calculateAge
 } from '@/utils/dateUtils';
 
 export default function CustomDatePicker({ 
@@ -97,33 +97,37 @@ export default function CustomDatePicker({
     setIsOpen(false);
   };
 
-  // ألوان نظام التصميم الدلالية
-  const actionPrimary = C.semantic?.actionPrimary || C?.amber?.DEFAULT || '#38BDF8';
-  const surfaceInput = C.semantic?.surfaceInput || C?.dark?.surface || '#1E293B';
+  const handleSelectToday = () => {
+    const now = new Date();
+    const str = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    handleSelectDate(str);
+  };
+
+  // ألوان نظام التصميم الدلالية المعتمة الصلبة
+  const actionPrimary = C.semantic?.actionPrimary || '#38BDF8';
+  const surfaceInput = C.semantic?.surfaceInput || '#1E293B';
   const surfaceCard = C.semantic?.surfaceCard || '#0F172A';
   const bgPage = C.semantic?.bgPage || '#020617';
-  const borderInput = C.semantic?.borderInput || C?.dark?.borderInput || '#334155';
+  const borderInput = C.semantic?.borderInput || '#334155';
   const textPrimary = C.semantic?.textPrimary || '#F8FAFC';
   const textSecondary = C.semantic?.textSecondary || '#94A3B8';
   const textMuted = C.semantic?.textMuted || '#64748B';
 
   const dateIsoString = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
-  // حساب العمر إذا كان مفعلاً
   const age = (showAge && dateObj) ? calculateAge(dateObj) : null;
 
   // -------------------------------------------------------------
-  // النمط 3: Select Dropdowns Variant (المحافظة على المكون القائم لمن يحتاجه)
+  // النمط 3: Select Dropdowns Variant
   // -------------------------------------------------------------
   if (variant === 'select') {
     const gDay = dateObj.getDate();
     const gMonth = dateObj.getMonth();
     const gYear = dateObj.getFullYear();
 
-    const hijriParts = getHijriParts(dateObj, hijriOffset);
     const currentGregorianYear = new Date().getFullYear();
-
     const daysInMonth = new Date(gYear, gMonth + 1, 0).getDate();
+
     const dayOptions = Array.from({ length: daysInMonth }, (_, i) => ({
       label: formatNum(i + 1),
       value: i + 1
@@ -172,17 +176,6 @@ export default function CustomDatePicker({
   // -------------------------------------------------------------
   // النمط 1 و 2: Grid Variant & Compact Bar Variant
   // -------------------------------------------------------------
-  const headerTitle = (() => {
-    if (useHijri) {
-      const { month, year } = getHijriParts(viewDate, hijriOffset);
-      const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.ar;
-      const monthName = monthsList[month] || monthsList[0];
-      const suffix = isRtl ? 'هـ' : 'AH';
-      return `${monthName} ${formatNum(year)} ${suffix}`;
-    }
-    return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
-  })();
-
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -203,6 +196,18 @@ export default function CustomDatePicker({
     }
     return days;
   })();
+
+  // خيارات الأشهر والسنين للتنقل السريع
+  const nowYear = new Date().getFullYear();
+  const monthSelectOptions = Array.from({ length: 12 }, (_, idx) => ({
+    label: new Intl.DateTimeFormat(cleanLang, { month: 'short' }).format(new Date(2026, idx, 1)),
+    value: idx
+  }));
+
+  const yearSelectOptions = Array.from({ length: 90 }, (_, idx) => {
+    const y = nowYear - 70 + idx;
+    return { label: formatNum(y), value: y };
+  });
 
   return (
     <div ref={dropdownRef} className={`relative inline-block z-40 ${className}`} dir={isRtl ? 'rtl' : 'ltr'}>
@@ -252,40 +257,96 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* النافذة المنبثقة للتقويم (Dropdown Calendar Modal) */}
+      {/* النافذة المنبثقة للتقويم مع حل الشفافية نهائياً (Solid Background & Overlay) */}
       {isOpen && (
         <div 
-          className="absolute top-[110%] z-50 rounded-2xl p-3 border shadow-2xl w-64 transition-all"
+          className="absolute top-[110%] z-50 rounded-2xl p-3.5 border shadow-2xl w-72 transition-all"
           style={{
             backgroundColor: surfaceCard,
             borderColor: borderInput,
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7)',
             [isRtl ? 'right' : 'left']: 0
           }}
         >
-          {/* هيدر التقويم: التنقل بين الأشهر */}
-          <div className="flex justify-between items-center mb-2.5">
-            <button 
-              type="button" 
-              onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
-              aria-label={t('common.prevMonth', 'الشهر السابق')}
-              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
-              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
-            >
-              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-            <span className="text-xs font-bold" style={{ color: textPrimary }}>
-              {headerTitle}
-            </span>
-            <button 
-              type="button" 
-              onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
-              aria-label={t('common.nextMonth', 'الشهر التالي')}
-              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
-              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
-            >
-              {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-            </button>
-          </div>
+          {/* اختيار الشهر والسنة السريع لسهولة اختيار التاريخ والتنقل */}
+          {!useHijri ? (
+            <div className="flex items-center justify-between gap-1 mb-3">
+              <button 
+                type="button" 
+                onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
+                aria-label={t('common.prevMonth', 'الشهر السابق')}
+                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[30px] min-h-[30px]"
+                style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+              >
+                {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
+
+              <div className="flex items-center gap-1 flex-1 px-1">
+                <div className="w-1/2">
+                  <CustomSelect
+                    options={monthSelectOptions}
+                    value={currentMonth}
+                    onChange={(m) => setViewDate(new Date(currentYear, Number(m), 1))}
+                    isArabic={isRtl}
+                    lang={cleanLang}
+                    t={t}
+                  />
+                </div>
+                <div className="w-1/2">
+                  <CustomSelect
+                    options={yearSelectOptions}
+                    value={currentYear}
+                    onChange={(y) => setViewDate(new Date(Number(y), currentMonth, 1))}
+                    isArabic={isRtl}
+                    lang={cleanLang}
+                    t={t}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
+                aria-label={t('common.nextMonth', 'الشهر التالي')}
+                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[30px] min-h-[30px]"
+                style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+              >
+                {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center mb-3">
+              <button 
+                type="button" 
+                onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
+                aria-label={t('common.prevMonth', 'الشهر السابق')}
+                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+                style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+              >
+                {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
+
+              <span className="text-xs font-bold" style={{ color: textPrimary }}>
+                {(() => {
+                  const { month, year } = getHijriParts(viewDate, hijriOffset);
+                  const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.ar;
+                  const monthName = monthsList[month] || monthsList[0];
+                  const suffix = isRtl ? 'هـ' : 'AH';
+                  return `${monthName} ${formatNum(year)} ${suffix}`;
+                })()}
+              </span>
+
+              <button 
+                type="button" 
+                onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
+                aria-label={t('common.nextMonth', 'الشهر التالي')}
+                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+                style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+              >
+                {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+              </button>
+            </div>
+          )}
 
           {/* أيام الأسبوع */}
           <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
@@ -296,7 +357,7 @@ export default function CustomDatePicker({
             ))}
           </div>
 
-          {/* شبكة الأيام */}
+          {/* شبكة الأيام مع وضوح الأرقام وسهولة النقر */}
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -315,11 +376,11 @@ export default function CustomDatePicker({
                   key={dayNum}
                   type="button"
                   onClick={() => handleSelectDate(dateStr)}
-                  className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold"
+                  className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold hover:opacity-90 active:scale-95"
                   style={{
                     backgroundColor: isSelected ? actionPrimary : surfaceInput,
                     color: isSelected ? bgPage : textPrimary,
-                    fontWeight: isSelected ? '800' : '500'
+                    fontWeight: isSelected ? '800' : '600'
                   }}
                 >
                   {displayNum}
@@ -353,19 +414,33 @@ export default function CustomDatePicker({
             </div>
           )}
 
-          {/* زر الإغلاق */}
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            aria-label={t('common.close', 'إغلاق')}
-            className="w-full mt-2.5 py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all min-h-[36px]"
-            style={{
-              backgroundColor: borderInput,
-              color: textPrimary
-            }}
-          >
-            {t('common.close', 'إغلاق')}
-          </button>
+          {/* أزرار اختيار "اليوم" والإغلاق */}
+          <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t" style={{ borderColor: borderInput }}>
+            <button
+              type="button"
+              onClick={handleSelectToday}
+              className="py-1.5 text-xs font-bold rounded-lg border-0 cursor-pointer transition-all"
+              style={{
+                backgroundColor: surfaceInput,
+                color: actionPrimary
+              }}
+            >
+              {t('common.today', 'اليوم')}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label={t('common.close', 'إغلاق')}
+              className="py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all"
+              style={{
+                backgroundColor: borderInput,
+                color: textPrimary
+              }}
+            >
+              {t('common.close', 'إغلاق')}
+            </button>
+          </div>
         </div>
       )}
     </div>
