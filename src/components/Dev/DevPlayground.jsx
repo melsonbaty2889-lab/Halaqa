@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
   ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound, RefreshCw,
-  Layout, Bookmark
+  Layout, Bookmark, Play
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -19,6 +19,7 @@ import LoadingButton from '@/components/UI/LoadingButton';
 import SelectModal from '@/components/UI/SelectModal';
 import { Skeleton, CardSkeleton, PageSkeleton } from '@/components/UI/Skeleton';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
+import SplashScreen from '@/components/UI/SplashScreen';
 import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 export default function DevPlayground({ 
@@ -28,6 +29,9 @@ export default function DevPlayground({
 }) {
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
+
+  // حالة عرض الشاشة الافتتاحية للمعاينة
+  const [showSplashPreview, setShowSplashPreview] = useState(false);
 
   // الحالات التفاعلية للنماذج والقوائم
   const [selectedRole, setSelectedRole] = useState('teacher');
@@ -135,6 +139,11 @@ export default function DevPlayground({
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
+      {/* معاينة الشاشة الافتتاحية الحية عند تفعيلها */}
+      {showSplashPreview && (
+        <SplashScreen onFinish={() => setShowSplashPreview(false)} />
+      )}
+
       <div className="max-w-xl mx-auto space-y-6">
         
         {/* رأس الصفحة */}
@@ -147,7 +156,22 @@ export default function DevPlayground({
           </p>
         </header>
 
-        {/* 1. معاينة شعار المكون SmartHalaqaProLogo */}
+        {/* 1. تجربة الشاشة الافتتاحية (SplashScreen) */}
+        <section className={`${UI.card} space-y-3 text-center`}>
+          <h3 className="text-sm font-bold flex items-center justify-center gap-2 text-semantic-actionPrimary">
+            <Play size={18} /> {t('devPlayground.splashPreviewTitle', 'تجربة الشاشة الافتتاحية (SplashScreen)')}
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowSplashPreview(true)}
+            className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-actionPrimary bg-semantic-surfaceInput text-semantic-actionPrimary flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-semantic-actionPrimaryGlow/10"
+          >
+            <Play size={16} />
+            <span>{t('devPlayground.runSplashBtn', 'تشغيل الشاشة الافتتاحية للمعاينة')}</span>
+          </button>
+        </section>
+
+        {/* 2. معاينة شعار المكون SmartHalaqaProLogo */}
         <section className={`${UI.card} space-y-4 text-center`}>
           <h3 className="text-sm font-bold flex items-center justify-center gap-2 text-semantic-actionPrimary">
             <Bookmark size={18} /> {t('devPlayground.logoPreviewTitle', 'معاينة شعار SmartHalaqaProLogo')}
@@ -171,7 +195,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 2. شعار المنصة الهوية (AppBrand) */}
+        {/* 3. شعار المنصة الهوية (AppBrand) */}
         <section className={`${UI.card} space-y-4 text-center`}>
           <h3 className="text-sm font-bold flex items-center justify-center gap-2 text-semantic-actionPrimary">
             <Sparkles size={18} /> {t('devPlayground.appBrandTitle', 'معاينة شعار وهوية المنصة (AppBrand)')}
@@ -186,7 +210,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 3. أزرار الهوية والدخول (AuthButtons) */}
+        {/* 4. أزرار الهوية والدخول (AuthButtons) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <KeyRound size={18} /> {t('devPlayground.authButtonsTitle', 'تجربة أزرار الهوية وتأكيد العمليات (AuthButtons)')}
@@ -218,7 +242,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 4. أزرار التحميل والتفاعلات (LoadingButton) */}
+        {/* 5. أزرار التحميل والتفاعلات (LoadingButton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
@@ -283,7 +307,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 5. القائمة المخصصة (CustomSelect) */}
+        {/* 6. القائمة المخصصة (CustomSelect) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
@@ -306,7 +330,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 6. الحالة الفارغة (EmptyState) */}
+        {/* 7. الحالة الفارغة (EmptyState) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
@@ -325,7 +349,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 7. مكون اختيار التاريخ القياسي (CustomDatePicker) */}
+        {/* 8. مكون اختيار التاريخ القياسي (CustomDatePicker) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -346,7 +370,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 8. محول التاريخ التفاعلي (Date Converter) */}
+        {/* 9. محول التاريخ التفاعلي (Date Converter) */}
         <section className={`${UI.card} space-y-4 text-start border-semantic-actionPrimary/30 bg-semantic-surfaceInput/20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <RefreshCw size={18} /> {t('devPlayground.dateConverterTitle', 'معاينة محول التاريخ الهجري والميلادي (Date Converter)')}
@@ -396,7 +420,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 9. اختيار الدولة (CountrySelect) */}
+        {/* 10. اختيار الدولة (CountrySelect) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -419,7 +443,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 10. محول اللغة (LanguageSwitcher) */}
+        {/* 11. محول اللغة (LanguageSwitcher) */}
         <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
@@ -433,7 +457,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 11. حالات النوافذ المنبثقة التنبيهية والتأكيدية (ConfirmModal) */}
+        {/* 12. حالات النوافذ المنبثقة التنبيهية والتأكيدية (ConfirmModal) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
@@ -545,7 +569,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 12. النافذة المنسدلة الاختيارية (SelectModal) */}
+        {/* 13. النافذة المنسدلة الاختيارية (SelectModal) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.selectModalTitle', 'تجربة النافذة المنسدلة (SelectModal)')}
@@ -569,7 +593,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 13. الهيكل العظمي والتحميل (Skeleton) */}
+        {/* 14. الهيكل العظمي والتحميل (Skeleton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Layout size={18} /> {t('devPlayground.skeletonTitle', 'تجربة تحميل الهيكل العظمي (Skeleton)')}
