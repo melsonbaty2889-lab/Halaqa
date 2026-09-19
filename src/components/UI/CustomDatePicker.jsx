@@ -18,7 +18,8 @@ import {
   setSavedHijriOffset,
   toArNums,
   toUrNums,
-  calculateAge
+  calculateAge,
+  hijriToGregorian
 } from '@/utils/dateUtils';
 
 export default function CustomDatePicker({ 
@@ -27,7 +28,7 @@ export default function CustomDatePicker({
   variant = 'grid',
   showHijriToggle = true,
   showSightAdjustment = true,
-  showAge = false,
+  showAge = true,
   minYear,
   maxYear,
   className = ''
@@ -44,7 +45,7 @@ export default function CustomDatePicker({
   const [hijriOffset, setHijriOffsetState] = useState(getSavedHijriOffset());
   const dropdownRef = useRef(null);
 
-  // تحويل التاريخ المدخل بأمان
+  // تحويل قيمة التاريخ المدخل لكيان Date
   const dateObj = useMemo(() => {
     if (!selectedDate) return new Date();
     if (selectedDate instanceof Date) return selectedDate;
@@ -64,7 +65,6 @@ export default function CustomDatePicker({
     setViewDate(dateObj);
   }, [dateObj]);
 
-  // إغلاق النافذة المنبثقة عند النقر خارج القائمة
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -80,7 +80,6 @@ export default function CustomDatePicker({
     setSavedHijriOffset(newOffset);
   };
 
-  // تنسيق الأرقام بحسب اللغة
   const formatNum = (num) => {
     if (num === null || num === undefined) return '';
     if (cleanLang === 'ur') return toUrNums(num);
@@ -88,6 +87,7 @@ export default function CustomDatePicker({
     return String(num);
   };
 
+  // التاريخ الهجري أو الميلادي المنسق للعرض
   const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
     try {
@@ -105,6 +105,20 @@ export default function CustomDatePicker({
     }
   }, [selectedDate, currentLang, useHijri, dateObj, hijriOffset]);
 
+  // التاريخ الرقمي المنسق فوق المكون (هجري أو ميلادي)
+  const formattedNumericDate = useMemo(() => {
+    if (useHijri) {
+      const { day, month, year } = getHijriParts(dateObj, hijriOffset);
+      const d = String(day).padStart(2, '0');
+      const m = String(month + 1).padStart(2, '0');
+      return `${formatNum(year)}-${formatNum(m)}-${formatNum(d)}`;
+    }
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    return `${formatNum(y)}-${formatNum(m)}-${formatNum(d)}`;
+  }, [useHijri, dateObj, hijriOffset, cleanLang]);
+
   const handleSelectDate = (dateStr) => {
     if (typeof onChange === 'function') {
       onChange(dateStr);
@@ -120,7 +134,6 @@ export default function CustomDatePicker({
     handleSelectDate(`${y}-${m}-${d}`);
   };
 
-  // الألوان الأساسية
   const actionPrimary = C.semantic?.actionPrimary || '#E07A00';
   const surfaceInput = C.semantic?.surfaceInput || '#0A101D';
   const surfaceCard = C.semantic?.surfaceCard || '#0F172A';
@@ -275,13 +288,30 @@ export default function CustomDatePicker({
   return (
     <div 
       ref={dropdownRef} 
-      className={`relative inline-block z-40 ${className}`} 
+      className={`relative inline-block w-full z-40 ${className}`} 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
+      {/* عرض العمر إن وجد فوق الزناد */}
+      {showAge && age !== null && (
+        <div className="flex justify-between items-center mb-1 px-1">
+          <span className="text-xs font-medium text-semantic-textSecondary">
+            {t('datePicker.birthDateLabel', 'تاريخ الميلاد والعمر:')}
+          </span>
+          <span 
+            className="text-[11px] font-bold px-2 py-0.5 rounded-md border 
+                       bg-semantic-surfaceInput text-semantic-actionPrimary 
+                       border-semantic-borderInput"
+          >
+            {t('datePicker.ageFormat', 'العمر:')} {formatNum(age)} {t('datePicker.yearsUnit', 'سنة')}
+          </span>
+        </div>
+      )}
+
+      {/* الزناد الرئيسي */}
       <div 
-        className="flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 
+        className="flex items-center justify-between gap-1.5 rounded-xl border px-2.5 py-1.5 
                    whitespace-nowrap min-h-[38px] transition-all 
-                   hover:border-semantic-borderHover"
+                   hover:border-semantic-borderHover w-full"
         style={{ backgroundColor: surfaceInput, borderColor: borderInput }}
       >
         <button
@@ -293,12 +323,12 @@ export default function CustomDatePicker({
                      text-semantic-textPrimary focus:outline-none"
         >
           <CalendarIcon size={14} className="text-semantic-actionPrimary" />
-          <span>{formatNum(dateIsoString)}</span>
+          <span>{formattedNumericDate}</span>
         </button>
 
         <span className="text-semantic-textMuted">|</span>
 
-        <span className="text-[11px] font-bold text-semantic-actionPrimary">
+        <span className="text-[11px] font-bold text-semantic-actionPrimary truncate">
           {formattedDisplayDate}
         </span>
 
@@ -327,6 +357,7 @@ export default function CustomDatePicker({
         )}
       </div>
 
+      {/* النافذة المنبثقة للتقويم */}
       {isOpen && (
         <div 
           className="absolute top-[110%] z-50 rounded-xl p-3 border 
@@ -425,6 +456,7 @@ export default function CustomDatePicker({
             ))}
           </div>
 
+          {/* شبكة اختيار اليوم مع التفعيل المباشر */}
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -435,7 +467,9 @@ export default function CustomDatePicker({
               const isSelected = dateStr === dateIsoString;
               
               const dayObj = new Date(currentYear, currentMonth, dayNum);
-              const rawDisplayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
+              const rawDisplayNum = useHijri 
+                ? getHijriParts(dayObj, hijriOffset).day 
+                : dayNum;
               const displayNum = formatNum(rawDisplayNum);
 
               return (
