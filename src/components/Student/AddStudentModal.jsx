@@ -138,17 +138,20 @@ const AddStudentModal = ({
               />
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
-                  {t('students.birth_date', 'تاريخ الميلاد')}
-                </label>
-                <CustomDatePicker
-                  selectedDate={parseLocalDate(formData.birth_date)}
-                  onChange={handleDateChange}
-                  isArabic={isRtl}
-                  showAge={true}
-                  placeholder={t('students.ph_birth_date', 'اختر تاريخ الميلاد...')}
-                />
-              </div>
+  <label className="block text-xs font-medium text-appText-sub mb-1.5">
+    {t('students.birth_date', 'تاريخ الميلاد')}
+  </label>
+  <CustomDatePicker
+    value={parseLocalDate(formData.birth_date)}
+    selectedDate={parseLocalDate(formData.birth_date)}
+    onChange={handleDateChange}
+    lang={isRtl ? 'ar' : 'en'}
+    showAge={true}
+    disableFuture={true} // هذا هو السطر المطلوب لمنع التواريخ المستقبلية
+    label={t('students.birth_date', 'تاريخ الميلاد')}
+    t={t}
+  />
+</div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
