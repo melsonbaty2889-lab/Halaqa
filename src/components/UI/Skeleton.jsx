@@ -1,7 +1,6 @@
 import React from 'react';
-import C from '@/theme/colors';
 
-// استخراج الأنماط لضمان الاتساق
+// استخراج أنيميشن الهيكل العظمي لضمان الاتساق
 const KEYFRAMES_STYLE = `
   @keyframes skeletonWave {
     0% { background-position: 200% 0; }
@@ -17,9 +16,6 @@ export function Skeleton({
   style = {},
   ...props
 }) {
-  const surfaceColor = C.dark?.surface || '#131B26';
-  const borderInputColor = C.dark?.borderInput || C.dark?.border || '#1E293B';
-
   return (
     <>
       <style>{KEYFRAMES_STYLE}</style>
@@ -31,7 +27,7 @@ export function Skeleton({
           width,
           height,
           borderRadius,
-          background: `linear-gradient(90deg, ${surfaceColor} 25%, ${borderInputColor} 50%, ${surfaceColor} 75%)`,
+          background: `linear-gradient(90deg, var(--color-surface) 25%, var(--color-border-input) 50%, var(--color-surface) 75%)`,
           backgroundSize: '200% 100%',
           animation: 'skeletonWave 1.6s infinite linear',
           display: 'inline-block',
@@ -45,19 +41,12 @@ export function Skeleton({
 
 // هيكل متموج مخصص للبطاقات الإحصائية
 export function CardSkeleton({ className = '', style = {}, ...props }) {
-  const cardBg = C.dark?.card || '#111827';
-  const borderCol = C.dark?.borderInput || C.dark?.border || '#1F2937';
-
   return (
     <div
       role="status"
       aria-hidden="true"
-      className={`p-5 rounded-xl border flex flex-col gap-3 w-full select-none ${className}`}
-      style={{
-        backgroundColor: cardBg,
-        borderColor: borderCol,
-        ...style,
-      }}
+      className={`p-5 rounded-xl border border-semantic-borderInput bg-semantic-card flex flex-col gap-3 w-full select-none ${className}`}
+      style={style}
       {...props}
     >
       <Skeleton width="40%" height="14px" />
@@ -68,16 +57,10 @@ export function CardSkeleton({ className = '', style = {}, ...props }) {
 
 // هيكل كامل للصفحات يُستخدم مع Suspense Fallback
 export function PageSkeleton({ className = '', style = {}, ...props }) {
-  const cardBg = C.dark?.card || '#111827';
-  const borderCol = C.dark?.borderInput || C.dark?.border || '#1F2937';
-
   return (
     <div className={`w-full space-y-6 select-none pointer-events-none ${className}`} style={style} {...props}>
       {/* Header Skeleton */}
-      <div 
-        className="flex justify-between items-center p-4 rounded-xl border"
-        style={{ backgroundColor: cardBg, borderColor: borderCol }}
-      >
+      <div className="flex justify-between items-center p-4 rounded-xl border border-semantic-borderInput bg-semantic-card">
         <div className="space-y-2 w-1/3">
           <Skeleton width="60%" height="20px" borderRadius="6px" />
           <Skeleton width="40%" height="12px" borderRadius="4px" />
@@ -94,11 +77,8 @@ export function PageSkeleton({ className = '', style = {}, ...props }) {
       </div>
 
       {/* Main Content Skeleton */}
-      <div 
-        className="border rounded-2xl p-5 space-y-4"
-        style={{ backgroundColor: cardBg, borderColor: borderCol }}
-      >
-        <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: borderCol }}>
+      <div className="border border-semantic-borderInput bg-semantic-card rounded-2xl p-5 space-y-4">
+        <div className="flex justify-between items-center pb-3 border-b border-semantic-borderInput">
           <Skeleton width="150px" height="20px" />
           <Skeleton width="80px" height="30px" borderRadius="6px" />
         </div>
