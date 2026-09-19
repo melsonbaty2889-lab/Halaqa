@@ -242,12 +242,12 @@ export default function DevPlayground({
         </section>
 
         {/* 7. تجربة محول اللغة (LanguageSwitcher) */}
-        <section className={`${UI.card} space-y-3 text-start`}>
+        <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
           </h3>
           
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between pt-1 relative z-30">
             <span className="text-xs text-semantic-textSecondary">
               {t('devPlayground.selectLanguageLabel', 'اختر لغة الواجهة:')}
             </span>
