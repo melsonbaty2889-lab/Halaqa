@@ -30,7 +30,9 @@ export default function LanguageSwitcher() {
   }, []);
 
   const handleLanguageChange = (lang) => {
-    i18n.changeLanguage(lang.code);
+    if (i18n?.changeLanguage) {
+      i18n.changeLanguage(lang.code);
+    }
     document.documentElement.dir = lang.dir;
     document.documentElement.lang = lang.code;
     setIsOpen(false);
@@ -42,32 +44,36 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-700/80 bg-slate-900/90 text-slate-200 text-xs font-semibold hover:bg-slate-800/90 transition-all shadow-md focus:outline-none"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-md focus:outline-none cursor-pointer"
+        aria-expanded={isOpen}
       >
-        <Globe className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        <Globe className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
         <span className="uppercase font-mono">{currentLang.code}</span>
-        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* القائمة: استخدام end-0 يضمن فتح القائمة باتجاه منتصف الكارت في RTL و LTR */}
+      {/* القائمة المنسدلة: استخدام end-0 لفتح القائمة للداخل دائماً */}
       {isOpen && (
-        <div className="absolute top-full mt-1.5 end-0 w-44 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl">
-          {LANGUAGES.map((lang) => (
-            <button
-              key={lang.code}
-              type="button"
-              onClick={() => handleLanguageChange(lang)}
-              dir={lang.dir}
-              className={`w-full px-3.5 py-2 text-xs flex items-center justify-between transition-colors ${
-                currentLangCode === lang.code
-                  ? 'bg-amber-500/15 text-amber-400 font-bold'
-                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-              }`}
-            >
-              <span className="truncate">{lang.name}</span>
-              {currentLangCode === lang.code && <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-            </button>
-          ))}
+        <div className="absolute top-full mt-1.5 end-0 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl">
+          {LANGUAGES.map((lang) => {
+            const isSelected = currentLangCode === lang.code;
+            return (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => handleLanguageChange(lang)}
+                dir={lang.dir}
+                className={`w-full px-3.5 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
+                    : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
+                }`}
+              >
+                <span className="truncate">{lang.name}</span>
+                {isSelected && <Check className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
