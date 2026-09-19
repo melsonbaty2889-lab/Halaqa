@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound 
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound, RefreshCw
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -15,6 +15,7 @@ import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
+import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -29,6 +30,9 @@ export default function DevPlayground({
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [reportDate, setReportDate] = useState('2026-09-19');
   
+  // حالة اختبار محول التاريخ
+  const [converterDate, setConverterDate] = useState(new Date());
+
   // حالة اختبار التحميل لأزرار AuthButtons
   const [btnLoading, setBtnLoading] = useState(false);
 
@@ -99,6 +103,17 @@ export default function DevPlayground({
     { value: 'student', label: t('roles.student', 'طالب') },
     { value: 'parent', label: t('roles.parent', 'ولي أمر') },
   ];
+
+  // دالة تحويل وتحضير بيانات التاريخ للمحول
+  const converterDateObj = converterDate instanceof Date ? converterDate : new Date(converterDate);
+  const formattedGregorian = converterDateObj.toLocaleDateString(cleanLang, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
+  const computedAge = calculateAge(converterDateObj);
 
   return (
     <div 
@@ -271,7 +286,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 6. تجربة مكون اختيار التاريخ */}
+        {/* 6. تجربة مكون اختيار التاريخ (CustomDatePicker Standard) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -284,9 +299,6 @@ export default function DevPlayground({
             <CustomDatePicker
               selectedDate={selectedDate}
               onChange={(date) => setSelectedDate(date)}
-              isArabic={isRtl}
-              lang={cleanLang}
-              t={t}
               showAge={true}
             />
             <p className="text-[11px] pt-1 text-semantic-textSecondary">
@@ -294,8 +306,60 @@ export default function DevPlayground({
             </p>
           </div>
         </section>
-        
-        {/* 7. تجربة محدد تاريخ التقارير (CustomDatePicker Compact) */}
+
+        {/* 7. تجربة محول التاريخ التفاعلي (Date Converter Card) */}
+        <section className={`${UI.card} space-y-4 text-start border-semantic-actionPrimary/30 bg-semantic-surfaceInput/20`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <RefreshCw size={18} /> {t('devPlayground.dateConverterTitle', 'معاينة محول التاريخ الهجري والميلادي (Date Converter)')}
+          </h3>
+          
+          <div className="space-y-3">
+            <label className="text-xs block text-semantic-textSecondary">
+              {t('devPlayground.converterSelectLabel', 'حدد التاريخ المُراد تحويله:')}
+            </label>
+            
+            <CustomDatePicker 
+              selectedDate={converterDate} 
+              onChange={(newDate) => setConverterDate(newDate)} 
+              showAge={false}
+            />
+
+            {/* بطاقة عرض نتائج التحويل */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+              <div className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput space-y-1">
+                <span className="text-[10px] font-bold text-semantic-textSecondary uppercase tracking-wider block">
+                  {t('devPlayground.gregorianDate', 'التاريخ الميلادي')}
+                </span>
+                <p className="text-xs font-bold text-semantic-textPrimary">
+                  {formattedGregorian}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput space-y-1">
+                <span className="text-[10px] font-bold text-semantic-actionPrimary uppercase tracking-wider block">
+                  {t('devPlayground.hijriDate', 'التاريخ الهجري')}
+                </span>
+                <p className="text-xs font-bold text-semantic-actionPrimary">
+                  {formattedHijri}
+                </p>
+              </div>
+            </div>
+
+            {/* عرض العمر المحسوب في المحول */}
+            {computedAge !== null && (
+              <div className="p-2.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceCard flex justify-between items-center">
+                <span className="text-xs font-medium text-semantic-textSecondary">
+                  {t('devPlayground.calculatedAge', 'العمر المحسوب تلقائياً:')}
+                </span>
+                <span className="text-xs font-bold text-semantic-actionPrimary bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderInput">
+                  {computedAge} {t('datePicker.yearsUnit', 'سنة')}
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* 8. تجربة محدد تاريخ التقارير (CustomDatePicker Compact) */}
         <section className={`${UI.card} space-y-3 text-start relative z-30`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.reportDateSelectorTitle', 'تجربة محدد تاريخ التقارير (CustomDatePicker Compact)')}
@@ -310,7 +374,7 @@ export default function DevPlayground({
               <CustomDatePicker 
                 selectedDate={reportDate} 
                 onChange={(newDate) => setReportDate(newDate)} 
-                variant="compact"
+                showAge={false}
               />
             </div>
 
@@ -320,7 +384,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 8. تجربة مكون اختيار الدولة */}
+        {/* 9. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -343,7 +407,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 9. تجربة محول اللغة (LanguageSwitcher) */}
+        {/* 10. تجربة محول اللغة (LanguageSwitcher) */}
         <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
@@ -357,7 +421,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 10. حالات النوافذ المنبثقة */}
+        {/* 11. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
