@@ -482,9 +482,13 @@
   "datePicker": {
     "age": "العمر:",
     "ageFormat": "Usia: {{age}} tahun",
+    "birthDate": "تاريخ الميلاد",
     "birthDateLabel": "تاريخ الميلاد",
+    "close": "إغلاق",
     "correspondingGregorian": "Sesuai Masehi:",
     "correspondingHijri": "Sesuai Hijriah:",
+    "gregorian": "ميلادي",
+    "hijri": "هجري",
     "pleaseSelectYear": "Pilih tahun",
     "selectDayPlaceholder": "اختر...",
     "selectYear": "Pilih tahun...",
@@ -493,6 +497,8 @@
     "switchCalendar": "Beralih Jenis Kalender",
     "switchToGregorian": "Beralih ke Kalender Masehi",
     "switchToHijri": "Beralih ke Kalender Hijriah",
+    "today": "اليوم",
+    "years": "سنة",
     "yearsUnit": "سنة"
   },
   "days": {

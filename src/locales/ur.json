@@ -482,9 +482,13 @@
   "datePicker": {
     "age": "العمر:",
     "ageFormat": "عمر: {{age}} سال",
+    "birthDate": "تاريخ الميلاد",
     "birthDateLabel": "تاريخ الميلاد",
+    "close": "إغلاق",
     "correspondingGregorian": "مطابق عیسوی:",
     "correspondingHijri": "مطابق ہجری:",
+    "gregorian": "ميلادي",
+    "hijri": "هجري",
     "pleaseSelectYear": "براہ کرم سال منتخب کریں",
     "selectDayPlaceholder": "اختر...",
     "selectYear": "سال منتخب کریں...",
@@ -493,6 +497,8 @@
     "switchCalendar": "تقویم کی قسم تبدیل کریں",
     "switchToGregorian": "عیسوی تقویم پر منتقل ہوں",
     "switchToHijri": "ہجری تقویم پر منتقل ہوں",
+    "today": "اليوم",
+    "years": "سنة",
     "yearsUnit": "سنة"
   },
   "days": {
