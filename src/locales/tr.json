@@ -580,6 +580,7 @@
     "selectedReportDate": "تاريخ التقرير المختار حالياً:",
     "selectedRole": "الدور المختار حالياً:",
     "selectLanguageLabel": "اختر لغة الواجهة:",
+    "selectModalHeader": "اختر الطالب من القائمة",
     "selectModalTitle": "تجربة النافذة المنسدلة (SelectModal)",
     "selectReportDateLabel": "اختر تاريخ التقرير (دعم الهجري والميلادي واللغات):",
     "selectRoleLabel": "اختر الدور الوظيفي:",
