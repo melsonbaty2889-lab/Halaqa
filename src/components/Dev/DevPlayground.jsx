@@ -164,62 +164,69 @@ export default function DevPlayground({
         </section>
 
         {/* 3. تجربة أزرار التحميل (LoadingButton) */}
-        <section className={`${UI.card} space-y-4 text-start`}>
-          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
-            <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
-          </h3>
-          
-          <div className="space-y-3 pt-1">
-            <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5">Primary Variant:</label>
-              <LoadingButton 
-                variant="primary" 
-                isLoading={loadingBtnState} 
-                onClick={handleTestLoadingBtn}
-                fullWidth
-              >
-                {t('common.save', 'حفظ التغييرات')}
-              </LoadingButton>
-            </div>
+<section className={`${UI.card} space-y-4 text-start`}>
+  <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+    <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
+  </h3>
+  
+  <div className="space-y-3 pt-1">
+    <div>
+      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+        Primary Variant:
+      </label>
+      <LoadingButton 
+        variant="primary" 
+        isLoading={loadingBtnState} 
+        onClick={handleTestLoadingBtn}
+        fullWidth
+      >
+        {t('common.save', 'حفظ التغييرات')}
+      </LoadingButton>
+    </div>
 
-            <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5">Emerald Variant:</label>
-              <LoadingButton 
-                variant="emerald" 
-                isLoading={loadingBtnState} 
-                onClick={handleTestLoadingBtn}
-                fullWidth
-              >
-                {t('common.confirm', 'تأكيد العملية')}
-              </LoadingButton>
-            </div>
+    <div>
+      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+        Emerald Variant:
+      </label>
+      <LoadingButton 
+        variant="emerald" 
+        isLoading={loadingBtnState} 
+        onClick={handleTestLoadingBtn}
+        fullWidth
+      >
+        {t('common.confirm', 'تأكيد العملية')}
+      </LoadingButton>
+    </div>
 
-            <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5">Danger Variant:</label>
-              <LoadingButton 
-                variant="danger" 
-                isLoading={loadingBtnState} 
-                onClick={handleTestLoadingBtn}
-                fullWidth
-              >
-                {t('common.delete', 'حذف العنصر')}
-              </LoadingButton>
-            </div>
+    <div>
+      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+        Danger Variant:
+      </label>
+      <LoadingButton 
+        variant="danger" 
+        isLoading={loadingBtnState} 
+        onClick={handleTestLoadingBtn}
+        fullWidth
+      >
+        {t('common.delete', 'حذف العنصر')}
+      </LoadingButton>
+    </div>
 
-            <div>
-              <label className="text-xs text-semantic-textSecondary block mb-1.5">Outline Variant:</label>
-              <LoadingButton 
-                variant="outline" 
-                isLoading={loadingBtnState} 
-                onClick={handleTestLoadingBtn}
-                fullWidth
-              >
-                {t('common.cancel', 'إلغاء')}
-              </LoadingButton>
-            </div>
-          </div>
-        </section>
-
+    <div>
+      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+        Outline Variant:
+      </label>
+      <LoadingButton 
+        variant="outline" 
+        isLoading={loadingBtnState} 
+        onClick={handleTestLoadingBtn}
+        fullWidth
+      >
+        {t('common.cancel', 'إلغاء')}
+      </LoadingButton>
+    </div>
+  </div>
+</section>
         {/* 4. تجربة القائمة المخصصة CustomSelect */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
