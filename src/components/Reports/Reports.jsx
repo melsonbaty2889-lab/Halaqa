@@ -343,7 +343,7 @@ export default function Reports({ students = [], academyId }) {
                     showToast(t('reports.phone_updated', { defaultValue: isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated" }));
                   } catch (err) {
                     console.error('Failed to update phone number:', err);
-                  } fontally {
+                  } finally {
                     setSavingPhone(false);
                   }
                 }}
