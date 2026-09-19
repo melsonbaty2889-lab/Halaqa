@@ -15,6 +15,7 @@ import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
+import ReportDateSelector from '@/components/UI/ReportDateSelector';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -27,6 +28,7 @@ export default function DevPlayground({
   const [selectedRole, setSelectedRole] = useState('teacher');
   const [selectedCountry, setSelectedCountry] = useState('SA');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [reportDate, setReportDate] = useState('2026-09-19');
   
   // حالة اختبار التحميل لأزرار AuthButtons
   const [btnLoading, setBtnLoading] = useState(false);
@@ -164,69 +166,70 @@ export default function DevPlayground({
         </section>
 
         {/* 3. تجربة أزرار التحميل (LoadingButton) */}
-<section className={`${UI.card} space-y-4 text-start`}>
-  <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
-    <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
-  </h3>
-  
-  <div className="space-y-3 pt-1">
-    <div>
-      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
-        Primary Variant:
-      </label>
-      <LoadingButton 
-        variant="primary" 
-        isLoading={loadingBtnState} 
-        onClick={handleTestLoadingBtn}
-        fullWidth
-      >
-        {t('common.save', 'حفظ التغييرات')}
-      </LoadingButton>
-    </div>
+        <section className={`${UI.card} space-y-4 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
+          </h3>
+          
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+                Primary Variant:
+              </label>
+              <LoadingButton 
+                variant="primary" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.save', 'حفظ التغييرات')}
+              </LoadingButton>
+            </div>
 
-    <div>
-      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
-        Emerald Variant:
-      </label>
-      <LoadingButton 
-        variant="emerald" 
-        isLoading={loadingBtnState} 
-        onClick={handleTestLoadingBtn}
-        fullWidth
-      >
-        {t('common.confirm', 'تأكيد العملية')}
-      </LoadingButton>
-    </div>
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+                Emerald Variant:
+              </label>
+              <LoadingButton 
+                variant="emerald" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.confirm', 'تأكيد العملية')}
+              </LoadingButton>
+            </div>
 
-    <div>
-      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
-        Danger Variant:
-      </label>
-      <LoadingButton 
-        variant="danger" 
-        isLoading={loadingBtnState} 
-        onClick={handleTestLoadingBtn}
-        fullWidth
-      >
-        {t('common.delete', 'حذف العنصر')}
-      </LoadingButton>
-    </div>
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+                Danger Variant:
+              </label>
+              <LoadingButton 
+                variant="danger" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.delete', 'حذف العنصر')}
+              </LoadingButton>
+            </div>
 
-    <div>
-      <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
-        Outline Variant:
-      </label>
-      <LoadingButton 
-        variant="outline" 
-        isLoading={loadingBtnState} 
-        onClick={handleTestLoadingBtn}
-        fullWidth
-      >
-        {t('common.cancel', 'إلغاء')}
-      </LoadingButton>
-    </div>
-  </div>
-</section>
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5 ltr:text-left rtl:text-right" dir="ltr">
+                Outline Variant:
+              </label>
+              <LoadingButton 
+                variant="outline" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.cancel', 'إلغاء')}
+              </LoadingButton>
+            </div>
+          </div>
+        </section>
+
         {/* 4. تجربة القائمة المخصصة CustomSelect */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
@@ -293,7 +296,31 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 7. تجربة مكون اختيار الدولة */}
+        {/* 7. تجربة محدد تاريخ التقارير (ReportDateSelector) */}
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Calendar size={18} /> {t('devPlayground.reportDateSelectorTitle', 'تجربة محدد تاريخ التقارير (ReportDateSelector)')}
+          </h3>
+          
+          <div className="space-y-3 pt-1">
+            <label className="text-xs block text-semantic-textSecondary">
+              {t('devPlayground.selectReportDateLabel', 'اختر تاريخ التقرير (دعم الهجري والميلادي واللغات):')}
+            </label>
+            
+            <div className="flex justify-start">
+              <ReportDateSelector 
+                selectedDate={reportDate} 
+                setSelectedDate={setReportDate} 
+              />
+            </div>
+
+            <p className="text-[11px] pt-1 text-semantic-textSecondary">
+              {t('devPlayground.selectedReportDate', 'تاريخ التقرير المختار حالياً:')} <strong className="text-semantic-textPrimary">{reportDate}</strong>
+            </p>
+          </div>
+        </section>
+
+        {/* 8. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -316,7 +343,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 8. تجربة محول اللغة (LanguageSwitcher) */}
+        {/* 9. تجربة محول اللغة (LanguageSwitcher) */}
         <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
@@ -330,7 +357,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 9. حالات النوافذ المنبثقة */}
+        {/* 10. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
