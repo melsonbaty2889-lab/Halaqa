@@ -454,6 +454,7 @@
       "title": "استعادة البيانات"
     },
     "languageSwitcherTitle": "تجربة محول اللغة (LanguageSwitcher)",
+    "loadingButtonTitle": "تجربة أزرار التحميل (LoadingButton)",
     "modalVariantsTitle": "حالات النوافذ المنبثقة (ConfirmModal Variants)",
     "primaryButtonLabel": "الزر الرئيسي (PrimaryButton):",
     "promptBtn": "نافذة إدخال نصي (Prompt Input)",
