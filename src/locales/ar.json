@@ -437,6 +437,8 @@
     "appBrandTitle": "معاينة شعار وهوية المنصة (AppBrand)",
     "authButtonsTitle": "تجربة أزرار الهوية وتأكيد العمليات (AuthButtons)",
     "authSuccess": "تم تنفيذ الإجراء بنجاح!",
+    "calculatedAge": "العمر المحسوب تلقائياً:",
+    "converterSelectLabel": "حدد التاريخ المُراد تحويله:",
     "countrySelectTitle": "تجربة اختيار الدولة (CountrySelect)",
     "customSelectTitle": "تجربة القائمة المخصصة (CustomSelect)",
     "dangerBtn": "نافذة خطر عادي (Danger)",
@@ -445,6 +447,7 @@
       "message": "هل أنت متأكد من حذف هذه الحلقة؟ لن تتمكن من التراجع بعد إتمام العملية.",
       "title": "حذف الحلقة الدراسية"
     },
+    "dateConverterTitle": "معاينة محول التاريخ الهجري والميلادي (Date Converter)",
     "datePickerTitle": "تجربة اختيار التاريخ (CustomDatePicker)",
     "emptyAction": "إضافة حلقتك الأولى",
     "emptyAlert": "تم النقر على زر الإجراء بنجاح!",
@@ -452,6 +455,8 @@
     "emptyStateTitle": "تجربة الحالة الفارغة (EmptyState)",
     "emptyTitle": "لا توجد حلقات دراسية حالياً",
     "googleButtonLabel": "زر دخول Google الموحد (GoogleButton):",
+    "gregorianDate": "التاريخ الميلادي",
+    "hijriDate": "التاريخ الهجري",
     "infoBtn": "نافذة استعادة / نجاح (Info)",
     "infoModal": {
       "confirm": "استعادة الآن",
