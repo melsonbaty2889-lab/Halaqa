@@ -481,6 +481,7 @@
   },
   "datePicker": {
     "ageFormat": "Age: {{age}} years old",
+    "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "Corresponding Gregorian:",
     "correspondingHijri": "Corresponding Hijri:",
     "pleaseSelectYear": "Please select year",
@@ -489,7 +490,8 @@
     "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Switch Calendar Type",
     "switchToGregorian": "Switch to Gregorian Calendar",
-    "switchToHijri": "Switch to Hijri Calendar"
+    "switchToHijri": "Switch to Hijri Calendar",
+    "yearsUnit": "سنة"
   },
   "days": {
     "friday": "Friday",

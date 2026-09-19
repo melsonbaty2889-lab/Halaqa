@@ -403,6 +403,7 @@
   },
   "datePicker": {
     "ageFormat": "العمر: {{age}} سنة",
+    "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "الموافق ميلادياً:",
     "correspondingHijri": "الموافق هجرياً:",
     "pleaseSelectYear": "يرجى اختيار السنة",
@@ -411,7 +412,8 @@
     "selectYearPlaceholder": "السنة...",
     "switchCalendar": "تبديل نوع التقويم",
     "switchToGregorian": "التحويل للتقويم الميلادي",
-    "switchToHijri": "التحويل للتقويم الهجري"
+    "switchToHijri": "التحويل للتقويم الهجري",
+    "yearsUnit": "سنة"
   },
   "days": {
     "friday": "friday",

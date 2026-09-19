@@ -481,6 +481,7 @@
   },
   "datePicker": {
     "ageFormat": "Yaş: {{age}} yaşında",
+    "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "Miladi Karşılığı:",
     "correspondingHijri": "Hicri Karşılığı:",
     "pleaseSelectYear": "Lütfen yılı seçin",
@@ -489,7 +490,8 @@
     "selectYearPlaceholder": "السنة...",
     "switchCalendar": "Takvim Türünü Değiştir",
     "switchToGregorian": "Miladi Takvime Geç",
-    "switchToHijri": "Hicri Takvime Geç"
+    "switchToHijri": "Hicri Takvime Geç",
+    "yearsUnit": "سنة"
   },
   "days": {
     "friday": "Cuma",

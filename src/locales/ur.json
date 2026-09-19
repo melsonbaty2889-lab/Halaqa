@@ -481,6 +481,7 @@
   },
   "datePicker": {
     "ageFormat": "عمر: {{age}} سال",
+    "birthDateLabel": "تاريخ الميلاد",
     "correspondingGregorian": "مطابق عیسوی:",
     "correspondingHijri": "مطابق ہجری:",
     "pleaseSelectYear": "براہ کرم سال منتخب کریں",
@@ -489,7 +490,8 @@
     "selectYearPlaceholder": "السنة...",
     "switchCalendar": "تقویم کی قسم تبدیل کریں",
     "switchToGregorian": "عیسوی تقویم پر منتقل ہوں",
-    "switchToHijri": "ہجری تقویم پر منتقل ہوں"
+    "switchToHijri": "ہجری تقویم پر منتقل ہوں",
+    "yearsUnit": "سنة"
   },
   "days": {
     "friday": "جمعہ",
