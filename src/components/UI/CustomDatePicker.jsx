@@ -252,7 +252,7 @@ export default function CustomDatePicker({
     const currentHY = todayM.isValid() ? todayM.iYear() : 1448;
      
     const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 5);
-    const minHY = disableFuture ? 1340 : 1380;
+    const minHY = disableFuture ? 1356 ;
     const years = [];
     for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
