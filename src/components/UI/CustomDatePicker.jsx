@@ -241,11 +241,13 @@ export default function CustomDatePicker({
     return years;
   }, [disableFuture, todayNoon]);
 
+    // 8 مكرر. خيارات السنوات الهجرية (محدثة لدعم النطاق المنطقي)
   const hijriYearsOptions = useMemo(() => {
     const todayM = moment(todayNoon);
     const currentHY = todayM.isValid() ? todayM.iYear() : 1448;
-    const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 10);
-    const minHY = HIJRI_MIN_YEAR;
+    // تحديد نطاق هجري مناسب (مثلاً من 1380 هـ كحد أدنى للمواليد، أو أوسع حسب الحاجة)
+    const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 5);
+    const minHY = disableFuture ? 1380 : 1400; // منع النزول إلى 1356 هـ لتجنب السنوات غير الواقعية
     const years = [];
     for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
