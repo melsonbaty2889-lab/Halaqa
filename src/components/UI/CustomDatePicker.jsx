@@ -26,7 +26,7 @@ export default function CustomDatePicker({
   const [calendarMode, setCalendarMode] = useState('gregorian'); // 'gregorian' | 'hijri'
   const [isOpen, setIsOpen] = useState(false);
 
-  // حالات فتح القوائم المنسدلة المخصصة لتقليل الاعتماد على select النظام
+  // حالة التحكم القوائم المنسدلة المخصصة
   const [openDropdown, setOpenDropdown] = useState(null); // 'month' | 'year' | null
 
   const pickerRef = useRef(null);
@@ -60,7 +60,9 @@ export default function CustomDatePicker({
 
   const [hijriView, setHijriView] = useState(() => {
     const m = moment(parsedDate || new Date());
-    return { year: m.iYear(), month: m.iMonth() };
+    // التأكد من النطاق المسموح به لمكتبة moment-hijri
+    const hYear = Math.max(1356, Math.min(1500, m.iYear()));
+    return { year: hYear, month: m.iMonth() };
   });
 
   useEffect(() => {
@@ -68,7 +70,8 @@ export default function CustomDatePicker({
     setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
 
     const m = moment(base);
-    setHijriView({ year: m.iYear(), month: m.iMonth() });
+    const hYear = Math.max(1356, Math.min(1500, m.iYear()));
+    setHijriView({ year: hYear, month: m.iMonth() });
   }, [parsedDate]);
 
   useEffect(() => {
@@ -147,20 +150,26 @@ export default function CustomDatePicker({
       let newYear = prev.year;
       if (newMonth > 11) {
         newMonth = 0;
-        newYear += 1;
+        newYear = Math.min(1500, newYear + 1);
       } else if (newMonth < 0) {
         newMonth = 11;
-        newYear -= 1;
+        newYear = Math.max(1356, newYear - 1);
       }
       return { year: newYear, month: newMonth };
     });
   };
 
   const handleHijriDaySelect = (hDay) => {
-    const m = moment(`${hijriView.year}/${hijriView.month + 1}/${hDay}`, 'iYYYY/iM/iD');
-    const gDate = m.toDate();
-    const safeGregorianDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0);
-    onChange(safeGregorianDate);
+    try {
+      const m = moment(`${hijriView.year}/${hijriView.month + 1}/${hDay}`, 'iYYYY/iM/iD');
+      if (m.isValid()) {
+        const gDate = m.toDate();
+        const safeGregorianDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0);
+        onChange(safeGregorianDate);
+      }
+    } catch (e) {
+      console.error('Error selecting hijri day:', e);
+    }
     setIsOpen(false);
     setOpenDropdown(null);
   };
@@ -175,10 +184,18 @@ export default function CustomDatePicker({
   }, [gregorianView]);
 
   const hijriGrid = useMemo(() => {
-    const startOfMonth = moment(`${hijriView.year}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
-    const daysInMonth = moment.iDaysInMonth(hijriView.year, hijriView.month);
-    const firstDayOfWeek = startOfMonth.day();
-    return { daysInMonth, firstDayOfWeek };
+    try {
+      const startOfMonth = moment(`${hijriView.year}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
+      const calculatedDays = moment.iDaysInMonth(hijriView.year, hijriView.month);
+      
+      // حماية في حال إرجاع NaN أو قيمة غير صالحة من المكتبة للسنوات البعيدة
+      const daysInMonth = (calculatedDays && !isNaN(calculatedDays) && calculatedDays > 0) ? calculatedDays : 29;
+      const firstDayOfWeek = startOfMonth.isValid() ? startOfMonth.day() : 0;
+
+      return { daysInMonth, firstDayOfWeek };
+    } catch (e) {
+      return { daysInMonth: 29, firstDayOfWeek: 0 };
+    }
   }, [hijriView]);
 
   // ==========================================
@@ -193,10 +210,12 @@ export default function CustomDatePicker({
     return years;
   }, []);
 
+  // حصر نطاق السنوات الهجرية بالسنوات المدعومة رسمياً من moment-hijri (1356 - 1500)
   const hijriYearsOptions = useMemo(() => {
-    const currentHY = moment().iYear();
+    const maxHY = 1500;
+    const minHY = 1356;
     const years = [];
-    for (let y = currentHY + 5; y >= currentHY - 100; y--) {
+    for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
     }
     return years;
