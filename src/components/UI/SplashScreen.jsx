@@ -1,8 +1,8 @@
+/* src/components/UI/SplashScreen.jsx */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { toEngNums } from '@/utils/dateUtils';
-import C from '@/theme/colors';
 
 const QURAN_DATA = [
   {
@@ -37,15 +37,6 @@ export default function SplashScreen({ onFinish }) {
   const currentLang = (i18n.resolvedLanguage || i18n.language || 'ar').split('-')[0].toLowerCase();
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(currentLang);
 
-  // استخراج ألوان الثيم الديناميكية من C
-  const bgDark = C.dark?.bg || '#070B11';
-  const textMain = C.text?.title || '#FFFFFF';
-  const textSub = C.text?.sub || C.text?.muted || '#94A3B8';
-  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#E07A00';
-  const emeraldColor = C.emerald?.text || C.emerald?.DEFAULT || '#10B981';
-  const surfaceCard = C.dark?.surface || 'rgba(15, 23, 42, 0.85)';
-  const borderCard = C.dark?.borderInput || C.dark?.border || 'rgba(255, 255, 255, 0.08)';
-
   const handleClose = useCallback(() => {
     if (isFadingOut) return;
     setIsFadingOut(true);
@@ -75,36 +66,27 @@ export default function SplashScreen({ onFinish }) {
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden select-none transition-opacity duration-500 ease-out font-sans ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden select-none transition-opacity duration-500 ease-out font-sans bg-semantic-bgPage text-semantic-textPrimary ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
-      style={{
-        backgroundColor: bgDark,
-        color: textMain
-      }}
     >
       {/* زر التخطي (Skip) */}
       <button
         type="button"
         onClick={handleClose}
         aria-label={t('splash.skip', 'تخطي')}
-        className="absolute top-6 end-6 z-20 px-4 py-2 border rounded-full text-xs font-medium transition-all duration-200 backdrop-blur-md active:scale-95 min-h-[44px] flex items-center justify-center gap-1.5 cursor-pointer"
-        style={{
-          backgroundColor: `${surfaceCard}B3`,
-          borderColor: borderCard,
-          color: textSub
-        }}
+        className="absolute top-6 end-6 z-20 px-4 py-2 border border-semantic-borderCard bg-semantic-surfaceCard/70 text-semantic-textSecondary rounded-full text-xs font-medium transition-all duration-200 backdrop-blur-md active:scale-95 min-h-[44px] flex items-center justify-center gap-1.5 cursor-pointer hover:text-semantic-textPrimary"
       >
         <span>{t('splash.skip', 'تخطي')}</span>
         <span aria-hidden="true">✕</span>
       </button>
 
-      {/* خلفية التوهج الزمردي */}
+      {/* خلفية التوهج الزمردي والشبكة */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 50% 35%, ${emeraldColor}1F 0%, transparent 60%),
+            radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
             radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0)
           `,
           backgroundSize: '100% 100%, 28px 28px'
@@ -112,40 +94,31 @@ export default function SplashScreen({ onFinish }) {
       />
 
       <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-sm w-full">
-        {/* الشعار */}
-        <div className="mb-5 animate-pulse drop-shadow-[0_0_25px_rgba(16,185,129,0.25)]">
-          <SmartHalaqaProLogo size={90} />
+        {/* منطقة الشعار والتوهج المطور */}
+        <div className="relative mb-6 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-semantic-success/20 blur-2xl transform scale-125 pointer-events-none" />
+          <div className="relative drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]">
+            <SmartHalaqaProLogo size={100} />
+          </div>
         </div>
 
         {/* العنوان والوصف */}
-        <h1 className="text-2xl font-black mb-1 tracking-tight" style={{ color: textMain }}>
+        <h1 className="text-2xl font-black mb-1 tracking-tight text-semantic-textPrimary">
           {t('splash.title', 'الحلقة الذكية')}
         </h1>
         
-        <p className="text-xs mb-6 font-medium" style={{ color: textSub }}>
+        <p className="text-xs mb-6 font-medium text-semantic-textSecondary">
           {t('splash.subtitle', 'المنصة الذكية لإدارة حلقات القرآن الكريم')}
         </p>
 
         {/* بطاقة الآية والترجمة */}
         {selectedAyaObj && (
-          <div 
-            className="backdrop-blur-md rounded-2xl px-5 py-3.5 mb-8 w-full shadow-xl flex flex-col gap-1.5 border"
-            style={{
-              backgroundColor: surfaceCard,
-              borderColor: borderCard
-            }}
-          >
-            <span className="text-sm font-bold block leading-relaxed dir-rtl" style={{ color: primaryColor }}>
-           ﴿ {selectedAyaObj.ar} ﴾
+          <div className="backdrop-blur-md bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl px-5 py-3.5 mb-8 w-full shadow-xl flex flex-col gap-1.5">
+            <span className="text-sm font-bold block leading-relaxed dir-rtl text-semantic-actionPrimary">
+              ﴿ {selectedAyaObj.ar} ﴾
             </span>
             {currentLang !== 'ar' && (
-              <span 
-                className="text-[11px] font-medium block opacity-85 border-t pt-1.5 leading-snug"
-                style={{
-                  color: textSub,
-                  borderColor: borderCard
-                }}
-              >
+              <span className="text-[11px] font-medium block opacity-85 border-t border-semantic-borderCard pt-1.5 leading-snug text-semantic-textSecondary">
                 "{selectedAyaObj[currentLang] || selectedAyaObj.en}"
               </span>
             )}
@@ -161,33 +134,24 @@ export default function SplashScreen({ onFinish }) {
           aria-label={t('splash.loading', 'جاري التحميل...')}
           className="w-60 relative"
         >
-          <div className="flex justify-between items-center text-xs mb-2" style={{ color: textSub }}>
+          <div className="flex justify-between items-center text-xs mb-2 text-semantic-textSecondary">
             <span className="font-medium">{t('splash.loading', 'جاري التحميل...')}</span>
-            <span className="font-mono font-bold" style={{ color: emeraldColor }}>
+            <span className="font-mono font-bold text-semantic-success">
               {toEngNums(progress)}%
             </span>
           </div>
 
-          <div 
-            className="w-full h-1.5 border rounded-full overflow-hidden p-0.5"
-            style={{
-              backgroundColor: bgDark,
-              borderColor: borderCard
-            }}
-          >
+          <div className="w-full h-1.5 border border-semantic-borderCard bg-semantic-bgPage rounded-full overflow-hidden p-0.5">
             <div 
-              className="h-full rounded-full transition-all duration-150 ease-out shadow-[0_0_12px_rgba(16,185,129,0.5)]"
-              style={{ 
-                width: `${progress}%`,
-                background: `linear-gradient(90deg, ${emeraldColor}, ${primaryColor})`
-              }}
+              className="h-full rounded-full transition-all duration-150 ease-out bg-gradient-to-r from-semantic-success to-semantic-actionPrimary shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
       </div>
 
       {/* الإصدار */}
-      <div className="absolute bottom-6 text-[10px] tracking-widest font-mono" style={{ color: textSub }}>
+      <div className="absolute bottom-6 text-[10px] tracking-widest font-mono text-semantic-textMuted">
         SMART HALAQA • v2.5
       </div>
     </div>
