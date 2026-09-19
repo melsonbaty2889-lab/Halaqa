@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
-const HIJRI_MIN_YEAR = 1380;
+const HIJRI_MIN_YEAR = 1340;
 const HIJRI_MAX_YEAR = 1500;
 
 const HIJRI_MONTHS_AR = [
@@ -245,9 +245,9 @@ export default function CustomDatePicker({
   const hijriYearsOptions = useMemo(() => {
     const todayM = moment(todayNoon);
     const currentHY = todayM.isValid() ? todayM.iYear() : 1448;
-    // تحديد نطاق هجري مناسب (مثلاً من 1380 هـ كحد أدنى للمواليد، أو أوسع حسب الحاجة)
+     
     const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 5);
-    const minHY = disableFuture ? 1380 : 1400; // منع النزول إلى 1356 هـ لتجنب السنوات غير الواقعية
+    const minHY = disableFuture ? 1340 : 1380;
     const years = [];
     for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
