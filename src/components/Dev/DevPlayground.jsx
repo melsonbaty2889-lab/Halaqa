@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
+import { TermsModal } from '@/components/UI/TermsModal';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
@@ -134,6 +135,11 @@ export default function DevPlayground({
   const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
   const computedAge = calculateAge(converterDateObj);
 
+  const [termsModalConfig, setTermsModalConfig] = useState({
+  isOpen: false,
+  contentType: 'terms'
+});
+  
   return (
     <div 
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
@@ -593,6 +599,31 @@ export default function DevPlayground({
           </div>
         </section>
 
+                {/* تجربة نافذة الشروط وسياسة الخصوصية (TermsModal) */}
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <ShieldAlert size={18} /> {t('devPlayground.termsModalTitle', 'تجربة الشروط وسياسة الخصوصية (TermsModal)')}
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => setTermsModalConfig({ isOpen: true, contentType: 'terms' })}
+              className="py-3 px-4 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-semantic-actionPrimary"
+            >
+              <span>{t('termsModal.termsTitle', 'الشروط والأحكام')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTermsModalConfig({ isOpen: true, contentType: 'privacy' })}
+              className="py-3 px-4 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-semantic-actionPrimary"
+            >
+              <span>{t('termsModal.privacyTitle', 'سياسة الخصوصية')}</span>
+            </button>
+          </div>
+        </section>
+        
         {/* 14. الهيكل العظمي والتحميل (Skeleton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
@@ -637,6 +668,14 @@ export default function DevPlayground({
         options={modalOptions}
         selectedValue={selectedModalValue}
         onSelect={(val) => setSelectedModalValue(val)}
+      />
+
+      {/* نافذة المعاينة */}
+      <TermsModal
+        isOpen={termsModalConfig.isOpen}
+        contentType={termsModalConfig.contentType}
+        onClose={() => setTermsModalConfig(prev => ({ ...prev, isOpen: false }))}
+        isRtl={isRtl}
       />
       
       <ConfirmModal
