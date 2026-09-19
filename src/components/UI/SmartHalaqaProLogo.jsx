@@ -1,3 +1,4 @@
+/* src/components/UI/SmartHalaqaProLogo.jsx */
 import React, { useId } from 'react';
 import C from '@/theme/colors';
 
@@ -12,16 +13,19 @@ export const SmartHalaqaProLogo = ({
   const goldGradId = `smartHalaqaGoldGrad_${idPrefix}`;
   const emeraldGradId = `smartHalaqaEmeraldGrad_${idPrefix}`;
 
-  // استخراج ألوان التدرج الذهبي ديناميكياً من C
+  // استخراج ألوان التدرج الذهبي والزمردي ديناميكياً من C
   const primaryGold = C.amber?.DEFAULT || '#f59e0b';
   const goldLight = C.amber?.light || '#fef08a';
   const goldDark = C.amber?.dark || '#b45309';
+
+  const emeraldLight = C.emerald?.light || C.emerald?.DEFAULT || '#10b981';
+  const emeraldDark = C.emerald?.dark || '#047857';
 
   return (
     <div
       role="img"
       aria-label="Smart Halaqa Pro Logo"
-      className={`rounded-[15px] bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-teal-700 via-teal-900 to-slate-950 border border-teal-400/35 flex items-center justify-center shadow-logo-glow shrink-0 ${className}`}
+      className={`rounded-[15px] bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-semantic-surfacePrimary via-semantic-bgCard to-semantic-bgPage border border-semantic-borderCard flex items-center justify-center shadow-logo-glow shrink-0 ${className}`}
       style={{
         width: `${size}px`,
         height: `${size}px`,
@@ -49,6 +53,7 @@ export const SmartHalaqaProLogo = ({
             <stop offset="50%" stopColor={primaryGold} />
             <stop offset="100%" stopColor={goldDark} />
           </linearGradient>
+
           <linearGradient
             id={emeraldGradId}
             x1="8"
@@ -57,8 +62,8 @@ export const SmartHalaqaProLogo = ({
             y2="24"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#047857" />
+            <stop offset="0%" stopColor={emeraldLight} />
+            <stop offset="100%" stopColor={emeraldDark} />
           </linearGradient>
         </defs>
 
