@@ -1,7 +1,7 @@
+/* src/components/UI/TermsModal.jsx */
 import React from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import C from '@/theme/colors';
 
 export function TermsModal({ 
   isOpen, 
@@ -19,38 +19,22 @@ export function TermsModal({
 
   const isTerms = contentType === 'terms';
 
-  // استخراج ألوان الثيم الديناميكية من C
-  const surfaceBg = C.dark?.card || C.dark?.surface || '#0F172A';
-  const borderCol = C.dark?.borderInput || C.dark?.border || '#1E293B';
-  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#F59E0B';
-  const titleColor = C.text?.title || '#FFFFFF';
-  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
-
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="terms-modal-title"
     >
       <div 
         dir={isRtl ? 'rtl' : 'ltr'}
-        className="relative w-full max-w-lg rounded-xl p-6 shadow-2xl border max-h-[80vh] flex flex-col transition-all"
-        style={{
-          backgroundColor: surfaceBg,
-          borderColor: borderCol,
-          color: titleColor
-        }}
+        className="relative w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary max-h-[80vh] flex flex-col transition-all"
       >
         {/* Header */}
-        <div 
-          className="flex items-center justify-between border-b pb-3 mb-4"
-          style={{ borderColor: borderCol }}
-        >
+        <div className="flex items-center justify-between border-b border-semantic-borderCard pb-3 mb-4">
           <h3 
             id="terms-modal-title"
-            className="text-lg font-semibold"
-            style={{ color: primaryColor }}
+            className="text-lg font-bold text-semantic-actionPrimary"
           >
             {isTerms 
               ? t('termsModal.termsTitle', 'الشروط والأحكام')
@@ -61,18 +45,14 @@ export function TermsModal({
             type="button"
             onClick={onClose}
             aria-label={t('termsModal.close', 'إغلاق')}
-            className="rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95"
-            style={{ color: subColor }}
+            className="rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95 text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div 
-          className="overflow-y-auto space-y-3 text-sm leading-relaxed pe-2 text-start"
-          style={{ color: subColor }}
-        >
+        <div className="overflow-y-auto space-y-3 text-sm leading-relaxed pe-2 text-start text-semantic-textSecondary">
           {isTerms ? (
             <>
               <p>{t('termsModal.termsWelcome', 'مرحباً بك في منصة الحلقة الذكية. باستخدامك للمنصة، فإنك توافق على الالتزام بالشروط التالية:')}</p>
@@ -91,18 +71,11 @@ export function TermsModal({
         </div>
 
         {/* Footer */}
-        <div 
-          className="border-t pt-3 mt-4 flex justify-end"
-          style={{ borderColor: borderCol }}
-        >
+        <div className="border-t border-semantic-borderCard pt-4 mt-4 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-95 min-h-[44px] cursor-pointer flex items-center justify-center"
-            style={{
-              backgroundColor: primaryColor,
-              color: '#FFFFFF'
-            }}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-bold bg-semantic-actionPrimary text-white transition-all active:scale-95 min-h-[44px] cursor-pointer flex items-center justify-center hover:opacity-95 shadow-md"
           >
             {t('termsModal.close', 'إغلاق')}
           </button>
