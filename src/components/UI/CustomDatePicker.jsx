@@ -1,320 +1,373 @@
-/* src/components/UI/CustomDatePicker.jsx */
-import React, { useState, useEffect, useMemo } from 'react';
-import { Repeat } from 'lucide-react';
-import CustomSelect from './CustomSelect';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2, Repeat } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import C from '@/theme/colors';
+import CustomSelect from './CustomSelect';
 import { 
   HIJRI_MONTHS, 
   getHijriParts, 
-  hijriToGregorian,
-  calculateAge, 
-  toArNums, 
-  toUrNums 
+  formatHijriDate, 
+  getSavedHijriOffset, 
+  setSavedHijriOffset,
+  toArNums,
+  toUrNums,
+  calculateAge,
+  hijriToGregorian
 } from '@/utils/dateUtils';
-
-function getHijriDetailsFormatted(date, lang = 'ar') {
-  if (!date || isNaN(new Date(date).getTime())) return null;
-  try {
-    const validDate = new Date(date);
-    const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
-    const isRtl = ['ar', 'ur'].includes(cleanLang);
-
-    const { day, month, year } = getHijriParts(validDate);
-    if (!year) return null;
-
-    const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
-    const monthName = HIJRI_MONTHS[currentLangMap][month] || HIJRI_MONTHS.ar[month];
-
-    let dayStr = String(day);
-    let yearStr = String(year);
-    let suffix = isRtl ? 'هـ' : 'AH';
-
-    if (cleanLang === 'ar') {
-      dayStr = toArNums(day);
-      yearStr = toArNums(year);
-    } else if (cleanLang === 'ur') {
-      dayStr = toUrNums(day);
-      yearStr = toUrNums(year);
-      suffix = 'ء';
-    }
-
-    return {
-      day,
-      month,
-      year,
-      text: `${dayStr} ${monthName} ${yearStr} ${suffix}`
-    };
-  } catch (e) {
-    return null;
-  }
-}
 
 export default function CustomDatePicker({ 
   selectedDate, 
-  startDate, 
   onChange, 
-  isArabic = true, 
-  lang = 'ar',
-  t = (key, fallback) => fallback,
-  isRange = false,
-  showAge = true
+  variant = 'grid', // 'grid' | 'compact' | 'select'
+  showHijriToggle = true,
+  showSightAdjustment = true,
+  showAge = false,
+  className = ''
 }) {
-  const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
-  const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  const cleanLang = currentLang.toLowerCase().split('-')[0];
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
+  const usesArNums = ['ar', 'ur'].includes(cleanLang);
 
-  const [calendarMode, setCalendarMode] = useState('gregorian');
+  const [useHijri, setUseHijri] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hijriOffset, setHijriOffsetState] = useState(getSavedHijriOffset());
+  const dropdownRef = useRef(null);
 
-  const rawDate = isRange ? startDate : selectedDate;
-  const mainDate = (rawDate && !isNaN(new Date(rawDate).getTime())) ? new Date(rawDate) : null;
+  // تحويل التاريخ المدخل إلى كيان Date
+  const dateObj = useMemo(() => {
+    if (!selectedDate) return new Date();
+    if (selectedDate instanceof Date) return selectedDate;
+    if (typeof selectedDate === 'string') {
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      if (year && month) return new Date(year, month - 1, day || 1);
+    }
+    const parsed = new Date(selectedDate);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }, [selectedDate]);
 
-  const hijriDetails = mainDate ? getHijriDetailsFormatted(mainDate, cleanLang) : null;
-  const age = (showAge && mainDate) ? calculateAge(mainDate) : null;
-
-  const [gDay, setGDay] = useState(mainDate ? mainDate.getDate() : 1);
-  const [gMonth, setGMonth] = useState(mainDate ? mainDate.getMonth() : 0);
-  const [gYear, setGYear] = useState(mainDate ? mainDate.getFullYear() : '');
-
-  const [hDay, setHDay] = useState(hijriDetails ? hijriDetails.day : 1);
-  const [hMonth, setHMonth] = useState(hijriDetails ? hijriDetails.month : 0);
-  const [hYear, setHYear] = useState(hijriDetails ? hijriDetails.year : '');
-
-  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
-  const surfaceBg = C?.dark?.surface || '#1E293B';
-  const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
-  const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
+  const [viewDate, setViewDate] = useState(dateObj);
 
   useEffect(() => {
-    if (mainDate) {
-      setGDay(mainDate.getDate());
-      setGMonth(mainDate.getMonth());
-      setGYear(mainDate.getFullYear());
+    setViewDate(dateObj);
+  }, [dateObj]);
 
-      const hd = getHijriDetailsFormatted(mainDate, cleanLang);
-      if (hd) {
-        setHDay(hd.day);
-        setHMonth(hd.month);
-        setHYear(hd.year);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
       }
-    }
-  }, [mainDate?.getTime(), cleanLang]);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const currentGregorianYear = new Date().getFullYear();
-  const currentHijriYear = getHijriParts(new Date())?.year || 1448;
-
-  const daysInMonth = useMemo(() => {
-    if (calendarMode === 'gregorian') {
-      const year = Number(gYear) || currentGregorianYear;
-      return new Date(year, Number(gMonth) + 1, 0).getDate();
-    }
-    return 30;
-  }, [calendarMode, gYear, gMonth, currentGregorianYear]);
-
-  const dayOptions = useMemo(() => {
-    return Array.from({ length: daysInMonth }, (_, i) => {
-      const val = i + 1;
-      let label = String(val);
-      if (cleanLang === 'ar') label = toArNums(val);
-      else if (cleanLang === 'ur') label = toUrNums(val);
-      return { label, value: val };
-    });
-  }, [daysInMonth, cleanLang]);
-
-  const gMonthOptions = useMemo(() => {
-    return Array.from({ length: 12 }, (_, idx) => {
-      const d = new Date(2026, idx, 1);
-      const label = new Intl.DateTimeFormat(cleanLang, { month: 'long' }).format(d);
-      return { label, value: idx };
-    });
-  }, [cleanLang]);
-
-  const gYearOptions = useMemo(() => [
-    { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
-    ...Array.from({ length: 100 }, (_, i) => {
-      const y = currentGregorianYear - i;
-      let label = String(y);
-      if (cleanLang === 'ar') label = toArNums(y);
-      else if (cleanLang === 'ur') label = toUrNums(y);
-      return { label, value: y };
-    })
-  ], [currentGregorianYear, cleanLang, t]);
-
-  const hMonthOptions = useMemo(() => {
-    const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
-    const list = HIJRI_MONTHS[currentLangMap] || HIJRI_MONTHS.ar;
-    return list.map((m, idx) => ({ label: m, value: idx }));
-  }, [cleanLang]);
-
-  const hYearOptions = useMemo(() => [
-    { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
-    ...Array.from({ length: 100 }, (_, i) => {
-      const y = currentHijriYear - i;
-      let yStr = String(y);
-      let suffix = isRtl ? 'هـ' : 'AH';
-      if (cleanLang === 'ar') yStr = toArNums(y);
-      else if (cleanLang === 'ur') {
-        yStr = toUrNums(y);
-        suffix = 'ء';
-      }
-      return { label: `${yStr} ${suffix}`, value: y };
-    })
-  ], [currentHijriYear, cleanLang, isRtl, t]);
-
-  const handleGregorianChange = (d, m, y) => {
-    const safeD = (d === '' || d === undefined || isNaN(Number(d))) ? 1 : Number(d);
-    const safeM = (m === '' || m === undefined || isNaN(Number(m))) ? 0 : Number(m);
-
-    setGDay(d);
-    setGMonth(safeM);
-    setGYear(y);
-
-    if (!y || y === '' || isNaN(Number(y))) return;
-
-    const numY = Number(y);
-    if (numY < 1900 || numY > 2100) return;
-
-    const maxDays = new Date(numY, safeM + 1, 0).getDate();
-    const safeDay = Math.min(safeD, maxDays);
-
-    const newDate = new Date(numY, safeM, safeDay);
-    if (!isNaN(newDate.getTime()) && typeof onChange === 'function') {
-      onChange(newDate);
-    }
+  const handleOffsetChange = (newOffset) => {
+    setHijriOffsetState(newOffset);
+    setSavedHijriOffset(newOffset);
   };
 
-  const handleHijriChange = (d, m, y) => {
-    const safeD = (d === '' || d === undefined || isNaN(Number(d))) ? 1 : Number(d);
-    const safeM = (m === '' || m === undefined || isNaN(Number(m))) ? 0 : Number(m);
-
-    setHDay(d);
-    setHMonth(safeM);
-    setHYear(y);
-
-    if (!y || y === '' || isNaN(Number(y))) return;
-
-    const numY = Number(y);
-    if (numY < 1000 || numY > 1600) return;
-
-    const convertedGregorian = hijriToGregorian(numY, safeM, safeD);
-    if (convertedGregorian && !isNaN(convertedGregorian.getTime()) && typeof onChange === 'function') {
-      onChange(convertedGregorian);
+  const formattedDisplayDate = useMemo(() => {
+    if (!selectedDate) return '';
+    try {
+      if (useHijri) {
+        return formatHijriDate(dateObj, currentLang, hijriOffset);
+      }
+      return new Intl.DateTimeFormat(currentLang, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(dateObj);
+    } catch (e) {
+      return String(selectedDate);
     }
+  }, [selectedDate, currentLang, useHijri, dateObj, hijriOffset]);
+
+  const formatNum = (num) => {
+    if (cleanLang === 'ur') return toUrNums(num);
+    return usesArNums ? toArNums(num) : num;
   };
+
+  const handleSelectDate = (dateStr) => {
+    if (typeof onChange === 'function') {
+      onChange(dateStr);
+    }
+    setIsOpen(false);
+  };
+
+  // ألوان نظام التصميم الدلالية
+  const actionPrimary = C.semantic?.actionPrimary || C?.amber?.DEFAULT || '#38BDF8';
+  const surfaceInput = C.semantic?.surfaceInput || C?.dark?.surface || '#1E293B';
+  const surfaceCard = C.semantic?.surfaceCard || '#0F172A';
+  const bgPage = C.semantic?.bgPage || '#020617';
+  const borderInput = C.semantic?.borderInput || C?.dark?.borderInput || '#334155';
+  const textPrimary = C.semantic?.textPrimary || '#F8FAFC';
+  const textSecondary = C.semantic?.textSecondary || '#94A3B8';
+  const textMuted = C.semantic?.textMuted || '#64748B';
+
+  const dateIsoString = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+  // حساب العمر إذا كان مفعلاً
+  const age = (showAge && dateObj) ? calculateAge(dateObj) : null;
+
+  // -------------------------------------------------------------
+  // النمط 3: Select Dropdowns Variant (المحافظة على المكون القائم لمن يحتاجه)
+  // -------------------------------------------------------------
+  if (variant === 'select') {
+    const gDay = dateObj.getDate();
+    const gMonth = dateObj.getMonth();
+    const gYear = dateObj.getFullYear();
+
+    const hijriParts = getHijriParts(dateObj, hijriOffset);
+    const currentGregorianYear = new Date().getFullYear();
+
+    const daysInMonth = new Date(gYear, gMonth + 1, 0).getDate();
+    const dayOptions = Array.from({ length: daysInMonth }, (_, i) => ({
+      label: formatNum(i + 1),
+      value: i + 1
+    }));
+
+    const monthOptions = Array.from({ length: 12 }, (_, idx) => ({
+      label: new Intl.DateTimeFormat(cleanLang, { month: 'long' }).format(new Date(2026, idx, 1)),
+      value: idx
+    }));
+
+    const yearOptions = [
+      { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
+      ...Array.from({ length: 100 }, (_, i) => {
+        const y = currentGregorianYear - i;
+        return { label: formatNum(y), value: y };
+      })
+    ];
+
+    const handleSelectChange = (d, m, y) => {
+      const safeD = d || 1;
+      const safeM = m ?? 0;
+      const safeY = y || currentGregorianYear;
+      const newD = new Date(safeY, safeM, safeD);
+      const str = `${newD.getFullYear()}-${String(newD.getMonth() + 1).padStart(2, '0')}-${String(newD.getDate()).padStart(2, '0')}`;
+      handleSelectDate(str);
+    };
+
+    return (
+      <div className={`flex flex-col w-full space-y-2 text-start ${className}`} dir={isRtl ? 'rtl' : 'ltr'}>
+        {showAge && age !== null && (
+          <div className="flex justify-end mb-1">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded border" style={{ color: actionPrimary, backgroundColor: surfaceInput, borderColor: borderInput }}>
+              {t('datePicker.ageFormat', `العمر: ${formatNum(age)} سنة`)}
+            </span>
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-1.5 w-full">
+          <CustomSelect options={dayOptions} value={gDay} onChange={(v) => handleSelectChange(v, gMonth, gYear)} isArabic={isRtl} lang={cleanLang} t={t} />
+          <CustomSelect options={monthOptions} value={gMonth} onChange={(v) => handleSelectChange(gDay, v, gYear)} isArabic={isRtl} lang={cleanLang} t={t} />
+          <CustomSelect options={yearOptions} value={gYear} onChange={(v) => handleSelectChange(gDay, gMonth, v)} isArabic={isRtl} lang={cleanLang} t={t} />
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // النمط 1 و 2: Grid Variant & Compact Bar Variant
+  // -------------------------------------------------------------
+  const headerTitle = (() => {
+    if (useHijri) {
+      const { month, year } = getHijriParts(viewDate, hijriOffset);
+      const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.ar;
+      const monthName = monthsList[month] || monthsList[0];
+      const suffix = isRtl ? 'هـ' : 'AH';
+      return `${monthName} ${formatNum(year)} ${suffix}`;
+    }
+    return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
+  })();
+
+  const currentYear = viewDate.getFullYear();
+  const currentMonth = viewDate.getMonth();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const firstDayOfWeek = (() => {
+    const day = new Date(currentYear, currentMonth, 1).getDay();
+    return isRtl ? (day + 1) % 7 : day;
+  })();
+
+  const weekDays = (() => {
+    const days = [];
+    const refDate = new Date(2026, 7, 1);
+    const startOffset = isRtl ? 0 : 1;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(refDate);
+      d.setDate(refDate.getDate() + startOffset + i);
+      days.push(new Intl.DateTimeFormat(currentLang, { weekday: 'narrow' }).format(d));
+    }
+    return days;
+  })();
 
   return (
-    <div className="flex flex-col w-full space-y-2 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="flex items-center justify-between text-xs gap-2">
+    <div ref={dropdownRef} className={`relative inline-block z-40 ${className}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* الشريط الإرشادي/الزناد (Trigger Container) */}
+      <div 
+        className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px] flex-wrap sm:flex-nowrap"
+        style={{ backgroundColor: surfaceInput, borderColor: borderInput }}
+      >
         <button
           type="button"
-          onClick={() => setCalendarMode(calendarMode === 'gregorian' ? 'hijri' : 'gregorian')}
-          aria-label={t('datePicker.switchCalendar', 'تبديل نوع التقويم')}
-          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-all active:scale-95 cursor-pointer whitespace-nowrap min-h-[36px]"
-          style={{
-            color: primaryColor,
-            backgroundColor: `${primaryColor}15`,
-            borderColor: `${primaryColor}30`
-          }}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={t('reports.selectDate', 'اختر التاريخ')}
+          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0"
+          style={{ color: actionPrimary }}
         >
-          <Repeat size={13} />
-          <span>
-            {calendarMode === 'gregorian' 
-              ? t('datePicker.switchToHijri', 'التحويل للتقويم الهجري') 
-              : t('datePicker.switchToGregorian', 'التحويل للتقويم الميلادي')}
+          <CalendarIcon size={16} />
+          <span style={{ color: textPrimary }}>
+            {formatNum(dateIsoString)}
           </span>
         </button>
 
-        {age !== null && age >= 0 && (
-          <span 
-            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap"
+        <span style={{ color: textMuted }}>|</span>
+
+        <span className="text-xs font-bold" style={{ color: actionPrimary }}>
+          {formattedDisplayDate}
+        </span>
+
+        {showHijriToggle && (
+          <button
+            type="button"
+            onClick={() => setUseHijri(!useHijri)}
+            aria-label={t('reports.toggleCalendarType', 'تغيير نوع التقويم')}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold cursor-pointer border transition-all"
             style={{
-              color: primaryColor,
-              backgroundColor: `${primaryColor}15`,
-              borderColor: `${primaryColor}30`
+              backgroundColor: useHijri ? 'var(--primary-glow, rgba(56,189,248,0.15))' : bgPage,
+              color: useHijri ? actionPrimary : textSecondary,
+              borderColor: useHijri ? actionPrimary : borderInput
             }}
           >
-            {t('datePicker.ageFormat', `العمر: ${cleanLang === 'ar' ? toArNums(age) : (cleanLang === 'ur' ? toUrNums(age) : age)} سنة`)}
-          </span>
+            <Globe size={12} />
+            <span>
+              {useHijri 
+                ? t('common.hijri', 'هجري') 
+                : t('common.gregorian', 'ميلادي')}
+            </span>
+          </button>
         )}
       </div>
 
-      {calendarMode === 'gregorian' ? (
-        <div className="grid grid-cols-3 gap-1.5 w-full">
-          <CustomSelect
-            options={dayOptions}
-            value={gDay}
-            onChange={(val) => handleGregorianChange(val, gMonth, gYear)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
-          <CustomSelect
-            options={gMonthOptions}
-            value={gMonth}
-            onChange={(val) => handleGregorianChange(gDay, val, gYear)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
-          <CustomSelect
-            options={gYearOptions}
-            value={gYear}
-            onChange={(val) => handleGregorianChange(gDay, gMonth, val)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-1.5 w-full">
-          <CustomSelect
-            options={dayOptions}
-            value={hDay}
-            onChange={(val) => handleHijriChange(val, hMonth, hYear)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
-          <CustomSelect
-            options={hMonthOptions}
-            value={hMonth}
-            onChange={(val) => handleHijriChange(hDay, val, hYear)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
-          <CustomSelect
-            options={hYearOptions}
-            value={hYear}
-            onChange={(val) => handleHijriChange(hDay, hMonth, val)}
-            isArabic={isRtl}
-            lang={cleanLang}
-            t={t}
-          />
+      {/* النافذة المنبثقة للتقويم (Dropdown Calendar Modal) */}
+      {isOpen && (
+        <div 
+          className="absolute top-[110%] z-50 rounded-2xl p-3 border shadow-2xl w-64 transition-all"
+          style={{
+            backgroundColor: surfaceCard,
+            borderColor: borderInput,
+            [isRtl ? 'right' : 'left']: 0
+          }}
+        >
+          {/* هيدر التقويم: التنقل بين الأشهر */}
+          <div className="flex justify-between items-center mb-2.5">
+            <button 
+              type="button" 
+              onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
+              aria-label={t('common.prevMonth', 'الشهر السابق')}
+              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+            >
+              {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+            <span className="text-xs font-bold" style={{ color: textPrimary }}>
+              {headerTitle}
+            </span>
+            <button 
+              type="button" 
+              onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
+              aria-label={t('common.nextMonth', 'الشهر التالي')}
+              className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
+            >
+              {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            </button>
+          </div>
+
+          {/* أيام الأسبوع */}
+          <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
+            {weekDays.map((d, i) => (
+              <span key={i} className="text-[10px] font-semibold" style={{ color: textSecondary }}>
+                {d}
+              </span>
+            ))}
+          </div>
+
+          {/* شبكة الأيام */}
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const dayNum = i + 1;
+              const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+              const isSelected = dateStr === dateIsoString;
+              
+              const dayObj = new Date(currentYear, currentMonth, dayNum);
+              const rawDisplayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
+              const displayNum = formatNum(rawDisplayNum);
+
+              return (
+                <button
+                  key={dayNum}
+                  type="button"
+                  onClick={() => handleSelectDate(dateStr)}
+                  className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold"
+                  style={{
+                    backgroundColor: isSelected ? actionPrimary : surfaceInput,
+                    color: isSelected ? bgPage : textPrimary,
+                    fontWeight: isSelected ? '800' : '500'
+                  }}
+                >
+                  {displayNum}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* تعديل رؤية الهلال للهجري */}
+          {useHijri && showSightAdjustment && (
+            <div className="mt-2.5 pt-2 border-t flex items-center justify-between" style={{ borderColor: borderInput }}>
+              <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: textSecondary }}>
+                <Settings2 size={12} /> {t('reports.sightAdjustment', 'تعديل الرؤية:')}
+              </span>
+              <div className="flex gap-1">
+                {[-1, 0, 1].map((offset) => (
+                  <button
+                    key={offset}
+                    type="button"
+                    onClick={() => handleOffsetChange(offset)}
+                    className="px-1.5 py-0.5 text-[10px] rounded border-0 cursor-pointer font-bold"
+                    style={{
+                      backgroundColor: hijriOffset === offset ? actionPrimary : surfaceInput,
+                      color: hijriOffset === offset ? bgPage : textSecondary
+                    }}
+                  >
+                    {offset > 0 ? `+${formatNum(offset)}` : formatNum(offset)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* زر الإغلاق */}
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-label={t('common.close', 'إغلاق')}
+            className="w-full mt-2.5 py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all min-h-[36px]"
+            style={{
+              backgroundColor: borderInput,
+              color: textPrimary
+            }}
+          >
+            {t('common.close', 'إغلاق')}
+          </button>
         </div>
       )}
-
-      <div 
-        className="flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium"
-        style={{
-          backgroundColor: surfaceBg,
-          borderColor: borderCol,
-          color: subColor
-        }}
-      >
-        <span>
-          {calendarMode === 'gregorian' 
-            ? t('datePicker.correspondingHijri', 'الموافق هجرياً:') 
-            : t('datePicker.correspondingGregorian', 'الموافق ميلادياً:')}
-        </span>
-        <span className="font-semibold tracking-wide" style={{ color: primaryColor }}>
-          {mainDate && gYear && hYear ? (
-            calendarMode === 'gregorian' 
-              ? (hijriDetails?.text || '—') 
-              : `${mainDate.getFullYear()}/${String(mainDate.getMonth() + 1).padStart(2, '0')}/${String(mainDate.getDate()).padStart(2, '0')} ${isRtl ? 'م' : 'AD'}`
-          ) : (
-            t('datePicker.pleaseSelectYear', 'يرجى اختيار السنة')
-          )}
-        </span>
-      </div>
     </div>
   );
 }
