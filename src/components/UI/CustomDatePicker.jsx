@@ -3,18 +3,28 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
+const HIJRI_MIN_YEAR = 1356;
+const HIJRI_MAX_YEAR = 1500;
+
 const HIJRI_MONTHS_AR = [
   'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
   'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
   'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
 ];
 
+// مرجع موحد لمنتصف نهار اليوم لتفادي أخطاء المنطقة الزمنية
+const getTodayNoon = () => {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  return d;
+};
+
 export default function CustomDatePicker({
   value,
   selectedDate,
   onChange = () => {},
   showAge = false,
-  disableFuture = false, // خاصية للتحكم في منع اختيار التواريخ المستقبلية
+  disableFuture = false,
   lang = 'ar',
   label,
   t = (key, fallback) => fallback
@@ -31,7 +41,7 @@ export default function CustomDatePicker({
   const pickerRef = useRef(null);
 
   // ==========================================
-  // 1. Parsing التاريخ الخارجي بدون Timezone Shift
+  // 1. Parsing التاريخ الخارجي
   // ==========================================
   const parsedDate = useMemo(() => {
     if (!activeDateValue) return null;
@@ -58,26 +68,27 @@ export default function CustomDatePicker({
   // 2. إعداد حالات العرض والمزامنة
   // ==========================================
   const [gregorianView, setGregorianView] = useState(() => {
-    const base = parsedDate || new Date();
+    const base = parsedDate || getTodayNoon();
     return { year: base.getFullYear(), month: base.getMonth() };
   });
 
   const [hijriView, setHijriView] = useState(() => {
-    const base = parsedDate || new Date();
+    const base = parsedDate || getTodayNoon();
     const m = moment(base);
-    const hYear = Math.max(1356, Math.min(1500, m.iYear()));
+    const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, m.iYear()));
     return { year: hYear, month: m.iMonth() };
   });
 
+  // تحديث العرض فقط عند تغير التاريخ المحدد خارجياً
   useEffect(() => {
-    const base = parsedDate || new Date();
-    setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
+    if (!parsedDate) return;
+    setGregorianView({ year: parsedDate.getFullYear(), month: parsedDate.getMonth() });
 
-    const m = moment(base);
+    const m = moment(parsedDate);
     const calculatedHYear = m.iYear();
-    const hYear = Math.max(1356, Math.min(1500, calculatedHYear));
+    const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, calculatedHYear));
     setHijriView({ year: hYear, month: m.iMonth() });
-  }, [parsedDate, calendarMode]);
+  }, [parsedDate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,7 +106,7 @@ export default function CustomDatePicker({
   // ==========================================
   const computedAge = useMemo(() => {
     if (!parsedDate) return null;
-    const today = new Date();
+    const today = getTodayNoon();
     let age = today.getFullYear() - parsedDate.getFullYear();
     const monthDiff = today.getMonth() - parsedDate.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < parsedDate.getDate())) {
@@ -125,9 +136,33 @@ export default function CustomDatePicker({
   }, [parsedDate, calendarMode, t]);
 
   // ==========================================
-  // 5. التنقل والانتخاب
+  // 5. حدود التنقل للـ Future
+  // ==========================================
+  const todayNoon = useMemo(() => getTodayNoon(), []);
+
+  const isNextGregorianDisabled = useMemo(() => {
+    if (!disableFuture) return false;
+    const currentViewDate = new Date(gregorianView.year, gregorianView.month, 1, 12, 0, 0);
+    const todayViewDate = new Date(todayNoon.getFullYear(), todayNoon.getMonth(), 1, 12, 0, 0);
+    return currentViewDate >= todayViewDate;
+  }, [disableFuture, gregorianView, todayNoon]);
+
+  const isNextHijriDisabled = useMemo(() => {
+    if (!disableFuture) return false;
+    const todayM = moment(todayNoon);
+    const todayHYear = todayM.iYear();
+    const todayHMonth = todayM.iMonth();
+
+    if (hijriView.year > todayHYear) return true;
+    if (hijriView.year === todayHYear && hijriView.month >= todayHMonth) return true;
+    return false;
+  }, [disableFuture, hijriView, todayNoon]);
+
+  // ==========================================
+  // 6. التنقل والانتخاب
   // ==========================================
   const handleGregorianMonthOffset = (offset) => {
+    if (offset > 0 && isNextGregorianDisabled) return;
     setGregorianView((prev) => {
       let newMonth = prev.month + offset;
       let newYear = prev.year;
@@ -143,15 +178,16 @@ export default function CustomDatePicker({
   };
 
   const handleHijriMonthOffset = (offset) => {
+    if (offset > 0 && isNextHijriDisabled) return;
     setHijriView((prev) => {
       let newMonth = prev.month + offset;
       let newYear = prev.year;
       if (newMonth > 11) {
         newMonth = 0;
-        newYear = Math.min(1500, newYear + 1);
+        newYear = Math.min(HIJRI_MAX_YEAR, newYear + 1);
       } else if (newMonth < 0) {
         newMonth = 11;
-        newYear = Math.max(1356, newYear - 1);
+        newYear = Math.max(HIJRI_MIN_YEAR, newYear - 1);
       }
       return { year: newYear, month: newMonth };
     });
@@ -159,7 +195,7 @@ export default function CustomDatePicker({
 
   const handleGregorianDaySelect = (day) => {
     const selected = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
-    if (disableFuture && selected > new Date()) return;
+    if (disableFuture && selected > todayNoon) return;
     onChange(selected);
     setIsOpen(false);
     setOpenDropdown(null);
@@ -171,7 +207,7 @@ export default function CustomDatePicker({
       if (m.isValid()) {
         const gDate = m.toDate();
         const safeGregorianDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0);
-        if (disableFuture && safeGregorianDate > new Date()) return;
+        if (disableFuture && safeGregorianDate > todayNoon) return;
         onChange(safeGregorianDate);
       }
     } catch (e) {
@@ -182,7 +218,7 @@ export default function CustomDatePicker({
   };
 
   // ==========================================
-  // 6. شبكة الأيام
+  // 7. شبكة الأيام
   // ==========================================
   const gregorianGrid = useMemo(() => {
     const daysInMonth = new Date(gregorianView.year, gregorianView.month + 1, 0).getDate();
@@ -202,10 +238,10 @@ export default function CustomDatePicker({
   }, [hijriView]);
 
   // ==========================================
-  // 7. خيارات السنوات (تراعي disableFuture)
+  // 8. خيارات السنوات والشهور
   // ==========================================
   const gregorianYearsOptions = useMemo(() => {
-    const currentY = new Date().getFullYear();
+    const currentY = todayNoon.getFullYear();
     const startYear = disableFuture ? currentY : currentY + 10;
     const endYear = currentY - 100;
     const years = [];
@@ -213,31 +249,54 @@ export default function CustomDatePicker({
       years.push(y);
     }
     return years;
-  }, [disableFuture]);
+  }, [disableFuture, todayNoon]);
 
   const hijriYearsOptions = useMemo(() => {
-    const currentHY = moment().iYear();
-    const maxHY = disableFuture ? Math.min(1500, currentHY) : Math.min(1500, currentHY + 10);
-    const minHY = 1356;
+    const currentHY = moment(todayNoon).iYear();
+    const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 10);
+    const minHY = HIJRI_MIN_YEAR;
     const years = [];
     for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
     }
     return years;
-  }, [disableFuture]);
+  }, [disableFuture, todayNoon]);
+
+  const isGregorianMonthDisabled = (monthIdx) => {
+    if (!disableFuture) return false;
+    const checkDate = new Date(gregorianView.year, monthIdx, 1, 12, 0, 0);
+    const todayFirstDay = new Date(todayNoon.getFullYear(), todayNoon.getMonth(), 1, 12, 0, 0);
+    return checkDate > todayFirstDay;
+  };
+
+  const isHijriMonthDisabled = (monthIdx) => {
+    if (!disableFuture) return false;
+    const todayM = moment(todayNoon);
+    const todayHYear = todayM.iYear();
+    const todayHMonth = todayM.iMonth();
+
+    if (hijriView.year > todayHYear) return true;
+    if (hijriView.year === todayHYear && monthIdx > todayHMonth) return true;
+    return false;
+  };
 
   const handleSelectToday = () => {
-    const today = new Date();
-    today.setHours(12, 0, 0, 0);
-    onChange(today);
+    onChange(getTodayNoon());
     setIsOpen(false);
     setOpenDropdown(null);
   };
 
-  const todayDate = useMemo(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-  }, []);
+  // توليد أيام الأسبوع ديناميكياً لتفادي القيم الثابتة
+  const weekDaysHeaders = useMemo(() => {
+    const days = [];
+    const baseDate = new Date(2023, 0, 1); // Sunday
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() + i);
+      days.push(d.toLocaleDateString(cleanLang, { weekday: 'narrow' }));
+    }
+    return days;
+  }, [cleanLang]);
 
   return (
     <div className="relative w-full text-start" dir={isRtl ? 'rtl' : 'ltr'} ref={pickerRef}>
@@ -260,6 +319,11 @@ export default function CustomDatePicker({
           setIsOpen(!isOpen);
           setOpenDropdown(null);
         }}
+        role="button"
+        tabIndex={0}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        aria-label={label || t('datePicker.birthDate', 'تاريخ الميلاد')}
         className="flex items-center justify-between p-2.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput cursor-pointer hover:border-semantic-actionPrimary transition-all"
       >
         <div className="flex items-center gap-2">
@@ -271,6 +335,7 @@ export default function CustomDatePicker({
 
         <button
           type="button"
+          aria-label={calendarMode === 'gregorian' ? t('datePicker.switchToHijri', 'التحويل للهجري') : t('datePicker.switchToGregorian', 'التحويل للميلادي')}
           onClick={(e) => {
             e.stopPropagation();
             setCalendarMode(calendarMode === 'gregorian' ? 'hijri' : 'gregorian');
@@ -295,6 +360,7 @@ export default function CustomDatePicker({
           <div className="flex items-center justify-between pb-3 border-b border-semantic-borderInput gap-1">
             <button
               type="button"
+              aria-label={t('datePicker.previousMonth', 'الشهر السابق')}
               onClick={() => {
                 calendarMode === 'gregorian' ? handleGregorianMonthOffset(-1) : handleHijriMonthOffset(-1);
                 setOpenDropdown(null);
@@ -309,12 +375,15 @@ export default function CustomDatePicker({
               <div className="relative">
                 <button
                   type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={openDropdown === 'month'}
+                  aria-label={t('datePicker.selectMonth', 'اختر الشهر')}
                   onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
                   className="flex items-center gap-1 text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2.5 py-1.5 hover:border-semantic-actionPrimary transition-colors"
                 >
                   <span>
                     {calendarMode === 'gregorian'
-                      ? new Date(2026, gregorianView.month, 1).toLocaleDateString(cleanLang, { month: 'long' })
+                      ? new Date(gregorianView.year, gregorianView.month, 1).toLocaleDateString(cleanLang, { month: 'long' })
                       : t(`datePicker.hijriMonths.${hijriView.month}`, HIJRI_MONTHS_AR[hijriView.month])}
                   </span>
                   <ChevronDown size={14} className="text-semantic-textSecondary" />
@@ -323,40 +392,56 @@ export default function CustomDatePicker({
                 {openDropdown === 'month' && (
                   <div className="absolute top-full mt-1 start-0 z-20 max-h-48 w-36 overflow-y-auto rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard py-1 shadow-lg">
                     {calendarMode === 'gregorian'
-                      ? Array.from({ length: 12 }, (_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => {
-                              setGregorianView({ ...gregorianView, month: i });
-                              setOpenDropdown(null);
-                            }}
-                            className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
-                              gregorianView.month === i
-                                ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
-                                : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                            }`}
-                          >
-                            {new Date(2026, i, 1).toLocaleDateString(cleanLang, { month: 'long' })}
-                          </button>
-                        ))
-                      : HIJRI_MONTHS_AR.map((mName, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setHijriView({ ...hijriView, month: idx });
-                              setOpenDropdown(null);
-                            }}
-                            className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
-                              hijriView.month === idx
-                                ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
-                                : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                            }`}
-                          >
-                            {t(`datePicker.hijriMonths.${idx}`, mName)}
-                          </button>
-                        ))}
+                      ? Array.from({ length: 12 }, (_, i) => {
+                          const disabled = isGregorianMonthDisabled(i);
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              disabled={disabled}
+                              aria-disabled={disabled}
+                              onClick={() => {
+                                if (disabled) return;
+                                setGregorianView({ ...gregorianView, month: i });
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                disabled
+                                  ? 'opacity-30 cursor-not-allowed text-semantic-textSecondary'
+                                  : gregorianView.month === i
+                                  ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
+                                  : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                              }`}
+                            >
+                              {new Date(gregorianView.year, i, 1).toLocaleDateString(cleanLang, { month: 'long' })}
+                            </button>
+                          );
+                        })
+                      : HIJRI_MONTHS_AR.map((mName, idx) => {
+                          const disabled = isHijriMonthDisabled(idx);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              disabled={disabled}
+                              aria-disabled={disabled}
+                              onClick={() => {
+                                if (disabled) return;
+                                setHijriView({ ...hijriView, month: idx });
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                disabled
+                                  ? 'opacity-30 cursor-not-allowed text-semantic-textSecondary'
+                                  : hijriView.month === idx
+                                  ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
+                                  : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                              }`}
+                            >
+                              {t(`datePicker.hijriMonths.${idx}`, mName)}
+                            </button>
+                          );
+                        })}
                   </div>
                 )}
               </div>
@@ -365,6 +450,9 @@ export default function CustomDatePicker({
               <div className="relative">
                 <button
                   type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={openDropdown === 'year'}
+                  aria-label={t('datePicker.selectYear', 'اختر السنة')}
                   onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
                   className="flex items-center gap-1 text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2.5 py-1.5 hover:border-semantic-actionPrimary transition-colors"
                 >
@@ -402,17 +490,25 @@ export default function CustomDatePicker({
 
             <button
               type="button"
+              aria-label={t('datePicker.nextMonth', 'الشهر التالي')}
+              disabled={calendarMode === 'gregorian' ? isNextGregorianDisabled : isNextHijriDisabled}
+              aria-disabled={calendarMode === 'gregorian' ? isNextGregorianDisabled : isNextHijriDisabled}
               onClick={() => {
                 calendarMode === 'gregorian' ? handleGregorianMonthOffset(1) : handleHijriMonthOffset(1);
                 setOpenDropdown(null);
               }}
-              className="p-1 rounded-lg text-semantic-textSecondary hover:bg-semantic-surfaceInput hover:text-semantic-textPrimary"
+              className={`p-1 rounded-lg text-semantic-textSecondary transition-colors ${
+                (calendarMode === 'gregorian' ? isNextGregorianDisabled : isNextHijriDisabled)
+                  ? 'opacity-30 cursor-not-allowed'
+                  : 'hover:bg-semantic-surfaceInput hover:text-semantic-textPrimary'
+              }`}
             >
               {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
             </button>
 
             <button 
               type="button"
+              aria-label={t('datePicker.close', 'إغلاق')}
               onClick={() => {
                 setIsOpen(false);
                 setOpenDropdown(null);
@@ -426,10 +522,8 @@ export default function CustomDatePicker({
           {/* Days Grid */}
           <div className="pt-3">
             <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-semantic-textSecondary mb-2">
-              {Array.from({ length: 7 }, (_, i) => (
-                <div key={i}>
-                  {new Date(2026, 0, 4 + i).toLocaleDateString(cleanLang, { weekday: 'narrow' })}
-                </div>
+              {weekDaysHeaders.map((dayName, i) => (
+                <div key={i}>{dayName}</div>
               ))}
             </div>
 
@@ -442,7 +536,7 @@ export default function CustomDatePicker({
                 {Array.from({ length: gregorianGrid.daysInMonth }, (_, i) => {
                   const day = i + 1;
                   const cellDate = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
-                  const isFuture = disableFuture && (cellDate > todayDate);
+                  const isFuture = disableFuture && (cellDate > todayNoon);
                   const isSelected = parsedDate &&
                     parsedDate.getDate() === day &&
                     parsedDate.getMonth() === gregorianView.month &&
@@ -453,6 +547,7 @@ export default function CustomDatePicker({
                       key={day}
                       type="button"
                       disabled={isFuture}
+                      aria-disabled={isFuture}
                       onClick={() => handleGregorianDaySelect(day)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
                         isFuture
@@ -480,7 +575,9 @@ export default function CustomDatePicker({
                     try {
                       const mCell = moment(`${hijriView.year}/${hijriView.month + 1}/${day}`, 'iYYYY/iM/iD');
                       if (mCell.isValid()) {
-                        isFuture = mCell.toDate() > todayDate;
+                        const cellDate = mCell.toDate();
+                        cellDate.setHours(12, 0, 0, 0);
+                        isFuture = cellDate > todayNoon;
                       }
                     } catch (e) {}
                   }
@@ -498,6 +595,7 @@ export default function CustomDatePicker({
                       key={day}
                       type="button"
                       disabled={isFuture}
+                      aria-disabled={isFuture}
                       onClick={() => handleHijriDaySelect(day)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
                         isFuture
