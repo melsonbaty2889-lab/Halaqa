@@ -217,7 +217,7 @@ export default function CustomDatePicker({
     return { daysInMonth, firstDayOfWeek };
   }, [gregorianView]);
 
-    const hijriGrid = useMemo(() => {
+  const hijriGrid = useMemo(() => {
     try {
       const safeYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, hijriView.year));
       const startOfMonth = moment(`${safeYear}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
@@ -233,12 +233,11 @@ export default function CustomDatePicker({
     return { daysInMonth: 29, firstDayOfWeek: 0 };
   }, [hijriView]);
 
-    // 8. خيارات السنوات والشهور (محدثة لدعم التقارير وإضافة الطالب)
+  // 8. خيارات السنوات والشهور (محدثة لدعم التقارير وإضافة الطالب)
   const gregorianYearsOptions = useMemo(() => {
     const currentY = todayNoon.getFullYear();
-    // إذا كان المكون مخصصاً للتقارير (disableFuture = false)، نفتح نطاق السنوات (مثلاً 20 سنة مستقبلية و 30 سنة ماضية، أو حسب الحاجة)
     const startYear = disableFuture ? currentY : currentY + 5;
-    const endYear = disableFuture ? currentY - 100 : currentY - 30; // منع ظهور 1938 في التقارير إلا إذا احتجنا نطاقاً أوسع
+    const endYear = disableFuture ? currentY - 100 : currentY - 30;
     const years = [];
     for (let y = startYear; y >= endYear; y--) {
       years.push(y);
@@ -246,13 +245,13 @@ export default function CustomDatePicker({
     return years;
   }, [disableFuture, todayNoon]);
 
-    // 8 مكرر. خيارات السنوات الهجرية (محدثة لدعم النطاق المنطقي)
+  // 8 مكرر. خيارات السنوات الهجرية (محدثة لدعم النطاق المنطقي)
   const hijriYearsOptions = useMemo(() => {
     const todayM = moment(todayNoon);
     const currentHY = todayM.isValid() ? todayM.iYear() : 1448;
      
     const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 5);
-    const minHY = disableFuture ? 1356 ;
+    const minHY = HIJRI_MIN_YEAR;
     const years = [];
     for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
