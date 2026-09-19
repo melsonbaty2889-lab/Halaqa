@@ -15,7 +15,6 @@ import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
-import ReportDateSelector from '@/components/UI/ReportDateSelector';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -296,29 +295,30 @@ export default function DevPlayground({
           </div>
         </section>
         
-{/* 7. تجربة محدد تاريخ التقارير (ReportDateSelector) */}
-<section className={`${UI.card} space-y-3 text-start relative z-30`}>
-  <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
-    <Calendar size={18} /> {t('devPlayground.reportDateSelectorTitle', 'تجربة محدد تاريخ التقارير (ReportDateSelector)')}
-  </h3>
-  
-  <div className="space-y-3 pt-1">
-    <label className="text-xs block text-semantic-textSecondary">
-      {t('devPlayground.selectReportDateLabel', 'اختر تاريخ التقرير (دعم الهجري والميلادي واللغات):')}
-    </label>
-    
-    <div className="flex justify-start relative z-40">
-      <ReportDateSelector 
-        selectedDate={reportDate} 
-        setSelectedDate={setReportDate} 
-      />
-    </div>
+        {/* 7. تجربة محدد تاريخ التقارير (CustomDatePicker Compact) */}
+        <section className={`${UI.card} space-y-3 text-start relative z-30`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Calendar size={18} /> {t('devPlayground.reportDateSelectorTitle', 'تجربة محدد تاريخ التقارير (CustomDatePicker Compact)')}
+          </h3>
+          
+          <div className="space-y-3 pt-1">
+            <label className="text-xs block text-semantic-textSecondary">
+              {t('devPlayground.selectReportDateLabel', 'اختر تاريخ التقرير (دعم الهجري والميلادي واللغات):')}
+            </label>
+            
+            <div className="flex justify-start relative z-40">
+              <CustomDatePicker 
+                selectedDate={reportDate} 
+                onChange={(newDate) => setReportDate(newDate)} 
+                variant="compact"
+              />
+            </div>
 
-    <p className="text-[11px] pt-1 text-semantic-textSecondary">
-      {t('devPlayground.selectedReportDate', 'تاريخ التقرير المختار حالياً:')} <strong className="text-semantic-textPrimary">{reportDate}</strong>
-    </p>
-  </div>
-</section>
+            <p className="text-[11px] pt-1 text-semantic-textSecondary">
+              {t('devPlayground.selectedReportDate', 'تاريخ التقرير المختار حالياً:')} <strong className="text-semantic-textPrimary">{reportDate}</strong>
+            </p>
+          </div>
+        </section>
 
         {/* 8. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
