@@ -111,11 +111,14 @@ export default function SplashScreen({ onFinish }) {
           {t('splash.subtitle', 'المنصة الذكية لإدارة حلقات القرآن الكريم')}
         </p>
 
-        {/* بطاقة الآية والترجمة */}
+                {/* بطاقة الآية والترجمة */}
         {selectedAyaObj && (
           <div className="backdrop-blur-md bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl px-5 py-3.5 mb-8 w-full shadow-xl flex flex-col gap-1.5">
-            <span className="text-sm font-bold block leading-relaxed dir-rtl text-semantic-actionPrimary">
-              ﴿ {selectedAyaObj.ar} ﴾
+            <span 
+              dir="rtl" 
+              className="text-sm font-bold block leading-relaxed text-semantic-actionPrimary"
+            >
+              &#FD3E; {selectedAyaObj.ar} &#FD3F;
             </span>
             {currentLang !== 'ar' && (
               <span className="text-[11px] font-medium block opacity-85 border-t border-semantic-borderCard pt-1.5 leading-snug text-semantic-textSecondary">
