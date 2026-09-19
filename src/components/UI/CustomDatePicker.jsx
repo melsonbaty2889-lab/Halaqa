@@ -12,7 +12,6 @@ const HIJRI_MONTHS_AR = [
   'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
 ];
 
-// مرجع موحد لمنتصف نهار اليوم لتفادي أخطاء المنطقة الزمنية
 const getTodayNoon = () => {
   const d = new Date();
   d.setHours(12, 0, 0, 0);
@@ -34,15 +33,13 @@ export default function CustomDatePicker({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = ['ar', 'ur'].includes(cleanLang);
 
-  const [calendarMode, setCalendarMode] = useState('gregorian'); // 'gregorian' | 'hijri'
+  const [calendarMode, setCalendarMode] = useState('gregorian');
   const [isOpen, setIsOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null); // 'month' | 'year' | null
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const pickerRef = useRef(null);
 
-  // ==========================================
-  // 1. Parsing التاريخ الخارجي
-  // ==========================================
+  // 1. Parsing التاريخ الخارجي بضمان الجودة
   const parsedDate = useMemo(() => {
     if (!activeDateValue) return null;
     let d = null;
@@ -64,9 +61,7 @@ export default function CustomDatePicker({
     return (d && !isNaN(d.getTime())) ? d : null;
   }, [activeDateValue]);
 
-  // ==========================================
   // 2. إعداد حالات العرض والمزامنة
-  // ==========================================
   const [gregorianView, setGregorianView] = useState(() => {
     const base = parsedDate || getTodayNoon();
     return { year: base.getFullYear(), month: base.getMonth() };
@@ -75,19 +70,22 @@ export default function CustomDatePicker({
   const [hijriView, setHijriView] = useState(() => {
     const base = parsedDate || getTodayNoon();
     const m = moment(base);
-    const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, m.iYear()));
-    return { year: hYear, month: m.iMonth() };
+    const validYear = m.isValid() ? m.iYear() : 1445;
+    const validMonth = m.isValid() ? m.iMonth() : 0;
+    const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, validYear));
+    return { year: hYear, month: validMonth };
   });
 
-  // تحديث العرض فقط عند تغير التاريخ المحدد خارجياً
   useEffect(() => {
     if (!parsedDate) return;
     setGregorianView({ year: parsedDate.getFullYear(), month: parsedDate.getMonth() });
 
     const m = moment(parsedDate);
-    const calculatedHYear = m.iYear();
-    const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, calculatedHYear));
-    setHijriView({ year: hYear, month: m.iMonth() });
+    if (m.isValid()) {
+      const calculatedHYear = m.iYear();
+      const hYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, calculatedHYear));
+      setHijriView({ year: hYear, month: m.iMonth() });
+    }
   }, [parsedDate]);
 
   useEffect(() => {
@@ -101,9 +99,7 @@ export default function CustomDatePicker({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ==========================================
   // 3. حساب العمر
-  // ==========================================
   const computedAge = useMemo(() => {
     if (!parsedDate) return null;
     const today = getTodayNoon();
@@ -115,17 +111,17 @@ export default function CustomDatePicker({
     return age < 0 ? 0 : age;
   }, [parsedDate]);
 
-  // ==========================================
-  // 4. تنسيق التاريخ المعروض
-  // ==========================================
+  // 4. تنسيق التاريخ المعروض حماية من NaN
   const formattedDisplayDate = useMemo(() => {
     if (!parsedDate) return null;
     if (calendarMode === 'hijri') {
       const m = moment(parsedDate);
+      if (!m.isValid()) return null;
       const day = m.iDate();
       const monthIdx = m.iMonth();
       const year = m.iYear();
-      const monthName = t(`datePicker.hijriMonths.${monthIdx}`, HIJRI_MONTHS_AR[monthIdx]);
+      if (isNaN(day) || isNaN(monthIdx) || isNaN(year)) return null;
+      const monthName = t(`datePicker.hijriMonths.${monthIdx}`, HIJRI_MONTHS_AR[monthIdx] || '');
       return `${day} ${monthName} ${year}`;
     } else {
       const year = parsedDate.getFullYear();
@@ -135,9 +131,7 @@ export default function CustomDatePicker({
     }
   }, [parsedDate, calendarMode, t]);
 
-  // ==========================================
   // 5. حدود التنقل للـ Future
-  // ==========================================
   const todayNoon = useMemo(() => getTodayNoon(), []);
 
   const isNextGregorianDisabled = useMemo(() => {
@@ -150,6 +144,7 @@ export default function CustomDatePicker({
   const isNextHijriDisabled = useMemo(() => {
     if (!disableFuture) return false;
     const todayM = moment(todayNoon);
+    if (!todayM.isValid()) return false;
     const todayHYear = todayM.iYear();
     const todayHMonth = todayM.iMonth();
 
@@ -158,9 +153,7 @@ export default function CustomDatePicker({
     return false;
   }, [disableFuture, hijriView, todayNoon]);
 
-  // ==========================================
   // 6. التنقل والانتخاب
-  // ==========================================
   const handleGregorianMonthOffset = (offset) => {
     if (offset > 0 && isNextGregorianDisabled) return;
     setGregorianView((prev) => {
@@ -217,9 +210,7 @@ export default function CustomDatePicker({
     setOpenDropdown(null);
   };
 
-  // ==========================================
   // 7. شبكة الأيام
-  // ==========================================
   const gregorianGrid = useMemo(() => {
     const daysInMonth = new Date(gregorianView.year, gregorianView.month + 1, 0).getDate();
     const firstDayOfWeek = new Date(gregorianView.year, gregorianView.month, 1).getDay();
@@ -237,9 +228,7 @@ export default function CustomDatePicker({
     }
   }, [hijriView]);
 
-  // ==========================================
   // 8. خيارات السنوات والشهور
-  // ==========================================
   const gregorianYearsOptions = useMemo(() => {
     const currentY = todayNoon.getFullYear();
     const startYear = disableFuture ? currentY : currentY + 10;
@@ -252,7 +241,8 @@ export default function CustomDatePicker({
   }, [disableFuture, todayNoon]);
 
   const hijriYearsOptions = useMemo(() => {
-    const currentHY = moment(todayNoon).iYear();
+    const todayM = moment(todayNoon);
+    const currentHY = todayM.isValid() ? todayM.iYear() : 1448;
     const maxHY = disableFuture ? Math.min(HIJRI_MAX_YEAR, currentHY) : Math.min(HIJRI_MAX_YEAR, currentHY + 10);
     const minHY = HIJRI_MIN_YEAR;
     const years = [];
@@ -272,6 +262,7 @@ export default function CustomDatePicker({
   const isHijriMonthDisabled = (monthIdx) => {
     if (!disableFuture) return false;
     const todayM = moment(todayNoon);
+    if (!todayM.isValid()) return false;
     const todayHYear = todayM.iYear();
     const todayHMonth = todayM.iMonth();
 
@@ -286,10 +277,9 @@ export default function CustomDatePicker({
     setOpenDropdown(null);
   };
 
-  // توليد أيام الأسبوع ديناميكياً لتفادي القيم الثابتة
   const weekDaysHeaders = useMemo(() => {
     const days = [];
-    const baseDate = new Date(2023, 0, 1); // Sunday
+    const baseDate = new Date(2023, 0, 1);
     for (let i = 0; i < 7; i++) {
       const d = new Date(baseDate);
       d.setDate(baseDate.getDate() + i);
@@ -384,7 +374,7 @@ export default function CustomDatePicker({
                   <span>
                     {calendarMode === 'gregorian'
                       ? new Date(gregorianView.year, gregorianView.month, 1).toLocaleDateString(cleanLang, { month: 'long' })
-                      : t(`datePicker.hijriMonths.${hijriView.month}`, HIJRI_MONTHS_AR[hijriView.month])}
+                      : t(`datePicker.hijriMonths.${hijriView.month}`, HIJRI_MONTHS_AR[hijriView.month] || '')}
                   </span>
                   <ChevronDown size={14} className="text-semantic-textSecondary" />
                 </button>
@@ -585,9 +575,11 @@ export default function CustomDatePicker({
                   let isSelected = false;
                   if (parsedDate) {
                     const mSelected = moment(parsedDate);
-                    isSelected = mSelected.iDate() === day &&
-                      mSelected.iMonth() === hijriView.month &&
-                      mSelected.iYear() === hijriView.year;
+                    if (mSelected.isValid()) {
+                      isSelected = mSelected.iDate() === day &&
+                        mSelected.iMonth() === hijriView.month &&
+                        mSelected.iYear() === hijriView.year;
+                    }
                   }
 
                   return (
