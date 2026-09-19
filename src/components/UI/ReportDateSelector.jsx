@@ -123,9 +123,9 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   const formatNum = (num) => (usesArNums ? toArNums(num) : num);
 
   return (
-    <div ref={dropdownRef} className="relative inline-block" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div ref={dropdownRef} className="relative inline-block z-40" dir={isRtl ? 'rtl' : 'ltr'}>
       <div 
-        className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px]"
+        className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px] flex-wrap sm:flex-nowrap"
         style={{
           backgroundColor: surfaceInput,
           borderColor: borderInput
@@ -134,7 +134,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={t('reports.selectDate', 'Select Date')}
+          aria-label={t('reports.selectDate', 'اختر التاريخ')}
           className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0"
           style={{ color: actionPrimary }}
         >
@@ -153,7 +153,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
         <button
           type="button"
           onClick={() => setUseHijri(!useHijri)}
-          aria-label={t('reports.toggleCalendarType', 'Toggle Calendar')}
+          aria-label={t('reports.toggleCalendarType', 'تغيير نوع التقويم')}
           className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold cursor-pointer border transition-all"
           style={{
             backgroundColor: useHijri ? 'var(--primary-glow)' : bgPage,
@@ -164,8 +164,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           <Globe size={12} />
           <span>
             {useHijri 
-              ? t('common.hijri', 'Hijri') 
-              : t('common.gregorian', 'Gregorian')}
+              ? t('common.hijri', 'هجري') 
+              : t('common.gregorian', 'ميلادي')}
           </span>
         </button>
       </div>
@@ -183,7 +183,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
             <button 
               type="button" 
               onClick={handlePrevMonth} 
-              aria-label={t('common.prevMonth', 'Previous Month')}
+              aria-label={t('common.prevMonth', 'الشهر السابق')}
               className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
               style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
             >
@@ -195,7 +195,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
             <button 
               type="button" 
               onClick={handleNextMonth} 
-              aria-label={t('common.nextMonth', 'Next Month')}
+              aria-label={t('common.nextMonth', 'الشهر التالي')}
               className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
               style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
             >
@@ -248,7 +248,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
               style={{ borderColor: borderInput }}
             >
               <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: textSecondary }}>
-                <Settings2 size={12} /> {t('reports.sightAdjustment', 'Sight Adjustment:')}
+                <Settings2 size={12} /> {t('reports.sightAdjustment', 'تعديل الرؤية:')}
               </span>
               <div className="flex gap-1">
                 {[-1, 0, 1].map((offset) => (
@@ -272,14 +272,14 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            aria-label={t('common.close', 'Close')}
+            aria-label={t('common.close', 'إغلاق')}
             className="w-full mt-2.5 py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all min-h-[36px]"
             style={{
               backgroundColor: borderInput,
               color: textPrimary
             }}
           >
-            {t('common.close', 'Close')}
+            {t('common.close', 'إغلاق')}
           </button>
         </div>
       )}
