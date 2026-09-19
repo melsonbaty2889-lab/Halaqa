@@ -14,6 +14,7 @@ import CustomSelect from '@/components/UI/CustomSelect';
 import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import LoadingButton from '@/components/UI/LoadingButton';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -29,6 +30,9 @@ export default function DevPlayground({
   
   // حالة اختبار التحميل لأزرار AuthButtons
   const [btnLoading, setBtnLoading] = useState(false);
+
+  // حالة اختبار التحميل لأزرار LoadingButton
+  const [loadingBtnState, setLoadingBtnState] = useState(false);
 
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
@@ -78,6 +82,13 @@ export default function DevPlayground({
     setTimeout(() => {
       setBtnLoading(false);
       alert(t('devPlayground.authSuccess', 'تم تنفيذ الإجراء بنجاح!'));
+    }, 1500);
+  };
+
+  const handleTestLoadingBtn = () => {
+    setLoadingBtnState(true);
+    setTimeout(() => {
+      setLoadingBtnState(false);
     }, 1500);
   };
 
@@ -152,7 +163,64 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 3. تجربة القائمة المخصصة CustomSelect */}
+        {/* 3. تجربة أزرار التحميل (LoadingButton) */}
+        <section className={`${UI.card} space-y-4 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
+          </h3>
+          
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">Primary Variant:</label>
+              <LoadingButton 
+                variant="primary" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.save', 'حفظ التغييرات')}
+              </LoadingButton>
+            </div>
+
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">Emerald Variant:</label>
+              <LoadingButton 
+                variant="emerald" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.confirm', 'تأكيد العملية')}
+              </LoadingButton>
+            </div>
+
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">Danger Variant:</label>
+              <LoadingButton 
+                variant="danger" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.delete', 'حذف العنصر')}
+              </LoadingButton>
+            </div>
+
+            <div>
+              <label className="text-xs text-semantic-textSecondary block mb-1.5">Outline Variant:</label>
+              <LoadingButton 
+                variant="outline" 
+                isLoading={loadingBtnState} 
+                onClick={handleTestLoadingBtn}
+                fullWidth
+              >
+                {t('common.cancel', 'إلغاء')}
+              </LoadingButton>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. تجربة القائمة المخصصة CustomSelect */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ListFilter size={18} /> {t('devPlayground.customSelectTitle', 'تجربة القائمة المخصصة (CustomSelect)')}
@@ -175,7 +243,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 4. تجربة مكون الحالة الفارغة (EmptyState) */}
+        {/* 5. تجربة مكون الحالة الفارغة (EmptyState) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <FolderSearch size={18} /> {t('devPlayground.emptyStateTitle', 'تجربة الحالة الفارغة (EmptyState)')}
@@ -194,7 +262,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 5. تجربة مكون اختيار التاريخ */}
+        {/* 6. تجربة مكون اختيار التاريخ */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -218,7 +286,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 6. تجربة مكون اختيار الدولة */}
+        {/* 7. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.countrySelectTitle', 'تجربة اختيار الدولة (CountrySelect)')}
@@ -241,7 +309,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 7. تجربة محول اللغة (LanguageSwitcher) */}
+        {/* 8. تجربة محول اللغة (LanguageSwitcher) */}
         <section className={`${UI.card} space-y-3 text-start relative z-20`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
@@ -255,7 +323,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 8. حالات النوافذ المنبثقة */}
+        {/* 9. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
