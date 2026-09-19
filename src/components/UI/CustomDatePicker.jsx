@@ -13,8 +13,10 @@ export default function CustomDatePicker({
   value,
   selectedDate,
   onChange = () => {},
-  showAge = true,
+  showAge = false,
+  disableFuture = false, // خاصية للتحكم في منع اختيار التواريخ المستقبلية
   lang = 'ar',
+  label,
   t = (key, fallback) => fallback
 }) {
   const activeDateValue = value ?? selectedDate;
@@ -67,30 +69,16 @@ export default function CustomDatePicker({
     return { year: hYear, month: m.iMonth() };
   });
 
-  // مزامنة حالة العرض عند تغيير التاريخ الخارجي
   useEffect(() => {
     const base = parsedDate || new Date();
     setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
 
     const m = moment(base);
-    const hYear = Math.max(1356, Math.min(1500, m.iYear()));
+    const calculatedHYear = m.iYear();
+    const hYear = Math.max(1356, Math.min(1500, calculatedHYear));
     setHijriView({ year: hYear, month: m.iMonth() });
-  }, [parsedDate]);
+  }, [parsedDate, calendarMode]);
 
-  // مزامنة العرض عند تحويل calendarMode للنمط الحالي للتاريخ المخزن
-  useEffect(() => {
-    if (!isOpen) return;
-    const base = parsedDate || new Date();
-    if (calendarMode === 'gregorian') {
-      setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
-    } else {
-      const m = moment(base);
-      const hYear = Math.max(1356, Math.min(1500, m.iYear()));
-      setHijriView({ year: hYear, month: m.iMonth() });
-    }
-  }, [calendarMode, isOpen, parsedDate]);
-
-  // إغلاق النافذة القادمة عند الضغط خارج المكون
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -137,7 +125,7 @@ export default function CustomDatePicker({
   }, [parsedDate, calendarMode, t]);
 
   // ==========================================
-  // 5. التنقل والتعديلات لعرض التقويم
+  // 5. التنقل والانتخاب
   // ==========================================
   const handleGregorianMonthOffset = (offset) => {
     setGregorianView((prev) => {
@@ -169,21 +157,21 @@ export default function CustomDatePicker({
     });
   };
 
-  // اختيار يوم ميلادي
   const handleGregorianDaySelect = (day) => {
     const selected = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
+    if (disableFuture && selected > new Date()) return;
     onChange(selected);
     setIsOpen(false);
     setOpenDropdown(null);
   };
 
-  // اختيار يوم هجري وتمرير Gregorian Date صالح
   const handleHijriDaySelect = (hDay) => {
     try {
       const m = moment(`${hijriView.year}/${hijriView.month + 1}/${hDay}`, 'iYYYY/iM/iD');
       if (m.isValid()) {
         const gDate = m.toDate();
         const safeGregorianDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0);
+        if (disableFuture && safeGregorianDate > new Date()) return;
         onChange(safeGregorianDate);
       }
     } catch (e) {
@@ -214,24 +202,29 @@ export default function CustomDatePicker({
   }, [hijriView]);
 
   // ==========================================
-  // 7. خيارات السنوات (1356 - 1500)
+  // 7. خيارات السنوات (تراعي disableFuture)
   // ==========================================
   const gregorianYearsOptions = useMemo(() => {
     const currentY = new Date().getFullYear();
+    const startYear = disableFuture ? currentY : currentY + 10;
+    const endYear = currentY - 100;
     const years = [];
-    for (let y = currentY + 5; y >= currentY - 100; y--) {
+    for (let y = startYear; y >= endYear; y--) {
       years.push(y);
     }
     return years;
-  }, []);
+  }, [disableFuture]);
 
   const hijriYearsOptions = useMemo(() => {
+    const currentHY = moment().iYear();
+    const maxHY = disableFuture ? Math.min(1500, currentHY) : Math.min(1500, currentHY + 10);
+    const minHY = 1356;
     const years = [];
-    for (let y = 1500; y >= 1356; y--) {
+    for (let y = maxHY; y >= minHY; y--) {
       years.push(y);
     }
     return years;
-  }, []);
+  }, [disableFuture]);
 
   const handleSelectToday = () => {
     const today = new Date();
@@ -241,13 +234,18 @@ export default function CustomDatePicker({
     setOpenDropdown(null);
   };
 
+  const todayDate = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  }, []);
+
   return (
     <div className="relative w-full text-start" dir={isRtl ? 'rtl' : 'ltr'} ref={pickerRef}>
       
       {/* Label and Age */}
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-xs font-semibold text-semantic-textSecondary">
-          {t('datePicker.birthDate', 'تاريخ الميلاد')}
+          {label || t('datePicker.birthDate', 'تاريخ الميلاد')}
         </label>
         {showAge && (
           <span className="text-[11px] font-bold text-semantic-actionPrimary bg-semantic-surfaceInput px-2 py-0.5 rounded-md border border-semantic-borderInput">
@@ -443,6 +441,8 @@ export default function CustomDatePicker({
 
                 {Array.from({ length: gregorianGrid.daysInMonth }, (_, i) => {
                   const day = i + 1;
+                  const cellDate = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
+                  const isFuture = disableFuture && (cellDate > todayDate);
                   const isSelected = parsedDate &&
                     parsedDate.getDate() === day &&
                     parsedDate.getMonth() === gregorianView.month &&
@@ -452,9 +452,12 @@ export default function CustomDatePicker({
                     <button
                       key={day}
                       type="button"
+                      disabled={isFuture}
                       onClick={() => handleGregorianDaySelect(day)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        isSelected
+                        isFuture
+                          ? 'opacity-30 cursor-not-allowed text-semantic-textSecondary'
+                          : isSelected
                           ? 'bg-semantic-actionPrimary text-white font-bold shadow-md'
                           : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
                       }`}
@@ -472,6 +475,15 @@ export default function CustomDatePicker({
 
                 {Array.from({ length: hijriGrid.daysInMonth }, (_, i) => {
                   const day = i + 1;
+                  let isFuture = false;
+                  if (disableFuture) {
+                    try {
+                      const mCell = moment(`${hijriView.year}/${hijriView.month + 1}/${day}`, 'iYYYY/iM/iD');
+                      if (mCell.isValid()) {
+                        isFuture = mCell.toDate() > todayDate;
+                      }
+                    } catch (e) {}
+                  }
 
                   let isSelected = false;
                   if (parsedDate) {
@@ -485,9 +497,12 @@ export default function CustomDatePicker({
                     <button
                       key={day}
                       type="button"
+                      disabled={isFuture}
                       onClick={() => handleHijriDaySelect(day)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        isSelected
+                        isFuture
+                          ? 'opacity-30 cursor-not-allowed text-semantic-textSecondary'
+                          : isSelected
                           ? 'bg-semantic-actionPrimary text-white font-bold shadow-md'
                           : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
                       }`}
