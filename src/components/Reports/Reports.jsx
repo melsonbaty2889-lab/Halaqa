@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { C } from '@/theme/colors';
 import { Card, Btn, Input } from '@/components/UI/UI';
 
-import ReportDateSelector from '@/components/UI/ReportDateSelector';
+import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import TemplateSettings from '@/components/Reports/TemplateSettings';
 import ReportMetrics from '@/components/Reports/ReportMetrics';
 import StudentReportCard from '@/components/Reports/StudentReportCard';
