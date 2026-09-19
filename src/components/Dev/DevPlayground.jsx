@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
-  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound, RefreshCw
+  ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound, RefreshCw,
+  Layout
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -117,18 +118,18 @@ export default function DevPlayground({
   const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
   const computedAge = calculateAge(converterDateObj);
 
-// حالة تجربة النافذة المنسدلة SelectModal
-const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
-const [selectedModalValue, setSelectedModalValue] = useState('student_1');
+  // حالة تجربة النافذة المنسدلة SelectModal
+  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [selectedModalValue, setSelectedModalValue] = useState('student_1');
 
-const modalOptions = [
-  { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
-  { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
-  { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
-  { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
-  { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
-  { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
-];
+  const modalOptions = [
+    { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
+    { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
+    { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
+    { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
+    { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
+    { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
+  ];
   
   return (
     <div 
@@ -374,7 +375,6 @@ const modalOptions = [
           </div>
         </section>
 
-
         {/* 9. تجربة مكون اختيار الدولة */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
@@ -524,8 +524,6 @@ const modalOptions = [
           </div>
         </section>
 
-      </div>
-
         {/* 12. تجربة النافذة المنسدلة الاختيارية (SelectModal) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
@@ -586,9 +584,10 @@ const modalOptions = [
             <PageSkeleton />
           </div>
         </section>
-      
-      
-           <SelectModal
+
+      </div>
+
+      <SelectModal
         isOpen={isSelectModalOpen}
         onClose={() => setIsSelectModalOpen(false)}
         title={t('devPlayground.selectModalHeader', 'اختر الطالب من القائمة')}
