@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
-const HIJRI_MIN_YEAR = 1356;
+const HIJRI_MIN_YEAR = 1380;
 const HIJRI_MAX_YEAR = 1500;
 
 const HIJRI_MONTHS_AR = [
