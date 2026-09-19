@@ -228,11 +228,12 @@ export default function CustomDatePicker({
     }
   }, [hijriView]);
 
-  // 8. خيارات السنوات والشهور
+    // 8. خيارات السنوات والشهور (محدثة لدعم التقارير وإضافة الطالب)
   const gregorianYearsOptions = useMemo(() => {
     const currentY = todayNoon.getFullYear();
-    const startYear = disableFuture ? currentY : currentY + 10;
-    const endYear = currentY - 100;
+    // إذا كان المكون مخصصاً للتقارير (disableFuture = false)، نفتح نطاق السنوات (مثلاً 20 سنة مستقبلية و 30 سنة ماضية، أو حسب الحاجة)
+    const startYear = disableFuture ? currentY : currentY + 5;
+    const endYear = disableFuture ? currentY - 100 : currentY - 30; // منع ظهور 1938 في التقارير إلا إذا احتجنا نطاقاً أوسع
     const years = [];
     for (let y = startYear; y >= endYear; y--) {
       years.push(y);
