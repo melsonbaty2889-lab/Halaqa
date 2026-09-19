@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
-const HIJRI_MIN_YEAR = 1340;
+const HIJRI_MIN_YEAR = 1356;
 const HIJRI_MAX_YEAR = 1500;
 
 const HIJRI_MONTHS_AR = [
@@ -217,15 +217,20 @@ export default function CustomDatePicker({
     return { daysInMonth, firstDayOfWeek };
   }, [gregorianView]);
 
-  const hijriGrid = useMemo(() => {
+    const hijriGrid = useMemo(() => {
     try {
-      const startOfMonth = moment(`${hijriView.year}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
-      const daysInMonth = startOfMonth.isValid() ? startOfMonth.iDaysInMonth() : 29;
-      const firstDayOfWeek = startOfMonth.isValid() ? startOfMonth.day() : 0;
-      return { daysInMonth, firstDayOfWeek };
+      const safeYear = Math.max(HIJRI_MIN_YEAR, Math.min(HIJRI_MAX_YEAR, hijriView.year));
+      const startOfMonth = moment(`${safeYear}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
+      if (startOfMonth.isValid() && !isNaN(startOfMonth.iDaysInMonth())) {
+        return { 
+          daysInMonth: startOfMonth.iDaysInMonth(), 
+          firstDayOfWeek: startOfMonth.day() 
+        };
+      }
     } catch (e) {
-      return { daysInMonth: 29, firstDayOfWeek: 0 };
+      console.error('Error generating hijri grid:', e);
     }
+    return { daysInMonth: 29, firstDayOfWeek: 0 };
   }, [hijriView]);
 
     // 8. خيارات السنوات والشهور (محدثة لدعم التقارير وإضافة الطالب)
