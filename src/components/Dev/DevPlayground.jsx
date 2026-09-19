@@ -549,6 +549,15 @@ const modalOptions = [
           </div>
         </section>
       
+           <SelectModal
+        isOpen={isSelectModalOpen}
+        onClose={() => setIsSelectModalOpen(false)}
+        title={t('devPlayground.selectModalHeader', 'اختر الطالب من القائمة')}
+        options={modalOptions}
+        selectedValue={selectedModalValue}
+        onSelect={(val) => setSelectedModalValue(val)}
+      />
+      
       <ConfirmModal
         isOpen={modalConfig.isOpen}
         variant={modalConfig.variant}
