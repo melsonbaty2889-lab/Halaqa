@@ -543,6 +543,7 @@
       "title": "إلغاء الموعد المحدد"
     },
     "receivedInput": "تم استلام القيمة المدخلة:",
+    "reportDateSelectorTitle": "تجربة محدد تاريخ التقارير (ReportDateSelector)",
     "secureDeleteBtn": "نافذة حذف مشروط (Secure Delete)",
     "secureDeleteModal": {
       "confirm": "تأكيد الحذف النهائي",
@@ -554,8 +555,10 @@
     "selectDateLabel": "اختر التاريخ الحجري / الميلادي:",
     "selectedCode": "الكود المختار حالياً:",
     "selectedDate": "التاريخ المختار حالياً:",
+    "selectedReportDate": "تاريخ التقرير المختار حالياً:",
     "selectedRole": "الدور المختار حالياً:",
     "selectLanguageLabel": "اختر لغة الواجهة:",
+    "selectReportDateLabel": "اختر تاريخ التقرير (دعم الهجري والميلادي واللغات):",
     "selectRoleLabel": "اختر الدور الوظيفي:",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
