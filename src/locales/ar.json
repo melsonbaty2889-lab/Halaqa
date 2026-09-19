@@ -411,6 +411,7 @@
     "correspondingHijri": "الموافق هجرياً:",
     "gregorian": "ميلادي",
     "hijri": "هجري",
+    "placeholder": "اختر التاريخ",
     "pleaseSelectYear": "يرجى اختيار السنة",
     "selectDayPlaceholder": "اختر...",
     "selectYear": "اختر السنة...",

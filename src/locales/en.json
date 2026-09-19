@@ -489,6 +489,7 @@
     "correspondingHijri": "Corresponding Hijri:",
     "gregorian": "ميلادي",
     "hijri": "هجري",
+    "placeholder": "اختر التاريخ",
     "pleaseSelectYear": "Please select year",
     "selectDayPlaceholder": "اختر...",
     "selectYear": "Select year...",
