@@ -566,6 +566,7 @@
     },
     "receivedInput": "تم استلام القيمة المدخلة:",
     "reportDateSelectorTitle": "تجربة محدد تاريخ التقارير (ReportDateSelector)",
+    "runSplashBtn": "تشغيل الشاشة الافتتاحية للمعاينة",
     "secureDeleteBtn": "نافذة حذف مشروط (Secure Delete)",
     "secureDeleteModal": {
       "confirm": "تأكيد الحذف النهائي",
@@ -589,6 +590,7 @@
     "skeletonCard": "بطاقة إحصائية (CardSkeleton):",
     "skeletonPage": "هيكل كامل للصفحة (PageSkeleton):",
     "skeletonTitle": "تجربة تحميل الهيكل العظمي (Skeleton)",
+    "splashPreviewTitle": "تجربة الشاشة الافتتاحية (SplashScreen)",
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "title": "مختبر العناصر الشامل (Dev Playground)",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
