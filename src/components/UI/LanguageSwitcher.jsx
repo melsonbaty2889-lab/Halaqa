@@ -40,21 +40,21 @@ export default function LanguageSwitcher({ className = '' }) {
   };
 
   return (
-    <div className={`relative inline-block text-start z-50 ${className}`} ref={dropdownRef}>
+    <div className={`relative inline-block text-start z-30 ${className}`} ref={dropdownRef}>
       {/* زر المحول */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-md focus:outline-none cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-md focus:outline-none cursor-pointer"
       >
         <Globe className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
         <span className="uppercase font-mono">{currentLang.code}</span>
         <ChevronDown className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* القائمة المنسدلة */}
+      {/* القائمة المنسدلة المحدثة */}
       {isOpen && (
-        <div className="absolute top-full mt-1.5 end-0 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl">
+        <div className="absolute top-full mt-1.5 start-0 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
