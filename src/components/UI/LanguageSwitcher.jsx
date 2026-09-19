@@ -12,7 +12,7 @@ export const LANGUAGES = [
   { code: 'id', name: 'Bahasa Indonesia', dir: 'ltr' },
 ];
 
-export default function LanguageSwitcher({ className = '' }) {
+export default function LanguageSwitcher({ className = '', align = 'auto' }) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -39,44 +39,60 @@ export default function LanguageSwitcher({ className = '' }) {
     setIsOpen(false);
   };
 
-  const isRtl = document.documentElement.dir === 'rtl';
+  // تحديد الفئات لمنع خروج القائمة المنسدلة خارج الشاشة
+  const getDropdownAlignmentClass = () => {
+    if (align === 'start') return 'start-0';
+    if (align === 'end') return 'end-0';
+    
+    const isRtl = document.documentElement.dir === 'rtl';
+    // في الواجهة العربية تعتمد القائمة التثبيت جهة اليمين لمنع الخروج لليسار، والعكس للغات LTR
+    return isRtl ? 'end-0' : 'start-0';
+  };
 
   return (
     <div className={`relative inline-block text-start z-50 ${className}`} ref={dropdownRef}>
+      {/* زر محول اللغة */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-md focus:outline-none cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-sm focus:outline-none cursor-pointer"
+        aria-expanded={isOpen}
       >
         <Globe className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
-        <span className="uppercase font-mono">{currentLang.code}</span>
-        <ChevronDown className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="uppercase font-mono tracking-wider">{currentLang.code}</span>
+        <ChevronDown
+          className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
       </button>
 
+      {/* القائمة المنسدلة للغات */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-1.5 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-xl ${
-            isRtl ? 'start-0' : 'end-0'
-          }`}
+          className={`absolute top-full mt-1.5 w-44 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-2xl py-1.5 z-50 backdrop-blur-xl ${getDropdownAlignmentClass()}`}
         >
-          {LANGUAGES.map((lang) => (
-            <button
-              key={lang.code}
-              type="button"
-              onClick={() => handleLanguageChange(lang)}
-              dir={lang.dir}
-              className={`w-full px-3.5 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                currentLangCode === lang.code
-                  ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
-                  : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
-              }`}
-            >
-              <span className="truncate">{lang.name}</span>
-              {currentLangCode === lang.code && (
-                <Check className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
-              )}
-            </button>
-          ))}
+          {LANGUAGES.map((lang) => {
+            const isSelected = currentLangCode === lang.code;
+            return (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => handleLanguageChange(lang)}
+                dir={lang.dir}
+                className={`w-full px-3.5 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
+                    : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
+                }`}
+              >
+                <span className="truncate">{lang.name}</span>
+                {isSelected && (
+                  <Check className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
