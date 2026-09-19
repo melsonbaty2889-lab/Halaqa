@@ -1,6 +1,6 @@
 /* src/components/UI/CustomDatePicker.jsx */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
 // أسماء الأشهر الهجرية الافتراضية
@@ -26,6 +26,9 @@ export default function CustomDatePicker({
   const [calendarMode, setCalendarMode] = useState('gregorian'); // 'gregorian' | 'hijri'
   const [isOpen, setIsOpen] = useState(false);
 
+  // حالات فتح القوائم المنسدلة المخصصة لتقليل الاعتماد على select النظام
+  const [openDropdown, setOpenDropdown] = useState(null); // 'month' | 'year' | null
+
   const pickerRef = useRef(null);
 
   // ==========================================
@@ -35,7 +38,6 @@ export default function CustomDatePicker({
     if (!activeDateValue) return null;
     let d;
     if (typeof activeDateValue === 'string') {
-      // التعامل مع التاريخ كـ Calendar Date لمنع مشكلة Timezone UTC Shift
       const dateParts = activeDateValue.split('T')[0].split('-');
       if (dateParts.length === 3) {
         d = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
@@ -51,19 +53,16 @@ export default function CustomDatePicker({
   // ==========================================
   // 2. إعداد حالة العرض الداخلي للتقويم (State)
   // ==========================================
-  // حالة العرض الميلادي
   const [gregorianView, setGregorianView] = useState(() => {
     const base = parsedDate || new Date();
     return { year: base.getFullYear(), month: base.getMonth() };
   });
 
-  // حالة العرض الهجري
   const [hijriView, setHijriView] = useState(() => {
     const m = moment(parsedDate || new Date());
     return { year: m.iYear(), month: m.iMonth() };
   });
 
-  // مزامنة أجهزة العرض عند تغير قيمة activeDateValue الخارجي
   useEffect(() => {
     const base = parsedDate || new Date();
     setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
@@ -72,11 +71,11 @@ export default function CustomDatePicker({
     setHijriView({ year: m.iYear(), month: m.iMonth() });
   }, [parsedDate]);
 
-  // إغلاق التقويم عند النقر خارجه
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setIsOpen(false);
+        setOpenDropdown(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -84,7 +83,7 @@ export default function CustomDatePicker({
   }, []);
 
   // ==========================================
-  // 3. حساب العمر بدقة (Age Calculation)
+  // 3. حساب العمر بدقة
   // ==========================================
   const computedAge = useMemo(() => {
     if (!parsedDate) return null;
@@ -98,7 +97,7 @@ export default function CustomDatePicker({
   }, [parsedDate]);
 
   // ==========================================
-  // 4. تنسيقات نصوص العرض والتاريخ الحاضر
+  // 4. تنسيقات نصوص العرض
   // ==========================================
   const formattedDisplayDate = useMemo(() => {
     if (!parsedDate) return null;
@@ -118,7 +117,7 @@ export default function CustomDatePicker({
   }, [parsedDate, calendarMode, cleanLang, t]);
 
   // ==========================================
-  // 5. العمليات والتحويلات للتقويم الميلادي
+  // 5. التنقل والتحويلات
   // ==========================================
   const handleGregorianMonthOffset = (offset) => {
     setGregorianView((prev) => {
@@ -139,11 +138,9 @@ export default function CustomDatePicker({
     const selected = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
     onChange(selected);
     setIsOpen(false);
+    setOpenDropdown(null);
   };
 
-  // ==========================================
-  // 6. العمليات والتحويلات للتقويم الهجري (moment-hijri)
-  // ==========================================
   const handleHijriMonthOffset = (offset) => {
     setHijriView((prev) => {
       let newMonth = prev.month + offset;
@@ -160,41 +157,32 @@ export default function CustomDatePicker({
   };
 
   const handleHijriDaySelect = (hDay) => {
-    // إنشاء كائن moment-hijri هجري دقيق
     const m = moment(`${hijriView.year}/${hijriView.month + 1}/${hDay}`, 'iYYYY/iM/iD');
-    // تحويله إلى JS Gregorian Date
     const gDate = m.toDate();
-    // ضبط الوقت لتفادي مشاكل timezone UTC
     const safeGregorianDate = new Date(gDate.getFullYear(), gDate.getMonth(), gDate.getDate(), 12, 0, 0);
     onChange(safeGregorianDate);
     setIsOpen(false);
+    setOpenDropdown(null);
   };
 
   // ==========================================
-  // 7. حسابات شبكة الأيام (Grid Generation)
+  // 6. شبكة الأيام
   // ==========================================
-
-  // بيانات الشبكة الميلادية
   const gregorianGrid = useMemo(() => {
     const daysInMonth = new Date(gregorianView.year, gregorianView.month + 1, 0).getDate();
     const firstDayOfWeek = new Date(gregorianView.year, gregorianView.month, 1).getDay();
     return { daysInMonth, firstDayOfWeek };
   }, [gregorianView]);
 
-  // بيانات الشبكة الهجرية الحقيقية باستخدام moment-hijri
   const hijriGrid = useMemo(() => {
-    // كائن moment هجري لبداية الشهر الهجري المحدد
     const startOfMonth = moment(`${hijriView.year}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
-    // عدد أيام الشهر الهجري الحالي
     const daysInMonth = moment.iDaysInMonth(hijriView.year, hijriView.month);
-    // يوم الأسبوع الذي يبدأ به الشهر الهجري (0 = الأحد)
     const firstDayOfWeek = startOfMonth.day();
-
     return { daysInMonth, firstDayOfWeek };
   }, [hijriView]);
 
   // ==========================================
-  // 8. قوائم الخيارات للسنوات والأشهر
+  // 7. قوائم خيارات السنوات
   // ==========================================
   const gregorianYearsOptions = useMemo(() => {
     const currentY = new Date().getFullYear();
@@ -214,18 +202,18 @@ export default function CustomDatePicker({
     return years;
   }, []);
 
-  // أزرار اليوم والمسح
   const handleSelectToday = () => {
     const today = new Date();
     today.setHours(12, 0, 0, 0);
     onChange(today);
     setIsOpen(false);
+    setOpenDropdown(null);
   };
 
   return (
     <div className="relative w-full text-start" dir={isRtl ? 'rtl' : 'ltr'} ref={pickerRef}>
       
-      {/* رأس الحقل مع حساب العمر وتاريخ الميلاد */}
+      {/* Label and Age */}
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-xs font-semibold text-semantic-textSecondary">
           {t('datePicker.birthDate', 'تاريخ الميلاد')}
@@ -237,9 +225,12 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* زر فتح واجهة التقويم */}
+      {/* Main Input Display */}
       <div 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setOpenDropdown(null);
+        }}
         className="flex items-center justify-between p-2.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput cursor-pointer hover:border-semantic-actionPrimary transition-all"
       >
         <div className="flex items-center gap-2">
@@ -249,12 +240,12 @@ export default function CustomDatePicker({
           </span>
         </div>
 
-        {/* زر التبديل السريع بين الهجري والميلادي */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             setCalendarMode(calendarMode === 'gregorian' ? 'hijri' : 'gregorian');
+            setOpenDropdown(null);
           }}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-semantic-surfaceCard border border-semantic-borderCard text-[11px] font-bold text-semantic-textSecondary hover:text-semantic-actionPrimary transition-colors"
         >
@@ -267,79 +258,125 @@ export default function CustomDatePicker({
         </button>
       </div>
 
-      {/* نافذة التقويم المنبثقة للضغط والاختيار */}
+      {/* Popover Card */}
       {isOpen && (
         <div className="absolute z-50 mt-2 w-full max-w-sm rounded-2xl border border-semantic-borderCard bg-semantic-surfaceCard p-4 shadow-xl backdrop-blur-md">
           
-          {/* ========================================== */}
-          {/* رأس التقويم والتنقل حسب الوضع المحدد       */}
-          {/* ========================================== */}
+          {/* Header Controls */}
           <div className="flex items-center justify-between pb-3 border-b border-semantic-borderInput gap-1">
             <button
               type="button"
-              onClick={() => calendarMode === 'gregorian' ? handleGregorianMonthOffset(-1) : handleHijriMonthOffset(-1)}
+              onClick={() => {
+                calendarMode === 'gregorian' ? handleGregorianMonthOffset(-1) : handleHijriMonthOffset(-1);
+                setOpenDropdown(null);
+              }}
               className="p-1 rounded-lg text-semantic-textSecondary hover:bg-semantic-surfaceInput hover:text-semantic-textPrimary"
             >
               {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </button>
 
-            <div className="flex items-center gap-1.5">
-              {calendarMode === 'gregorian' ? (
-                /* عناصر خيارات التبديل الميلادي */
-                <>
-                  <select
-                    value={gregorianView.month}
-                    onChange={(e) => setGregorianView({ ...gregorianView, month: parseInt(e.target.value, 10) })}
-                    className="text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2 py-1 outline-none cursor-pointer"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i} value={i}>
-                        {new Date(2026, i, 1).toLocaleDateString(cleanLang, { month: 'long' })}
-                      </option>
-                    ))}
-                  </select>
+            <div className="flex items-center gap-2 relative">
+              {/* Custom Month Dropdown Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
+                  className="flex items-center gap-1 text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2.5 py-1.5 hover:border-semantic-actionPrimary transition-colors"
+                >
+                  <span>
+                    {calendarMode === 'gregorian'
+                      ? new Date(2026, gregorianView.month, 1).toLocaleDateString(cleanLang, { month: 'long' })
+                      : t(`datePicker.hijriMonths.${hijriView.month}`, HIJRI_MONTHS_AR[hijriView.month])}
+                  </span>
+                  <ChevronDown size={14} className="text-semantic-textSecondary" />
+                </button>
 
-                  <select
-                    value={gregorianView.year}
-                    onChange={(e) => setGregorianView({ ...gregorianView, year: parseInt(e.target.value, 10) })}
-                    className="text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2 py-1 outline-none cursor-pointer"
-                  >
-                    {gregorianYearsOptions.map((y) => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </>
-              ) : (
-                /* عناصر خيارات التبديل الهجري */
-                <>
-                  <select
-                    value={hijriView.month}
-                    onChange={(e) => setHijriView({ ...hijriView, month: parseInt(e.target.value, 10) })}
-                    className="text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2 py-1 outline-none cursor-pointer"
-                  >
-                    {HIJRI_MONTHS_AR.map((mName, idx) => (
-                      <option key={idx} value={idx}>
-                        {t(`datePicker.hijriMonths.${idx}`, mName)}
-                      </option>
-                    ))}
-                  </select>
+                {openDropdown === 'month' && (
+                  <div className="absolute top-full mt-1 start-0 z-20 max-h-48 w-36 overflow-y-auto rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard py-1 shadow-lg">
+                    {calendarMode === 'gregorian'
+                      ? Array.from({ length: 12 }, (_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              setGregorianView({ ...gregorianView, month: i });
+                              setOpenDropdown(null);
+                            }}
+                            className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
+                              gregorianView.month === i
+                                ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
+                                : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                            }`}
+                          >
+                            {new Date(2026, i, 1).toLocaleDateString(cleanLang, { month: 'long' })}
+                          </button>
+                        ))
+                      : HIJRI_MONTHS_AR.map((mName, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setHijriView({ ...hijriView, month: idx });
+                              setOpenDropdown(null);
+                            }}
+                            className={`w-full text-start px-3 py-1.5 text-xs font-semibold transition-colors ${
+                              hijriView.month === idx
+                                ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
+                                : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                            }`}
+                          >
+                            {t(`datePicker.hijriMonths.${idx}`, mName)}
+                          </button>
+                        ))}
+                  </div>
+                )}
+              </div>
 
-                  <select
-                    value={hijriView.year}
-                    onChange={(e) => setHijriView({ ...hijriView, year: parseInt(e.target.value, 10) })}
-                    className="text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2 py-1 outline-none cursor-pointer"
-                  >
-                    {hijriYearsOptions.map((y) => (
-                      <option key={y} value={y}>{y}</option>
+              {/* Custom Year Dropdown Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
+                  className="flex items-center gap-1 text-xs font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderInput rounded-lg px-2.5 py-1.5 hover:border-semantic-actionPrimary transition-colors"
+                >
+                  <span>{calendarMode === 'gregorian' ? gregorianView.year : hijriView.year}</span>
+                  <ChevronDown size={14} className="text-semantic-textSecondary" />
+                </button>
+
+                {openDropdown === 'year' && (
+                  <div className="absolute top-full mt-1 end-0 z-20 max-h-48 w-28 overflow-y-auto rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard py-1 shadow-lg">
+                    {(calendarMode === 'gregorian' ? gregorianYearsOptions : hijriYearsOptions).map((y) => (
+                      <button
+                        key={y}
+                        type="button"
+                        onClick={() => {
+                          if (calendarMode === 'gregorian') {
+                            setGregorianView({ ...gregorianView, year: y });
+                          } else {
+                            setHijriView({ ...hijriView, year: y });
+                          }
+                          setOpenDropdown(null);
+                        }}
+                        className={`w-full text-center px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          (calendarMode === 'gregorian' ? gregorianView.year : hijriView.year) === y
+                            ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary'
+                            : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                        }`}
+                      >
+                        {y}
+                      </button>
                     ))}
-                  </select>
-                </>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
               type="button"
-              onClick={() => calendarMode === 'gregorian' ? handleGregorianMonthOffset(1) : handleHijriMonthOffset(1)}
+              onClick={() => {
+                calendarMode === 'gregorian' ? handleGregorianMonthOffset(1) : handleHijriMonthOffset(1);
+                setOpenDropdown(null);
+              }}
               className="p-1 rounded-lg text-semantic-textSecondary hover:bg-semantic-surfaceInput hover:text-semantic-textPrimary"
             >
               {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
@@ -347,18 +384,18 @@ export default function CustomDatePicker({
 
             <button 
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                setOpenDropdown(null);
+              }}
               className="p-1 rounded-lg text-semantic-textSecondary hover:bg-semantic-surfaceInput ms-1"
             >
               <X size={16} />
             </button>
           </div>
 
-          {/* ========================================== */}
-          {/* شبكة الأيام القابلة للضغط والاختيار         */}
-          {/* ========================================== */}
+          {/* Days Grid */}
           <div className="pt-3">
-            {/* أسماء أيام الأسبوع */}
             <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-semantic-textSecondary mb-2">
               {Array.from({ length: 7 }, (_, i) => (
                 <div key={i}>
@@ -367,7 +404,6 @@ export default function CustomDatePicker({
               ))}
             </div>
 
-            {/* عرض شبكة الأيام المخصصة بناءً على الوضع الحالي */}
             {calendarMode === 'gregorian' ? (
               <div className="grid grid-cols-7 gap-1 text-center text-xs">
                 {Array.from({ length: gregorianGrid.firstDayOfWeek }, (_, i) => (
@@ -406,7 +442,6 @@ export default function CustomDatePicker({
                 {Array.from({ length: hijriGrid.daysInMonth }, (_, i) => {
                   const day = i + 1;
 
-                  // فحص التحديد بالاعتماد على moment-hijri للتاريخ المختار
                   let isSelected = false;
                   if (parsedDate) {
                     const mSelected = moment(parsedDate);
@@ -434,9 +469,7 @@ export default function CustomDatePicker({
             )}
           </div>
 
-          {/* ========================================== */}
-          {/* أزرار الإجراءات السريعة (اليوم / إغلاق)       */}
-          {/* ========================================== */}
+          {/* Quick Actions */}
           <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-semantic-borderInput">
             <button
               type="button"
@@ -447,7 +480,10 @@ export default function CustomDatePicker({
             </button>
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                setOpenDropdown(null);
+              }}
               className="flex-1 py-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-textSecondary font-bold text-xs hover:bg-semantic-borderInput transition-colors"
             >
               {t('datePicker.close', 'إغلاق')}
