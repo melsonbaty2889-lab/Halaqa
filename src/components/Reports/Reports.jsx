@@ -226,7 +226,7 @@ export default function Reports({ students = [], academyId }) {
         </div>
       )}
 
-      {/* الهيدر وعنصر اختيار التاريخ */}
+      {/* الهيدر وعنصر اختيار التاريخ الموحد */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -239,7 +239,11 @@ export default function Reports({ students = [], academyId }) {
           </div>
         </div>
         
-        <ReportDateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+        <CustomDatePicker 
+          selectedDate={selectedDate} 
+          onChange={(newDate) => setSelectedDate(newDate)} 
+          variant="compact"
+        />
       </div>
 
       {/* بطاقات الإحصائيات والمؤشرات */}
@@ -339,7 +343,7 @@ export default function Reports({ students = [], academyId }) {
                     showToast(t('reports.phone_updated', { defaultValue: isRtl ? "تم تحديث رقم الهاتف بنجاح" : "Phone number updated" }));
                   } catch (err) {
                     console.error('Failed to update phone number:', err);
-                  } finally {
+                  } fontally {
                     setSavingPhone(false);
                   }
                 }}
