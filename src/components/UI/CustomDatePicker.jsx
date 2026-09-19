@@ -1,8 +1,15 @@
 /* src/components/UI/CustomDatePicker.jsx */
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronRight, ChevronLeft, Globe, Settings2 } from 'lucide-react';
+import { 
+  Calendar as CalendarIcon, 
+  ChevronRight, 
+  ChevronLeft, 
+  Globe, 
+  Settings2,
+  Check
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import C from '@/theme/colors';
+import C from '@/theme/styles';
 import CustomSelect from './CustomSelect';
 import { 
   HIJRI_MONTHS, 
@@ -22,12 +29,14 @@ export default function CustomDatePicker({
   showHijriToggle = true,
   showSightAdjustment = true,
   showAge = false,
+  minYear,
+  maxYear,
   className = ''
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   const cleanLang = currentLang.toLowerCase().split('-')[0];
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur', 'fa'].includes(cleanLang);
   const usesArNums = ['ar', 'ur'].includes(cleanLang);
 
   const [useHijri, setUseHijri] = useState(false);
@@ -35,13 +44,15 @@ export default function CustomDatePicker({
   const [hijriOffset, setHijriOffsetState] = useState(getSavedHijriOffset());
   const dropdownRef = useRef(null);
 
-  // تحويل التاريخ المدخل إلى كيان Date
+  // تحويل التاريخ المدخل بأمان إلى كيان Date
   const dateObj = useMemo(() => {
     if (!selectedDate) return new Date();
     if (selectedDate instanceof Date) return selectedDate;
     if (typeof selectedDate === 'string') {
-      const [year, month, day] = selectedDate.split('-').map(Number);
-      if (year && month) return new Date(year, month - 1, day || 1);
+      const parts = selectedDate.split('-').map(Number);
+      if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        return new Date(parts[0], parts[1] - 1, parts[2] || 1);
+      }
     }
     const parsed = new Date(selectedDate);
     return isNaN(parsed.getTime()) ? new Date() : parsed;
@@ -53,6 +64,7 @@ export default function CustomDatePicker({
     setViewDate(dateObj);
   }, [dateObj]);
 
+  // إغلاق النافذة المنبثقة عند النقر خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -68,6 +80,12 @@ export default function CustomDatePicker({
     setSavedHijriOffset(newOffset);
   };
 
+  const formatNum = (num) => {
+    if (num === null || num === undefined) return '';
+    if (cleanLang === 'ur') return toUrNums(num);
+    return usesArNums ? toArNums(num) : String(num);
+  };
+
   const formattedDisplayDate = useMemo(() => {
     if (!selectedDate) return '';
     try {
@@ -77,18 +95,13 @@ export default function CustomDatePicker({
       return new Intl.DateTimeFormat(currentLang, {
         weekday: 'short',
         day: 'numeric',
-        month: 'long',
+        month: 'short',
         year: 'numeric'
       }).format(dateObj);
     } catch (e) {
       return String(selectedDate);
     }
   }, [selectedDate, currentLang, useHijri, dateObj, hijriOffset]);
-
-  const formatNum = (num) => {
-    if (cleanLang === 'ur') return toUrNums(num);
-    return usesArNums ? toArNums(num) : num;
-  };
 
   const handleSelectDate = (dateStr) => {
     if (typeof onChange === 'function') {
@@ -103,7 +116,7 @@ export default function CustomDatePicker({
     handleSelectDate(str);
   };
 
-  // ألوان نظام التصميم الدلالية المعتمة الصلبة
+  // استخراج ألوان الهوية البصرية المعتمدة
   const actionPrimary = C.semantic?.actionPrimary || '#38BDF8';
   const surfaceInput = C.semantic?.surfaceInput || '#1E293B';
   const surfaceCard = C.semantic?.surfaceCard || '#0F172A';
@@ -114,18 +127,20 @@ export default function CustomDatePicker({
   const textMuted = C.semantic?.textMuted || '#64748B';
 
   const dateIsoString = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-
   const age = (showAge && dateObj) ? calculateAge(dateObj) : null;
 
+  const currentGregorianYear = new Date().getFullYear();
+  const effectiveMinYear = minYear || (currentGregorianYear - 100);
+  const effectiveMaxYear = maxYear || (currentGregorianYear + 10);
+
   // -------------------------------------------------------------
-  // النمط 3: Select Dropdowns Variant
+  // 1. نمط القوائم المنسدلة (Select Variant) - مثالك الأفضل لتاريخ الميلاد
   // -------------------------------------------------------------
   if (variant === 'select') {
     const gDay = dateObj.getDate();
     const gMonth = dateObj.getMonth();
     const gYear = dateObj.getFullYear();
 
-    const currentGregorianYear = new Date().getFullYear();
     const daysInMonth = new Date(gYear, gMonth + 1, 0).getDate();
 
     const dayOptions = Array.from({ length: daysInMonth }, (_, i) => ({
@@ -138,18 +153,18 @@ export default function CustomDatePicker({
       value: idx
     }));
 
-    const yearOptions = [
-      { label: t('datePicker.selectYearPlaceholder', 'السنة...'), value: '' },
-      ...Array.from({ length: 100 }, (_, i) => {
-        const y = currentGregorianYear - i;
+    const yearOptions = Array.from(
+      { length: effectiveMaxYear - effectiveMinYear + 1 }, 
+      (_, i) => {
+        const y = effectiveMaxYear - i;
         return { label: formatNum(y), value: y };
-      })
-    ];
+      }
+    );
 
     const handleSelectChange = (d, m, y) => {
-      const safeD = d || 1;
-      const safeM = m ?? 0;
-      const safeY = y || currentGregorianYear;
+      const safeD = Math.min(d || 1, new Date(y || gYear, (m ?? gMonth) + 1, 0).getDate());
+      const safeM = m ?? gMonth;
+      const safeY = y || gYear;
       const newD = new Date(safeY, safeM, safeD);
       const str = `${newD.getFullYear()}-${String(newD.getMonth() + 1).padStart(2, '0')}-${String(newD.getDate()).padStart(2, '0')}`;
       handleSelectDate(str);
@@ -158,23 +173,47 @@ export default function CustomDatePicker({
     return (
       <div className={`flex flex-col w-full space-y-2 text-start ${className}`} dir={isRtl ? 'rtl' : 'ltr'}>
         {showAge && age !== null && (
-          <div className="flex justify-end mb-1">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded border" style={{ color: actionPrimary, backgroundColor: surfaceInput, borderColor: borderInput }}>
-              {t('datePicker.ageFormat', `العمر: ${formatNum(age)} سنة`)}
+          <div className="flex justify-between items-center px-1">
+            <span className="text-xs text-semantic-textSecondary">
+              {t('datePicker.birthDateLabel', 'تاريخ الميلاد')}
+            </span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md border bg-semantic-surfaceInput text-semantic-actionPrimary border-semantic-borderInput">
+              {t('datePicker.ageFormat', 'العمر:')} {formatNum(age)} {t('datePicker.yearsUnit', 'سنة')}
             </span>
           </div>
         )}
-        <div className="grid grid-cols-3 gap-1.5 w-full">
-          <CustomSelect options={dayOptions} value={gDay} onChange={(v) => handleSelectChange(v, gMonth, gYear)} isArabic={isRtl} lang={cleanLang} t={t} />
-          <CustomSelect options={monthOptions} value={gMonth} onChange={(v) => handleSelectChange(gDay, v, gYear)} isArabic={isRtl} lang={cleanLang} t={t} />
-          <CustomSelect options={yearOptions} value={gYear} onChange={(v) => handleSelectChange(gDay, gMonth, v)} isArabic={isRtl} lang={cleanLang} t={t} />
+        <div className="grid grid-cols-3 gap-2 w-full">
+          <CustomSelect 
+            options={dayOptions} 
+            value={gDay} 
+            onChange={(v) => handleSelectChange(v, gMonth, gYear)} 
+            isArabic={isRtl} 
+            lang={cleanLang} 
+            t={t} 
+          />
+          <CustomSelect 
+            options={monthOptions} 
+            value={gMonth} 
+            onChange={(v) => handleSelectChange(gDay, v, gYear)} 
+            isArabic={isRtl} 
+            lang={cleanLang} 
+            t={t} 
+          />
+          <CustomSelect 
+            options={yearOptions} 
+            value={gYear} 
+            onChange={(v) => handleSelectChange(gDay, gMonth, v)} 
+            isArabic={isRtl} 
+            lang={cleanLang} 
+            t={t} 
+          />
         </div>
       </div>
     );
   }
 
   // -------------------------------------------------------------
-  // النمط 1 و 2: Grid Variant & Compact Bar Variant
+  // 2. نمط التقويم المدمج/الشبكي (Grid & Compact Variants) - للتقارير والاستخدام العادي
   // -------------------------------------------------------------
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
@@ -187,7 +226,7 @@ export default function CustomDatePicker({
 
   const weekDays = (() => {
     const days = [];
-    const refDate = new Date(2026, 7, 1);
+    const refDate = new Date(2026, 7, 1); // السبت كمرجع لبداية التقويم العربي
     const startOffset = isRtl ? 0 : 1;
     for (let i = 0; i < 7; i++) {
       const d = new Date(refDate);
@@ -197,41 +236,40 @@ export default function CustomDatePicker({
     return days;
   })();
 
-  // خيارات الأشهر والسنين للتنقل السريع
-  const nowYear = new Date().getFullYear();
   const monthSelectOptions = Array.from({ length: 12 }, (_, idx) => ({
     label: new Intl.DateTimeFormat(cleanLang, { month: 'short' }).format(new Date(2026, idx, 1)),
     value: idx
   }));
 
-  const yearSelectOptions = Array.from({ length: 90 }, (_, idx) => {
-    const y = nowYear - 70 + idx;
-    return { label: formatNum(y), value: y };
-  });
+  const yearSelectOptions = Array.from(
+    { length: effectiveMaxYear - effectiveMinYear + 1 }, 
+    (_, idx) => {
+      const y = effectiveMaxYear - idx;
+      return { label: formatNum(y), value: y };
+    }
+  );
 
   return (
     <div ref={dropdownRef} className={`relative inline-block z-40 ${className}`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* الشريط الإرشادي/الزناد (Trigger Container) */}
+      
+      {/* الزناد الرئيسي لعرض التاريخ والتفاعل (Trigger Bar) */}
       <div 
-        className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px] flex-wrap sm:flex-nowrap"
+        className="flex items-center gap-2 rounded-xl border px-3 py-2 whitespace-nowrap min-h-[44px] transition-all hover:border-semantic-borderHover"
         style={{ backgroundColor: surfaceInput, borderColor: borderInput }}
       >
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={t('reports.selectDate', 'اختر التاريخ')}
-          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0"
-          style={{ color: actionPrimary }}
+          className="flex items-center gap-2 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0 text-semantic-textPrimary focus:outline-none"
         >
-          <CalendarIcon size={16} />
-          <span style={{ color: textPrimary }}>
-            {formatNum(dateIsoString)}
-          </span>
+          <CalendarIcon size={16} className="text-semantic-actionPrimary" />
+          <span>{formatNum(dateIsoString)}</span>
         </button>
 
         <span style={{ color: textMuted }}>|</span>
 
-        <span className="text-xs font-bold" style={{ color: actionPrimary }}>
+        <span className="text-xs font-bold text-semantic-actionPrimary">
           {formattedDisplayDate}
         </span>
 
@@ -257,10 +295,10 @@ export default function CustomDatePicker({
         )}
       </div>
 
-      {/* النافذة المنبثقة للتقويم مع حل الشفافية نهائياً (Solid Background & Overlay) */}
+      {/* النافذة المنبثقة للتقويم خلفية معتمة جيدة ومنع تداخل الطبقات */}
       {isOpen && (
         <div 
-          className="absolute top-[110%] z-50 rounded-2xl p-3.5 border shadow-2xl w-72 transition-all"
+          className="absolute top-[115%] z-50 rounded-2xl p-4 border shadow-2xl w-80 transition-all text-start"
           style={{
             backgroundColor: surfaceCard,
             borderColor: borderInput,
@@ -268,20 +306,20 @@ export default function CustomDatePicker({
             [isRtl ? 'right' : 'left']: 0
           }}
         >
-          {/* اختيار الشهر والسنة السريع لسهولة اختيار التاريخ والتنقل */}
+          {/* رأس التقويم والتنقل بين الأشهر والسنوات */}
           {!useHijri ? (
-            <div className="flex items-center justify-between gap-1 mb-3">
+            <div className="flex items-center justify-between gap-1.5 mb-3">
               <button 
                 type="button" 
                 onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
                 aria-label={t('common.prevMonth', 'الشهر السابق')}
-                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[30px] min-h-[30px]"
+                className="p-1.5 rounded-lg border cursor-pointer flex items-center justify-center transition-all hover:bg-semantic-surfaceInput"
                 style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
               >
                 {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
 
-              <div className="flex items-center gap-1 flex-1 px-1">
+              <div className="flex items-center gap-1.5 flex-1">
                 <div className="w-1/2">
                   <CustomSelect
                     options={monthSelectOptions}
@@ -308,7 +346,7 @@ export default function CustomDatePicker({
                 type="button" 
                 onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
                 aria-label={t('common.nextMonth', 'الشهر التالي')}
-                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[30px] min-h-[30px]"
+                className="p-1.5 rounded-lg border cursor-pointer flex items-center justify-center transition-all hover:bg-semantic-surfaceInput"
                 style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
               >
                 {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -320,13 +358,13 @@ export default function CustomDatePicker({
                 type="button" 
                 onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} 
                 aria-label={t('common.prevMonth', 'الشهر السابق')}
-                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+                className="p-1.5 rounded-lg border cursor-pointer flex items-center justify-center transition-all hover:bg-semantic-surfaceInput"
                 style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
               >
                 {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
 
-              <span className="text-xs font-bold" style={{ color: textPrimary }}>
+              <span className="text-xs font-bold text-semantic-textPrimary">
                 {(() => {
                   const { month, year } = getHijriParts(viewDate, hijriOffset);
                   const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.ar;
@@ -340,7 +378,7 @@ export default function CustomDatePicker({
                 type="button" 
                 onClick={() => setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} 
                 aria-label={t('common.nextMonth', 'الشهر التالي')}
-                className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+                className="p-1.5 rounded-lg border cursor-pointer flex items-center justify-center transition-all hover:bg-semantic-surfaceInput"
                 style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
               >
                 {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -349,15 +387,15 @@ export default function CustomDatePicker({
           )}
 
           {/* أيام الأسبوع */}
-          <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
+          <div className="grid grid-cols-7 gap-1 text-center mb-2">
             {weekDays.map((d, i) => (
-              <span key={i} className="text-[10px] font-semibold" style={{ color: textSecondary }}>
+              <span key={i} className="text-[11px] font-bold text-semantic-textSecondary">
                 {d}
               </span>
             ))}
           </div>
 
-          {/* شبكة الأيام مع وضوح الأرقام وسهولة النقر */}
+          {/* شبكة الأيام */}
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -376,11 +414,10 @@ export default function CustomDatePicker({
                   key={dayNum}
                   type="button"
                   onClick={() => handleSelectDate(dateStr)}
-                  className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold hover:opacity-90 active:scale-95"
+                  className="py-2 text-xs rounded-lg border-0 cursor-pointer transition-all font-bold flex items-center justify-center hover:bg-semantic-actionPrimary/20 active:scale-95"
                   style={{
                     backgroundColor: isSelected ? actionPrimary : surfaceInput,
                     color: isSelected ? bgPage : textPrimary,
-                    fontWeight: isSelected ? '800' : '600'
                   }}
                 >
                   {displayNum}
@@ -389,10 +426,10 @@ export default function CustomDatePicker({
             })}
           </div>
 
-          {/* تعديل رؤية الهلال للهجري */}
+          {/* تعديل رؤية الهلال للتقويم الهجري */}
           {useHijri && showSightAdjustment && (
-            <div className="mt-2.5 pt-2 border-t flex items-center justify-between" style={{ borderColor: borderInput }}>
-              <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: textSecondary }}>
+            <div className="mt-3 pt-2 border-t border-semantic-borderInput flex items-center justify-between">
+              <span className="text-[10px] flex items-center gap-1 font-medium text-semantic-textSecondary">
                 <Settings2 size={12} /> {t('reports.sightAdjustment', 'تعديل الرؤية:')}
               </span>
               <div className="flex gap-1">
@@ -401,7 +438,7 @@ export default function CustomDatePicker({
                     key={offset}
                     type="button"
                     onClick={() => handleOffsetChange(offset)}
-                    className="px-1.5 py-0.5 text-[10px] rounded border-0 cursor-pointer font-bold"
+                    className="px-2 py-0.5 text-[10px] rounded-md border-0 cursor-pointer font-bold transition-all"
                     style={{
                       backgroundColor: hijriOffset === offset ? actionPrimary : surfaceInput,
                       color: hijriOffset === offset ? bgPage : textSecondary
@@ -414,12 +451,12 @@ export default function CustomDatePicker({
             </div>
           )}
 
-          {/* أزرار اختيار "اليوم" والإغلاق */}
-          <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t" style={{ borderColor: borderInput }}>
+          {/* أزرار الإجراءات السريعة (اليوم / إغلاق) */}
+          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-semantic-borderInput">
             <button
               type="button"
               onClick={handleSelectToday}
-              className="py-1.5 text-xs font-bold rounded-lg border-0 cursor-pointer transition-all"
+              className="py-2 text-xs font-bold rounded-xl border-0 cursor-pointer transition-all hover:bg-semantic-actionPrimary/20"
               style={{
                 backgroundColor: surfaceInput,
                 color: actionPrimary
@@ -432,7 +469,7 @@ export default function CustomDatePicker({
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label={t('common.close', 'إغلاق')}
-              className="py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all"
+              className="py-2 text-xs font-bold rounded-xl border-0 cursor-pointer transition-all hover:bg-semantic-borderInput/80"
               style={{
                 backgroundColor: borderInput,
                 color: textPrimary
