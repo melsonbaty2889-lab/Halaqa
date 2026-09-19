@@ -13,6 +13,7 @@ import EmptyState from '@/components/UI/EmptyState';
 import CustomSelect from '@/components/UI/CustomSelect';
 import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
@@ -240,7 +241,21 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 7. حالات النوافذ المنبثقة */}
+        {/* 7. تجربة محول اللغة (LanguageSwitcher) */}
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Globe size={18} /> {t('devPlayground.languageSwitcherTitle', 'تجربة محول اللغة (LanguageSwitcher)')}
+          </h3>
+          
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-semantic-textSecondary">
+              {t('devPlayground.selectLanguageLabel', 'اختر لغة الواجهة:')}
+            </span>
+            <LanguageSwitcher />
+          </div>
+        </section>
+
+        {/* 8. حالات النوافذ المنبثقة */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
