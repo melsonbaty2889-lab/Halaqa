@@ -1,9 +1,10 @@
 /* src/components/UI/AppBrand.jsx */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import { C } from '@/theme/colors';
 
-// أسماء المنصة الموحدة لجميع اللغات المعتمدة
+// أسماء المنصة الموحدة لكل لغة
 const BRAND_NAMES = {
   ar: 'الحلقة الذكية',
   ur: 'اسمارٹ حلقہ',
@@ -16,13 +17,19 @@ const BRAND_NAMES = {
 export default function AppBrand({ 
   className = '', 
   subtitle,
-  lang = 'ar',
-  t = (key, fallback) => fallback 
+  lang,
+  t: customT
 }) {
-  // الحصول على كود اللغة النظيف
-  const currentLang = (lang || 'ar').toLowerCase().split('-')[0];
+  const { i18n, t: i18nT } = useTranslation();
 
-  // تحديد اسم البراند برمجياً بناءً على اللغة الحالية
+  // تحديد دالة الترجمة ولغة النظام تلقائياً من i18n إن لم تُمرر
+  const t = customT || i18nT;
+  const activeLang = lang || i18n?.language || 'ar';
+
+  // تنظيف كود اللغة (مثل 'en-US' -> 'en')
+  const currentLang = activeLang.toLowerCase().split('-')[0];
+
+  // تحديد اسم البراند برمجياً مع التراجع إلى القيمة الافتراضية
   const brandName = BRAND_NAMES[currentLang] || t('common.appName', 'Smart Halaqa');
 
   return (
@@ -40,7 +47,7 @@ export default function AppBrand({
         </div>
       </div>
 
-      {/* اسم المنصة */}
+      {/* اسم المنصة المتغير ديناميكياً بحسب اللغة */}
       <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 text-semantic-textPrimary">
         {brandName}
       </h2>
