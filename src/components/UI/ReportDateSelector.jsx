@@ -17,6 +17,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
   
   const cleanLang = currentLang.toLowerCase().split('-')[0];
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : ['ar', 'ur'].includes(cleanLang);
+  const usesArNums = ['ar', 'ur'].includes(cleanLang);
 
   const [useHijri, setUseHijri] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -81,79 +82,90 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
       const monthsList = HIJRI_MONTHS[cleanLang] || HIJRI_MONTHS.en;
       const monthName = monthsList[month] || monthsList[0];
       const suffix = isRtl ? 'هـ' : 'AH';
-      const yearFormatted = isRtl ? toArNums(year) : year;
+      const yearFormatted = usesArNums ? toArNums(year) : year;
       return `${monthName} ${yearFormatted} ${suffix}`;
     }
     return new Intl.DateTimeFormat(currentLang, { month: 'long', year: 'numeric' }).format(viewDate);
-  }, [viewDate, useHijri, cleanLang, isRtl, currentLang, hijriOffset]);
+  }, [viewDate, useHijri, cleanLang, isRtl, usesArNums, currentLang, hijriOffset]);
 
   const currentYear = viewDate.getFullYear();
   const currentMonth = viewDate.getMonth();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+
+  const firstDayOfWeek = useMemo(() => {
+    const day = new Date(currentYear, currentMonth, 1).getDay();
+    return isRtl ? (day + 1) % 7 : day;
+  }, [currentYear, currentMonth, isRtl]);
 
   const weekDays = useMemo(() => {
     const days = [];
-    const refDate = new Date(2026, 7, 2);
+    const refDate = new Date(2026, 7, 1);
+    const startOffset = isRtl ? 0 : 1;
+
     for (let i = 0; i < 7; i++) {
       const d = new Date(refDate);
-      d.setDate(refDate.getDate() + i);
+      d.setDate(refDate.getDate() + startOffset + i);
       days.push(new Intl.DateTimeFormat(currentLang, { weekday: 'narrow' }).format(d));
     }
     return days;
-  }, [currentLang]);
+  }, [currentLang, isRtl]);
 
-  const primaryColor = C.amber?.DEFAULT || C.primary?.DEFAULT || '#38BDF8';
-  const surfaceBg = C.dark?.surface || '#1E293B';
-  const borderCol = C.dark?.borderInput || C.inputs?.border || '#334155';
-  const mainBg = C.dark?.bg || '#0F172A';
-  const titleColor = C.text?.title || '#F8FAFC';
-  const subColor = C.text?.sub || C.text?.muted || '#94A3B8';
+  // الربط التام بطبقة الألوان الدلالية من دليل نظام التصميم
+  const actionPrimary = C.semantic?.actionPrimary || 'var(--color-action-primary)';
+  const surfaceInput = C.semantic?.surfaceInput || 'var(--color-surface-input)';
+  const surfaceCard = C.semantic?.surfaceCard || 'var(--color-surface-card)';
+  const bgPage = C.semantic?.bgPage || 'var(--color-bg-page)';
+  const borderInput = C.semantic?.borderInput || 'var(--color-border-input)';
+  const textPrimary = C.semantic?.textPrimary || 'var(--color-text-primary)';
+  const textSecondary = C.semantic?.textSecondary || 'var(--color-text-secondary)';
+  const textMuted = C.semantic?.textMuted || 'var(--color-text-muted)';
+
+  const formatNum = (num) => (usesArNums ? toArNums(num) : num);
 
   return (
     <div ref={dropdownRef} className="relative inline-block" dir={isRtl ? 'rtl' : 'ltr'}>
       <div 
         className="flex items-center gap-2 rounded-xl border px-3 py-1.5 whitespace-nowrap min-h-[44px]"
         style={{
-          backgroundColor: surfaceBg,
-          borderColor: borderCol
+          backgroundColor: surfaceInput,
+          borderColor: borderInput
         }}
       >
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={t('reports.selectDate', 'اختر التاريخ')}
+          aria-label={t('reports.selectDate', 'Select Date')}
           className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer text-xs font-semibold p-0"
-          style={{ color: primaryColor }}
+          style={{ color: actionPrimary }}
         >
           <CalendarIcon size={16} />
-          <span style={{ color: titleColor }}>
-            {isRtl ? toArNums(selectedDate) : selectedDate}
+          <span style={{ color: textPrimary }}>
+            {formatNum(selectedDate)}
           </span>
         </button>
 
-        <span style={{ color: C.text?.muted || '#475569' }}>|</span>
+        <span style={{ color: textMuted }}>|</span>
 
-        <span className="text-xs font-bold" style={{ color: primaryColor }}>
+        <span className="text-xs font-bold" style={{ color: actionPrimary }}>
           {formattedDisplayDate}
         </span>
 
         <button
           type="button"
           onClick={() => setUseHijri(!useHijri)}
-          aria-label={t('reports.toggleCalendarType', 'تبديل التقويم')}
+          aria-label={t('reports.toggleCalendarType', 'Toggle Calendar')}
           className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold cursor-pointer border transition-all"
           style={{
-            backgroundColor: useHijri ? `${primaryColor}20` : mainBg,
-            color: useHijri ? primaryColor : subColor,
-            borderColor: useHijri ? primaryColor : borderCol
+            backgroundColor: useHijri ? 'var(--primary-glow)' : bgPage,
+            color: useHijri ? actionPrimary : textSecondary,
+            borderColor: useHijri ? actionPrimary : borderInput
           }}
         >
           <Globe size={12} />
           <span>
             {useHijri 
-              ? t('common.hijri', isRtl ? 'هجري' : 'Hijri') 
-              : t('common.gregorian', isRtl ? 'ميلادي' : 'Gregorian')}
+              ? t('common.hijri', 'Hijri') 
+              : t('common.gregorian', 'Gregorian')}
           </span>
         </button>
       </div>
@@ -162,8 +174,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
         <div 
           className="absolute top-[110%] z-50 rounded-2xl p-3 border shadow-2xl w-64 transition-all"
           style={{
-            backgroundColor: mainBg,
-            borderColor: borderCol,
+            backgroundColor: surfaceCard,
+            borderColor: borderInput,
             [isRtl ? 'right' : 'left']: 0
           }}
         >
@@ -171,21 +183,21 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
             <button 
               type="button" 
               onClick={handlePrevMonth} 
-              aria-label={t('common.prevMonth', 'الشهر السابق')}
+              aria-label={t('common.prevMonth', 'Previous Month')}
               className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
-              style={{ backgroundColor: surfaceBg, borderColor: borderCol, color: titleColor }}
+              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
             >
               {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
-            <span className="text-xs font-bold" style={{ color: titleColor }}>
+            <span className="text-xs font-bold" style={{ color: textPrimary }}>
               {headerTitle}
             </span>
             <button 
               type="button" 
               onClick={handleNextMonth} 
-              aria-label={t('common.nextMonth', 'الشهر التالي')}
+              aria-label={t('common.nextMonth', 'Next Month')}
               className="p-1 rounded-lg border cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
-              style={{ backgroundColor: surfaceBg, borderColor: borderCol, color: titleColor }}
+              style={{ backgroundColor: surfaceInput, borderColor: borderInput, color: textPrimary }}
             >
               {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
@@ -193,7 +205,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
 
           <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
             {weekDays.map((d, i) => (
-              <span key={i} className="text-[10px] font-semibold" style={{ color: subColor }}>
+              <span key={i} className="text-[10px] font-semibold" style={{ color: textSecondary }}>
                 {d}
               </span>
             ))}
@@ -210,7 +222,7 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
               
               const dayObj = new Date(currentYear, currentMonth, dayNum);
               const rawDisplayNum = useHijri ? getHijriParts(dayObj, hijriOffset).day : dayNum;
-              const displayNum = isRtl ? toArNums(rawDisplayNum) : rawDisplayNum;
+              const displayNum = formatNum(rawDisplayNum);
 
               return (
                 <button
@@ -219,8 +231,8 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
                   onClick={() => { setSelectedDate(dateStr); setIsOpen(false); }}
                   className="py-1.5 text-xs rounded-md border-0 cursor-pointer transition-all font-semibold"
                   style={{
-                    backgroundColor: isSelected ? primaryColor : surfaceBg,
-                    color: isSelected ? mainBg : titleColor,
+                    backgroundColor: isSelected ? actionPrimary : surfaceInput,
+                    color: isSelected ? bgPage : textPrimary,
                     fontWeight: isSelected ? '800' : '500'
                   }}
                 >
@@ -233,10 +245,10 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           {useHijri && (
             <div 
               className="mt-2.5 pt-2 border-t flex items-center justify-between"
-              style={{ borderColor: surfaceBg }}
+              style={{ borderColor: borderInput }}
             >
-              <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: subColor }}>
-                <Settings2 size={12} /> {t('reports.sightAdjustment', isRtl ? 'تعديل الرؤية:' : 'Sight Adjustment:')}
+              <span className="text-[10px] flex items-center gap-1 font-medium" style={{ color: textSecondary }}>
+                <Settings2 size={12} /> {t('reports.sightAdjustment', 'Sight Adjustment:')}
               </span>
               <div className="flex gap-1">
                 {[-1, 0, 1].map((offset) => (
@@ -246,11 +258,11 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
                     onClick={() => handleOffsetChange(offset)}
                     className="px-1.5 py-0.5 text-[10px] rounded border-0 cursor-pointer font-bold"
                     style={{
-                      backgroundColor: hijriOffset === offset ? primaryColor : surfaceBg,
-                      color: hijriOffset === offset ? mainBg : subColor
+                      backgroundColor: hijriOffset === offset ? actionPrimary : surfaceInput,
+                      color: hijriOffset === offset ? bgPage : textSecondary
                     }}
                   >
-                    {offset > 0 ? (isRtl ? `+${toArNums(offset)}` : `+${offset}`) : (isRtl ? toArNums(offset) : offset)}
+                    {offset > 0 ? `+${formatNum(offset)}` : formatNum(offset)}
                   </button>
                 ))}
               </div>
@@ -260,14 +272,14 @@ export default function ReportDateSelector({ selectedDate, setSelectedDate }) {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            aria-label={t('common.close', 'إغلاق')}
+            aria-label={t('common.close', 'Close')}
             className="w-full mt-2.5 py-1.5 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all min-h-[36px]"
             style={{
-              backgroundColor: borderCol,
-              color: titleColor
+              backgroundColor: borderInput,
+              color: textPrimary
             }}
           >
-            {t('common.close', isRtl ? 'إغلاق' : 'Close')}
+            {t('common.close', 'Close')}
           </button>
         </div>
       )}
