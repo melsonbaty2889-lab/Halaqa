@@ -147,8 +147,8 @@ const AddStudentModal = ({
     onChange={handleDateChange}
     lang={isRtl ? 'ar' : 'en'}
     showAge={true}
-    disableFuture={true} // هذا هو السطر المطلوب لمنع التواريخ المستقبلية
-    label={t('students.birth_date', 'تاريخ الميلاد')}
+    disableFuture={true}
+    placeholder={t('students.ph_birth_date', 'اختر تاريخ الميلاد...')}
     t={t}
   />
 </div>
