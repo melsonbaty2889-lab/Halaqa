@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import moment from 'moment-hijri';
 
-// أسماء الأشهر الهجرية الافتراضية
 const HIJRI_MONTHS_AR = [
   'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
   'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
@@ -25,33 +24,36 @@ export default function CustomDatePicker({
 
   const [calendarMode, setCalendarMode] = useState('gregorian'); // 'gregorian' | 'hijri'
   const [isOpen, setIsOpen] = useState(false);
-
-  // حالة التحكم القوائم المنسدلة المخصصة
   const [openDropdown, setOpenDropdown] = useState(null); // 'month' | 'year' | null
 
   const pickerRef = useRef(null);
 
   // ==========================================
-  // 1. معالجة وتفسير التاريخ المدخل (Parsing)
+  // 1. Parsing التاريخ الخارجي بدون Timezone Shift
   // ==========================================
   const parsedDate = useMemo(() => {
     if (!activeDateValue) return null;
-    let d;
+    let d = null;
     if (typeof activeDateValue === 'string') {
-      const dateParts = activeDateValue.split('T')[0].split('-');
-      if (dateParts.length === 3) {
-        d = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+      const cleanStr = activeDateValue.split('T')[0];
+      const parts = cleanStr.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        d = new Date(y, m, day, 12, 0, 0);
       } else {
         d = new Date(activeDateValue);
       }
-    } else {
-      d = new Date(activeDateValue);
+    } else if (activeDateValue instanceof Date) {
+      d = new Date(activeDateValue.getTime());
     }
-    return isNaN(d.getTime()) ? null : d;
+
+    return (d && !isNaN(d.getTime())) ? d : null;
   }, [activeDateValue]);
 
   // ==========================================
-  // 2. إعداد حالة العرض الداخلي للتقويم (State)
+  // 2. إعداد حالات العرض والمزامنة
   // ==========================================
   const [gregorianView, setGregorianView] = useState(() => {
     const base = parsedDate || new Date();
@@ -59,12 +61,13 @@ export default function CustomDatePicker({
   });
 
   const [hijriView, setHijriView] = useState(() => {
-    const m = moment(parsedDate || new Date());
-    // التأكد من النطاق المسموح به لمكتبة moment-hijri
+    const base = parsedDate || new Date();
+    const m = moment(base);
     const hYear = Math.max(1356, Math.min(1500, m.iYear()));
     return { year: hYear, month: m.iMonth() };
   });
 
+  // مزامنة حالة العرض عند تغيير التاريخ الخارجي
   useEffect(() => {
     const base = parsedDate || new Date();
     setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
@@ -74,6 +77,20 @@ export default function CustomDatePicker({
     setHijriView({ year: hYear, month: m.iMonth() });
   }, [parsedDate]);
 
+  // مزامنة العرض عند تحويل calendarMode للنمط الحالي للتاريخ المخزن
+  useEffect(() => {
+    if (!isOpen) return;
+    const base = parsedDate || new Date();
+    if (calendarMode === 'gregorian') {
+      setGregorianView({ year: base.getFullYear(), month: base.getMonth() });
+    } else {
+      const m = moment(base);
+      const hYear = Math.max(1356, Math.min(1500, m.iYear()));
+      setHijriView({ year: hYear, month: m.iMonth() });
+    }
+  }, [calendarMode, isOpen, parsedDate]);
+
+  // إغلاق النافذة القادمة عند الضغط خارج المكون
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -86,7 +103,7 @@ export default function CustomDatePicker({
   }, []);
 
   // ==========================================
-  // 3. حساب العمر بدقة
+  // 3. حساب العمر
   // ==========================================
   const computedAge = useMemo(() => {
     if (!parsedDate) return null;
@@ -100,7 +117,7 @@ export default function CustomDatePicker({
   }, [parsedDate]);
 
   // ==========================================
-  // 4. تنسيقات نصوص العرض
+  // 4. تنسيق التاريخ المعروض
   // ==========================================
   const formattedDisplayDate = useMemo(() => {
     if (!parsedDate) return null;
@@ -117,10 +134,10 @@ export default function CustomDatePicker({
       const day = String(parsedDate.getDate()).padStart(2, '0');
       return `${year}/${month}/${day}`;
     }
-  }, [parsedDate, calendarMode, cleanLang, t]);
+  }, [parsedDate, calendarMode, t]);
 
   // ==========================================
-  // 5. التنقل والتحويلات
+  // 5. التنقل والتعديلات لعرض التقويم
   // ==========================================
   const handleGregorianMonthOffset = (offset) => {
     setGregorianView((prev) => {
@@ -135,13 +152,6 @@ export default function CustomDatePicker({
       }
       return { year: newYear, month: newMonth };
     });
-  };
-
-  const handleGregorianDaySelect = (day) => {
-    const selected = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
-    onChange(selected);
-    setIsOpen(false);
-    setOpenDropdown(null);
   };
 
   const handleHijriMonthOffset = (offset) => {
@@ -159,6 +169,15 @@ export default function CustomDatePicker({
     });
   };
 
+  // اختيار يوم ميلادي
+  const handleGregorianDaySelect = (day) => {
+    const selected = new Date(gregorianView.year, gregorianView.month, day, 12, 0, 0);
+    onChange(selected);
+    setIsOpen(false);
+    setOpenDropdown(null);
+  };
+
+  // اختيار يوم هجري وتمرير Gregorian Date صالح
   const handleHijriDaySelect = (hDay) => {
     try {
       const m = moment(`${hijriView.year}/${hijriView.month + 1}/${hDay}`, 'iYYYY/iM/iD');
@@ -168,7 +187,7 @@ export default function CustomDatePicker({
         onChange(safeGregorianDate);
       }
     } catch (e) {
-      console.error('Error selecting hijri day:', e);
+      console.error('Error parsing hijri date:', e);
     }
     setIsOpen(false);
     setOpenDropdown(null);
@@ -186,12 +205,8 @@ export default function CustomDatePicker({
   const hijriGrid = useMemo(() => {
     try {
       const startOfMonth = moment(`${hijriView.year}/${hijriView.month + 1}/1`, 'iYYYY/iM/iD');
-      const calculatedDays = moment.iDaysInMonth(hijriView.year, hijriView.month);
-      
-      // حماية في حال إرجاع NaN أو قيمة غير صالحة من المكتبة للسنوات البعيدة
-      const daysInMonth = (calculatedDays && !isNaN(calculatedDays) && calculatedDays > 0) ? calculatedDays : 29;
+      const daysInMonth = startOfMonth.isValid() ? startOfMonth.iDaysInMonth() : 29;
       const firstDayOfWeek = startOfMonth.isValid() ? startOfMonth.day() : 0;
-
       return { daysInMonth, firstDayOfWeek };
     } catch (e) {
       return { daysInMonth: 29, firstDayOfWeek: 0 };
@@ -199,7 +214,7 @@ export default function CustomDatePicker({
   }, [hijriView]);
 
   // ==========================================
-  // 7. قوائم خيارات السنوات
+  // 7. خيارات السنوات (1356 - 1500)
   // ==========================================
   const gregorianYearsOptions = useMemo(() => {
     const currentY = new Date().getFullYear();
@@ -210,12 +225,9 @@ export default function CustomDatePicker({
     return years;
   }, []);
 
-  // حصر نطاق السنوات الهجرية بالسنوات المدعومة رسمياً من moment-hijri (1356 - 1500)
   const hijriYearsOptions = useMemo(() => {
-    const maxHY = 1500;
-    const minHY = 1356;
     const years = [];
-    for (let y = maxHY; y >= minHY; y--) {
+    for (let y = 1500; y >= 1356; y--) {
       years.push(y);
     }
     return years;
@@ -295,7 +307,7 @@ export default function CustomDatePicker({
             </button>
 
             <div className="flex items-center gap-2 relative">
-              {/* Custom Month Dropdown Button */}
+              {/* Custom Month Dropdown */}
               <div className="relative">
                 <button
                   type="button"
@@ -351,7 +363,7 @@ export default function CustomDatePicker({
                 )}
               </div>
 
-              {/* Custom Year Dropdown Button */}
+              {/* Custom Year Dropdown */}
               <div className="relative">
                 <button
                   type="button"
