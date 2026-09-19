@@ -16,6 +16,7 @@ import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
 import SelectModal from '@/components/UI/SelectModal';
+import { Skeleton, CardSkeleton, PageSkeleton } from '@/components/UI/Skeleton';
 import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 export default function DevPlayground({ 
@@ -548,6 +549,44 @@ const modalOptions = [
             </p>
           </div>
         </section>
+
+        {/* 13. تجربة الهيكل العظمي (Skeleton Loading) */}
+        <section className={`${UI.card} space-y-4 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Layout size={18} /> {t('devPlayground.skeletonTitle', 'تجربة تحميل الهيكل العظمي (Skeleton)')}
+          </h3>
+
+          {/* عناصر مفردة */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-semantic-textSecondary">
+              {t('devPlayground.skeletonBasic', 'عناصر تحميل منفصلة:')}
+            </p>
+            <div className="flex items-center gap-3">
+              <Skeleton width="48px" height="48px" borderRadius="50%" />
+              <div className="space-y-2 flex-1">
+                <Skeleton width="60%" height="16px" />
+                <Skeleton width="40%" height="12px" />
+              </div>
+            </div>
+          </div>
+
+          {/* بطاقة إحصائية */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-semantic-textSecondary">
+              {t('devPlayground.skeletonCard', 'بطاقة إحصائية (CardSkeleton):')}
+            </p>
+            <CardSkeleton />
+          </div>
+
+          {/* هيكل كامل للصفحة */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-semantic-textSecondary">
+              {t('devPlayground.skeletonPage', 'هيكل كامل للصفحة (PageSkeleton):')}
+            </p>
+            <PageSkeleton />
+          </div>
+        </section>
+      
       
            <SelectModal
         isOpen={isSelectModalOpen}
