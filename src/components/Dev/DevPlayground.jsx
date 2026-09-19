@@ -15,6 +15,7 @@ import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
+import SelectModal from '@/components/UI/SelectModal';
 import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 export default function DevPlayground({ 
@@ -115,6 +116,19 @@ export default function DevPlayground({
   const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
   const computedAge = calculateAge(converterDateObj);
 
+// حالة تجربة النافذة المنسدلة SelectModal
+const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+const [selectedModalValue, setSelectedModalValue] = useState('student_1');
+
+const modalOptions = [
+  { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
+  { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
+  { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
+  { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
+  { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
+  { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
+];
+  
   return (
     <div 
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
@@ -511,6 +525,30 @@ export default function DevPlayground({
 
       </div>
 
+        {/* 12. تجربة النافذة المنسدلة الاختيارية (SelectModal) */}
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <ListFilter size={18} /> {t('devPlayground.selectModalTitle', 'تجربة النافذة المنسدلة (SelectModal)')}
+          </h3>
+          
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setIsSelectModalOpen(true)}
+              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-between transition-all cursor-pointer hover:border-semantic-actionPrimary"
+            >
+              <span>{t('devPlayground.openSelectModal', 'فتح نافذة الاختيار')}</span>
+              <span className="text-semantic-actionPrimary">
+                {modalOptions.find(o => o.value === selectedModalValue)?.label || 'اختر...'}
+              </span>
+            </button>
+
+            <p className="text-[11px] text-semantic-textSecondary">
+              {t('devPlayground.selectedModalValue', 'القيمة المختارة حالياً:')} <strong className="text-semantic-textPrimary">{selectedModalValue}</strong>
+            </p>
+          </div>
+        </section>
+      
       <ConfirmModal
         isOpen={modalConfig.isOpen}
         variant={modalConfig.variant}
