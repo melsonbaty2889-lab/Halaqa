@@ -1,7 +1,7 @@
 import React, { useState, useEffect, forwardRef, useId, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-// دمرج واستخراج متغيرات الثيم المعيارية طبقاً لـ DESIGN_SYSTEM.md
+// استخراج متغيرات الثيم المعيارية طبقاً لـ DESIGN_SYSTEM.md
 const getPrimary = () => 'var(--color-action-primary)';
 const getSurface = () => 'var(--color-surface-input)';
 const getCardBg = () => 'var(--color-surface-card)';
@@ -70,7 +70,7 @@ const Btn = forwardRef(({
   style = {}, 
   disabled = false, 
   loading = false,
-  isLoading = false, // دعم الاسم المترادف لمنع كسر الأكواد
+  isLoading = false,
   startIcon = null,
   endIcon = null,
   type = "button", 
@@ -90,6 +90,7 @@ const Btn = forwardRef(({
     lg: { padding: "12px 24px", minHeight: "52px", fontSize: "1rem" }
   };
 
+  // الأنماط المعيارية الشاملة
   const styles = {
     primary: { 
       background: "linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%)", 
@@ -97,10 +98,21 @@ const Btn = forwardRef(({
       fontWeight: "bold", 
       boxShadow: "0 4px 14px var(--color-action-primary-glow)" 
     },
+    emerald: { 
+      background: "var(--color-success)", 
+      color: "var(--color-text-primary)", 
+      fontWeight: "bold",
+      boxShadow: "0 4px 14px color-mix(in srgb, var(--color-success) 25%, transparent)"
+    },
     secondary: { 
       background: "color-mix(in srgb, var(--color-action-primary) 12%, transparent)", 
       color: "var(--color-action-primary)", 
       border: "1px solid color-mix(in srgb, var(--color-action-primary) 25%, transparent)" 
+    },
+    outline: { 
+      background: "transparent", 
+      color: "var(--color-text-primary)", 
+      border: "1px solid var(--color-border-input)" 
     },
     ghost: { 
       background: "var(--color-surface-input)", 
@@ -122,6 +134,11 @@ const Btn = forwardRef(({
       background: "var(--color-danger)", 
       color: "var(--color-text-primary)", 
       fontWeight: "bold" 
+    },
+    google: {
+      background: "var(--color-surface-secondary)",
+      color: "var(--color-text-primary)",
+      border: "1px solid var(--color-border-input)"
     }
   };
 
@@ -155,7 +172,7 @@ const Btn = forwardRef(({
         transition: "all 0.2s ease-in-out",
         boxSizing: "border-box",
         ...currentSize,
-        ...styles[variant],
+        ...(styles[variant] || styles.primary),
         ...hoverStyle,
         ...style
       }}
