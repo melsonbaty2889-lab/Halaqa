@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, CheckCircle2, AlertCircle, Loader2, Trash2, RefreshCw } from 'lucide-react';
-import CustomSelect from '@/components/UI/CustomSelect';
+import Select from '@/components/UI/Select';
 
 const DOCUMENT_TYPES = [
   'id_card',
