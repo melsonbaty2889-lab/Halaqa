@@ -1,5 +1,5 @@
 import React from 'react';
-import { Btn } from './UI';
+import Btn from './Btn';
 
 export default function LoadingButton({ 
   children, 
