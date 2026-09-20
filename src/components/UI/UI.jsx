@@ -1,18 +1,15 @@
 import React, { useState, useEffect, forwardRef, useId, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import C, { C as C_named } from "@/theme/colors";
 
-// استخراج الهوية وثيم الألوان المعياري بدقة
-const Theme = C || C_named || {};
-
-const getPrimary = () => 'var(--primary)';
-const getSurface = () => 'var(--surface-input)';
-const getCardBg = () => 'var(--surface-card)';
-const getBorder = () => 'var(--border-input)';
-const getTextTitle = () => 'var(--text-main)';
-const getTextSub = () => 'var(--text-sub)';
-const getDanger = () => 'var(--error)';
-const getSuccess = () => 'var(--emerald-text)';
+// دمرج واستخراج متغيرات الثيم المعيارية طبقاً لـ DESIGN_SYSTEM.md
+const getPrimary = () => 'var(--color-action-primary)';
+const getSurface = () => 'var(--color-surface-input)';
+const getCardBg = () => 'var(--color-surface-card)';
+const getBorder = () => 'var(--color-border-input)';
+const getTextTitle = () => 'var(--color-text-primary)';
+const getTextSub = () => 'var(--color-text-secondary)';
+const getDanger = () => 'var(--color-danger)';
+const getSuccess = () => 'var(--color-success)';
 
 // مؤشر التحميل القياسي الداخلي
 const Spinner = ({ size = 18 }) => (
@@ -48,9 +45,9 @@ const Badge = forwardRef(({ children, color, className = "", style = {}, ...prop
         borderRadius: 20, 
         fontSize: "0.75rem", 
         fontWeight: 700, 
-        background: `rgba(224, 122, 0, 0.12)`, 
+        background: `color-mix(in srgb, ${badgeColor} 12%, transparent)`, 
         color: badgeColor, 
-        border: `1px solid rgba(224, 122, 0, 0.25)`, 
+        border: `1px solid color-mix(in srgb, ${badgeColor} 25%, transparent)`, 
         whiteSpace: "nowrap",
         fontFamily: "inherit",
         ...style 
@@ -81,16 +78,42 @@ const Btn = forwardRef(({
   const [isHovered, setIsHovered] = useState(false);
 
   const styles = {
-    primary: { background: "linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%)", color: "var(--text-main)", fontWeight: "bold", boxShadow: "0 4px 14px var(--primary-glow)" },
-    secondary: { background: "rgba(224, 122, 0, 0.12)", color: "var(--primary)", border: "1px solid rgba(224, 122, 0, 0.25)" },
-    ghost: { background: "var(--surface-input)", color: "var(--text-main)", border: "1px solid var(--border-input)" },
-    danger: { background: "rgba(239, 68, 68, 0.12)", color: "var(--error)", border: "1px solid rgba(239, 68, 68, 0.25)" },
-    success: { background: "var(--emerald-dark)", color: "var(--text-main)", fontWeight: "bold" },
-    failed: { background: "var(--error)", color: "var(--text-main)", fontWeight: "bold" }
+    primary: { 
+      background: "linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%)", 
+      color: "var(--color-text-primary)", 
+      fontWeight: "bold", 
+      boxShadow: "0 4px 14px var(--color-action-primary-glow)" 
+    },
+    secondary: { 
+      background: "color-mix(in srgb, var(--color-action-primary) 12%, transparent)", 
+      color: "var(--color-action-primary)", 
+      border: "1px solid color-mix(in srgb, var(--color-action-primary) 25%, transparent)" 
+    },
+    ghost: { 
+      background: "var(--color-surface-input)", 
+      color: "var(--color-text-primary)", 
+      border: "1px solid var(--color-border-input)" 
+    },
+    danger: { 
+      background: "var(--color-danger-bg)", 
+      color: "var(--color-danger)", 
+      border: "1px solid color-mix(in srgb, var(--color-danger) 25%, transparent)" 
+    },
+    success: { 
+      background: "var(--color-success-bg)", 
+      color: "var(--color-success)", 
+      border: "1px solid var(--color-success-border)",
+      fontWeight: "bold" 
+    },
+    failed: { 
+      background: "var(--color-danger)", 
+      color: "var(--color-text-primary)", 
+      fontWeight: "bold" 
+    }
   };
 
   const isDisabled = disabled || loading;
-  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", transform: "translateY(-1px)" } : {};
+  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", translateY: "-1px" } : {};
 
   return (
     <button
@@ -145,7 +168,7 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       padding: 20, 
       width: "100%", 
       boxSizing: "border-box", 
-      boxShadow: "var(--shadow-main)",
+      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
       color: getTextTitle(),
       textAlign: "start",
       backdropFilter: "blur(16px)",
@@ -222,7 +245,7 @@ const Input = forwardRef(({
     outline: "none", 
     boxSizing: "border-box",
     textAlign: "start",
-    boxShadow: isFocused ? `0 0 0 3px ${errorText ? 'rgba(239, 68, 68, 0.2)' : 'var(--primary-glow)'}` : "none",
+    boxShadow: isFocused ? `0 0 0 3px ${errorText ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-action-primary-glow)'}` : "none",
     transition: "all 0.2s ease",
     colorScheme: "dark",
     ...style
@@ -361,7 +384,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           alignItems: "center",
           cursor: "pointer",
           boxSizing: "border-box",
-          boxShadow: isOpen ? `0 0 0 3px var(--primary-glow)` : "none",
+          boxShadow: isOpen ? `0 0 0 3px var(--color-action-primary-glow)` : "none",
           transition: "all 0.2s ease",
           ...style
         }}
@@ -382,7 +405,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               top: coords.top,
               left: coords.left,
               width: coords.width,
-              background: getSurface(),
+              background: getCardBg(),
               border: `1px solid ${getBorder()}`,
               borderRadius: 12,
               padding: "6px 0",
@@ -391,7 +414,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               zIndex: 9999,
               maxHeight: 220,
               overflowY: "auto",
-              boxShadow: "var(--shadow-main)",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(12px)"
             }}
           >
@@ -410,7 +433,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
                   minHeight: "44px",
                   fontSize: "0.875rem",
                   color: value === o.value ? getPrimary() : getTextTitle(),
-                  background: value === o.value ? "rgba(224, 122, 0, 0.12)" : "transparent",
+                  background: value === o.value ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent",
                   cursor: "pointer",
                   textAlign: "start",
                   fontWeight: value === o.value ? 700 : 400,
@@ -466,7 +489,7 @@ const Modal = ({ open, onClose, title, children, className = "", style = {} }) =
           maxHeight: "85vh", 
           overflowY: "auto", 
           boxSizing: "border-box", 
-          boxShadow: "var(--shadow-main)",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
           textAlign: "start",
           color: getTextTitle(),
           ...style 
