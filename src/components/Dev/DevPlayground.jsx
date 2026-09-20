@@ -153,7 +153,6 @@ const showToast = (message, type = 'info') => {
     message,
     type
   });
-};
 
   return (
     <div 
