@@ -60,14 +60,17 @@ const Badge = forwardRef(({ children, color, className = "", style = {}, ...prop
 });
 Badge.displayName = 'Badge';
 
-// 2. الزر الاحترافي (Btn / Button)
+// 2. الزر الاحترافي الموحد (Btn / Button)
 const Btn = forwardRef(({ 
   children, 
   onClick, 
   variant = "primary", 
+  size = "md",
+  fullWidth = false,
   style = {}, 
   disabled = false, 
   loading = false,
+  isLoading = false, // دعم الاسم المترادف لمنع كسر الأكواد
   startIcon = null,
   endIcon = null,
   type = "button", 
@@ -76,6 +79,16 @@ const Btn = forwardRef(({
   ...props 
 }, ref) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const isBtnLoading = loading || isLoading;
+  const isDisabled = disabled || isBtnLoading;
+
+  // الأحجام الموحدة
+  const sizeStyles = {
+    sm: { padding: "6px 12px", minHeight: "36px", fontSize: "0.75rem" },
+    md: { padding: "10px 18px", minHeight: "44px", fontSize: "0.875rem" },
+    lg: { padding: "12px 24px", minHeight: "52px", fontSize: "1rem" }
+  };
 
   const styles = {
     primary: { 
@@ -112,8 +125,8 @@ const Btn = forwardRef(({
     }
   };
 
-  const isDisabled = disabled || loading;
-  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", translateY: "-1px" } : {};
+  const currentSize = sizeStyles[size] || sizeStyles.md;
+  const hoverStyle = isHovered && !isDisabled ? { filter: "brightness(1.12)", transform: "translateY(-1px)" } : {};
 
   return (
     <button
@@ -121,8 +134,9 @@ const Btn = forwardRef(({
       type={type}
       onClick={onClick}
       disabled={isDisabled}
+      aria-busy={isBtnLoading}
       aria-disabled={isDisabled}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`ui-button ${className}`}
@@ -131,26 +145,25 @@ const Btn = forwardRef(({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        padding: "10px 18px",
-        minHeight: "44px",
+        width: fullWidth ? "100%" : "auto",
         borderRadius: 12,
         border: "none",
         cursor: isDisabled ? "not-allowed" : "pointer",
         fontFamily: "inherit",
-        fontSize: "0.875rem",
         fontWeight: 600,
-        opacity: isDisabled ? 0.5 : 1,
+        opacity: isDisabled ? 0.65 : 1,
         transition: "all 0.2s ease-in-out",
         boxSizing: "border-box",
+        ...currentSize,
         ...styles[variant],
         ...hoverStyle,
         ...style
       }}
       {...props}
     >
-      {loading ? <Spinner size={18} /> : startIcon}
+      {isBtnLoading ? <Spinner size={18} /> : startIcon}
       {children}
-      {!loading && endIcon}
+      {!isBtnLoading && endIcon}
     </button>
   );
 });
