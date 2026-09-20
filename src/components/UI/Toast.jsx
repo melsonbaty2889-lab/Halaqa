@@ -1,3 +1,4 @@
+/* src/components/UI/Toast.jsx */
 import React, { useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
@@ -13,19 +14,19 @@ export default function Toast({ isOpen, message, type = 'info', onClose, duratio
 
   if (!isOpen) return null;
 
-  // أنماط الألوان متكاملة للخلفية والحدود والنصوص
+  // أنماط الألوان الدلالية المعتمدة
   const typeStyles = {
-    success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
-    error: 'bg-red-950/95 border-red-500/50 text-red-200',
-    warning: 'bg-amber-950/95 border-amber-500/50 text-amber-200',
-    info: 'bg-slate-900/95 border-amber-500/40 text-slate-200',
+    success: 'bg-semantic-surfaceCard border-semantic-success/40 text-semantic-textPrimary',
+    error: 'bg-semantic-surfaceCard border-semantic-error/40 text-semantic-textPrimary',
+    warning: 'bg-semantic-surfaceCard border-semantic-warning/40 text-semantic-textPrimary',
+    info: 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-textPrimary',
   };
 
   const icons = {
-    success: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />,
-    error: <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />,
-    warning: <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />,
-    info: <Info className="w-5 h-5 text-amber-400 shrink-0" />,
+    success: <CheckCircle2 className="w-5 h-5 text-semantic-success shrink-0" />,
+    error: <AlertCircle className="w-5 h-5 text-semantic-error shrink-0" />,
+    warning: <AlertCircle className="w-5 h-5 text-semantic-warning shrink-0" />,
+    info: <Info className="w-5 h-5 text-semantic-actionPrimary shrink-0" />,
   };
 
   const currentStyle = typeStyles[type] || typeStyles.info;
@@ -39,14 +40,14 @@ export default function Toast({ isOpen, message, type = 'info', onClose, duratio
       <div className="flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
         <div className="flex items-center gap-2.5 min-w-0">
           {currentIcon}
-          <span className="leading-snug break-words truncate">{message}</span>
+          <span className="leading-snug break-words">{message}</span>
         </div>
 
         <button 
           type="button"
           onClick={onClose} 
-          className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer"
-          aria-label="Close"
+          className="p-1.5 hover:bg-semantic-surfaceInput rounded-xl text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors shrink-0 cursor-pointer active:scale-95"
+          aria-label="إغلاق"
         >
           <X className="w-4 h-4" />
         </button>
