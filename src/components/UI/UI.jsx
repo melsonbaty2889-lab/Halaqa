@@ -330,17 +330,40 @@ const Input = forwardRef(({
 });
 Input.displayName = 'Input';
 
-// 5. قائمة الاختيارات المخصصة (Select عبر React Portal)
-const Select = forwardRef(({ label, value, onChange, options = [], className = "", style = {}, id: customId, ...props }, ref) => {
+// 5. قائمة الاختيارات المخصصة الذكية (Select)
+const Select = forwardRef(({ 
+  label, 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "اختر...", 
+  searchPlaceholder = "بحث...", 
+  noOptionsMessage = "لا توجد خيارات متاحة", 
+  errorText = "", 
+  searchable = false, 
+  disabled = false, 
+  className = "", 
+  style = {}, 
+  id: customId, 
+  ...props 
+}, ref) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef(null);
   const autoId = useId();
   const selectId = customId || autoId;
 
-  const selectedOption = options.find(o => o.value === value) || options[0];
+  const safeValue = value !== undefined && value !== null ? String(value) : '';
+  const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
+
+  const filteredOptions = options.filter(opt => {
+    if (!searchable || !searchTerm.trim()) return true;
+    return String(opt?.label || '').toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleToggle = useCallback(() => {
+    if (disabled) return;
     if (!isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setCoords({
@@ -349,8 +372,9 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         width: rect.width
       });
     }
+    setSearchTerm('');
     setIsOpen(prev => !prev);
-  }, [isOpen]);
+  }, [isOpen, disabled]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -359,12 +383,20 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [isOpen]);
 
+  const handleOptionSelect = (optionValue) => {
+    if (typeof onChange === 'function') {
+      onChange({ target: { value: optionValue } });
+    }
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
   return (
     <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box", position: "relative" }}>
       {label && (
         <label 
           htmlFor={selectId}
-          style={{ fontSize: "0.8rem", color: getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
+          style={{ fontSize: "0.8rem", color: errorText ? getDanger() : getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
         >
           {label}
         </label>
@@ -378,6 +410,7 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
         }}
         id={selectId}
         type="button"
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={handleToggle}
@@ -386,33 +419,38 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
           width: "100%",
           minHeight: "44px",
           background: getSurface(),
-          border: isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`,
+          border: errorText ? `1px solid ${getDanger()}` : (isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`),
           borderRadius: 10,
           padding: "12px 14px",
-          color: getTextTitle(),
+          color: selectedOption ? getTextTitle() : getTextSub(),
           fontFamily: "inherit",
           fontSize: "0.875rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          cursor: "pointer",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
           boxSizing: "border-box",
-          boxShadow: isOpen ? `0 0 0 3px var(--color-action-primary-glow)` : "none",
+          boxShadow: isOpen ? `0 0 0 3px ${errorText ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-action-primary-glow)'}` : "none",
           transition: "all 0.2s ease",
           ...style
         }}
         {...props}
       >
-        <span>{selectedOption?.label || "اختر..."}</span>
-        <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: getPrimary() }}>▼</span>
+        <span>{selectedOption?.label || placeholder}</span>
+        <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: isOpen ? getPrimary() : getTextSub() }}>▼</span>
       </button>
+
+      {errorText && (
+        <span role="alert" style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: getDanger() }}>
+          {errorText}
+        </span>
+      )}
 
       {isOpen && typeof window !== 'undefined' && createPortal(
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 9998 }} onClick={() => setIsOpen(false)} />
-          <ul
-            role="listbox"
-            aria-activedescendant={value}
+          <div
             style={{
               position: "fixed",
               top: coords.top,
@@ -422,45 +460,82 @@ const Select = forwardRef(({ label, value, onChange, options = [], className = "
               border: `1px solid ${getBorder()}`,
               borderRadius: 12,
               padding: "6px 0",
-              margin: 0,
-              listStyle: "none",
               zIndex: 9999,
-              maxHeight: 220,
-              overflowY: "auto",
+              maxHeight: 260,
+              display: "flex",
+              flexDirection: "column",
               boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(12px)"
             }}
           >
-            {options.map(o => (
-              <li
-                key={o.value}
-                id={o.value}
-                role="option"
-                aria-selected={value === o.value}
-                onClick={() => {
-                  onChange({ target: { value: o.value } });
-                  setIsOpen(false);
-                }}
-                style={{
-                  padding: "10px 14px",
-                  minHeight: "44px",
-                  fontSize: "0.875rem",
-                  color: value === o.value ? getPrimary() : getTextTitle(),
-                  background: value === o.value ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent",
-                  cursor: "pointer",
-                  textAlign: "start",
-                  fontWeight: value === o.value ? 700 : 400,
-                  transition: "background 0.15s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between"
-                }}
-              >
-                <span>{o.label}</span>
-                {value === o.value && <span style={{ color: getPrimary(), fontSize: "0.8rem" }}>✓</span>}
-              </li>
-            ))}
-          </ul>
+            {searchable && (
+              <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
+                <input
+                  type="text"
+                  placeholder={searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "6px 10px",
+                    fontSize: "0.8rem",
+                    borderRadius: 6,
+                    border: `1px solid ${getBorder()}`,
+                    background: getSurface(),
+                    color: getTextTitle(),
+                    outline: "none"
+                  }}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            <ul
+              role="listbox"
+              style={{
+                margin: 0,
+                padding: "4px 0",
+                listStyle: "none",
+                overflowY: "auto",
+                maxHeight: 200
+              }}
+            >
+              {filteredOptions.length === 0 ? (
+                <li style={{ padding: "12px 14px", fontSize: "0.8rem", color: getTextSub(), textAlign: "center" }}>
+                  {noOptionsMessage}
+                </li>
+              ) : (
+                filteredOptions.map(o => {
+                  const isSelected = String(o.value) === safeValue;
+                  return (
+                    <li
+                      key={o.value}
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => handleOptionSelect(o.value)}
+                      style={{
+                        padding: "10px 14px",
+                        minHeight: "40px",
+                        fontSize: "0.875rem",
+                        color: isSelected ? getPrimary() : getTextTitle(),
+                        background: isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent",
+                        cursor: "pointer",
+                        textAlign: "start",
+                        fontWeight: isSelected ? 700 : 400,
+                        transition: "background 0.15s ease",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                      }}
+                    >
+                      <span>{o.label}</span>
+                      {isSelected && <span style={{ color: getPrimary(), fontSize: "0.8rem" }}>✓</span>}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
         </>,
         document.body
       )}
