@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import CustomSelect from '@/components/UI/CustomSelect.jsx';
+import Select from '@/components/UI/Select.jsx';
 import { RIWAYAT_LIST } from '@/constants/riwayat.js';
 
 export default function QuranicPoliciesTab({ formData = {}, updateField }) {
