@@ -18,11 +18,13 @@ export const Select = forwardRef(({
   searchPlaceholder = "بحث...", 
   noOptionsMessage = "لا توجد خيارات متاحة", 
   errorText = "", 
+  error = null,
   searchable = false, 
   disabled = false, 
   className = "", 
   style = {}, 
-  id: customId, 
+  id: customId,
+  t = (key, fallback) => fallback,
   ...props 
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +34,7 @@ export const Select = forwardRef(({
   const triggerRef = useRef(null);
   const autoId = useId();
   const selectId = customId || autoId;
+  const displayError = errorText || error;
 
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
@@ -58,7 +61,7 @@ export const Select = forwardRef(({
 
   const handleOptionSelect = (optionValue) => {
     if (typeof onChange === 'function') {
-      onChange({ target: { value: optionValue } });
+      onChange(optionValue);
     }
     setIsOpen(false);
     setSearchTerm('');
@@ -111,7 +114,7 @@ export const Select = forwardRef(({
       {label && (
         <label 
           htmlFor={selectId}
-          style={{ fontSize: "0.8rem", color: errorText ? getDanger() : getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
+          style={{ fontSize: "0.8rem", color: displayError ? getDanger() : getPrimary(), marginBottom: 6, display: "block", fontWeight: 600, textAlign: "start" }}
         >
           {label}
         </label>
@@ -135,7 +138,7 @@ export const Select = forwardRef(({
           width: "100%",
           minHeight: "44px",
           background: getSurface(),
-          border: errorText ? `1px solid ${getDanger()}` : (isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`),
+          border: displayError ? `1px solid ${getDanger()}` : (isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`),
           borderRadius: 10,
           padding: "12px 14px",
           color: selectedOption ? getTextTitle() : getTextSub(),
@@ -147,19 +150,19 @@ export const Select = forwardRef(({
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
           boxSizing: "border-box",
-          boxShadow: isOpen ? `0 0 0 3px ${errorText ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-action-primary-glow)'}` : "none",
+          boxShadow: isOpen ? `0 0 0 3px ${displayError ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-action-primary-glow)'}` : "none",
           transition: "all 0.2s ease",
           ...style
         }}
         {...props}
       >
-        <span>{selectedOption?.label || placeholder}</span>
+        <span>{selectedOption?.label || placeholder || t('common.select', 'اختر...')}</span>
         <span style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", fontSize: "0.7rem", color: isOpen ? getPrimary() : getTextSub() }}>▼</span>
       </button>
 
-      {errorText && (
+      {displayError && (
         <span role="alert" style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: getDanger() }}>
-          {errorText}
+          {displayError}
         </span>
       )}
 
@@ -188,7 +191,7 @@ export const Select = forwardRef(({
               <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
                 <input
                   type="text"
-                  placeholder={searchPlaceholder}
+                  placeholder={searchPlaceholder || t('common.search', 'بحث...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -219,7 +222,7 @@ export const Select = forwardRef(({
             >
               {filteredOptions.length === 0 ? (
                 <li style={{ padding: "12px 14px", fontSize: "0.8rem", color: getTextSub(), textAlign: "center" }}>
-                  {noOptionsMessage}
+                  {noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة')}
                 </li>
               ) : (
                 filteredOptions.map((o, idx) => {
