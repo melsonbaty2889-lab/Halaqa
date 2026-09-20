@@ -7,21 +7,27 @@ import {
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
-import Toast from '@/components/UI/Toast';
-import { TermsModal } from '@/components/UI/TermsModal';
-import ConfirmModal from '@/components/UI/ConfirmModal';
-import CountrySelect from '@/components/UI/CountrySelect';
-import CustomDatePicker from '@/components/UI/CustomDatePicker';
-import EmptyState from '@/components/UI/EmptyState';
-import CustomSelect from '@/components/UI/CustomSelect';
-import AppBrand from '@/components/UI/AppBrand';
-import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
-import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
-import LoadingButton from '@/components/UI/LoadingButton';
-import Select from '@/components/UI/Select';
-import { Skeleton, CardSkeleton, PageSkeleton } from '@/components/UI/Skeleton';
-import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
-import SplashScreen from '@/components/UI/SplashScreen';
+import {
+  Toast,
+  TermsModal,
+  ConfirmModal,
+  CountrySelect,
+  CustomDatePicker,
+  EmptyState,
+  CustomSelect,
+  AppBrand,
+  PrimaryButton,
+  GoogleButton,
+  LanguageSwitcher,
+  LoadingButton,
+  Select,
+  Skeleton,
+  CardSkeleton,
+  PageSkeleton,
+  SmartHalaqaProLogo,
+  SplashScreen
+} from '@/components/UI';
+
 import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 
 export default function DevPlayground({ 
@@ -45,8 +51,7 @@ export default function DevPlayground({
   const [btnLoading, setBtnLoading] = useState(false);
   const [loadingBtnState, setLoadingBtnState] = useState(false);
 
-  // حالات النوافذ المنبثقة
-  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  // حالة اختيار القائمة المنسدلة (المحتواة بداخل المكون Select القياسي)
   const [selectedModalValue, setSelectedModalValue] = useState('student_1');
 
   const [modalConfig, setModalConfig] = useState({
@@ -590,23 +595,21 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 13. النافذة المنسدلة الاختيارية (SelectModal) */}
+        {/* 13. القائمة المنسدلة القياسية (Select) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
-            <ListFilter size={18} /> {t('devPlayground.selectModalTitle', 'تجربة النافذة المنسدلة (SelectModal)')}
+            <ListFilter size={18} /> {t('devPlayground.selectModalTitle', 'تجربة القائمة المنسدلة القياسية (Select)')}
           </h3>
           
           <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => setIsSelectModalOpen(true)}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-between transition-all cursor-pointer hover:border-semantic-actionPrimary"
-            >
-              <span>{t('devPlayground.openSelectModal', 'فتح نافذة الاختيار')}</span>
-              <span className="text-semantic-actionPrimary">
-                {modalOptions.find(o => o.value === selectedModalValue)?.label || 'اختر...'}
-              </span>
-            </button>
+            <Select
+              label={t('devPlayground.selectModalHeader', 'اختر الطالب من القائمة')}
+              options={modalOptions}
+              value={selectedModalValue}
+              onChange={(val) => setSelectedModalValue(val)}
+              title={t('devPlayground.selectModalHeader', 'اختر الطالب من القائمة')}
+              t={t}
+            />
 
             <p className="text-[11px] text-semantic-textSecondary">
               {t('devPlayground.selectedModalValue', 'القيمة المختارة حالياً:')} <strong className="text-semantic-textPrimary">{selectedModalValue}</strong>
@@ -699,13 +702,13 @@ export default function DevPlayground({
             </button>
 
             <button
-           type="button"
-           onClick={() => showToast('تحذير: يرجى التحقق من البيانات المدخلة.', 'warning')}
-           className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-warning/30 bg-semantic-warning/10 text-semantic-warning flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-warning/20 active:scale-95"
-           >
-           <AlertTriangle size={15} />
-           <span>{t('devPlayground.toastWarning', 'تحذير')}</span>
-          </button>
+              type="button"
+              onClick={() => showToast('تحذير: يرجى التحقق من البيانات المدخلة.', 'warning')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-warning/30 bg-semantic-warning/10 text-semantic-warning flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-warning/20 active:scale-95"
+            >
+              <AlertTriangle size={15} />
+              <span>{t('devPlayground.toastWarning', 'تحذير')}</span>
+            </button>
 
             <button
               type="button"
@@ -719,16 +722,6 @@ export default function DevPlayground({
         </section>
         
       </div>
-
-      {/* المكونات المنبثقة */}
-      <SelectModal
-        isOpen={isSelectModalOpen}
-        onClose={() => setIsSelectModalOpen(false)}
-        title={t('devPlayground.selectModalHeader', 'اختر الطالب من القائمة')}
-        options={modalOptions}
-        selectedValue={selectedModalValue}
-        onSelect={(val) => setSelectedModalValue(val)}
-      />
 
       {/* التنبيه العائم للمعاينة */}
       <Toast
