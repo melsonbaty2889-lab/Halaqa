@@ -3,7 +3,6 @@ import ReactDom from 'react-dom';
 import { useFloating, autoUpdate, offset, shift } from '@floating-ui/react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
-import C from '@/theme/colors';
 
 export default function CountrySelect({
   value,
@@ -20,12 +19,12 @@ export default function CountrySelect({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
-  const cardBg = C?.dark?.surface || '#1E293B';
-  const inputBg = C?.dark?.bg || '#0F172A';
-  const borderCol = C?.dark?.borderInput || C?.inputs?.border || '#334155';
-  const titleColor = C?.text?.title || '#F8FAFC';
-  const subColor = C?.text?.sub || C?.text?.muted || '#94A3B8';
-  const primaryColor = C?.amber?.DEFAULT || C?.primary?.DEFAULT || '#38BDF8';
+  const cardBg = 'var(--color-surface-card)';
+  const inputBg = 'var(--color-surface-input)';
+  const borderCol = 'var(--color-border-input)';
+  const titleColor = 'var(--color-text-primary)';
+  const subColor = 'var(--color-text-secondary)';
+  const primaryColor = 'var(--color-action-primary)';
 
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
@@ -76,7 +75,6 @@ export default function CountrySelect({
 
   const defaultPlaceholder = placeholder || t('countrySelect.placeholder', 'اختر الدولة...');
 
-  // تحديد دالة جلب اسم الدولة حسب اللغة
   const getCountryName = (c) => {
     if (cleanLang === 'ar') return c.nameAr || c.nameEn;
     if (cleanLang === 'fr') return c.nameFr || c.nameEn || c.nameAr;
@@ -116,7 +114,7 @@ export default function CountrySelect({
             </span>
           </span>
         ) : (
-          <span className="truncate" style={{ color: `${subColor}A0` }}>
+          <span className="truncate" style={{ color: subColor }}>
             {defaultPlaceholder}
           </span>
         )}
@@ -205,7 +203,7 @@ export default function CountrySelect({
                       }}
                       className="w-full text-start px-2.5 py-2 text-xs rounded-lg flex items-center justify-between transition-colors cursor-pointer min-h-[36px]"
                       style={{
-                        backgroundColor: isSelected ? `${primaryColor}20` : 'transparent',
+                        backgroundColor: isSelected ? 'color-mix(in srgb, var(--color-action-primary) 20%, transparent)' : 'transparent',
                         color: isSelected ? primaryColor : titleColor,
                         fontWeight: isSelected ? '600' : '400'
                       }}
