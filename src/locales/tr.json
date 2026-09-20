@@ -1117,7 +1117,11 @@
     "name": "Öğretmen"
   },
   "termsModal": {
+    "acceptBtn": "موافقة ومتابعة",
+    "agreeCheckbox": "قرأت جميع الشروط وأوافق على الالتزام بها",
     "close": "Kapat",
+    "headerSubtitle": "يرجى قراءة الشروط والسياسات بعناية",
+    "headerTitle": "اتفاقية الاستخدام والخصوصية",
     "privacyRule1": "1. Tüm veriler gizliliğinizi korumak için SSL ile şifrelenir.",
     "privacyRule2": "2. Kişisel verilerinizi reklam amacıyla üçüncü taraflarla paylaşmayız.",
     "privacyRule3": "3. E-postanızı yalnızca hesabınızla ilgili bildirimler için kullanırız.",

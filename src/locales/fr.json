@@ -1117,7 +1117,11 @@
     "name": "Enseignant"
   },
   "termsModal": {
+    "acceptBtn": "موافقة ومتابعة",
+    "agreeCheckbox": "قرأت جميع الشروط وأوافق على الالتزام بها",
     "close": "Fermer",
+    "headerSubtitle": "يرجى قراءة الشروط والسياسات بعناية",
+    "headerTitle": "اتفاقية الاستخدام والخصوصية",
     "privacyRule1": "1. Toutes les données sont cryptées par protocole SSL.",
     "privacyRule2": "2. Nous ne partageons pas vos données à des fins publicitaires.",
     "privacyRule3": "3. Votre e-mail est utilisé uniquement pour la communication liée à votre compte.",

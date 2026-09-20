@@ -1117,7 +1117,11 @@
     "name": "Pengajar"
   },
   "termsModal": {
+    "acceptBtn": "موافقة ومتابعة",
+    "agreeCheckbox": "قرأت جميع الشروط وأوافق على الالتزام بها",
     "close": "Tutup",
+    "headerSubtitle": "يرجى قراءة الشروط والسياسات بعناية",
+    "headerTitle": "اتفاقية الاستخدام والخصوصية",
     "privacyRule1": "1. Semua data dienkripsi menggunakan standar SSL untuk melindungi privasi Anda.",
     "privacyRule2": "2. Kami tidak membagikan atau menjual data pribadi Anda kepada pihak ketiga untuk tujuan iklan.",
     "privacyRule3": "3. Kami menggunakan email Anda hanya untuk komunikasi dan pemberitahuan terkait akun Anda.",

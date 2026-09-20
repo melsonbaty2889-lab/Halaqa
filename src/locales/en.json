@@ -1117,7 +1117,11 @@
     "name": "Teacher"
   },
   "termsModal": {
+    "acceptBtn": "موافقة ومتابعة",
+    "agreeCheckbox": "قرأت جميع الشروط وأوافق على الالتزام بها",
     "close": "Close",
+    "headerSubtitle": "يرجى قراءة الشروط والسياسات بعناية",
+    "headerTitle": "اتفاقية الاستخدام والخصوصية",
     "privacyRule1": "1. All data is encrypted using SSL standards to protect your privacy.",
     "privacyRule2": "2. We do not share or sell your personal data to third parties for advertising purposes.",
     "privacyRule3": "3. We use your email strictly for communications and notifications regarding your account.",
