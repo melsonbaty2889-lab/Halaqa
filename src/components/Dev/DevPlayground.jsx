@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   CheckCircle, AlertTriangle, Trash2, HelpCircle, 
   ShieldAlert, MessageSquare, Globe, Calendar, FolderSearch, Plus, ListFilter, Sparkles, KeyRound, RefreshCw,
-  Layout, Bookmark, Play
+  Layout, Bookmark, Play, Bell, CheckCircle2, AlertCircle, Info
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
@@ -137,22 +137,23 @@ export default function DevPlayground({
   const computedAge = calculateAge(converterDateObj);
 
   const [termsModalConfig, setTermsModalConfig] = useState({
-  isOpen: false,
-  contentType: 'terms'
-});
+    isOpen: false,
+    contentType: 'terms'
+  });
 
   const [toastConfig, setToastConfig] = useState({
-  isOpen: false,
-  message: '',
-  type: 'info'
-});
-
-const showToast = (message, type = 'info') => {
-  setToastConfig({
-    isOpen: true,
-    message,
-    type
+    isOpen: false,
+    message: '',
+    type: 'info'
   });
+
+  const showToast = (message, type = 'info') => {
+    setToastConfig({
+      isOpen: true,
+      message,
+      type
+    });
+  };
 
   return (
     <div 
@@ -613,7 +614,7 @@ const showToast = (message, type = 'info') => {
           </div>
         </section>
 
-                {/* تجربة نافذة الشروط وسياسة الخصوصية (TermsModal) */}
+        {/* تجربة نافذة الشروط وسياسة الخصوصية (TermsModal) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <ShieldAlert size={18} /> {t('devPlayground.termsModalTitle', 'تجربة الشروط وسياسة الخصوصية (TermsModal)')}
