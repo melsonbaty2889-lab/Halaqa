@@ -1,10 +1,16 @@
 /* src/components/UI/Toast.jsx */
 import React, { useEffect } from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
-export default function Toast({ isOpen, message, type = 'info', onClose, duration = 4000 }) {
+export default function Toast({ 
+  isOpen, 
+  message, 
+  type = 'info', 
+  onClose, 
+  duration = 4000 
+}) {
   useEffect(() => {
-    if (isOpen && duration > 0) {
+    if (isOpen && duration) {
       const timer = setTimeout(() => {
         onClose();
       }, duration);
@@ -14,42 +20,53 @@ export default function Toast({ isOpen, message, type = 'info', onClose, duratio
 
   if (!isOpen) return null;
 
-  // أنماط الألوان الدلالية المعتمدة
-  const typeStyles = {
-    success: 'bg-semantic-surfaceCard border-semantic-success/40 text-semantic-textPrimary',
-    error: 'bg-semantic-surfaceCard border-semantic-error/40 text-semantic-textPrimary',
-    warning: 'bg-semantic-surfaceCard border-semantic-warning/40 text-semantic-textPrimary',
-    info: 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-textPrimary',
+  // تحديد الأيقونة والتنسيق حسب نوع التنبيه
+  const config = {
+    success: {
+      icon: CheckCircle2,
+      style: 'bg-semantic-success/15 border-semantic-success/40 text-semantic-success',
+      iconColor: 'text-semantic-success'
+    },
+    error: {
+      icon: AlertCircle,
+      style: 'bg-semantic-error/15 border-semantic-error/40 text-semantic-error',
+      iconColor: 'text-semantic-error'
+    },
+    warning: {
+      icon: AlertTriangle,
+      style: 'bg-semantic-warning/15 border-semantic-warning/40 text-semantic-warning',
+      iconColor: 'text-semantic-warning'
+    },
+    info: {
+      icon: Info,
+      style: 'bg-semantic-surfaceInput border-semantic-borderInput text-semantic-textPrimary',
+      iconColor: 'text-semantic-actionPrimary'
+    }
+  }[type] || {
+    icon: Info,
+    style: 'bg-semantic-surfaceInput border-semantic-borderInput text-semantic-textPrimary',
+    iconColor: 'text-semantic-actionPrimary'
   };
 
-  const icons = {
-    success: <CheckCircle2 className="w-5 h-5 text-semantic-success shrink-0" />,
-    error: <AlertCircle className="w-5 h-5 text-semantic-error shrink-0" />,
-    warning: <AlertCircle className="w-5 h-5 text-semantic-warning shrink-0" />,
-    info: <Info className="w-5 h-5 text-semantic-actionPrimary shrink-0" />,
-  };
-
-  const currentStyle = typeStyles[type] || typeStyles.info;
-  const currentIcon = icons[type] || icons.info;
+  const IconComponent = config.icon;
 
   return (
-    <div 
-      dir="auto"
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] w-[90%] max-w-md p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${currentStyle}`}
-    >
-      <div className="flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
+    <div className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-4 duration-200">
+      <div className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border backdrop-blur-md shadow-lg ${config.style}`}>
         <div className="flex items-center gap-2.5 min-w-0">
-          {currentIcon}
-          <span className="leading-snug break-words">{message}</span>
+          <IconComponent size={20} className={`shrink-0 ${config.iconColor}`} />
+          <p className="text-xs font-semibold leading-relaxed truncate">
+            {message}
+          </p>
         </div>
 
-        <button 
+        <button
           type="button"
-          onClick={onClose} 
-          className="p-1.5 hover:bg-semantic-surfaceInput rounded-xl text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors shrink-0 cursor-pointer active:scale-95"
+          onClick={onClose}
+          className="p-1 rounded-lg opacity-70 hover:opacity-100 transition-opacity shrink-0 cursor-pointer"
           aria-label="إغلاق"
         >
-          <X className="w-4 h-4" />
+          <X size={16} />
         </button>
       </div>
     </div>
