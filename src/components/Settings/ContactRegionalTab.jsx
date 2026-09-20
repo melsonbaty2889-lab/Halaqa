@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CustomSelect from '@/components/UI/CustomSelect.jsx';
+import Select from '@/components/UI/Select.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
 
