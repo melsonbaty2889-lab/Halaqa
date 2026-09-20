@@ -54,6 +54,18 @@ export const Select = forwardRef(({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // قفل تمرير الصفحة الخلفية عند فتح القائمة المنبثقة
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return options;
     const query = searchTerm.toLowerCase().trim();
@@ -244,7 +256,10 @@ export const Select = forwardRef(({
               )}
 
               {/* قائمة الخيارات */}
-              <div className="overflow-y-auto p-2 space-y-1 max-h-[50vh]">
+              <div 
+                className="overflow-y-auto p-2 space-y-1 max-h-[50vh]"
+                style={{ overscrollBehavior: 'contain' }}
+              >
                 {filteredOptions.length === 0 ? (
                   <div className="p-6 text-center text-xs text-semantic-textSecondary">
                     {noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة')}
@@ -340,7 +355,8 @@ export const Select = forwardRef(({
                   padding: "4px 0",
                   listStyle: "none",
                   overflowY: "auto",
-                  maxHeight: 220
+                  maxHeight: 220,
+                  overscrollBehavior: 'contain'
                 }}
               >
                 {filteredOptions.length === 0 ? (
