@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
+import Toast from '@/components/UI/Toast';
 import { TermsModal } from '@/components/UI/TermsModal';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
@@ -139,7 +140,21 @@ export default function DevPlayground({
   isOpen: false,
   contentType: 'terms'
 });
-  
+
+  const [toastConfig, setToastConfig] = useState({
+  isOpen: false,
+  message: '',
+  type: 'info'
+});
+
+const showToast = (message, type = 'info') => {
+  setToastConfig({
+    isOpen: true,
+    message,
+    type
+  });
+};
+
   return (
     <div 
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
@@ -658,6 +673,51 @@ export default function DevPlayground({
           </div>
         </section>
 
+        {/* تجربة التنبيه العائم (Toast) */}
+        <section className={`${UI.card} space-y-3 text-start`}>
+          <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <Bell size={18} /> {t('devPlayground.toastTitle', 'تجربة التنبيه العائم (Toast)')}
+          </h3>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={() => showToast('تم حفظ التغييرات بنجاح!', 'success')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-success/30 bg-semantic-success/10 text-semantic-success flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-success/20 active:scale-95"
+            >
+              <CheckCircle2 size={15} />
+              <span>{t('devPlayground.toastSuccess', 'نجاح')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => showToast('حدث خطأ أثناء الاتصال بالخادم!', 'error')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-error/30 bg-semantic-error/10 text-semantic-error flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-error/20 active:scale-95"
+            >
+              <AlertCircle size={15} />
+              <span>{t('devPlayground.toastError', 'خطأ')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => showToast('تحذير: يرجى التحقق من البيانات المدخلة.', 'warning')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-warning/30 bg-semantic-warning/10 text-semantic-warning flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-warning/20 active:scale-95"
+            >
+              <AlertTriangle size={15} />
+              <span>{t('devPlayground.toastWarning', 'تحذير')}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => showToast('معلومة: تم إرسال البريد الإلكتروني بنجاح.', 'info')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:border-semantic-actionPrimary active:scale-95"
+            >
+              <Info size={15} />
+              <span>{t('devPlayground.toastInfo', 'معلومات')}</span>
+            </button>
+          </div>
+        </section>
+        
       </div>
 
       {/* المكونات المنبثقة */}
@@ -670,6 +730,14 @@ export default function DevPlayground({
         onSelect={(val) => setSelectedModalValue(val)}
       />
 
+      {/* التنبيه العائم للمعاينة */}
+      <Toast
+        isOpen={toastConfig.isOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={() => setToastConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+      
       {/* نافذة المعاينة */}
       <TermsModal
         isOpen={termsModalConfig.isOpen}
