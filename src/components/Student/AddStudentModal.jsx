@@ -6,7 +6,7 @@ import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-
 import { RIWAYAT_LIST } from '@/constants/riwayat';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
-import CustomSelect from '@/components/UI/CustomSelect';
+import Select from '@/components/UI/Select';
 import { useStudentForm } from '@/hooks/useStudentForm';
 
 const parseLocalDate = (dateStr) => {
