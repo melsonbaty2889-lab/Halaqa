@@ -18,7 +18,7 @@ import AppBrand from '@/components/UI/AppBrand';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import LoadingButton from '@/components/UI/LoadingButton';
-import SelectModal from '@/components/UI/SelectModal';
+import Select from '@/components/UI/Select';
 import { Skeleton, CardSkeleton, PageSkeleton } from '@/components/UI/Skeleton';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
 import SplashScreen from '@/components/UI/SplashScreen';
