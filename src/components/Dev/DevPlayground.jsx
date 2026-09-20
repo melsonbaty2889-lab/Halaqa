@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { UI } from '@/theme/styles';
+import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
 import {
   Toast,
   TermsModal,
@@ -28,8 +29,6 @@ import {
   SplashScreen
 } from '@/components/UI';
 
-import { formatHijriDate, calculateAge } from '@/utils/dateUtils';
-
 export default function DevPlayground({ 
   t = (key, fallback) => fallback,
   lang = 'ar',
@@ -38,22 +37,21 @@ export default function DevPlayground({
   const cleanLang = (lang || 'ar').toLowerCase().split('-')[0];
   const isRtl = isArabic !== undefined ? isArabic : ['ar', 'ur'].includes(cleanLang);
 
-  // حالة عرض الشاشة الافتتاحية للمعاينة
+  // حالات المعاينة والتفاعل
   const [showSplashPreview, setShowSplashPreview] = useState(false);
-
-  // الحالات التفاعلية للنماذج والقوائم
   const [selectedRole, setSelectedRole] = useState('teacher');
   const [selectedCountry, setSelectedCountry] = useState('SA');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [converterDate, setConverterDate] = useState(new Date());
 
-  // حالات التحميل لأزرار الإجراءات والدخول
+  // حالات التحميل
   const [btnLoading, setBtnLoading] = useState(false);
   const [loadingBtnState, setLoadingBtnState] = useState(false);
 
-  // حالة اختيار القائمة المنسدلة (المحتواة بداخل المكون Select القياسي)
+  // حالة القائمة المنسدلة
   const [selectedModalValue, setSelectedModalValue] = useState('student_1');
 
+  // حالة النافذة المنبثقة للتأكيد
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     variant: 'warning',
@@ -66,7 +64,23 @@ export default function DevPlayground({
     isLoading: false
   });
 
-  // معالجات النوافذ المنبثقة الإرشاديّة والتأكيدية
+  // حالات النوافذ المنبثقة والإشعارات
+  const [termsModalConfig, setTermsModalConfig] = useState({
+    isOpen: false,
+    contentType: 'terms'
+  });
+
+  const [toastConfig, setToastConfig] = useState({
+    isOpen: false,
+    message: '',
+    type: 'info'
+  });
+
+  // دوال التحكم بالمعالجة والتنبيهات
+  const showToast = (message, type = 'info') => {
+    setToastConfig({ isOpen: true, message, type });
+  };
+
   const openTestModal = (config) => {
     setModalConfig({
       isOpen: true,
@@ -97,7 +111,6 @@ export default function DevPlayground({
     }
   };
 
-  // معالجات اختبار التحميل للزر
   const handleTestAuthClick = () => {
     setBtnLoading(true);
     setTimeout(() => {
@@ -113,7 +126,7 @@ export default function DevPlayground({
     }, 1500);
   };
 
-  // بيانات الأدوار والنوافذ المنسدلة
+  // بيانات الخيارات
   const roleOptions = [
     { value: 'admin', label: t('roles.admin', 'مدير النظام') },
     { value: 'teacher', label: t('roles.teacher', 'معلم الحلقة') },
@@ -125,12 +138,9 @@ export default function DevPlayground({
     { value: 'student_1', label: 'محمد أحمد علي', subLabel: 'حلقة الإيمان - الجزء 30' },
     { value: 'student_2', label: 'عبدالرحمن خالد', subLabel: 'حلقة النور - الجزء 29' },
     { value: 'student_3', label: 'عمر فاروق', subLabel: 'حلقة الفرقان - الجزء 1' },
-    { value: 'student_4', label: 'يوسف إبراهيم', subLabel: 'حلقة الترتيل - الجزء 15' },
-    { value: 'student_5', label: 'حمزة محمود', subLabel: 'حلقة الحفاظ - الجزء 5' },
-    { value: 'student_6', label: 'بلال عثمان', subLabel: 'حلقة التقوى - الجزء 10' },
   ];
 
-  // عمليات حسابية مشتقة من التاريخ للمحول
+  // عمليات حسابية لتاريخ المحول
   const converterDateObj = converterDate instanceof Date ? converterDate : new Date(converterDate);
   const formattedGregorian = converterDateObj.toLocaleDateString(cleanLang, {
     weekday: 'long',
@@ -141,31 +151,12 @@ export default function DevPlayground({
   const formattedHijri = formatHijriDate(converterDateObj, cleanLang, 0);
   const computedAge = calculateAge(converterDateObj);
 
-  const [termsModalConfig, setTermsModalConfig] = useState({
-    isOpen: false,
-    contentType: 'terms'
-  });
-
-  const [toastConfig, setToastConfig] = useState({
-    isOpen: false,
-    message: '',
-    type: 'info'
-  });
-
-  const showToast = (message, type = 'info') => {
-    setToastConfig({
-      isOpen: true,
-      message,
-      type
-    });
-  };
-
   return (
     <div 
       className="min-h-screen p-5 font-cairo bg-semantic-bgPage text-semantic-textPrimary"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* معاينة الشاشة الافتتاحية الحية عند تفعيلها */}
+      {/* معاينة الشاشة الافتتاحية الحية */}
       {showSplashPreview && (
         <SplashScreen onFinish={() => setShowSplashPreview(false)} />
       )}
@@ -268,7 +259,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 5. أزرار التحميل والتفاعلات (LoadingButton) */}
+                {/* 5. أزرار التحميل والتفاعلات (LoadingButton) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Sparkles size={18} /> {t('devPlayground.loadingButtonTitle', 'تجربة أزرار التحميل (LoadingButton)')}
@@ -375,7 +366,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 8. مكون اختيار التاريخ القياسي (CustomDatePicker) */}
+                {/* 8. مكون اختيار التاريخ القياسي (CustomDatePicker) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
             <Calendar size={18} /> {t('devPlayground.datePickerTitle', 'تجربة اختيار التاريخ (CustomDatePicker)')}
@@ -483,7 +474,7 @@ export default function DevPlayground({
           </div>
         </section>
 
-        {/* 12. حالات النوافذ المنبثقة التنبيهية والتأكيدية (ConfirmModal) */}
+                {/* 12. حالات النوافذ المنبثقة التنبيهية والتأكيدية (ConfirmModal) */}
         <section className={`${UI.card} space-y-4 text-start`}>
           <h3 className="text-sm font-bold text-semantic-actionPrimary">
             {t('devPlayground.modalVariantsTitle', 'حالات النوافذ المنبثقة (ConfirmModal Variants)')}
@@ -731,7 +722,7 @@ export default function DevPlayground({
         onClose={() => setToastConfig(prev => ({ ...prev, isOpen: false }))}
       />
       
-      {/* نافذة المعاينة */}
+      {/* النوافذ المنبثقة للمعاينة */}
       <TermsModal
         isOpen={termsModalConfig.isOpen}
         contentType={termsModalConfig.contentType}
@@ -757,4 +748,4 @@ export default function DevPlayground({
       />
     </div>
   );
-}
+            }
