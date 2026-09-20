@@ -9,7 +9,7 @@ import StudentItemCard from './StudentItemCard';
 import StudentProfile from './StudentProfile';
 import AddStudentModal from './AddStudentModal';
 import ConfirmModal from '@/components/UI/ConfirmModal';
-import CustomSelect from '@/components/UI/CustomSelect';
+import Select from '@/components/UI/Select';
 import { useAcademy } from '@/context/AcademyContext';
 import { useStudentsManager } from '@/hooks/useStudentsManager';
 import { renderStatusBadge } from '@/utils/studentUtils';
