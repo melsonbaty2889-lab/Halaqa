@@ -36,7 +36,6 @@ export const Select = forwardRef(({
   const [isMobile, setIsMobile] = useState(false);
 
   const triggerRef = useRef(null);
-  const searchInputRef = useRef(null);
   const autoId = useId();
   const selectId = customId || autoId;
   const displayError = errorText || error;
@@ -44,7 +43,7 @@ export const Select = forwardRef(({
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
 
-  // التحقق من حجم الشاشة للتحويل المزدوج (Dropdown / Modal)
+  // التحقق من حجم الشاشة
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -134,13 +133,6 @@ export const Select = forwardRef(({
         break;
     }
   };
-
-  // التركيز التلقائي على حقل البحث عند الفتح
-  useEffect(() => {
-    if (isOpen && searchable && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [isOpen, searchable]);
 
   return (
     <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box", position: "relative" }}>
@@ -235,12 +227,11 @@ export const Select = forwardRef(({
                 </button>
               </div>
 
-              {/* حقل البحث */}
+              {/* حقل البحث (بدون تركيز تلقائي) */}
               {(searchable || options.length > 5) && (
                 <div className="p-3 border-b border-semantic-borderInput">
                   <div className="relative">
                     <input
-                      ref={searchInputRef}
                       type="text"
                       placeholder={searchPlaceholder || t('common.search', 'بحث...')}
                       value={searchTerm}
@@ -328,7 +319,6 @@ export const Select = forwardRef(({
               {(searchable || options.length > 5) && (
                 <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
                   <input
-                    ref={searchInputRef}
                     type="text"
                     placeholder={searchPlaceholder || t('common.search', 'بحث...')}
                     value={searchTerm}
