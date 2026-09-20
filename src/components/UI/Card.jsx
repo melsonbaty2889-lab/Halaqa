@@ -4,7 +4,7 @@ const getCardBg = () => 'var(--color-surface-card)';
 const getBorder = () => 'var(--color-border-input)';
 const getTextTitle = () => 'var(--color-text-primary)';
 
-const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref) => (
+const Card = forwardRef(({ children, style = {}, className = "", hoverable = false, ...props }, ref) => (
   <div 
     ref={ref}
     className={`ui-card ${className}`}
@@ -20,6 +20,8 @@ const Card = forwardRef(({ children, style = {}, className = "", ...props }, ref
       textAlign: "start",
       backdropFilter: "blur(16px)",
       WebkitBackdropFilter: "blur(16px)",
+      transition: hoverable ? "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease" : "none",
+      cursor: hoverable ? "pointer" : "default",
       ...style 
     }}
     {...props}
