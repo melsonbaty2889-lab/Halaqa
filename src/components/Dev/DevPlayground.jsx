@@ -26,7 +26,8 @@ import {
   CardSkeleton,
   PageSkeleton,
   SmartHalaqaProLogo,
-  SplashScreen
+  SplashScreen,
+  Badge
 } from '@/components/UI';
 
 export default function DevPlayground({ 
@@ -324,6 +325,38 @@ export default function DevPlayground({
           </div>
         </section>
 
+        {/* معاينة شارات الحالة (Badge) */}
+<section className={`${UI.card} space-y-4 text-start`}>
+  <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
+    <Bookmark size={18} /> {t('devPlayground.badgeTitle', 'تجربة شارات الحالة (Badge)')}
+  </h3>
+  
+  <div className="flex flex-wrap items-center gap-2 pt-1">
+    {/* الشارة الافتراضية (تعتمد على اللون الرئيسي) */}
+    <Badge>
+      {t('devPlayground.badgeDefault', 'شارة افتراضية')}
+    </Badge>
+
+    {/* شارة النجاح */}
+    <Badge color="var(--color-success)">
+      <CheckCircle2 size={14} />
+      <span>{t('devPlayground.badgeSuccess', 'نشط / مكتمل')}</span>
+    </Badge>
+
+    {/* شارة الخطأ / الخطر */}
+    <Badge color="var(--color-danger)">
+      <AlertCircle size={14} />
+      <span>{t('devPlayground.badgeDanger', 'ملغى / متوقف')}</span>
+    </Badge>
+
+    {/* شارة التحذير */}
+    <Badge color="var(--color-warning)">
+      <AlertTriangle size={14} />
+      <span>{t('devPlayground.badgeWarning', 'قيد الانتظار')}</span>
+    </Badge>
+  </div>
+</section>
+        
         {/* 6. القائمة المخصصة (CustomSelect) */}
         <section className={`${UI.card} space-y-3 text-start`}>
           <h3 className="text-sm font-bold flex items-center gap-2 text-semantic-actionPrimary">
