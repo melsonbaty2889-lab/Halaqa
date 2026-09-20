@@ -1,7 +1,8 @@
-/* src/components/UI/TermsModal.jsx */
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, ShieldCheck, FileText, Check, Lock, UserCheck, Key, Shield, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, FileText, Check, Lock, UserCheck, Key, Shield, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Modal from './Modal';
+import Btn from './Btn';
 
 export function TermsModal({ 
   isOpen, 
@@ -19,7 +20,7 @@ export function TermsModal({
     ? isRtlProp 
     : (i18n?.dir ? i18n.dir() === 'rtl' : true);
 
-  // تحديث التبويب النشط عند تغير الـ Props
+  // تحديث حالة التبويب والموافقة عند فتح النافذة
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
@@ -27,80 +28,48 @@ export function TermsModal({
     }
   }, [isOpen, initialTab]);
 
-  // إغلاق النافذة بزر Escape
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Escape' && !requireAcceptance) {
-      onClose();
-    }
-  }, [onClose, requireAcceptance]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, handleKeyDown]);
-
-  if (!isOpen) return null;
-
   const handleConfirmAction = () => {
     if (onAccept) onAccept(activeTab);
     onClose();
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md animate-in fade-in duration-200"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="terms-modal-title"
+    <Modal
+      open={isOpen}
+      onClose={requireAcceptance ? () => {} : onClose}
+      maxWidth={580}
+      style={{ padding: 0 }}
     >
-      <div 
-        dir={isRtl ? 'rtl' : 'ltr'}
-        className="relative w-full max-w-xl rounded-2xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary shadow-2xl max-h-[85vh] flex flex-col overflow-hidden transition-all"
-      >
-        {/* Header */}
+      <div dir={isRtl ? 'rtl' : 'ltr'} className="flex flex-col h-full text-semantic-textPrimary">
+        {/* الهيدر */}
         <div className="flex items-center justify-between border-b border-semantic-borderCard p-5 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-semantic-actionPrimaryGlow/10 text-semantic-actionPrimary">
+            <div className="p-2 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
               <ShieldCheck size={22} />
             </div>
             <div>
               <h3 
                 id="terms-modal-title"
-                className="text-base sm:text-lg font-bold text-semantic-textPrimary"
+                className="text-base sm:text-lg font-bold text-semantic-textPrimary m-0"
               >
                 {t('termsModal.headerTitle', 'اتفاقية الاستخدام والخصوصية')}
               </h3>
-              <p className="text-[11px] text-semantic-textSecondary">
+              <p className="text-[11px] text-semantic-textSecondary m-0">
                 {t('termsModal.headerSubtitle', 'يرجى قراءة الشروط والسياسات بعناية')}
               </p>
             </div>
           </div>
-
-          <button 
-            type="button"
-            onClick={onClose}
-            aria-label={t('termsModal.close', 'إغلاق')}
-            className="rounded-xl transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput active:scale-95"
-          >
-            <X size={20} />
-          </button>
         </div>
 
-        {/* Tab Switcher */}
+        {/* محول التبويبات (Tab Switcher) */}
         <div className="flex border-b border-semantic-borderCard bg-semantic-surfaceInput/40 p-1.5 gap-1.5 mx-5 mt-4 rounded-xl">
           <button
             type="button"
             onClick={() => setActiveTab('terms')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
               activeTab === 'terms'
-                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
-                : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
+                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border-semantic-borderCard'
+                : 'border-transparent text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
             <FileText size={15} />
@@ -110,10 +79,10 @@ export function TermsModal({
           <button
             type="button"
             onClick={() => setActiveTab('privacy')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
               activeTab === 'privacy'
-                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
-                : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
+                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border-semantic-borderCard'
+                : 'border-transparent text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
             <Lock size={15} />
@@ -121,8 +90,8 @@ export function TermsModal({
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs sm:text-sm leading-relaxed text-semantic-textSecondary text-start custom-scrollbar">
+        {/* المحتوى القابل للتمرير */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs sm:text-sm leading-relaxed text-semantic-textSecondary text-start custom-scrollbar max-h-[50vh]">
           {activeTab === 'terms' ? (
             <div className="space-y-3.5">
               <p className="font-medium text-semantic-textPrimary leading-normal">
@@ -190,8 +159,8 @@ export function TermsModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-semantic-borderCard p-4 bg-semantic-surfaceInput/20 space-y-3">
+        {/* الفوتر وأزرار التحكم */}
+        <div className="border-t border-semantic-borderCard p-4 bg-semantic-surfaceInput/20 space-y-3 rounded-b-2xl">
           {requireAcceptance && (
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input
@@ -207,28 +176,24 @@ export function TermsModal({
           )}
 
           <div className="flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary transition-all active:scale-95 min-h-[40px] cursor-pointer hover:text-semantic-textPrimary hover:border-semantic-borderHover"
-            >
-              {t('termsModal.close', 'إغلاق')}
-            </button>
+            {!requireAcceptance && (
+              <Btn variant="ghost" onClick={onClose}>
+                {t('termsModal.close', 'إغلاق')}
+              </Btn>
+            )}
 
-            <button
-              type="button"
+            <Btn
+              variant="primary"
               disabled={requireAcceptance && !hasAgreed}
               onClick={handleConfirmAction}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-semantic-actionPrimary text-white transition-all active:scale-95 min-h-[40px] cursor-pointer flex items-center justify-center gap-1.5 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
             >
               <Check size={16} />
               <span>{t('termsModal.acceptBtn', 'موافقة ومتابعة')}</span>
-            </button>
+            </Btn>
           </div>
         </div>
-
       </div>
-    </div>
+    </Modal>
   );
 }
 
