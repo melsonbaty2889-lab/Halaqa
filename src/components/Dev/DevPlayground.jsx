@@ -699,13 +699,13 @@ export default function DevPlayground({
             </button>
 
             <button
-              type="button"
-              onClick={() => showToast('تحذير: يرجى التحقق من البيانات المدخلة.', 'warning')}
-              className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-warning/30 bg-semantic-warning/10 text-semantic-warning flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-warning/20 active:scale-95"
-            >
-              <AlertTriangle size={15} />
-              <span>{t('devPlayground.toastWarning', 'تحذير')}</span>
-            </button>
+           type="button"
+           onClick={() => showToast('تحذير: يرجى التحقق من البيانات المدخلة.', 'warning')}
+           className="py-2.5 px-3 rounded-xl text-xs font-bold border border-semantic-warning/30 bg-semantic-warning/10 text-semantic-warning flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:bg-semantic-warning/20 active:scale-95"
+           >
+           <AlertTriangle size={15} />
+           <span>{t('devPlayground.toastWarning', 'تحذير')}</span>
+          </button>
 
             <button
               type="button"
