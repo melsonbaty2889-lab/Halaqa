@@ -544,15 +544,27 @@ const Select = forwardRef(({
 });
 Select.displayName = 'Select';
 
-// 6. النافذة المنبثقة (Modal عبر React Portal)
+// 6. النافذة المنبثقة (Modal)
 const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
   const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
-    const handleEscape = (e) => { e.key === 'Escape' && onClose(); };
+
+    // قفل تمرير خلفية الصفحة عند فتح النافذة
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleEscape = (e) => { 
+      if (e.key === 'Escape') onClose(); 
+    };
+
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      window.removeEventListener('keydown', handleEscape);
+    };
   }, [open, onClose]);
 
   if (!open || typeof window === 'undefined') return null;
