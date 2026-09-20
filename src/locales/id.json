@@ -594,6 +594,11 @@
     "subtitle": "معاينة دقيقة ومطابقة تماماً لسلوك العناصر والنظام القياسي",
     "termsModalTitle": "تجربة الشروط وسياسة الخصوصية (TermsModal)",
     "title": "مختبر العناصر الشامل (Dev Playground)",
+    "toastError": "خطأ",
+    "toastInfo": "معلومات",
+    "toastSuccess": "نجاح",
+    "toastTitle": "تجربة التنبيه العائم (Toast)",
+    "toastWarning": "تحذير",
     "warningBtn": "نافذة تحذير / أرشفة (Warning)",
     "warningModal": {
       "confirm": "تأكيد الأرشفة",
