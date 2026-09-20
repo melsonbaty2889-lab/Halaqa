@@ -349,6 +349,7 @@ const Select = forwardRef(({
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef(null);
   const autoId = useId();
@@ -373,15 +374,9 @@ const Select = forwardRef(({
       });
     }
     setSearchTerm('');
+    setActiveIndex(-1);
     setIsOpen(prev => !prev);
   }, [isOpen, disabled]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleScroll = () => setIsOpen(false);
-    window.addEventListener('scroll', handleScroll, true);
-    return () => window.removeEventListener('scroll', handleScroll, true);
-  }, [isOpen]);
 
   const handleOptionSelect = (optionValue) => {
     if (typeof onChange === 'function') {
@@ -390,6 +385,48 @@ const Select = forwardRef(({
     setIsOpen(false);
     setSearchTerm('');
   };
+
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
+        e.preventDefault();
+        handleToggle();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex(prev => (prev < filteredOptions.length - 1 ? prev + 1 : 0));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex(prev => (prev > 0 ? prev - 1 : filteredOptions.length - 1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (activeIndex >= 0 && activeIndex < filteredOptions.length) {
+          handleOptionSelect(filteredOptions[activeIndex].value);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        break;
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleScroll = () => setIsOpen(false);
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [isOpen]);
 
   return (
     <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box", position: "relative" }}>
@@ -414,6 +451,7 @@ const Select = forwardRef(({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         className={`ui-select ${className}`}
         style={{
           width: "100%",
@@ -475,6 +513,7 @@ const Select = forwardRef(({
                   placeholder={searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   style={{
                     width: "100%",
                     padding: "6px 10px",
@@ -505,8 +544,9 @@ const Select = forwardRef(({
                   {noOptionsMessage}
                 </li>
               ) : (
-                filteredOptions.map(o => {
+                filteredOptions.map((o, idx) => {
                   const isSelected = String(o.value) === safeValue;
+                  const isActive = idx === activeIndex;
                   return (
                     <li
                       key={o.value}
@@ -517,8 +557,8 @@ const Select = forwardRef(({
                         padding: "10px 14px",
                         minHeight: "40px",
                         fontSize: "0.875rem",
-                        color: isSelected ? getPrimary() : getTextTitle(),
-                        background: isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent",
+                        color: isSelected || isActive ? getPrimary() : getTextTitle(),
+                        background: isActive ? "color-mix(in srgb, var(--color-action-primary) 20%, transparent)" : (isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent"),
                         cursor: "pointer",
                         textAlign: "start",
                         fontWeight: isSelected ? 700 : 400,
