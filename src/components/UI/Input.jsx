@@ -1,4 +1,5 @@
 import React, { useState, forwardRef, useId } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
 const getSurface = () => 'var(--color-surface-input)';
@@ -21,13 +22,29 @@ export const Input = forwardRef(({
   endIcon = null,
   errorText = "",
   helperText = "",
+  onFocus,
+  onBlur,
   ...props 
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const autoId = useId();
   const inputId = customId || autoId;
 
+  const isPasswordType = type === "password";
+  const actualType = isPasswordType ? (showPassword ? "text" : "password") : type;
+
   const borderCol = errorText ? getDanger() : getBorder();
+
+  const handleFocus = (e) => {
+    setIsFocused(true);
+    if (onFocus) onFocus(e);
+  };
+
+  const handleBlur = (e) => {
+    setIsFocused(false);
+    if (onBlur) onBlur(e);
+  };
 
   const baseStyle = { 
     width: "100%", 
@@ -36,7 +53,7 @@ export const Input = forwardRef(({
     borderRadius: 10, 
     padding: "10px 14px",
     paddingInlineStart: startIcon ? "40px" : "14px",
-    paddingInlineEnd: endIcon ? "40px" : "14px",
+    paddingInlineEnd: (endIcon || isPasswordType) ? "40px" : "14px",
     minHeight: as === "textarea" ? "auto" : "44px",
     color: getTextTitle(), 
     fontFamily: "inherit", 
@@ -74,8 +91,8 @@ export const Input = forwardRef(({
             id={inputId}
             value={value} 
             onChange={onChange} 
-            onFocus={() => setIsFocused(true)} 
-            onBlur={() => setIsFocused(false)} 
+            onFocus={handleFocus} 
+            onBlur={handleBlur} 
             placeholder={placeholder} 
             aria-invalid={!!errorText}
             className={`ui-textarea ${className}`} 
@@ -86,11 +103,11 @@ export const Input = forwardRef(({
           <input 
             ref={ref} 
             id={inputId}
-            type={type} 
+            type={actualType} 
             value={value} 
             onChange={onChange} 
-            onFocus={() => setIsFocused(true)} 
-            onBlur={() => setIsFocused(false)} 
+            onFocus={handleFocus} 
+            onBlur={handleBlur} 
             placeholder={placeholder} 
             aria-invalid={!!errorText}
             className={`ui-input ${className}`} 
@@ -99,10 +116,31 @@ export const Input = forwardRef(({
           />
         )}
 
-        {endIcon && (
-          <span style={{ position: "absolute", insetInlineEnd: 12, display: "flex", alignItems: "center", color: getTextSub() }}>
-            {endIcon}
-          </span>
+        {isPasswordType ? (
+          <button
+            type="button"
+            onClick={() => setShowPassword(prev => !prev)}
+            aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            style={{
+              position: "absolute",
+              insetInlineEnd: 12,
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              color: getTextSub(),
+              cursor: "pointer"
+            }}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        ) : (
+          endIcon && (
+            <span style={{ position: "absolute", insetInlineEnd: 12, display: "flex", alignItems: "center", color: getTextSub() }}>
+              {endIcon}
+            </span>
+          )
         )}
       </div>
 
