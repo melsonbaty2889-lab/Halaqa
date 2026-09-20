@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
-import CustomSelect from '@/components/UI/CustomSelect';
+import Select from '@/components/UI/Select';
 import { useStudentDocuments } from '@/hooks/useStudentDocuments';
 
 export const StudentDocuments = ({ studentId, academyId, onBack }) => {
