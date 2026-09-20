@@ -7,7 +7,7 @@ import Toast from '@/components/UI/Toast';
 import { useToast } from '@/hooks/useToast';
 import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
-import CustomSelect from '@/components/UI/CustomSelect.jsx';
+import Select from '@/components/UI/Select.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
 import { CURRENCIES } from '@/constants/currencies.js';
 
