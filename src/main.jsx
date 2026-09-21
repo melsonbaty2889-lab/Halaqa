@@ -36,7 +36,7 @@ window.addEventListener('error', (event) => {
 const InitialLoader = () => (
   <div 
     className="fixed inset-0 z-50 flex flex-col items-center justify-center font-cairo select-none"
-    style={{ backgroundColor: C.dark.bg, color: C.text.main }}
+    style={{ backgroundColor: C.dark.bg, color: C.appText.main }}
   >
     <div 
       className="w-10 h-10 border-3 border-t-transparent rounded-full animate-spin mb-3"
