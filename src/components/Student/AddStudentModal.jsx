@@ -1,5 +1,4 @@
 // src/components/Student/AddStudentModal.jsx
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
@@ -52,21 +51,21 @@ const AddStudentModal = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" 
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl relative my-auto">
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col shadow-2xl relative my-auto text-semantic-textPrimary">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-appBorder-card bg-dark-card rounded-t-2xl shrink-0 z-20">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-semantic-borderCard bg-semantic-surfaceCard rounded-t-2xl shrink-0 z-20">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
+            <div className="p-2 bg-semantic-actionPrimary/10 text-semantic-actionPrimary rounded-xl shrink-0">
               {studentToEdit ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-appText-main leading-snug">
+              <h2 className="text-base sm:text-lg font-bold text-semantic-textPrimary leading-snug">
                 {studentToEdit
                   ? t('students.edit_title', 'تعديل بيانات الطالب')
                   : t('students.add_title', 'إضافة طالب جديد')}
               </h2>
-              <p className="text-xs text-appText-sub">
+              <p className="text-xs text-semantic-textSecondary">
                 {t('students.modal_subtitle', 'إدخال البيانات الأساسية والدولية والعائلية')}
               </p>
             </div>
@@ -74,7 +73,7 @@ const AddStudentModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-appText-sub hover:text-appText-main rounded-lg hover:bg-dark-input transition-colors shrink-0"
+            className="p-1.5 text-semantic-textSecondary hover:text-semantic-textPrimary rounded-lg hover:bg-semantic-surfaceInput transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -88,14 +87,14 @@ const AddStudentModal = ({
         >
           {/* 1. البيانات الأساسية */}
           <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-4 h-4" />
               <span>{t('students.basic_info', 'البيانات الأساسية')}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.name_ar', 'الاسم بالعربية')} *
                 </label>
                 <input
@@ -103,12 +102,12 @@ const AddStudentModal = ({
                   value={formData.name_ar}
                   onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
                   placeholder={t('students.ph_name_ar', 'ادخل الاسم بالعربية')}
-                  className={`w-full px-3 py-2.5 bg-dark-input border ${
-                    errors.name_ar ? 'border-rose-500' : 'border-appBorder-input'
-                  } rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors`}
+                  className={`w-full px-3 py-2.5 bg-semantic-surfaceInput border ${
+                    errors.name_ar ? 'border-semantic-error' : 'border-semantic-borderInput'
+                  } rounded-xl text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors`}
                 />
                 {errors.name_ar && (
-                  <p className="text-rose-400 text-xs mt-1 flex items-center gap-1">
+                  <p className="text-semantic-error text-xs mt-1 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     <span>{errors.name_ar}</span>
                   </p>
@@ -116,7 +115,7 @@ const AddStudentModal = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.name_en', 'الاسم بالإنجليزية')}
                 </label>
                 <input
@@ -124,13 +123,13 @@ const AddStudentModal = ({
                   value={formData.name_en}
                   onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                   placeholder={t('students.ph_name_en', 'Enter name in English')}
-                  className="w-full px-3 py-2.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors"
+                  className="w-full px-3 py-2.5 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <CustomSelect
+              <Select
                 label={t('students.gender', 'الجنس')}
                 value={formData.gender}
                 onChange={(val) => setFormData({ ...formData, gender: val })}
@@ -138,25 +137,23 @@ const AddStudentModal = ({
               />
 
               <div className="sm:col-span-2">
-  <label className="block text-xs font-medium text-appText-sub mb-1.5">
-    {t('students.birth_date', 'تاريخ الميلاد')}
-  </label>
-  <CustomDatePicker
-    value={parseLocalDate(formData.birth_date)}
-    selectedDate={parseLocalDate(formData.birth_date)}
-    onChange={handleDateChange}
-    lang={isRtl ? 'ar' : 'en'}
-    showAge={true}
-    disableFuture={true}
-    placeholder={t('students.ph_birth_date', 'اختر تاريخ الميلاد...')}
-    t={t}
-  />
-</div>
+                <CustomDatePicker
+                  label={t('students.birth_date', 'تاريخ الميلاد')}
+                  value={parseLocalDate(formData.birth_date)}
+                  selectedDate={parseLocalDate(formData.birth_date)}
+                  onChange={handleDateChange}
+                  lang={isRtl ? 'ar' : 'en'}
+                  showAge={true}
+                  disableFuture={true}
+                  placeholder={t('students.ph_birth_date', 'اختر تاريخ الميلاد...')}
+                  t={t}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="relative z-10">
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.country', 'دولة الإقامة')}
                 </label>
                 <CountrySelect
@@ -167,7 +164,7 @@ const AddStudentModal = ({
               </div>
 
               <div className="relative z-10">
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.nationality', 'الجنسية')}
                 </label>
                 <CountrySelect
@@ -181,15 +178,15 @@ const AddStudentModal = ({
           </div>
 
           {/* 2. الحلقة والتلاوة والمستوى */}
-          <div className="space-y-4 pt-4 border-t border-appBorder-card">
-            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-4 pt-4 border-t border-semantic-borderCard">
+            <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" />
               <span>{t('students.halaqa_and_recitation', 'الحلقة والتلاوة والمستوى')}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="relative z-10">
-                <CustomSelect
+                <Select
                   label={t('students.select_halaqa', 'تسكين الحلقة')}
                   placeholder={t('students.ph_select_halaqa', 'اختر الحلقة...')}
                   value={formData.halaqa_id}
@@ -205,7 +202,7 @@ const AddStudentModal = ({
               </div>
 
               <div className="relative z-10">
-                <CustomSelect
+                <Select
                   label={t('students.preferred_riwayah', 'الرواية المفضلة')}
                   placeholder={t('students.ph_select_riwayah', 'اختر الرواية...')}
                   value={formData.preferred_riwayah}
@@ -220,7 +217,7 @@ const AddStudentModal = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.current_juz', 'الجزء الحالي (1 - 30)')}
                 </label>
                 <input
@@ -230,12 +227,12 @@ const AddStudentModal = ({
                   value={formData.current_juz ?? ''}
                   onChange={(e) => setFormData({ ...formData, current_juz: e.target.value ? parseInt(e.target.value, 10) : null })}
                   placeholder="1 - 30"
-                  className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm focus:outline-none focus:border-appBorder-hover transition-colors"
+                  className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-sm focus:outline-none focus:border-semantic-actionPrimary transition-colors"
                 />
               </div>
 
               <div className="relative z-10">
-                <CustomSelect
+                <Select
                   label={t('students.memorization_system', 'نظام المراجعة/الحفظ')}
                   placeholder={t('students.ph_memorization_system', 'اختر النظام...')}
                   value={formData.memorization_system || ''}
@@ -251,15 +248,15 @@ const AddStudentModal = ({
           </div>
 
           {/* 3. بيانات ولي الأمر */}
-          <div className="space-y-4 pt-4 border-t border-appBorder-card">
+          <div className="space-y-4 pt-4 border-t border-semantic-borderCard">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
                 <Shield className="w-4 h-4" />
                 <span>{t('students.parent_info', 'بيانات ولي الأمر')}</span>
               </h3>
 
               <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                <span className="text-xs text-appText-sub">
+                <span className="text-xs text-semantic-textSecondary">
                   {showParentFields ? t('common.enabled', 'مفعل') : t('common.disabled', 'معطل')}
                 </span>
                 <div className="relative">
@@ -271,7 +268,7 @@ const AddStudentModal = ({
                   />
                   <div
                     className={`w-9 h-5 rounded-full transition-colors ${
-                      showParentFields ? 'bg-primary' : 'bg-dark-input border border-appBorder-input'
+                      showParentFields ? 'bg-semantic-actionPrimary' : 'bg-semantic-surfaceInput border border-semantic-borderInput'
                     }`}
                   />
                   <div
@@ -284,9 +281,9 @@ const AddStudentModal = ({
             </div>
 
             {showParentFields && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-dark-input/40 p-4 rounded-xl border border-appBorder-card animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-semantic-surfaceInput/40 p-4 rounded-xl border border-semantic-borderCard animate-in fade-in duration-150">
                 <div>
-                  <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                  <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                     {t('students.parent_name', 'اسم ولي الأمر')}
                   </label>
                   <input
@@ -294,12 +291,12 @@ const AddStudentModal = ({
                     value={formData.parent_name}
                     onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
                     placeholder={t('students.ph_parent_name', 'ادخل الاسم الكامل')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors"
+                    className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-appText-sub mb-1.5">
+                  <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                     {t('students.parent_phone', 'هاتف ولي الأمر')}
                   </label>
                   <input
@@ -308,20 +305,20 @@ const AddStudentModal = ({
                     value={formData.parent_phone}
                     onChange={handlePhoneChange}
                     placeholder={t('students.ph_phone', 'رقم الهاتف مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
+                    className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors text-start"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-medium text-appText-sub">
+                    <label className="block text-xs font-medium text-semantic-textSecondary">
                       {t('students.parent_whatsapp', 'واتساب ولي الأمر')}
                     </label>
                     {formData.parent_phone && (
                       <button
                         type="button"
                         onClick={handleCopyPhoneToWhatsapp}
-                        className="text-[11px] text-primary hover:underline transition-all"
+                        className="text-[11px] text-semantic-actionPrimary hover:underline transition-all cursor-pointer"
                       >
                         {t('common.same_as_phone', 'نفس الهاتف')}
                       </button>
@@ -333,7 +330,7 @@ const AddStudentModal = ({
                     value={formData.parent_whatsapp}
                     onChange={handleWhatsappChange}
                     placeholder={t('students.ph_whatsapp', 'رقم الواتساب مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-lg text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors text-start"
+                    className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors text-start"
                   />
                 </div>
               </div>
@@ -342,7 +339,7 @@ const AddStudentModal = ({
 
           {/* 4. ملاحظات */}
           <div>
-            <label className="block text-xs font-medium text-appText-sub mb-1.5">
+            <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
               {t('common.notes', 'ملاحظات إضافية')}
             </label>
             <textarea
@@ -350,17 +347,17 @@ const AddStudentModal = ({
               value={formData.notes_text}
               onChange={(e) => setFormData({ ...formData, notes_text: e.target.value })}
               placeholder={t('students.ph_notes', 'أي ملاحظات تخص الطالب...')}
-              className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-sm placeholder:text-appText-sub/50 focus:outline-none focus:border-appBorder-hover transition-colors resize-none"
+              className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors resize-none"
             />
           </div>
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-appBorder-card bg-dark-card rounded-b-2xl shrink-0 z-20">
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-5 border-t border-semantic-borderCard bg-semantic-surfaceCard rounded-b-2xl shrink-0 z-20">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-appText-sub hover:text-appText-main transition-colors"
+            className="px-4 py-2 text-sm font-medium text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer"
           >
             {t('common.cancel', 'إلغاء')}
           </button>
@@ -368,7 +365,7 @@ const AddStudentModal = ({
             type="submit"
             form="add-student-form"
             disabled={isSubmitting}
-            className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-appText-main rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary-glow disabled:opacity-50 cursor-pointer"
+            className="px-6 py-2.5 bg-semantic-actionPrimary hover:bg-semantic-actionPrimary/90 text-white rounded-xl text-sm font-bold transition-all shadow-lg disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting
               ? t('common.saving', 'جاري الحفظ...')
