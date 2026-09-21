@@ -1,9 +1,9 @@
 /* src/components/UI/index.js */
 export { default as AppBrand } from './AppBrand';
-export { default as AuthButtons, PrimaryButton, GoogleButton } from './AuthButtons';
+export { PrimaryButton, GoogleButton } from './AuthButtons';
 export { default as Badge } from './Badge';
-export { default as Btn } from './Btn';
-export { default as Card } from './Card';
+export { default as Btn, Btn as Button } from './Btn';
+export { default as Card, CardHeader, CardBody, CardFooter } from './Card';
 export { default as ConfirmModal } from './ConfirmModal';
 export { default as CountrySelect } from './CountrySelect';
 export { default as CustomDatePicker } from './CustomDatePicker';
@@ -16,10 +16,9 @@ export { default as LoadingButton } from './LoadingButton';
 export { default as Modal } from './Modal';
 export { default as PageHeader } from './PageHeader';
 export { default as Select, default as CustomSelect } from './Select';
-export { Skeleton, CardSkeleton, PageSkeleton } from './Skeleton';
+export { default as Skeleton, CardSkeleton, PageSkeleton } from './Skeleton';
 export { default as SmartHalaqaProLogo } from './SmartHalaqaProLogo';
 export { default as SplashScreen } from './SplashScreen';
 export { default as Table, THead, TBody, TR, TH, TD } from './Table';
 export { default as TermsModal } from './TermsModal';
 export { default as Toast } from './Toast';
-export { default as UI } from './UI';
