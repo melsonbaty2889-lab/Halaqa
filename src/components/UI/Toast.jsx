@@ -1,4 +1,3 @@
-/* src/components/UI/Toast.jsx */
 import React, { useEffect } from 'react';
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
@@ -6,7 +5,7 @@ export default function Toast({
   isOpen, 
   message, 
   type = 'info', 
-  onClose, 
+  onClose = () => {}, 
   duration = 4000 
 }) {
   useEffect(() => {
@@ -20,7 +19,6 @@ export default function Toast({
 
   if (!isOpen) return null;
 
-  // تحديد الأيقونة والتنسيق حسب نوع التنبيه
   const config = {
     success: {
       icon: CheckCircle2,
@@ -35,7 +33,7 @@ export default function Toast({
     warning: {
       icon: AlertTriangle,
       style: 'bg-semantic-warning/15 border-semantic-warning/40 text-semantic-warning',
-      iconColor: 'text-semantic-warning'
+      iconColor: 'text-semantic-error'
     },
     info: {
       icon: Info,
@@ -51,11 +49,15 @@ export default function Toast({
   const IconComponent = config.icon;
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-4 duration-200">
+    <div 
+      role="status" 
+      aria-live="polite" 
+      className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-4 duration-200"
+    >
       <div className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border backdrop-blur-md shadow-lg ${config.style}`}>
         <div className="flex items-center gap-2.5 min-w-0">
           <IconComponent size={20} className={`shrink-0 ${config.iconColor}`} />
-          <p className="text-xs font-semibold leading-relaxed truncate">
+          <p className="text-xs font-semibold leading-relaxed break-words">
             {message}
           </p>
         </div>
