@@ -1,3 +1,11 @@
+// 0. كاشف الأخطاء المباشر للشاشة
+window.onerror = function (message, source, lineno, colno, error) {
+  const errorBox = document.createElement('div');
+  errorBox.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#111;color:#ff5555;padding:20px;z-index:99999;overflow:auto;font-family:monospace;font-size:12px;direction:ltr;text-align:left;';
+  errorBox.innerHTML = '<h3>⚠️ Runtime Error Found:</h3><p><b>Message:</b> ' + message + '</p><p><b>File:</b> ' + source + '</p><p><b>Line:</b> ' + lineno + ':' + colno + '</p><pre>' + (error && error.stack ? error.stack : '') + '</pre>';
+  document.body.appendChild(errorBox);
+};
+
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
