@@ -15,10 +15,10 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
   // خيارات نمط التعليم
   const educationModeOptions = useMemo(() => [
-  { label: t('quranic.online', isRtl ? 'عن بُعد' : 'Online'), value: 'online' },
-  { label: t('quranic.onsite', isRtl ? 'حضوري' : 'In-Person'), value: 'onsite' },
-  { label: t('quranic.hybrid', isRtl ? 'مدمج' : 'Hybrid'), value: 'hybrid' },
-], [t, isRtl]);
+    { label: t('quranic.online', isRtl ? 'عن بُعد' : 'Online'), value: 'online' },
+    { label: t('quranic.onsite', isRtl ? 'حضوري' : 'In-Person'), value: 'onsite' },
+    { label: t('quranic.hybrid', isRtl ? 'مدمج' : 'Hybrid'), value: 'hybrid' },
+  ], [t, isRtl]);
 
   // خيارات الرواية / القراءة - جلب الاسم حسب اللغة الحالية للواجهة
   const riwayaOptions = useMemo(() => {
@@ -43,14 +43,14 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
   return (
     <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="card-surface space-y-4 !overflow-visible border border-[var(--border-card)] p-4 rounded-xl">
-        <h3 className="text-xs font-bold text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 !overflow-visible w-full">
+        <h3 className="text-xs font-bold text-semantic-actionPrimary pb-2 border-b border-semantic-borderInput">
           {t('quranic.title', isRtl ? 'الإعدادات القرآنية والتعليمية' : 'Quranic & Educational Settings')}
         </h3>
 
         <div className="space-y-3.5">
           {/* نمط التعليم */}
-          <CustomSelect
+          <Select
             label={t('quranic.mode', isRtl ? 'نمط التعليم' : 'Learning Mode')}
             value={formData?.learning_type ?? 'online'}
             onChange={(val) => handleChange('learning_type', val)}
@@ -58,7 +58,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
           />
 
           {/* الرواية الافتراضية */}
-          <CustomSelect
+          <Select
             label={t('quranic.riwaya', isRtl ? 'الرواية الافتراضية' : 'Default Recitation / Riwaya')}
             value={formData?.default_qiraat ?? 'hafs_an_asem'}
             onChange={(val) => handleChange('default_qiraat', val)}
@@ -68,7 +68,7 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
           />
 
           {/* المدرسة والمنهجية */}
-          <CustomSelect
+          <Select
             label={t('quranic.madrasa', isRtl ? 'المدرسة والمنهجية' : 'Methodology & School')}
             value={formData?.teaching_methodology ?? 'mashreqi'}
             onChange={(val) => handleChange('teaching_methodology', val)}
@@ -77,40 +77,40 @@ export default function QuranicPoliciesTab({ formData = {}, updateField }) {
 
           {/* خيارات التسجيل الذاتي والموافقة */}
           <div className="pt-2 space-y-2.5">
-            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-[var(--text-main)] select-none">
+            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-semantic-textPrimary select-none">
               <input
                 type="checkbox"
                 checked={Boolean(formData?.allow_self_registration ?? true)}
                 onChange={(e) => handleChange('allow_self_registration', e.target.checked)}
-                className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer shrink-0"
+                className="w-4 h-4 accent-semantic-actionPrimary rounded cursor-pointer shrink-0"
               />
               <span>{t('quranic.allowSelfReg', isRtl ? 'السماح للطلاب بالتسجيل الذاتي' : 'Allow Student Self-Registration')}</span>
             </label>
 
-            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-[var(--text-main)] select-none">
+            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-semantic-textPrimary select-none">
               <input
                 type="checkbox"
                 checked={Boolean(formData?.require_approval ?? true)}
                 onChange={(e) => handleChange('require_approval', e.target.checked)}
-                className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer shrink-0"
+                className="w-4 h-4 accent-semantic-actionPrimary rounded cursor-pointer shrink-0"
               />
               <span>{t('quranic.requireApproval', isRtl ? 'اشتراط موافقة الإدارة على كل طالب جديد' : 'Require Admin Approval for New Students')}</span>
             </label>
           </div>
 
-          {/* الحد الأقصى للطلاب */}{/* الحد الأقصى للطلاب */}
-<div>
-  <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
-    {t('quranic.maxStudents', isRtl ? 'الحد الأقصى للطلاب في الحلقة' : 'Max Students per Group')}
-  </label>
-  <input
-    type="number"
-    min={1}
-    value={formData?.max_students_per_group ?? 25}
-    onChange={(e) => handleChange('max_students_per_group', Number(e.target.value))}
-    className="app-input w-full text-start"
-  />
-</div>
+          {/* الحد الأقصى للطلاب */}
+          <div>
+            <label className="block text-xs font-bold mb-1.5 text-semantic-textPrimary">
+              {t('quranic.maxStudents', isRtl ? 'الحد الأقصى للطلاب في الحلقة' : 'Max Students per Group')}
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={formData?.max_students_per_group ?? 25}
+              onChange={(e) => handleChange('max_students_per_group', Number(e.target.value))}
+              className="w-full bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl px-3.5 py-2.5 text-xs text-semantic-textPrimary placeholder:text-semantic-textSecondary/50 outline-none transition-all duration-200 text-start focus:border-semantic-actionPrimary focus:ring-2 focus:ring-semantic-actionPrimary/20"
+            />
+          </div>
         </div>
       </div>
     </div>
