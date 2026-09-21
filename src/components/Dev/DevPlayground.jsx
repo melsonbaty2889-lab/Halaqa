@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   AppBrand,
-  AuthButtons,
+  PrimaryButton,
+  GoogleButton,
   Badge, 
   Btn, 
   Card, 
