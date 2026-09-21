@@ -1,3 +1,4 @@
+// src/components/Student/DocumentUploadModal.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, CheckCircle2, AlertCircle, Loader2, Trash2, RefreshCw } from 'lucide-react';
@@ -96,18 +97,18 @@ export const DocumentUploadModal = ({
   }));
 
   return (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/80 p-4 overscroll-contain">
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overscroll-contain">
       <div 
-        className="w-full max-w-lg bg-dark-card text-appText-main rounded-2xl shadow-2xl border border-appBorder-card overflow-visible max-h-[90vh] flex flex-col"
-        dir={i18n.dir()}
+        className="w-full max-w-lg bg-semantic-surfaceCard text-semantic-textPrimary rounded-2xl shadow-2xl border border-semantic-borderCard overflow-visible max-h-[90vh] flex flex-col"
+        dir={i18n?.dir ? i18n.dir() : 'rtl'}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-appBorder-card bg-dark-card rounded-t-2xl shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-semantic-borderCard bg-semantic-surfaceCard rounded-t-2xl shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+            <div className="p-2 bg-semantic-actionPrimary/10 text-semantic-actionPrimary rounded-xl border border-semantic-actionPrimary/20">
               <UploadCloud className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-appText-main">
+            <h3 className="text-base font-bold text-semantic-textPrimary">
               {t('documents.upload_title', 'رفع ملف جديد')}
             </h3>
           </div>
@@ -115,7 +116,7 @@ export const DocumentUploadModal = ({
             type="button"
             onClick={handleClose} 
             disabled={isLoading}
-            className="text-appText-sub hover:text-appText-main transition-colors p-1.5 rounded-lg hover:bg-dark-input disabled:opacity-50 cursor-pointer"
+            className="text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors p-1.5 rounded-lg hover:bg-semantic-surfaceInput disabled:opacity-50 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -126,10 +127,10 @@ export const DocumentUploadModal = ({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Document Type Select */}
             <div className="space-y-1.5 relative z-20">
-              <label className="block text-xs font-medium text-appText-sub">
-                {t('documents.type_label', 'نوع المستند')} <span className="text-primary">*</span>
+              <label className="block text-xs font-medium text-semantic-textSecondary">
+                {t('documents.type_label', 'نوع المستند')} <span className="text-semantic-actionPrimary">*</span>
               </label>
-              <CustomSelect
+              <Select
                 value={documentType}
                 onChange={(val) => setDocumentType(val)}
                 options={typeOptions}
@@ -139,8 +140,8 @@ export const DocumentUploadModal = ({
 
             {/* File Upload Zone */}
             <div className="space-y-1.5 relative z-10">
-              <label className="block text-xs font-medium text-appText-sub">
-                {t('documents.file_label', 'الملف')} <span className="text-primary">*</span>
+              <label className="block text-xs font-medium text-semantic-textSecondary">
+                {t('documents.file_label', 'الملف')} <span className="text-semantic-actionPrimary">*</span>
               </label>
               
               <input
@@ -155,17 +156,17 @@ export const DocumentUploadModal = ({
                 onClick={() => !isLoading && fileInputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
                   selectedFile 
-                    ? 'border-emerald-500/50 bg-emerald-500/5' 
-                    : 'border-appBorder-input hover:border-primary/50 bg-dark-input/50 hover:bg-dark-input'
+                    ? 'border-semantic-success/50 bg-semantic-success/5' 
+                    : 'border-semantic-borderInput hover:border-semantic-actionPrimary/50 bg-semantic-surfaceInput/50 hover:bg-semantic-surfaceInput'
                 }`}
               >
                 {selectedFile ? (
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-6 h-6 text-semantic-success shrink-0" />
                       <div className="text-start overflow-hidden">
-                        <p className="text-sm font-medium text-appText-main truncate">{selectedFile.name}</p>
-                        <p className="text-xs text-appText-sub">
+                        <p className="text-sm font-medium text-semantic-textPrimary truncate">{selectedFile.name}</p>
+                        <p className="text-xs text-semantic-textSecondary">
                           {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
                       </div>
@@ -179,7 +180,7 @@ export const DocumentUploadModal = ({
                           fileInputRef.current?.click();
                         }}
                         disabled={isLoading}
-                        className="p-1.5 text-appText-sub hover:text-primary hover:bg-dark-input rounded-lg transition-colors"
+                        className="p-1.5 text-semantic-textSecondary hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput rounded-lg transition-colors"
                         title={t('common.change', 'تغيير')}
                       >
                         <RefreshCw className="w-4 h-4" />
@@ -188,7 +189,7 @@ export const DocumentUploadModal = ({
                         type="button"
                         onClick={handleRemoveFile}
                         disabled={isLoading}
-                        className="p-1.5 text-appText-sub hover:text-rose-400 hover:bg-dark-input rounded-lg transition-colors"
+                        className="p-1.5 text-semantic-textSecondary hover:text-semantic-error hover:bg-semantic-surfaceInput rounded-lg transition-colors"
                         title={t('common.remove', 'إلغاء')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -197,11 +198,11 @@ export const DocumentUploadModal = ({
                   </div>
                 ) : (
                   <div className="space-y-2 pointer-events-none">
-                    <UploadCloud className="w-8 h-8 text-primary mx-auto" />
-                    <p className="text-sm font-medium text-appText-main">
+                    <UploadCloud className="w-8 h-8 text-semantic-actionPrimary mx-auto" />
+                    <p className="text-sm font-medium text-semantic-textPrimary">
                       {t('documents.drag_drop_text', 'انقر هنا لاختيار ملف من جهازك')}
                     </p>
-                    <p className="text-xs text-appText-muted">PDF, PNG, JPG (MAX. 10MB)</p>
+                    <p className="text-xs text-semantic-textSecondary">PDF, PNG, JPG (MAX. 10MB)</p>
                   </div>
                 )}
               </div>
@@ -209,7 +210,7 @@ export const DocumentUploadModal = ({
 
             {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs">
+              <div className="flex items-center gap-2 p-3 bg-semantic-error/10 border border-semantic-error/20 rounded-xl text-semantic-error text-xs">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -217,7 +218,7 @@ export const DocumentUploadModal = ({
 
             {/* Notes */}
             <div className="space-y-1.5 relative z-10">
-              <label className="block text-xs font-medium text-appText-sub">
+              <label className="block text-xs font-medium text-semantic-textSecondary">
                 {t('documents.notes_label', 'ملاحظات')}
               </label>
               <textarea
@@ -226,7 +227,7 @@ export const DocumentUploadModal = ({
                 placeholder={t('documents.notes_placeholder', 'تفاصيل أو ملاحظات إضافية...')}
                 rows={3}
                 disabled={isLoading}
-                className="w-full bg-dark-input border border-appBorder-input text-appText-main placeholder-appText-muted text-sm rounded-xl p-3 focus:outline-none focus:border-appBorder-hover transition-colors resize-none disabled:opacity-50"
+                className="w-full bg-semantic-surfaceInput border border-semantic-borderInput text-semantic-textPrimary placeholder-semantic-textSecondary text-sm rounded-xl p-3 focus:outline-none focus:border-semantic-actionPrimary transition-colors resize-none disabled:opacity-50"
               />
             </div>
 
@@ -236,14 +237,14 @@ export const DocumentUploadModal = ({
                 type="button"
                 onClick={handleClose}
                 disabled={isLoading}
-                className="px-5 py-2.5 text-sm font-medium text-appText-sub hover:text-appText-main bg-dark-input hover:bg-appBorder-input/50 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2.5 text-sm font-medium text-semantic-textSecondary hover:text-semantic-textPrimary bg-semantic-surfaceInput hover:bg-semantic-borderInput/50 border border-semantic-borderCard rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {t('common.cancel', 'إلغاء')}
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !selectedFile}
-                className="px-6 py-2.5 text-sm font-bold text-appText-main bg-primary hover:bg-primary-hover rounded-xl transition-all shadow-lg shadow-primary-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 text-sm font-bold text-white bg-semantic-actionPrimary hover:bg-semantic-actionPrimary/90 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
               >
                 {isLoading ? (
                   <>
