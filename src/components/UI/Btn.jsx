@@ -47,7 +47,7 @@ export const Btn = forwardRef(({
 
   const styles = {
     primary: { 
-      background: "linear-gradient(180deg, var(--primary-btn-start) 0%, var(--primary-btn-end) 100%)", 
+      background: "var(--color-action-primary)", 
       color: "var(--color-text-primary)", 
       fontWeight: "bold", 
       boxShadow: "0 4px 14px var(--color-action-primary-glow)" 
