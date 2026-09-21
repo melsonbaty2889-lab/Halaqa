@@ -1,4 +1,6 @@
+// src/components/Dev/DevPlayground.jsx
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // استيرادات مباشرة لمنع الحلقات التداخلية (Circular Dependency)
 import AppBrand from '@/components/UI/AppBrand';
@@ -42,6 +44,8 @@ import {
 } from 'lucide-react';
 
 export default function DevPlayground() {
+  const { t } = useTranslation();
+
   // الحالات الخاصة بالسناريوهات والتفاعلات
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -54,36 +58,40 @@ export default function DevPlayground() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const tableData = [
-    { id: 1, name: 'محمد علي', role: 'مطور واجهات', status: 'نشط', color: 'var(--color-success)' },
-    { id: 2, name: 'أحمد محمود', role: 'مصمم UI/UX', status: 'قيد الانتظار', color: 'var(--color-warning)' },
-    { id: 3, name: 'سارة خالد', role: 'مدير مشروع', status: 'متوقف', color: 'var(--color-danger)' },
+    { id: 1, name: 'محمد علي', role: 'مطور واجهات', status: 'نشط', variant: 'success' },
+    { id: 2, name: 'أحمد محمود', role: 'مصمم UI/UX', status: 'قيد الانتظار', variant: 'warning' },
+    { id: 3, name: 'سارة خالد', role: 'مدير مشروع', status: 'متوقف', variant: 'danger' },
   ];
 
   if (showSplash) {
     return (
-      <div style={{ position: 'relative', height: '100vh' }}>
+      <div className="relative h-screen">
         <SplashScreen />
         <button 
           onClick={() => setShowSplash(false)}
-          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 10000, padding: '10px 20px', borderRadius: 8, background: '#fff', border: 'none', cursor: 'pointer' }}
+          className="fixed bottom-5 right-5 z-[10000] px-5 py-2.5 rounded-xl bg-semantic-surfaceCard border border-semantic-borderCard text-semantic-textPrimary font-bold text-xs shadow-2xl hover:bg-semantic-surfaceInput transition-colors cursor-pointer"
         >
-          إغلاق شاشة التحميل (SplashScreen)
+          {t('dev.close_splash', 'إغلاق شاشة التحميل (SplashScreen)')}
         </button>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto', fontFamily: 'inherit' }}>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
       
       {/* 1. PageHeader */}
       <PageHeader 
-        title="معرض جميع مكونات UI (Dev Playground)" 
-        sub="صفحة شاملة لاختبار ومعاينة 23 مكوناً من المكونات المفصولة"
+        title={t('dev.title', 'معرض جميع مكونات UI (Dev Playground)')} 
+        sub={t('dev.sub', 'صفحة شاملة لاختبار ومعاينة 23 مكوناً من المكونات المفصولة')}
         action={
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Btn variant="outline" size="sm" onClick={() => setShowSplash(true)}>عرض SplashScreen</Btn>
-            <Btn variant="outline" size="sm" onClick={() => setIsConfirmOpen(true)}>ConfirmModal</Btn>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Btn variant="outline" size="sm" onClick={() => setShowSplash(true)}>
+              {t('dev.show_splash', 'عرض SplashScreen')}
+            </Btn>
+            <Btn variant="outline" size="sm" onClick={() => setIsConfirmOpen(true)}>
+              ConfirmModal
+            </Btn>
             <Btn variant="primary" size="sm" startIcon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
               Modal
             </Btn>
@@ -91,27 +99,28 @@ export default function DevPlayground() {
         }
       />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="flex flex-col gap-6">
 
         {/* 2. الهوية والعلامة التجارية (AppBrand & Logos) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <Sparkles size={18} /> 1. الهوية والشعارات (AppBrand, SmartHalaqaProLogo, LanguageSwitcher)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <Sparkles size={18} />
+              <span>1. الهوية والشعارات (AppBrand, SmartHalaqaProLogo, LanguageSwitcher)</span>
             </h3>
           </Card.Header>
-          <Card.Body>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center' }}>
+          <Card.Body className="p-4 sm:p-6">
+            <div className="flex flex-wrap gap-6 items-center">
               <div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: 8 }}>AppBrand:</p>
+                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">AppBrand:</p>
                 <AppBrand />
               </div>
               <div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: 8 }}>SmartHalaqaProLogo:</p>
+                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">SmartHalaqaProLogo:</p>
                 <SmartHalaqaProLogo size={40} />
               </div>
               <div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: 8 }}>LanguageSwitcher:</p>
+                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">LanguageSwitcher:</p>
                 <LanguageSwitcher />
               </div>
             </div>
@@ -119,42 +128,44 @@ export default function DevPlayground() {
         </Card>
 
         {/* 3. شارات الحالة والتنبيهات (Badge & Toast) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <Bookmark size={18} /> 2. الشارات والتنبيهات (Badge & Toast)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <Bookmark size={18} />
+              <span>2. الشارات والتنبيهات (Badge & Toast)</span>
             </h3>
           </Card.Header>
-          <Card.Body style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <Card.Body className="p-4 sm:p-6 flex flex-col gap-4">
+            <div className="flex flex-wrap gap-3 items-center">
               <Badge>افتراضي</Badge>
-              <Badge color="var(--color-success)">
+              <Badge variant="success">
                 <CheckCircle2 size={14} /> <span>مكتمل</span>
               </Badge>
-              <Badge color="var(--color-danger)">
+              <Badge variant="danger">
                 <AlertCircle size={14} /> <span>ملغى</span>
               </Badge>
-              <Badge color="var(--color-warning)">
+              <Badge variant="warning">
                 <AlertTriangle size={14} /> <span>قيد الانتظار</span>
               </Badge>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', margin: 0 }}>مكون Toast:</p>
+            <div className="flex flex-col gap-2 mt-2">
+              <p className="text-xs text-semantic-textSecondary font-medium">مكون Toast:</p>
               <Toast type="info" message="هذا تنبيه تجريبي لمعاينة مكون Toast" />
             </div>
           </Card.Body>
         </Card>
 
-                {/* 4. الأزرار وتسجيل الدخول (Btn, LoadingButton, AuthButtons) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <MousePointerClick size={18} /> 3. الأزرار وحقول الإجراءات (Btn, LoadingButton, PrimaryButton, GoogleButton)
+        {/* 4. الأزرار وتسجيل الدخول (Btn, LoadingButton, AuthButtons) */}
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <MousePointerClick size={18} />
+              <span>3. الأزرار وحقول الإجراءات (Btn, LoadingButton, PrimaryButton, GoogleButton)</span>
             </h3>
           </Card.Header>
-          <Card.Body style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+          <Card.Body className="p-4 sm:p-6 flex flex-col gap-5">
+            <div className="flex flex-wrap gap-2.5 items-center">
               <Btn variant="primary">Btn Primary</Btn>
               <Btn variant="outline">Btn Outline</Btn>
               <LoadingButton loading={true}>زر جاري التحميل</LoadingButton>
@@ -164,8 +175,8 @@ export default function DevPlayground() {
             </div>
 
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 10 }}>أزرار المصادقة (PrimaryButton & GoogleButton):</p>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <p className="text-xs text-semantic-textSecondary mb-2.5 font-medium">أزرار المصادقة (PrimaryButton & GoogleButton):</p>
+              <div className="flex flex-wrap gap-2.5 items-center">
                 <PrimaryButton>تسجيل الدخول</PrimaryButton>
                 <GoogleButton />
               </div>
@@ -174,14 +185,15 @@ export default function DevPlayground() {
         </Card>
 
         {/* 5. حقول الإدخال والانتخاب المتقدمة (Input, Select, CountrySelect) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <Layout size={18} /> 4. حقول القوائم والإدخال (Input, Select, CountrySelect)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <Layout size={18} />
+              <span>4. حقول القوائم والإدخال (Input, Select, CountrySelect)</span>
             </h3>
           </Card.Header>
-          <Card.Body>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+          <Card.Body className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input 
                 label="حقل Input عادي" 
                 placeholder="أدخل النص..." 
@@ -207,16 +219,17 @@ export default function DevPlayground() {
         </Card>
 
         {/* 6. تاريخ ووقت التقويم (CustomDatePicker, DatePickerHeader, DatePickerDaysGrid) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <Calendar size={18} /> 5. أدوات التقويم (CustomDatePicker, DatePickerHeader, DatePickerDaysGrid)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <Calendar size={18} />
+              <span>5. أدوات التقويم (CustomDatePicker, DatePickerHeader, DatePickerDaysGrid)</span>
             </h3>
           </Card.Header>
-          <Card.Body>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          <Card.Body className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 8 }}>مكون CustomDatePicker كامل:</p>
+                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">مكون CustomDatePicker كامل:</p>
                 <CustomDatePicker 
                   label="اختر التاريخ"
                   value={selectedDate}
@@ -224,8 +237,8 @@ export default function DevPlayground() {
                 />
               </div>
 
-              <div style={{ border: '1px dashed var(--color-border-input)', padding: 12, borderRadius: 12 }}>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 8 }}>مكونات DatePicker الفرعية معروضة مباشرة:</p>
+              <div className="border border-dashed border-semantic-borderInput p-3 rounded-xl bg-semantic-surfaceInput/30">
+                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">مكونات DatePicker الفرعية معروضة مباشرة:</p>
                 <DatePickerHeader 
                   currentMonth={selectedDate} 
                   onPrevMonth={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
@@ -242,16 +255,17 @@ export default function DevPlayground() {
         </Card>
 
         {/* 7. الهيكل العظمي والحالة الفارغة (Skeleton & EmptyState) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <Activity size={18} /> 6. حالات الواجهة (Skeleton & EmptyState)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <Activity size={18} />
+              <span>6. حالات الواجهة (Skeleton & EmptyState)</span>
             </h3>
           </Card.Header>
-          <Card.Body style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          <Card.Body className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 12 }}>تحميل Skeleton:</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p className="text-xs text-semantic-textSecondary mb-3 font-medium">تحميل Skeleton:</p>
+              <div className="flex flex-col gap-2">
                 <Skeleton width="100%" height="20px" />
                 <Skeleton width="75%" height="20px" />
                 <Skeleton width="40%" height="20px" />
@@ -259,7 +273,7 @@ export default function DevPlayground() {
             </div>
 
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 12 }}>الحالة الفارغة EmptyState:</p>
+              <p className="text-xs text-semantic-textSecondary mb-3 font-medium">الحالة الفارغة EmptyState:</p>
               <EmptyState 
                 icon={<Inbox size={28} />}
                 title="لا توجد بيانات"
@@ -270,13 +284,14 @@ export default function DevPlayground() {
         </Card>
 
         {/* 8. الجدول (Table, THead, TBody, TR, TH, TD) */}
-        <Card>
-          <Card.Header>
-            <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <TableIcon size={18} /> 7. الجداول (Table)
+        <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm overflow-hidden">
+          <Card.Header className="p-4 border-b border-semantic-borderCard">
+            <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
+              <TableIcon size={18} />
+              <span>7. الجداول (Table)</span>
             </h3>
           </Card.Header>
-          <Card.Body style={{ padding: 0 }}>
+          <Card.Body className="p-0 overflow-x-auto">
             <Table>
               <THead>
                 <TR>
@@ -292,7 +307,7 @@ export default function DevPlayground() {
                     <TD>{row.id}</TD>
                     <TD>{row.name}</TD>
                     <TD>{row.role}</TD>
-                    <TD><Badge color={row.color}>{row.status}</Badge></TD>
+                    <TD><Badge variant={row.variant}>{row.status}</Badge></TD>
                   </TR>
                 ))}
               </TBody>
@@ -304,10 +319,10 @@ export default function DevPlayground() {
 
       {/* 9. النوافذ المنبثقة (Modal, ConfirmModal, TermsModal) */}
       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} title="نافذة Modal العادية">
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
+        <p className="text-sm text-semantic-textSecondary">
           هذا محتوى النافذة المنبثقة العادية المفصولة في ملف Modal.jsx.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+        <div className="flex justify-end gap-2.5 mt-5">
           <Btn variant="outline" onClick={() => setIsModalOpen(false)}>إلغاء</Btn>
           <Btn variant="primary" onClick={() => setIsModalOpen(false)}>تأكيد</Btn>
         </div>
