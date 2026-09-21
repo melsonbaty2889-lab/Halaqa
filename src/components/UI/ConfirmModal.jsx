@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactDom from 'react-dom';
 import { 
   Trash2, Archive, ArchiveRestore,
   HelpCircle, X, Loader2 
@@ -26,14 +27,22 @@ const ConfirmModal = ({
 
   const [inputValue, setInputValue] = useState('');
 
-  // إعادة ضبط المدخلات عند فتح أو إغلاق النافذة
+  // المتغيرات البرمجية للتنسيقات
+  const cardBg = 'var(--color-surface-card)';
+  const inputBg = 'var(--color-surface-input)';
+  const borderCol = 'var(--color-border-input)';
+  const titleColor = 'var(--color-text-primary)';
+  const subColor = 'var(--color-text-secondary)';
+  const primaryColor = 'var(--color-action-primary)';
+  const dangerColor = 'var(--color-danger)';
+  const successColor = 'var(--color-success)';
+
   useEffect(() => {
     if (isOpen) {
       setInputValue('');
     }
   }, [isOpen]);
 
-  // إغلاق النافذة عند الضغط على زر Esc
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen && !isLoading) {
@@ -44,59 +53,67 @@ const ConfirmModal = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isLoading, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof window === 'undefined') return null;
 
-  // تحديد أنماط الأيقونات والأزرار والنصوص الافتراضية باستخدام كلاسات Tailwind والنظام المعتمد
   const getVariantStyles = () => {
     switch (variant) {
       case 'danger':
       case 'secure-delete':
         return {
-          icon: <Trash2 size={22} className="text-red-500" />,
-          borderIcon: 'border-red-500/30 bg-red-500/10',
-          btnBg: 'bg-red-500 hover:bg-red-600 text-white',
+          icon: <Trash2 size={22} style={{ color: dangerColor }} />,
+          borderIconBg: 'color-mix(in srgb, var(--color-danger) 15%, transparent)',
+          borderIconCol: 'color-mix(in srgb, var(--color-danger) 30%, transparent)',
+          btnBg: dangerColor,
+          btnColor: '#ffffff',
           defaultTitle: t('confirmModal.dangerTitle', 'تأكيد الحذف'),
           defaultConfirmText: t('common.delete', 'حذف')
         };
       case 'info':
         return {
-          icon: <ArchiveRestore size={22} className="text-emerald-500" />,
-          borderIcon: 'border-emerald-500/30 bg-emerald-500/10',
-          btnBg: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+          icon: <ArchiveRestore size={22} style={{ color: successColor }} />,
+          borderIconBg: 'color-mix(in srgb, var(--color-success) 15%, transparent)',
+          borderIconCol: 'color-mix(in srgb, var(--color-success) 30%, transparent)',
+          btnBg: successColor,
+          btnColor: '#ffffff',
           defaultTitle: t('confirmModal.restoreTitle', 'تأكيد الاستعادة'),
           defaultConfirmText: t('common.restore', 'استعادة')
         };
       case 'alert':
         return {
-          icon: <HelpCircle size={22} className="text-semantic-actionPrimary" />,
-          borderIcon: 'border-semantic-actionPrimary/30 bg-semantic-actionPrimary/10',
-          btnBg: 'bg-semantic-actionPrimary hover:opacity-90 text-white',
+          icon: <HelpCircle size={22} style={{ color: primaryColor }} />,
+          borderIconBg: 'color-mix(in srgb, var(--color-action-primary) 15%, transparent)',
+          borderIconCol: 'color-mix(in srgb, var(--color-action-primary) 30%, transparent)',
+          btnBg: primaryColor,
+          btnColor: '#ffffff',
           defaultTitle: t('confirmModal.alertTitle', 'تنبيه'),
           defaultConfirmText: t('common.ok', 'حسناً')
         };
       case 'prompt':
         return {
-          icon: <HelpCircle size={22} className="text-semantic-actionPrimary" />,
-          borderIcon: 'border-semantic-actionPrimary/30 bg-semantic-actionPrimary/10',
-          btnBg: 'bg-semantic-actionPrimary hover:opacity-90 text-white',
+          icon: <HelpCircle size={22} style={{ color: primaryColor }} />,
+          borderIconBg: 'color-mix(in srgb, var(--color-action-primary) 15%, transparent)',
+          borderIconCol: 'color-mix(in srgb, var(--color-action-primary) 30%, transparent)',
+          btnBg: primaryColor,
+          btnColor: '#ffffff',
           defaultTitle: t('confirmModal.promptTitle', 'إدخال التفاصيل'),
           defaultConfirmText: t('common.send', 'إرسال')
         };
       case 'warning':
       default:
         return {
-          icon: <Archive size={22} className="text-semantic-actionPrimary" />,
-          borderIcon: 'border-semantic-actionPrimary/30 bg-semantic-actionPrimary/10',
-          btnBg: 'bg-semantic-actionPrimary hover:opacity-90 text-white',
+          icon: <Archive size={22} style={{ color: primaryColor }} />,
+          borderIconBg: 'color-mix(in srgb, var(--color-action-primary) 15%, transparent)',
+          borderIconCol: 'color-mix(in srgb, var(--color-action-primary) 30%, transparent)',
+          btnBg: primaryColor,
+          btnColor: '#ffffff',
           defaultTitle: t('confirmModal.warningTitle', 'تأكيد الإجراء'),
           defaultConfirmText: t('common.confirm', 'تأكيد')
         };
     }
   };
 
-  const styles = getVariantStyles();
+  const variantStyle = getVariantStyles();
 
-  // التحقق من تفعيل زر التأكيد
   const isConfirmDisabled = isLoading || (
     variant === 'secure-delete' && 
     requiredConfirmWord && 
@@ -115,14 +132,38 @@ const ConfirmModal = ({
     }
   };
 
-  return (
+  return ReactDom.createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-all"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        backgroundColor: 'rgba(7, 11, 17, 0.8)',
+        backdropFilter: 'blur(6px)'
+      }}
       dir={isRtl ? 'rtl' : 'ltr'}
       role="dialog"
       aria-modal="true"
+      onClick={(e) => e.target === e.currentTarget && !isLoading && onClose()}
     >
-      <div className="border border-semantic-borderInput rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 relative transition-all text-start bg-semantic-surfaceInput text-semantic-textPrimary">
+      <div 
+        style={{
+          backgroundColor: cardBg,
+          border: `1px solid ${borderCol}`,
+          borderRadius: 20,
+          maxWidth: 440,
+          width: '100%',
+          padding: 24,
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+          position: 'relative',
+          textAlign: 'start',
+          color: titleColor
+        }}
+      >
         
         {/* زر الإغلاق العلوي */}
         <button
@@ -130,23 +171,47 @@ const ConfirmModal = ({
           onClick={onClose}
           disabled={isLoading}
           aria-label={t('common.close', 'إغلاق')}
-          className={`absolute top-4 p-2 rounded-xl cursor-pointer border-0 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-semantic-textSecondary hover:bg-semantic-borderCard ${
-            isRtl ? 'left-4' : 'right-4'
-          }`}
+          style={{
+            position: 'absolute',
+            top: 16,
+            left: isRtl ? 16 : 'auto',
+            right: isRtl ? 'auto' : 16,
+            background: 'none',
+            border: 'none',
+            color: subColor,
+            cursor: 'pointer',
+            minWidth: 44,
+            minHeight: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 12
+          }}
         >
           <X size={20} />
         </button>
 
         {/* رأس التنبيه والأيقونة */}
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-2xl border shrink-0 flex items-center justify-center ${styles.borderIcon}`}>
-            {styles.icon}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
+          <div 
+            style={{ 
+              padding: 12, 
+              borderRadius: 16, 
+              border: `1px solid ${variantStyle.borderIconCol}`,
+              backgroundColor: variantStyle.borderIconBg,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            {variantStyle.icon}
           </div>
-          <div className={`flex-1 ${isRtl ? 'pe-6' : 'ps-6'}`}>
-            <h3 className="text-base font-bold text-semantic-textPrimary">
-              {title || styles.defaultTitle}
+          <div style={{ flex: 1, paddingRight: isRtl ? 0 : 32, paddingLeft: isRtl ? 32 : 0 }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: titleColor }}>
+              {title || variantStyle.defaultTitle}
             </h3>
-            <p className="text-xs mt-1 leading-relaxed text-semantic-textSecondary">
+            <p style={{ margin: '6px 0 0 0', fontSize: '0.8125rem', color: subColor, lineHeight: 1.5 }}>
               {message || t('confirmModal.defaultMessage', 'هل أنت متأكد من الاستمرار في هذا الإجراء؟')}
             </p>
           </div>
@@ -154,42 +219,76 @@ const ConfirmModal = ({
 
         {/* حقل مدخلات إضافي للنوافذ التي تطلب نصاً */}
         {variant === 'prompt' && (
-          <div className="space-y-2">
+          <div style={{ marginBottom: 16 }}>
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={promptPlaceholder || t('common.typeHere', 'اكتب هنا...')}
-              className="w-full p-3 rounded-xl text-xs border border-semantic-borderInput bg-semantic-bg text-semantic-textPrimary outline-none transition-all focus:border-semantic-actionPrimary"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 12,
+                fontSize: '0.8125rem',
+                border: `1px solid ${borderCol}`,
+                backgroundColor: inputBg,
+                color: titleColor,
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
             />
           </div>
         )}
 
         {variant === 'secure-delete' && requiredConfirmWord && (
-          <div className="space-y-2">
-            <p className="text-[11px] text-semantic-textSecondary">
-              {t('confirmModal.typeWordToConfirm', 'اكتب كلمة')} <strong className="text-red-500">"{requiredConfirmWord}"</strong> {t('confirmModal.toConfirm', 'لتأكيد الإجراء:')}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: '0.75rem', color: subColor, marginBottom: 6 }}>
+              {t('confirmModal.typeWordToConfirm', 'اكتب كلمة')} <strong style={{ color: dangerColor }}>"{requiredConfirmWord}"</strong> {t('confirmModal.toConfirm', 'لتأكيد الإجراء:')}
             </p>
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-full p-3 rounded-xl text-xs border border-semantic-borderInput bg-semantic-bg text-semantic-textPrimary outline-none transition-all focus:border-semantic-actionPrimary"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 12,
+                fontSize: '0.8125rem',
+                border: `1px solid ${borderCol}`,
+                backgroundColor: inputBg,
+                color: titleColor,
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
             />
           </div>
         )}
 
         {/* محتوى إضافي مخصص */}
-        {children && <div className="pt-1">{children}</div>}
+        {children && <div style={{ marginBottom: 16 }}>{children}</div>}
 
         {/* الأزرار */}
-        <div className="flex items-center gap-3 pt-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
           {variant !== 'alert' && (
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all border-0 cursor-pointer min-h-[44px] flex items-center justify-center bg-semantic-borderCard text-semantic-textPrimary hover:bg-semantic-borderInput"
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: 12,
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                border: `1px solid ${borderCol}`,
+                backgroundColor: 'transparent',
+                color: titleColor,
+                cursor: 'pointer',
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
               {cancelText || t('common.cancel', 'إلغاء')}
             </button>
@@ -199,20 +298,35 @@ const ConfirmModal = ({
             type="button"
             onClick={handleConfirmClick}
             disabled={isConfirmDisabled}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all border-0 shadow-lg flex items-center justify-center gap-2 min-h-[44px] ${styles.btnBg} ${
-              isConfirmDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            }`}
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              borderRadius: 12,
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              border: 'none',
+              backgroundColor: variantStyle.btnBg,
+              color: variantStyle.btnColor,
+              cursor: isConfirmDisabled ? 'not-allowed' : 'pointer',
+              opacity: isConfirmDisabled ? 0.5 : 1,
+              minHeight: 44,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8
+            }}
           >
             {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin shrink-0" aria-hidden="true" />
+              <Loader2 size={18} style={{ animation: 'ui-spin 0.8s linear infinite' }} />
             ) : (
-              confirmText || styles.defaultConfirmText
+              confirmText || variantStyle.defaultConfirmText
             )}
           </button>
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
