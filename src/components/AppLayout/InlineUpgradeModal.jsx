@@ -78,7 +78,7 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           }}>
             <Zap size={24} />
           </div>
-          <h2 style={{ color: C.text.main, fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
+          <h2 style={{ color: C.appText.main, fontSize: '1.25rem', margin: '0 0 6px 0', fontWeight: 'bold' }}>
             {getText(t, 'upgrade.title', 'ترقية حساب الأكاديمية')}
           </h2>
           <p style={{ color: C.text.sub, fontSize: '0.85rem', margin: 0 }}>
@@ -94,7 +94,7 @@ export default function InlineUpgradeModal({ isOpen, onClose, academyName }) {
           marginBlockEnd: '20px',
           border: `1px solid ${C.border.card}`
         }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.text.main, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: C.appText.main, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle size={18} style={{ color: C.emerald.DEFAULT }} />
               <span>{getText(t, 'upgrade.feat1', 'إدارة عدد غير محدود من الطلاب والحلقات')}</span>
