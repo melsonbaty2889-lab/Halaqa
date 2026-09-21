@@ -34,7 +34,7 @@ export default class GlobalErrorBoundary extends Component {
           justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
-          color: C.text.main
+          color: C.appText.main
         }}>
           <div style={{
             width: '100%',
@@ -78,7 +78,7 @@ export default class GlobalErrorBoundary extends Component {
               <AlertTriangle size={36} />
             </div>
 
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.text.main }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.appText.main }}>
               عذراً، حدث خطأ تقني غير متوقع
             </h2>
             <p style={{ fontSize: '0.875rem', color: C.text.sub, marginBlockEnd: '24px', lineHeight: '1.6' }}>
