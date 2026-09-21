@@ -24,7 +24,7 @@ const StudentsList = ({
   academySettings
 }) => {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl';
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
 
   const { academy } = useAcademy?.() || {};
   const calendarType = academySettings?.calendar_type || academy?.calendar_type || 'gregorian';
@@ -138,18 +138,18 @@ const StudentsList = ({
   const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || halaqaFilter !== 'all' || sortBy !== 'name';
 
   return (
-    <div className="space-y-4 text-appText-main" dir={i18n.dir()}>
+    <div className="space-y-4 text-semantic-textPrimary" dir={i18n?.dir ? i18n.dir() : 'rtl'}>
       {/* 1. رأس الصفحة */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3 text-start w-full sm:w-auto">
-          <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-primary/10 text-primary border border-primary/20">
+          <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-appText-main leading-snug">
+            <h1 className="text-lg font-bold text-semantic-textPrimary leading-snug">
               {t('students_management_title', 'شؤون الطلاب والمسار التعليمي')}
             </h1>
-            <p className="text-xs text-appText-sub">
+            <p className="text-xs text-semantic-textSecondary">
               {t('students.subtitle', 'إدارة وتنظيم بيانات الطلاب والمتابعة اليومية')}
             </p>
           </div>
@@ -158,7 +158,7 @@ const StudentsList = ({
         <button 
           type="button"
           onClick={handleOpenAddModal} 
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-appText-main font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-primary-glow active:scale-95 shrink-0"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-semantic-actionPrimary text-white font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>{t('add_new_student', 'إضافة طالب جديد')}</span>
@@ -169,57 +169,57 @@ const StudentsList = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <div 
           onClick={() => setStatusFilter('all')}
-          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'all' ? 'border-primary ring-1 ring-primary' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+          className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'all' ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
         >
-          <div className="absolute top-0 start-0 end-0 h-1 bg-primary"></div>
-          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('total_students', 'إجمالي الطلاب')}</p>
-          <p className="text-base sm:text-xl font-bold text-appText-main mt-1">{stats.total}</p>
+          <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-actionPrimary"></div>
+          <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('total_students', 'إجمالي الطلاب')}</p>
+          <p className="text-base sm:text-xl font-bold text-semantic-textPrimary mt-1">{stats?.total || 0}</p>
         </div>
 
         <div 
           onClick={() => setStatusFilter('active')}
-          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'active' ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+          className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'active' ? 'border-semantic-success ring-1 ring-semantic-success' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
         >
-          <div className="absolute top-0 start-0 end-0 h-1 bg-emerald-500"></div>
-          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('status_active', 'النشطون')}</p>
-          <p className="text-base sm:text-xl font-bold text-emerald-400 mt-1">{stats.active}</p>
+          <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-success"></div>
+          <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('status_active', 'النشطون')}</p>
+          <p className="text-base sm:text-xl font-bold text-semantic-success mt-1">{stats?.active || 0}</p>
         </div>
 
         <div 
           onClick={() => setStatusFilter('inactive')}
-          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'inactive' ? 'border-rose-500 ring-1 ring-rose-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+          className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'inactive' ? 'border-semantic-error ring-1 ring-semantic-error' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
         >
-          <div className="absolute top-0 start-0 end-0 h-1 bg-rose-500"></div>
-          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('status_inactive', 'غير النشطين')}</p>
-          <p className="text-base sm:text-xl font-bold text-rose-400 mt-1">{stats.inactive}</p>
+          <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-error"></div>
+          <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('status_inactive', 'غير النشطين')}</p>
+          <p className="text-base sm:text-xl font-bold text-semantic-error mt-1">{stats?.inactive || 0}</p>
         </div>
 
         <div 
           onClick={() => setStatusFilter('archived')}
-          className={`bg-dark-card border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'archived' ? 'border-sky-500 ring-1 ring-sky-500' : 'border-appBorder-card hover:border-appBorder-card/80'}`}
+          className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'archived' ? 'border-semantic-warning ring-1 ring-semantic-warning' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
         >
-          <div className="absolute top-0 start-0 end-0 h-1 bg-sky-500"></div>
-          <p className="text-[10px] sm:text-xs text-appText-sub whitespace-nowrap font-medium">{t('common.archived', 'المؤرشفون')}</p>
-          <p className="text-base sm:text-xl font-bold text-sky-400 mt-1">{stats.archived}</p>
+          <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-warning"></div>
+          <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('common.archived', 'المؤرشفون')}</p>
+          <p className="text-base sm:text-xl font-bold text-semantic-warning mt-1">{stats?.archived || 0}</p>
         </div>
       </div>
 
       {/* 3. شريط البحث والفلترة والترتيب */}
-      <div className="bg-dark-card/60 p-3 sm:p-4 rounded-2xl border border-appBorder-card space-y-3 shadow-md relative z-20">
+      <div className="bg-semantic-surfaceCard/60 p-3 sm:p-4 rounded-2xl border border-semantic-borderCard space-y-3 shadow-md relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           <div className="relative w-full col-span-2 md:col-span-1 z-10">
-            <Search className="w-4 h-4 text-appText-muted absolute start-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-semantic-textSecondary absolute start-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('search_placeholder', 'ابحث عن طالب بالاسم، الهاتف، أو السورة الحالية...')}
-              className="w-full bg-dark-input border border-appBorder-input rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm text-appText-main placeholder-appText-muted focus:outline-none focus:border-primary transition-colors"
+              placeholder={t('search_placeholder', 'ابحث عن طالب بالاسم، الهاتف...')}
+              className="w-full bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm text-semantic-textPrimary placeholder-semantic-textSecondary focus:outline-none focus:border-semantic-actionPrimary transition-colors"
             />
           </div>
 
           <div className="relative z-40 col-span-1">
-            <CustomSelect
+            <Select
               value={statusFilter}
               onChange={(val) => setStatusFilter(val)}
               options={statusOptions}
@@ -228,7 +228,7 @@ const StudentsList = ({
           </div>
 
           <div className="relative z-30 col-span-1">
-            <CustomSelect
+            <Select
               value={halaqaFilter}
               onChange={(val) => setHalaqaFilter(val)}
               options={halaqaOptions}
@@ -237,7 +237,7 @@ const StudentsList = ({
           </div>
 
           <div className="relative z-20 col-span-2 md:col-span-1">
-            <CustomSelect
+            <Select
               value={sortBy}
               onChange={(val) => setSortBy(val)}
               options={sortOptions}
@@ -246,13 +246,13 @@ const StudentsList = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-appText-sub pt-2 px-1 border-t border-appBorder-card/40 relative z-0">
+        <div className="flex items-center justify-between text-xs text-semantic-textSecondary pt-2 px-1 border-t border-semantic-borderCard/40 relative z-0">
           <span className="flex items-center gap-1.5">
-            <ListFilter className="w-3.5 h-3.5 text-primary" />
+            <ListFilter className="w-3.5 h-3.5 text-semantic-actionPrimary" />
             <span>
               {t('students.results_count', 'عرض {{count}} من إجمالي {{total}} طالب', {
-                count: filteredStudents.length,
-                total: stats.total,
+                count: filteredStudents?.length || 0,
+                total: stats?.total || 0,
               })}
             </span>
           </span>
@@ -260,7 +260,7 @@ const StudentsList = ({
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="flex items-center gap-1 text-primary hover:underline font-medium transition-colors"
+              className="flex items-center gap-1 text-semantic-actionPrimary hover:underline font-medium transition-colors"
             >
               <FilterX className="w-3.5 h-3.5" />
               <span>{t('common.reset_filters', 'إلغاء الفلاتر')}</span>
@@ -271,22 +271,22 @@ const StudentsList = ({
 
       {/* 4. قائمة الطلاب */}
       {isLoading ? (
-        <div className="text-center py-12 text-sm text-appText-sub">
+        <div className="text-center py-12 text-sm text-semantic-textSecondary">
           {t('loading', 'جاري تحميل البيانات...')}
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="text-center py-12 bg-dark-card rounded-2xl border border-appBorder-card space-y-2">
-          <Users className="w-10 h-10 text-appText-muted mx-auto" />
-          <p className="text-appText-main font-medium text-sm">
+        <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-2">
+          <Users className="w-10 h-10 text-semantic-textSecondary mx-auto" />
+          <p className="text-semantic-textPrimary font-medium text-sm">
             {t('no_search_results', 'لم يتم العثور على نتائج تطابق بحثك.')}
           </p>
-          <p className="text-xs text-appText-sub">
+          <p className="text-xs text-semantic-textSecondary">
             {t('students.no_match_hint', 'جرّب تغيير البحث أو إضافة طالب جديد')}
           </p>
           {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="mt-2 inline-flex items-center gap-1 text-xs text-primary underline"
+              className="mt-2 inline-flex items-center gap-1 text-xs text-semantic-actionPrimary underline"
             >
               <FilterX className="w-3 h-3" />
               <span>{t('common.reset_filters', 'إلغاء الفلاتر')}</span>
