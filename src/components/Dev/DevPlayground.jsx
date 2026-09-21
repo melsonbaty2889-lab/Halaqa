@@ -146,11 +146,11 @@ export default function DevPlayground() {
           </Card.Body>
         </Card>
 
-        {/* 4. الأزرار وتسجيل الدخول (Btn, LoadingButton, AuthButtons) */}
+                {/* 4. الأزرار وتسجيل الدخول (Btn, LoadingButton, AuthButtons) */}
         <Card>
           <Card.Header>
             <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-action-primary)' }}>
-              <MousePointerClick size={18} /> 3. الأزرار وحقول الإجراءات (Btn, LoadingButton, AuthButtons)
+              <MousePointerClick size={18} /> 3. الأزرار وحقول الإجراءات (Btn, LoadingButton, PrimaryButton, GoogleButton)
             </h3>
           </Card.Header>
           <Card.Body style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -164,8 +164,11 @@ export default function DevPlayground() {
             </div>
 
             <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 10 }}>أزرار المصادقة (AuthButtons):</p>
-              <AuthButtons />
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 10 }}>أزرار المصادقة (PrimaryButton & GoogleButton):</p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <PrimaryButton>تسجيل الدخول</PrimaryButton>
+                <GoogleButton />
+              </div>
             </div>
           </Card.Body>
         </Card>
