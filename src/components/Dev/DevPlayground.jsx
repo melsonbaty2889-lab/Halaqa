@@ -11,8 +11,6 @@ import Card from '@/components/UI/Card';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import CountrySelect from '@/components/UI/CountrySelect';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
-import DatePickerDaysGrid from '@/components/UI/DatePickerDaysGrid';
-import DatePickerHeader from '@/components/UI/DatePickerHeader';
 import EmptyState from '@/components/UI/EmptyState';
 import Input from '@/components/UI/Input';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
@@ -83,7 +81,7 @@ export default function DevPlayground() {
       {/* 1. PageHeader */}
       <PageHeader 
         title={t('dev.title', 'معرض جميع مكونات UI (Dev Playground)')} 
-        sub={t('dev.sub', 'صفحة شاملة لاختبار ومعاينة 23 مكوناً من المكونات المفصولة')}
+        sub={t('dev.sub', 'صفحة شاملة لاختبار ومعاينة مكونات الواجهة الفصلية')}
         action={
           <div className="flex items-center gap-2 flex-wrap">
             <Btn variant="outline" size="sm" onClick={() => setShowSplash(true)}>
@@ -218,38 +216,22 @@ export default function DevPlayground() {
           </Card.Body>
         </Card>
 
-        {/* 6. تاريخ ووقت التقويم (CustomDatePicker, DatePickerHeader, DatePickerDaysGrid) */}
+        {/* 6. تاريخ ووقت التقويم (CustomDatePicker) */}
         <Card className="border border-semantic-borderCard bg-semantic-surfaceCard rounded-2xl shadow-sm">
           <Card.Header className="p-4 border-b border-semantic-borderCard">
             <h3 className="m-0 text-sm sm:text-base font-bold flex items-center gap-2 text-semantic-actionPrimary">
               <Calendar size={18} />
-              <span>5. أدوات التقويم (CustomDatePicker, DatePickerHeader, DatePickerDaysGrid)</span>
+              <span>5. أدوات التقويم (CustomDatePicker)</span>
             </h3>
           </Card.Header>
           <Card.Body className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">مكون CustomDatePicker كامل:</p>
-                <CustomDatePicker 
-                  label="اختر التاريخ"
-                  value={selectedDate}
-                  onChange={setSelectedDate}
-                />
-              </div>
-
-              <div className="border border-dashed border-semantic-borderInput p-3 rounded-xl bg-semantic-surfaceInput/30">
-                <p className="text-xs text-semantic-textSecondary mb-2 font-medium">مكونات DatePicker الفرعية معروضة مباشرة:</p>
-                <DatePickerHeader 
-                  currentMonth={selectedDate} 
-                  onPrevMonth={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-                  onNextMonth={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-                />
-                <DatePickerDaysGrid 
-                  currentMonth={selectedDate}
-                  selectedDate={selectedDate}
-                  onSelectDate={(d) => setSelectedDate(d)}
-                />
-              </div>
+            <div className="max-w-md">
+              <p className="text-xs text-semantic-textSecondary mb-2 font-medium">مكون CustomDatePicker كامل:</p>
+              <CustomDatePicker 
+                label="اختر التاريخ"
+                value={selectedDate}
+                onChange={setSelectedDate}
+              />
             </div>
           </Card.Body>
         </Card>
