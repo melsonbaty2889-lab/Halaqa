@@ -20,7 +20,15 @@ export function TermsModal({
     ? isRtlProp 
     : (i18n?.dir ? i18n.dir() === 'rtl' : true);
 
-  // تحديث حالة التبويب والموافقة عند فتح النافذة
+  // المتغيرات البرمجية لتنسيقات الألوان الآمنة
+  const cardBg = 'var(--color-surface-card)';
+  const inputBg = 'var(--color-surface-input)';
+  const borderCol = 'var(--color-border-input)';
+  const titleColor = 'var(--color-text-primary)';
+  const subColor = 'var(--color-text-secondary)';
+  const primaryColor = 'var(--color-action-primary)';
+  const successColor = 'var(--color-success)';
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
@@ -37,24 +45,23 @@ export function TermsModal({
     <Modal
       open={isOpen}
       onClose={requireAcceptance ? () => {} : onClose}
-      maxWidth={580}
-      style={{ padding: 0 }}
+      style={{ padding: 0, maxWidth: 580 }}
     >
-      <div dir={isRtl ? 'rtl' : 'ltr'} className="flex flex-col h-full text-semantic-textPrimary">
+      <div dir={isRtl ? 'rtl' : 'ltr'} style={{ display: 'flex', flexDirection: 'column', height: '100%', color: titleColor }}>
         {/* الهيدر */}
-        <div className="flex items-center justify-between border-b border-semantic-borderCard p-5 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${borderCol}`, padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: 8, borderRadius: 12, backgroundColor: 'color-mix(in srgb, var(--color-action-primary) 12%, transparent)', color: primaryColor }}>
               <ShieldCheck size={22} />
             </div>
             <div>
               <h3 
                 id="terms-modal-title"
-                className="text-base sm:text-lg font-bold text-semantic-textPrimary m-0"
+                style={{ fontSize: '1rem', fontWeight: 700, color: titleColor, margin: 0 }}
               >
                 {t('termsModal.headerTitle', 'اتفاقية الاستخدام والخصوصية')}
               </h3>
-              <p className="text-[11px] text-semantic-textSecondary m-0">
+              <p style={{ fontSize: '0.75rem', color: subColor, margin: 0 }}>
                 {t('termsModal.headerSubtitle', 'يرجى قراءة الشروط والسياسات بعناية')}
               </p>
             </div>
@@ -62,15 +69,26 @@ export function TermsModal({
         </div>
 
         {/* محول التبويبات (Tab Switcher) */}
-        <div className="flex border-b border-semantic-borderCard bg-semantic-surfaceInput/40 p-1.5 gap-1.5 mx-5 mt-4 rounded-xl">
+        <div style={{ display: 'flex', borderBottom: `1px solid ${borderCol}`, backgroundColor: inputBg, padding: 6, gap: 6, margin: '16px 20px 0 20px', borderRadius: 12 }}>
           <button
             type="button"
             onClick={() => setActiveTab('terms')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
-              activeTab === 'terms'
-                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border-semantic-borderCard'
-                : 'border-transparent text-semantic-textSecondary hover:text-semantic-textPrimary'
-            }`}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 8,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              cursor: 'pointer',
+              border: activeTab === 'terms' ? `1px solid ${borderCol}` : '1px solid transparent',
+              backgroundColor: activeTab === 'terms' ? cardBg : 'transparent',
+              color: activeTab === 'terms' ? primaryColor : subColor,
+              transition: 'all 0.2s ease'
+            }}
           >
             <FileText size={15} />
             <span>{t('termsModal.termsTitle', 'الشروط والأحكام')}</span>
@@ -79,11 +97,22 @@ export function TermsModal({
           <button
             type="button"
             onClick={() => setActiveTab('privacy')}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
-              activeTab === 'privacy'
-                ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border-semantic-borderCard'
-                : 'border-transparent text-semantic-textSecondary hover:text-semantic-textPrimary'
-            }`}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 8,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              cursor: 'pointer',
+              border: activeTab === 'privacy' ? `1px solid ${borderCol}` : '1px solid transparent',
+              backgroundColor: activeTab === 'privacy' ? cardBg : 'transparent',
+              color: activeTab === 'privacy' ? primaryColor : subColor,
+              transition: 'all 0.2s ease'
+            }}
           >
             <Lock size={15} />
             <span>{t('termsModal.privacyTitle', 'سياسة الخصوصية')}</span>
@@ -91,67 +120,67 @@ export function TermsModal({
         </div>
 
         {/* المحتوى القابل للتمرير */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs sm:text-sm leading-relaxed text-semantic-textSecondary text-start custom-scrollbar max-h-[50vh]">
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16, fontSize: '0.8125rem', lineHeight: 1.6, color: subColor, textAlign: 'start', maxHeight: '50vh' }}>
           {activeTab === 'terms' ? (
-            <div className="space-y-3.5">
-              <p className="font-medium text-semantic-textPrimary leading-normal">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <p style={{ fontWeight: 600, color: titleColor, margin: 0 }}>
                 {t('termsModal.termsWelcome', 'مرحباً بك في منصة الحلقة الذكية. باستخدامك للمنصة، فإنك توافق على الالتزام بالشروط التالية:')}
               </p>
               
-              <div className="space-y-3 pt-1">
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <UserCheck size={18} className="text-semantic-actionPrimary shrink-0 mt-0.5" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <UserCheck size={18} style={{ color: primaryColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">1. صحة البيانات</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.termsRule1', 'التعهد بصحة ودقة البيانات المدخلة عند إنشاء الحساب وتحديثها دورياً.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>1. صحة البيانات</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.termsRule1', 'التعهد بصحة ودقة البيانات المدخلة عند إنشاء الحساب وتحديثها دورياً.')}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <Key size={18} className="text-semantic-actionPrimary shrink-0 mt-0.5" />
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <Key size={18} style={{ color: primaryColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">2. أمان الحساب</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.termsRule2', 'الحفاظ على سرية معلومات الحساب وكلمة المرور وعدم مشاركتها مع أطراف أخرى.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>2. أمان الحساب</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.termsRule2', 'الحفاظ على سرية معلومات الحساب وكلمة المرور وعدم مشاركتها مع أطراف أخرى.')}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <Shield size={18} className="text-semantic-actionPrimary shrink-0 mt-0.5" />
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <Shield size={18} style={{ color: primaryColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">3. الملكية الفكرية</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.termsRule3', 'احترام حقوق الملكية الفكرية للمحتوى التعليمي والمناهج والبيانات المرفوعة على المنصة.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>3. الملكية الفكرية</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.termsRule3', 'احترام حقوق الملكية الفكرية للمحتوى التعليمي والمناهج والبيانات المرفوعة على المنصة.')}</p>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-3.5">
-              <p className="font-medium text-semantic-textPrimary leading-normal">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <p style={{ fontWeight: 600, color: titleColor, margin: 0 }}>
                 {t('termsModal.privacyWelcome', 'نحن نلتزم بحماية خصوصيتك وبياناتك الشخصية وفقاً لأعلى معايير الأمان العالمية:')}
               </p>
 
-              <div className="space-y-3 pt-1">
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <Lock size={18} className="text-semantic-success shrink-0 mt-0.5" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <Lock size={18} style={{ color: successColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">1. التشفير والحماية</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.privacyRule1', 'يتم تشفير جميع البيانات الحساسة باستخدام معايير SSL/TLS لحمايتها من أي وصول غير مصرح به.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>1. التشفير والحماية</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.privacyRule1', 'يتم تشفير جميع البيانات الحساسة باستخدام معايير SSL/TLS لحمايتها من أي وصول غير مصرح به.')}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <ShieldCheck size={18} className="text-semantic-success shrink-0 mt-0.5" />
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <ShieldCheck size={18} style={{ color: successColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">2. عدم مشاركة البيانات</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.privacyRule2', 'لا نقوم بمشاركة أو بيع بياناتك الشخصية لأي طرف ثالث لأغراض إعلانية أو تجارية.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>2. عدم مشاركة البيانات</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.privacyRule2', 'لا نقوم بمشاركة أو بيع بياناتك الشخصية لأي طرف ثالث لأغراض إعلانية أو تجارية.')}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 p-3 rounded-xl bg-semantic-surfaceInput/30 border border-semantic-borderCard/50">
-                  <Bell size={18} className="text-semantic-success shrink-0 mt-0.5" />
+                <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 12, backgroundColor: inputBg, border: `1px solid ${borderCol}` }}>
+                  <Bell size={18} style={{ color: successColor, flexShrink: 0, marginTop: 2 }} />
                   <div>
-                    <h4 className="font-bold text-semantic-textPrimary text-xs mb-0.5">3. الاستخدام المصرّح</h4>
-                    <p className="text-[11px] leading-relaxed">{t('termsModal.privacyRule3', 'نستخدم بيانات التواصل للتنبيهات والإشعارات التشغيلية المتعلقة بحسابك وحلقاتك فقط.')}</p>
+                    <h4 style={{ fontWeight: 700, color: titleColor, fontSize: '0.75rem', margin: '0 0 2px 0' }}>3. الاستخدام المصرّح</h4>
+                    <p style={{ fontSize: '0.75rem', margin: 0 }}>{t('termsModal.privacyRule3', 'نستخدم بيانات التواصل للتنبيهات والإشعارات التشغيلية المتعلقة بحسابك وحلقاتك فقط.')}</p>
                   </div>
                 </div>
               </div>
@@ -160,22 +189,22 @@ export function TermsModal({
         </div>
 
         {/* الفوتر وأزرار التحكم */}
-        <div className="border-t border-semantic-borderCard p-4 bg-semantic-surfaceInput/20 space-y-3 rounded-b-2xl">
+        <div style={{ borderTop: `1px solid ${borderCol}`, padding: 16, backgroundColor: inputBg, display: 'flex', flexDirection: 'column', gap: 12, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }}>
           {requireAcceptance && (
-            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}>
               <input
                 type="checkbox"
                 checked={hasAgreed}
                 onChange={(e) => setHasAgreed(e.target.checked)}
-                className="w-4 h-4 rounded border-semantic-borderInput text-semantic-actionPrimary focus:ring-semantic-actionPrimary/30 bg-semantic-surfaceInput cursor-pointer"
+                style={{ width: 16, height: 16, borderRadius: 4, cursor: 'pointer' }}
               />
-              <span className="text-xs font-medium text-semantic-textPrimary">
+              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: titleColor }}>
                 {t('termsModal.agreeCheckbox', 'قرأت جميع الشروط وأوافق على الالتزام بها')}
               </span>
             </label>
           )}
 
-          <div className="flex items-center justify-end gap-2.5">
+          <div style={{ display: 'flex', itemsAlign: 'center', justifyContent: 'flex-end', gap: 10 }}>
             {!requireAcceptance && (
               <Btn variant="ghost" onClick={onClose}>
                 {t('termsModal.close', 'إغلاق')}
