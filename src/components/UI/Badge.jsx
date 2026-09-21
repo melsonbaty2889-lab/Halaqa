@@ -1,28 +1,15 @@
 import React, { forwardRef } from 'react';
 
-const getPrimary = () => 'var(--color-action-primary)';
-
-export const Badge = forwardRef(({ children, color, className = "", style = {}, ...props }, ref) => {
-  const badgeColor = color || getPrimary();
-
+export const Badge = forwardRef(({ children, color = 'var(--color-action-primary)', className = '', style = {}, ...props }, ref) => {
   return (
     <span 
       ref={ref}
-      className={`ui-badge ${className}`}
+      className={`ui-badge inline-flex items-center gap-1.5 px-3 py-1 min-h-[28px] rounded-full text-xs font-bold whitespace-nowrap ${className}`}
       style={{ 
-        display: "inline-flex", 
-        alignItems: "center", 
-        gap: 6, 
-        padding: "4px 12px", 
-        minHeight: "28px",
-        borderRadius: 20, 
-        fontSize: "0.75rem", 
-        fontWeight: 700, 
-        background: `color-mix(in srgb, ${badgeColor} 12%, transparent)`, 
-        color: badgeColor, 
-        border: `1px solid color-mix(in srgb, ${badgeColor} 25%, transparent)`, 
-        whiteSpace: "nowrap",
-        fontFamily: "inherit",
+        background: `color-mix(in srgb, ${color} 12%, transparent)`, 
+        color: color, 
+        border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`, 
+        fontFamily: 'inherit',
         ...style 
       }}
       {...props}
