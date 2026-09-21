@@ -1,30 +1,30 @@
 import React, { useState } from 'react';
-import { 
-  AppBrand,
-  PrimaryButton,
-  GoogleButton,
-  Badge, 
-  Btn, 
-  Card, 
-  ConfirmModal,
-  CountrySelect,
-  CustomDatePicker,
-  DatePickerDaysGrid,
-  DatePickerHeader,
-  EmptyState,
-  Input, 
-  LanguageSwitcher,
-  LoadingButton,
-  Modal, 
-  PageHeader,
-  Select, 
-  Skeleton,
-  SmartHalaqaProLogo,
-  SplashScreen,
-  Table, THead, TBody, TR, TH, TD,
-  TermsModal,
-  Toast
-} from '@/components/UI';
+
+// استيرادات مباشرة لمنع الحلقات التداخلية (Circular Dependency)
+import AppBrand from '@/components/UI/AppBrand';
+import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
+import Badge from '@/components/UI/Badge';
+import Btn from '@/components/UI/Btn';
+import Card from '@/components/UI/Card';
+import ConfirmModal from '@/components/UI/ConfirmModal';
+import CountrySelect from '@/components/UI/CountrySelect';
+import CustomDatePicker from '@/components/UI/CustomDatePicker';
+import DatePickerDaysGrid from '@/components/UI/DatePickerDaysGrid';
+import DatePickerHeader from '@/components/UI/DatePickerHeader';
+import EmptyState from '@/components/UI/EmptyState';
+import Input from '@/components/UI/Input';
+import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import LoadingButton from '@/components/UI/LoadingButton';
+import Modal from '@/components/UI/Modal';
+import PageHeader from '@/components/UI/PageHeader';
+import Select from '@/components/UI/Select';
+import Skeleton from '@/components/UI/Skeleton';
+import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo';
+import SplashScreen from '@/components/UI/SplashScreen';
+import Table, { THead, TBody, TR, TH, TD } from '@/components/UI/Table';
+import TermsModal from '@/components/UI/TermsModal';
+import Toast from '@/components/UI/Toast';
+
 import { 
   Bookmark, 
   MousePointerClick, 
