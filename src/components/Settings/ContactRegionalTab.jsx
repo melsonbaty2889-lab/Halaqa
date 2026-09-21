@@ -1,9 +1,11 @@
+// src/components/Settings/ContactRegionalTab.jsx
+
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import Select from '@/components/UI/Select.jsx';
-import { COUNTRIES_LIST } from '@/constants/countries.js';
-import { CURRENCIES } from '@/constants/currencies.js';
+import Select from '@/components/UI/Select';
+import { COUNTRIES_LIST } from '@/constants/countries';
+import { CURRENCIES } from '@/constants/currencies';
 
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
@@ -72,7 +74,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }
   };
 
-  // معالجة اختيار وإلغاء أيام العطلة بشكل نقي وآمن
+  // معالجة اختيار وإلغاء أيام العطلة
   const toggleWeekendDay = (dayKey) => {
     if (typeof updateField !== 'function') return;
 
@@ -94,7 +96,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     updateField('weekend_days', updated);
   };
 
-  // استخراج الأيام المختارة كـ Array بأمان لعرضها في الواجهة
+  // استخراج الأيام المختارة لعرضها
   const selectedWeekendDays = useMemo(() => {
     if (Array.isArray(formData?.weekend_days)) return formData.weekend_days;
     if (typeof formData?.weekend_days === 'string') {
@@ -104,12 +106,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   }, [formData?.weekend_days]);
 
   return (
-    <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="space-y-5 text-start w-full text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* القسم الرئيسي: بيانات التواصل والدولة */}
-      <div className="card-surface space-y-4 !overflow-visible w-full border border-[var(--border-card)] p-4 rounded-xl">
+      <div className="bg-semantic-surfaceCard space-y-4 !overflow-visible w-full border border-semantic-borderCard p-4 rounded-xl shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+            <label className="block text-xs font-bold mb-1.5 text-semantic-textPrimary">
               {t('settings.officialEmail', isRtl ? 'البريد الإلكتروني الرسمي' : 'Official Email')}
             </label>
             <input 
@@ -117,12 +119,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               value={formData?.contact_email ?? ''} 
               onChange={(e) => updateField && updateField('contact_email', e.target.value)} 
               dir="ltr"
-              className="app-input text-start w-full" 
+              className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-xs focus:outline-none focus:border-semantic-actionPrimary transition-colors" 
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+            <label className="block text-xs font-bold mb-1.5 text-semantic-textPrimary">
               {t('settings.phoneWhatsapp', isRtl ? 'الهاتف / الواتساب' : 'Phone / WhatsApp')}
             </label>
             <input 
@@ -130,13 +132,13 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               value={formData?.contact_phone ?? ''} 
               onChange={(e) => updateField && updateField('contact_phone', e.target.value)} 
               dir="ltr"
-              className="app-input text-start w-full" 
+              className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-xs focus:outline-none focus:border-semantic-actionPrimary transition-colors" 
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 !overflow-visible">
-          <CustomSelect 
+          <Select 
             label={t('settings.country', isRtl ? 'الدولة' : 'Country')}
             value={formData?.country_code ?? 'EG'}
             onChange={handleCountryChange}
@@ -144,7 +146,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             searchable={true}
           />
 
-          <CustomSelect 
+          <Select 
             label={t('settings.currency', isRtl ? 'العملة الرسمية' : 'Official Currency')}
             value={formData?.currency ?? 'EGP'}
             onChange={(val) => updateField && updateField('currency', val)}
@@ -155,16 +157,16 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
       </div>
 
       {/* القسم المتقدم: الإعدادات الإقليمية */}
-      <div className="card-surface p-0 !overflow-visible border border-[var(--border-card)] rounded-xl w-full">
+      <div className="bg-semantic-surfaceCard p-0 !overflow-visible border border-semantic-borderCard rounded-xl w-full shadow-sm">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full p-4 bg-transparent hover:bg-[var(--surface-input)] transition-colors flex items-center justify-between text-xs font-bold text-[var(--text-sub)] border-none cursor-pointer rounded-xl"
+          className="w-full p-4 bg-transparent hover:bg-semantic-surfaceInput transition-colors flex items-center justify-between text-xs font-bold text-semantic-textSecondary border-none cursor-pointer rounded-xl"
         >
           <div className="flex items-center gap-2">
             <span>{t('settings.advancedRegional', isRtl ? 'إعدادات إقليمية متقدمة' : 'Advanced Regional Settings')}</span>
             {selectedWeekendDays.length > 0 && (
-              <span className="text-[10px] bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-full font-bold">
+              <span className="text-[10px] bg-semantic-actionPrimary/10 text-semantic-actionPrimary px-2 py-0.5 rounded-full font-bold">
                 {selectedWeekendDays.length} {isRtl ? 'أيام عطلة' : 'weekend days'}
               </span>
             )}
@@ -173,9 +175,9 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
         </button>
 
         {showAdvanced && (
-          <div className="p-4 border-t border-[var(--border-card)] space-y-4 !overflow-visible w-full">
+          <div className="p-4 border-t border-semantic-borderCard space-y-4 !overflow-visible w-full">
             <div>
-              <label className="block text-xs font-bold mb-1.5 text-[var(--text-main)]">
+              <label className="block text-xs font-bold mb-1.5 text-semantic-textPrimary">
                 {t('settings.website', isRtl ? 'الموقع الإلكتروني' : 'Website')}
               </label>
               <input 
@@ -183,12 +185,12 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
                 value={formData?.website ?? ''} 
                 onChange={(e) => updateField && updateField('website', e.target.value)} 
                 dir="ltr"
-                className="app-input text-start text-xs w-full" 
+                className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-xs focus:outline-none focus:border-semantic-actionPrimary transition-colors" 
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 !overflow-visible">
-              <CustomSelect 
+              <Select 
                 label={t('settings.timezone', isRtl ? 'المنطقة الزمنية' : 'Timezone')}
                 value={formData?.timezone ?? 'Africa/Cairo'}
                 onChange={(val) => updateField && updateField('timezone', val)}
@@ -196,7 +198,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
                 searchable={true}
               />
 
-              <CustomSelect 
+              <Select 
                 label={t('settings.calendarType', isRtl ? 'نوع التقويم' : 'Calendar Type')}
                 value={formData?.calendar_type ?? 'gregorian'}
                 onChange={(val) => updateField && updateField('calendar_type', val)}
@@ -205,7 +207,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 text-[var(--text-main)]">
+              <label className="block text-xs font-bold mb-2 text-semantic-textPrimary">
                 {t('settings.weekendDays', isRtl ? 'أيام العطلة الأسبوعية' : 'Weekend Days')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -218,8 +220,8 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
                       onClick={() => toggleWeekendDay(day.key)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
                         active 
-                          ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-[var(--primary-glow)]' 
-                          : 'bg-[var(--surface-input)] text-[var(--text-sub)] border-[var(--border-input)] hover:text-[var(--text-main)]'
+                          ? 'bg-semantic-actionPrimary text-white border-semantic-actionPrimary shadow-md' 
+                          : 'bg-semantic-surfaceInput text-semantic-textSecondary border-semantic-borderInput hover:text-semantic-textPrimary'
                       }`}
                     >
                       {day.label}
