@@ -1,3 +1,5 @@
+// src/components/Settings/Settings.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Building, ShieldCheck, Save, RotateCcw, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -398,9 +400,9 @@ export default function Settings({
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4 text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* شريط التبويبات */}
-      <div className="flex border-b border-[var(--border-card)] gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+      <div className="flex border-b border-semantic-borderCard gap-2 overflow-x-auto custom-scrollbar scroll-smooth">
         {steps.map((step) => {
           const Icon = step.icon;
           const isActive = activeStep === step.id;
@@ -411,8 +413,8 @@ export default function Settings({
               onClick={() => setActiveStep(step.id)}
               className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'border-[var(--primary)] text-[var(--primary)] font-extrabold bg-[var(--surface-input)]/20 rounded-t-lg'
-                  : 'border-transparent text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                  ? 'border-semantic-actionPrimary text-semantic-actionPrimary font-extrabold bg-semantic-surfaceInput/20 rounded-t-lg'
+                  : 'border-transparent text-semantic-textSecondary hover:text-semantic-textPrimary'
               }`}
             >
               <Icon size={16} />
@@ -427,8 +429,8 @@ export default function Settings({
         {toastMessage && (
           <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-md animate-in fade-in slide-in-from-top-2 ${
             toastMessage.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-500'
-              : 'bg-rose-500/10 border border-rose-500/30 text-rose-500'
+              ? 'bg-semantic-success/10 border border-semantic-success/30 text-semantic-success'
+              : 'bg-semantic-error/10 border border-semantic-error/30 text-semantic-error'
           }`}>
             <div className="flex items-center gap-2">
               {toastMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
@@ -470,11 +472,11 @@ export default function Settings({
         </div>
 
         {/* شريط الإجراءات */}
-        <div className="flex flex-row items-center justify-between gap-3 pt-5 border-t border-[var(--border-card)] w-full">
+        <div className="flex flex-row items-center justify-between gap-3 pt-5 border-t border-semantic-borderCard w-full">
           <button
             type="submit"
             disabled={saving}
-            className={`btn-primary text-xs px-6 py-3 flex items-center justify-center gap-2 cursor-pointer shadow-md rounded-xl font-bold transition-all ${
+            className={`bg-semantic-actionPrimary hover:bg-semantic-actionPrimary/90 text-white text-xs px-6 py-3 flex items-center justify-center gap-2 cursor-pointer shadow-md rounded-xl font-bold transition-all ${
               saving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.01]'
             }`}
           >
@@ -487,7 +489,7 @@ export default function Settings({
               <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="btn-secondary text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
+                className="bg-semantic-surfaceInput hover:bg-semantic-surfaceInput/80 text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
               >
                 <RotateCcw size={14} />
                 <span>{t('common.discard')}</span>
