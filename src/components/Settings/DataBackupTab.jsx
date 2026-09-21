@@ -64,15 +64,15 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
 
   return (
     <div className="space-y-5 text-start w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="card-surface space-y-4 !overflow-visible border border-[var(--border-card)] p-4 rounded-xl">
-        <div className="flex items-center gap-2 text-[var(--primary)] pb-2 border-b border-[var(--border-input)]">
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 !overflow-visible w-full">
+        <div className="flex items-center gap-2 text-semantic-actionPrimary pb-2 border-b border-semantic-borderInput">
           <Database size={18} />
-          <h3 className="text-xs font-bold">
+          <h3 className="text-xs font-bold text-semantic-textPrimary">
             {t('backup.title', isRtl ? 'النسخ الاحتياطي واستعادة البيانات' : 'Data Backup & Export')}
           </h3>
         </div>
 
-        <p className="text-xs text-[var(--text-sub)] leading-relaxed">
+        <p className="text-xs text-semantic-textSecondary leading-relaxed">
           {t('backup.description', isRtl 
             ? 'تصدير إعدادات المنظومة لحفظها احتياطياً أو استيرادها في أكاديمية أخرى بنقرة واحدة.' 
             : 'Export system settings for backup or import them into another academy in one click.')}
@@ -82,7 +82,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
           <button
             type="button"
             onClick={handleExport}
-            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
+            className="bg-semantic-surfaceInput hover:bg-semantic-surfaceInput/80 text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
           >
             <Download size={15} />
             <span>{t('backup.exportBtn', isRtl ? 'تصدير الإعدادات (JSON)' : 'Export Configuration (.json)')}</span>
@@ -99,7 +99,7 @@ export default function DataBackupTab({ formData = {}, setFormData, importInputR
           <button
             type="button"
             onClick={() => importInputRef?.current?.click()}
-            className="btn-secondary text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
+            className="bg-semantic-surfaceInput hover:bg-semantic-surfaceInput/80 text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput text-xs py-2.5 px-4 flex items-center justify-center gap-2 w-full cursor-pointer rounded-xl font-bold transition-all"
           >
             <Upload size={15} />
             <span>{t('backup.importBtn', isRtl ? 'استيراد الإعدادات (JSON)' : 'Import Configuration (.json)')}</span>
