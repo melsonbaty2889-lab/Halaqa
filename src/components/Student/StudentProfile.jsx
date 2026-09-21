@@ -22,7 +22,7 @@ const getHalaqaName = (h, isRtl) => {
 const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDelete, onArchive }) => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
-  const isRtl = i18n.dir() === 'rtl';
+  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
   const [activeTab, setActiveTab] = useState('overview');
 
   if (!student) return null;
@@ -65,21 +65,21 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
   const notesText = getNotesText();
 
   return (
-    <div className="space-y-6 text-appText-main" dir={i18n.dir()}>
+    <div className="space-y-6 text-semantic-textPrimary" dir={i18n?.dir ? i18n.dir() : 'rtl'}>
       {/* شريط التحكم والأزرار العلوي */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="p-2 bg-dark-input hover:bg-appBorder-input/50 text-appText-sub hover:text-appText-main rounded-xl transition-colors flex items-center gap-2 text-sm font-medium active:scale-95"
+            className="p-2 bg-semantic-surfaceInput hover:bg-semantic-borderInput/50 text-semantic-textSecondary hover:text-semantic-textPrimary rounded-xl transition-colors flex items-center gap-2 text-sm font-medium active:scale-95 border border-semantic-borderCard"
           >
             <BackIcon className="w-5 h-5" />
             <span>{t('common.back', 'رجوع')}</span>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-appText-main">{studentName}</h1>
-            <p className="text-xs text-appText-sub mt-0.5">
+            <h1 className="text-xl font-bold text-semantic-textPrimary">{studentName}</h1>
+            <p className="text-xs text-semantic-textSecondary mt-0.5">
               {t('students.profile_subtitle', 'الملف الشخصي للطالب')}
             </p>
           </div>
@@ -89,20 +89,20 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={() => onEdit && onEdit(student)}
-            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+            className="px-3 py-2 bg-semantic-warning/10 hover:bg-semantic-warning/20 text-semantic-warning border border-semantic-warning/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
           >
             <Edit className="w-4 h-4" />
             <span>{t('common.edit', 'تعديل')}</span>
           </button>
 
-          {/* زر الأرشفة التكيفي الحرج */}
+          {/* زر الأرشفة التكيفي */}
           <button
             type="button"
             onClick={() => onArchive && onArchive(student)}
             className={`px-3 py-2 border rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
               isArchived
-                ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
-                : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border-sky-500/20'
+                ? 'bg-semantic-success/10 hover:bg-semantic-success/20 text-semantic-success border-semantic-success/20'
+                : 'bg-semantic-actionPrimary/10 hover:bg-semantic-actionPrimary/20 text-semantic-actionPrimary border-semantic-actionPrimary/20'
             }`}
           >
             {isArchived ? (
@@ -121,7 +121,7 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           <button
             type="button"
             onClick={() => onDelete && onDelete(student.id)}
-            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+            className="px-3 py-2 bg-semantic-error/10 hover:bg-semantic-error/20 text-semantic-error border border-semantic-error/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
             <span>{t('common.delete', 'حذف')}</span>
@@ -130,14 +130,14 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       </div>
 
       {/* التبويبات Tabs */}
-      <div className="flex items-center gap-2 border-b border-appBorder-card pb-2">
+      <div className="flex items-center gap-2 border-b border-semantic-borderCard pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
             activeTab === 'overview'
-              ? 'bg-primary text-appText-main shadow-md shadow-primary-glow font-bold'
-              : 'text-appText-sub hover:bg-dark-card hover:text-appText-main'
+              ? 'bg-semantic-actionPrimary text-white shadow-md font-bold'
+              : 'text-semantic-textSecondary hover:bg-semantic-surfaceCard hover:text-semantic-textPrimary'
           }`}
         >
           {t('students.tab_overview', 'نظرة عامة')}
@@ -147,8 +147,8 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
           onClick={() => setActiveTab('documents')}
           className={`px-4 py-2 text-sm font-medium rounded-xl transition-all flex items-center gap-2 ${
             activeTab === 'documents'
-              ? 'bg-primary text-appText-main shadow-md shadow-primary-glow font-bold'
-              : 'text-appText-sub hover:bg-dark-card hover:text-appText-main'
+              ? 'bg-semantic-actionPrimary text-white shadow-md font-bold'
+              : 'text-semantic-textSecondary hover:bg-semantic-surfaceCard hover:text-semantic-textPrimary'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -159,49 +159,49 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
       {/* محتوى التبويب */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-primary" />
+          <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-sm font-bold text-semantic-textPrimary border-b border-semantic-borderCard pb-2 flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-semantic-actionPrimary" />
               <span>{t('students.academic_info', 'البيانات الأكاديمية')}</span>
             </h3>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.halaqa', 'الحلقة:')}</span>
-                <span className="text-appText-main font-medium">{halaqaName}</span>
+                <span className="text-semantic-textSecondary block text-xs">{t('students.halaqa', 'الحلقة:')}</span>
+                <span className="text-semantic-textPrimary font-medium">{halaqaName}</span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.preferred_riwayah', 'الرواية المفضلة:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.preferred_riwayah', 'الرواية المفضلة:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {formatRiwayah(student.preferred_riwayah, currentLang, t('common.unspecified', 'غير محددة'))}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.current_juz', 'الجزء الحالي:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.current_juz', 'الجزء الحالي:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {student.current_juz ? `${t('students.juz', 'الجزء')} ${student.current_juz}` : t('common.unspecified', 'غير محدد')}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.memorization_system', 'نظام المراجعة:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.memorization_system', 'نظام المراجعة:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {getMemorizationSystemLabel(student.memorization_system)}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.status', 'حالة الطالب:')}</span>
+                <span className="text-semantic-textSecondary block text-xs">{t('students.status', 'حالة الطالب:')}</span>
                 <span className="inline-block mt-1">
                   {isArchived ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20">
                       <Archive className="w-3 h-3" />
                       <span>{student.status === 'graduated' ? t('common.graduated', 'متخرج') : t('common.archived', 'مؤرشف')}</span>
                     </span>
                   ) : student.status === 'active' ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-semantic-success/10 text-semantic-success border border-semantic-success/20">
                       <UserCheck className="w-3 h-3" />
                       <span>{t('common.active', 'نشط')}</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-semantic-error/10 text-semantic-error border border-semantic-error/20">
                       <UserX className="w-3 h-3" />
                       <span>{t('common.inactive', 'غير نشط')}</span>
                     </span>
@@ -211,84 +211,84 @@ const StudentProfile = ({ student, academyId, halaqas = [], onBack, onEdit, onDe
             </div>
           </div>
 
-          <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4 md:col-span-2">
-            <h3 className="text-sm font-bold text-appText-main border-b border-appBorder-card pb-2">
+          <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-5 space-y-4 md:col-span-2 shadow-sm">
+            <h3 className="text-sm font-bold text-semantic-textPrimary border-b border-semantic-borderCard pb-2">
               {t('students.personal_and_parent_info', 'البيانات الشخصية وولي الأمر')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.gender', 'الجنس:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.gender', 'الجنس:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {student.gender === 'female' ? t('common.female', 'أنثى') : t('common.male', 'ذكر')}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.birth_date', 'تاريخ الميلاد والعمر:')}</span>
-                <div className="text-appText-main font-medium flex items-center gap-2 mt-0.5" dir={isRtl ? 'rtl' : 'ltr'}>
+                <span className="text-semantic-textSecondary block text-xs">{t('students.birth_date', 'تاريخ الميلاد والعمر:')}</span>
+                <div className="text-semantic-textPrimary font-medium flex items-center gap-2 mt-0.5" dir={isRtl ? 'rtl' : 'ltr'}>
                   <span dir="ltr" className="text-sm">{student.birth_date || t('common.unspecified', 'غير محدد')}</span>
                   {age !== null && (
-                    <span className="text-xs text-primary font-normal bg-primary/10 px-2 py-0.5 rounded-md">
+                    <span className="text-xs text-semantic-actionPrimary font-normal bg-semantic-actionPrimary/10 px-2 py-0.5 rounded-md border border-semantic-actionPrimary/20">
                       ({age} {t('common.years_old', 'سنة')})
                     </span>
                   )}
                 </div>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.country', 'دولة الإقامة:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.country', 'دولة الإقامة:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {formatCountry(student.country, currentLang, t('common.unspecified', 'غير محددة'))}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.nationality', 'الجنسية:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.nationality', 'الجنسية:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {formatCountry(student.nationality, currentLang, t('common.unspecified', 'غير محددة'))}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.parent_name', 'ولي الأمر:')}</span>
-                <span className="text-appText-main font-medium">
+                <span className="text-semantic-textSecondary block text-xs">{t('students.parent_name', 'ولي الأمر:')}</span>
+                <span className="text-semantic-textPrimary font-medium">
                   {student.parent_name || t('common.unspecified', 'غير محدد')}
                 </span>
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.parent_phone', 'هاتف ولي الأمر:')}</span>
+                <span className="text-semantic-textSecondary block text-xs">{t('students.parent_phone', 'هاتف ولي الأمر:')}</span>
                 {student.parent_phone ? (
                   <a
                     href={`tel:${student.parent_phone}`}
-                    className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+                    className="text-semantic-actionPrimary hover:underline font-medium inline-flex items-center gap-1"
                     dir="ltr"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span>{student.parent_phone}</span>
                   </a>
                 ) : (
-                  <span className="text-appText-main font-medium">{t('common.unspecified', 'غير محدد')}</span>
+                  <span className="text-semantic-textPrimary font-medium">{t('common.unspecified', 'غير محدد')}</span>
                 )}
               </div>
               <div>
-                <span className="text-appText-sub block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
+                <span className="text-semantic-textSecondary block text-xs">{t('students.parent_whatsapp', 'واتساب ولي الأمر:')}</span>
                 {cleanWhatsapp ? (
                   <a
                     href={`https://wa.me/${cleanWhatsapp}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-400 hover:underline font-medium inline-flex items-center gap-1"
+                    className="text-semantic-success hover:underline font-medium inline-flex items-center gap-1"
                     dir="ltr"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>{rawWhatsapp}</span>
                   </a>
                 ) : (
-                  <span className="text-appText-main font-medium">{t('common.unspecified', 'غير محدد')}</span>
+                  <span className="text-semantic-textPrimary font-medium">{t('common.unspecified', 'غير محدد')}</span>
                 )}
               </div>
             </div>
 
             {notesText && (
-              <div className="pt-3 border-t border-appBorder-card">
-                <span className="text-appText-sub block text-xs mb-1">{t('common.notes', 'ملاحظات:')}</span>
-                <p className="text-xs text-appText-sub bg-dark-input p-3 rounded-xl border border-appBorder-input">
+              <div className="pt-3 border-t border-semantic-borderCard">
+                <span className="text-semantic-textSecondary block text-xs mb-1">{t('common.notes', 'ملاحظات:')}</span>
+                <p className="text-xs text-semantic-textSecondary bg-semantic-surfaceInput p-3 rounded-xl border border-semantic-borderInput">
                   {notesText}
                 </p>
               </div>
