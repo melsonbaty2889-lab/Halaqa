@@ -441,6 +441,12 @@
     "tuesday": "tuesday",
     "wednesday": "wednesday"
   },
+  "dev": {
+    "close_splash": "إغلاق شاشة التحميل (SplashScreen)",
+    "show_splash": "عرض SplashScreen",
+    "sub": "صفحة شاملة لاختبار ومعاينة 23 مكوناً من المكونات المفصولة",
+    "title": "معرض جميع مكونات UI (Dev Playground)"
+  },
   "devPlayground": {
     "alertBtn": "نافذة تنبيه أحادي (Alert Only)",
     "alertModal": {
