@@ -1,4 +1,3 @@
-/* src/components/UI/CustomDatePicker.jsx */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar as CalendarIcon, Globe } from 'lucide-react';
 import moment from 'moment-hijri';
