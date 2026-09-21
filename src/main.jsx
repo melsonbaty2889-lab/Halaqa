@@ -44,7 +44,7 @@ const InitialLoader = () => (
     ></div>
     <p 
       className="text-xs font-semibold tracking-wide"
-      style={{ color: C.text.sub }}
+      style={{ color: C.appText.sub }}
     >
       جاري تحميل المنصة...
     </p>
