@@ -320,6 +320,7 @@
     "delete_confirm": "تأكيد الحذف",
     "disabled": "Disabled",
     "discard": "Discard",
+    "download": "تحميل",
     "download_file": "Download File",
     "edit": "Edit",
     "enabled": "Enabled",
@@ -345,6 +346,7 @@
     "notice": "تنبيه",
     "offlineNotice": "You are currently working offline",
     "ok": "حسناً",
+    "open_external": "فتح في نافذة جديدة",
     "optional": "Optional",
     "or_via_email": "or via Email",
     "paused": "Paused",
@@ -357,6 +359,7 @@
     "reloadNow": "Reload Now",
     "remove": "Remove",
     "reset_filters": "Reset Filters",
+    "reset_zoom": "إعادة ضبط",
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "Same as phone",
@@ -387,7 +390,9 @@
     "verifying": "Verifying...",
     "verifying_permissions": "Verifying permissions...",
     "view": "View",
-    "years_old": "years old"
+    "years_old": "years old",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير"
   },
   "confirmModal": {
     "alertTitle": "تنبيه",

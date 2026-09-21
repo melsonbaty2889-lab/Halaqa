@@ -320,6 +320,7 @@
     "delete_confirm": "تأكيد الحذف",
     "disabled": "غیر فعال",
     "discard": "متروک کریں",
+    "download": "تحميل",
     "download_file": "فائل ڈاؤن لوڈ کریں",
     "edit": "ترمیم کریں",
     "enabled": "فعال",
@@ -345,6 +346,7 @@
     "notice": "تنبيه",
     "offlineNotice": "آپ اس وقت آف لائن موڈ میں کام کر رہے ہیں",
     "ok": "حسناً",
+    "open_external": "فتح في نافذة جديدة",
     "optional": "اختیاری",
     "or_via_email": "یا ای میل کے ذریعے",
     "paused": "معطل",
@@ -357,6 +359,7 @@
     "reloadNow": "ابھی ری فریش کریں",
     "remove": "ختم کریں",
     "reset_filters": "فلٹرز ختم کریں",
+    "reset_zoom": "إعادة ضبط",
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "فون نمبر جیسا ہی",
@@ -387,7 +390,9 @@
     "verifying": "تصدیق ہو رہی ہے...",
     "verifying_permissions": "تصدیق و اجازتیں دیکھی جا رہی ہیں...",
     "view": "دیکھیں",
-    "years_old": "سال"
+    "years_old": "سال",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير"
   },
   "confirmModal": {
     "alertTitle": "تنبيه",

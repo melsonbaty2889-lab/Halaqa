@@ -320,6 +320,7 @@
     "delete_confirm": "تأكيد الحذف",
     "disabled": "Devre Dışı",
     "discard": "Vazgeç",
+    "download": "تحميل",
     "download_file": "Dosyayı İndir",
     "edit": "Düzenle",
     "enabled": "Etkin",
@@ -345,6 +346,7 @@
     "notice": "تنبيه",
     "offlineNotice": "Şu anda çevrimdışı moddasınız",
     "ok": "حسناً",
+    "open_external": "فتح في نافذة جديدة",
     "optional": "İsteğe bağlı",
     "or_via_email": "veya E-posta ile",
     "paused": "Duraklatıldı",
@@ -357,6 +359,7 @@
     "reloadNow": "Yenile",
     "remove": "Kaldır",
     "reset_filters": "Filtreleri Sıfırla",
+    "reset_zoom": "إعادة ضبط",
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "Telefon ile aynı",
@@ -387,7 +390,9 @@
     "verifying": "Doğrulanıyor...",
     "verifying_permissions": "İzinler kontrol ediliyor...",
     "view": "Görüntüle",
-    "years_old": "yaşında"
+    "years_old": "yaşında",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير"
   },
   "confirmModal": {
     "alertTitle": "تنبيه",

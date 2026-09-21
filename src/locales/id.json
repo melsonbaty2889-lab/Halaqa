@@ -320,6 +320,7 @@
     "delete_confirm": "تأكيد الحذف",
     "disabled": "Dinonaktifkan",
     "discard": "Buang",
+    "download": "تحميل",
     "download_file": "Unduh Berkas",
     "edit": "Edit",
     "enabled": "Diaktifkan",
@@ -345,6 +346,7 @@
     "notice": "تنبيه",
     "offlineNotice": "Saat ini Anda bekerja dalam mode offline",
     "ok": "حسناً",
+    "open_external": "فتح في نافذة جديدة",
     "optional": "Opsional",
     "or_via_email": "atau via Email",
     "paused": "Dihentikan",
@@ -357,6 +359,7 @@
     "reloadNow": "Muat Ulang",
     "remove": "Hapus",
     "reset_filters": "Atur Ulang Filter",
+    "reset_zoom": "إعادة ضبط",
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "Sama dengan telepon",
@@ -387,7 +390,9 @@
     "verifying": "Memverifikasi...",
     "verifying_permissions": "Memeriksa izin...",
     "view": "Lihat",
-    "years_old": "tahun"
+    "years_old": "tahun",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير"
   },
   "confirmModal": {
     "alertTitle": "تنبيه",

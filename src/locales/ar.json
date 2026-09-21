@@ -288,6 +288,7 @@
     "delete_confirm": "تأكيد الحذف",
     "disabled": "معطل",
     "discard": "discard",
+    "download": "تحميل",
     "download_file": "تحميل الملف",
     "edit": "تعديل",
     "enabled": "مفعل",
@@ -311,6 +312,7 @@
     "notes": "ملاحظات المعلم",
     "notice": "تنبيه",
     "ok": "حسناً",
+    "open_external": "فتح في نافذة جديدة",
     "optional": "optional",
     "paused": "موقوف",
     "pending": "معلق",
@@ -320,6 +322,7 @@
     "processing": "جاري المعالجة...",
     "remove": "إلغاء",
     "reset_filters": "إلغاء الفلاتر",
+    "reset_zoom": "إعادة ضبط",
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "نفس الهاتف",
@@ -346,7 +349,9 @@
     "uploading": "جاري الرفع...",
     "verifying_permissions": "جاري التحقق من الصلاحيات...",
     "view": "عرض",
-    "years_old": "سنة"
+    "years_old": "سنة",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير"
   },
   "confirmModal": {
     "alertTitle": "تنبيه",
