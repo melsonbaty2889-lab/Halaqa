@@ -85,3 +85,13 @@ export function GoogleButton({
     </Btn>
   );
 }
+
+// تصدير افتراضي يجمع الأزرار لمنع أخطاء الاستيراد
+export default function AuthButtons() {
+  return (
+    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+      <PrimaryButton>تسجيل الدخول</PrimaryButton>
+      <GoogleButton />
+    </div>
+  );
+}
