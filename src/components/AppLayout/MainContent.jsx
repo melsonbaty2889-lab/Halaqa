@@ -42,6 +42,7 @@ export default function MainContent() {
 
   const { appState, user, profile, academy, logout, refreshStatus, userRole, t } = useAcademy();
   const [authView, setAuthView] = useState('login');
+  const [prefilledEmail, setPrefilledEmail] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
@@ -78,6 +79,13 @@ export default function MainContent() {
       setTimeout(() => setIsRefreshing(false), 500);
     }
   }, [refreshStatus]);
+
+  const handleSwitchToLogin = useCallback((emailToPass) => {
+    if (typeof emailToPass === 'string' && emailToPass.trim() !== '') {
+      setPrefilledEmail(emailToPass.trim());
+    }
+    setAuthView('login');
+  }, []);
 
   const getSuspensionReason = useCallback(() => {
     const reason = academy?.suspension_reason || academy?.status_reason;
@@ -117,13 +125,14 @@ export default function MainContent() {
         <div className="bg-semantic-bgPage min-h-screen">
           {authView === 'login' && (
             <LoginPage 
+              initialEmail={prefilledEmail}
               onSwitchToSignUp={() => setAuthView('signup')} 
               onForgotPassword={() => setAuthView('forgot')}
               onLoginSuccess={() => refreshStatus?.()}
             />
           )}
           {authView === 'signup' && (
-            <SignUpPage onSwitchToLogin={() => setAuthView('login')} />
+            <SignUpPage onSwitchToLogin={handleSwitchToLogin} />
           )}
           {authView === 'forgot' && (
             <ForgotPassword onBackToLogin={() => setAuthView('login')} />
