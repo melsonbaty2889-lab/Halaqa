@@ -27,6 +27,7 @@ export default function LoginPage({
     showPassword,
     setShowPassword,
     loading,
+    googleLoading,
     fieldErrors,
     status,
     handleEmailLogin,
@@ -34,11 +35,9 @@ export default function LoginPage({
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
-  // فصل حالة تحميل Google عن التحميل المباشر للنموذج
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
-  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
+  const appSubtitle = APP_SUBTITLES?.[currentLangCode] || APP_SUBTITLES?.ar || 'الحلقة الذكية';
 
   useEffect(() => {
     document.title = `${t('auth.login', 'تسجيل الدخول')} | ${appSubtitle}`;
@@ -49,7 +48,6 @@ export default function LoginPage({
     const errorMsg = status?.msg || fieldErrors?.email || fieldErrors?.password;
     if (errorMsg) {
       showToast(errorMsg, 'error');
-      setGoogleLoading(false);
     }
   }, [status, fieldErrors, showToast]);
 
@@ -98,16 +96,15 @@ export default function LoginPage({
     handleEmailLogin(e);
   };
 
-  const onGoogleSubmit = async (e) => {
-    setGoogleLoading(true);
-    try {
-      await handleGoogleLogin(e);
-    } catch (err) {
-      setGoogleLoading(false);
-    }
-  };
-
   const activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
+
+  // توحيد استخدام متغيرات ألوان نظام التصميم مع الدعم المتبادل لضمان الاتساق الكامل
+  const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
+  const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
+  const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
+  const dangerColor = C.semantic?.danger || C.error?.DEFAULT;
+  const borderInputColor = C.semantic?.borderInput || C.inputs?.border;
+  const surfaceInputColor = C.semantic?.surfaceInput || C.inputs?.bg;
 
   return (
     <AuthLayout 
@@ -121,13 +118,13 @@ export default function LoginPage({
           <div className="text-center mb-5">
             <h1
               className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-              style={{ color: C.text?.title }}
+              style={{ color: textPrimaryColor }}
             >
               {t('auth.loginTitle', 'تسجيل الدخول')}
             </h1>
             <p
               className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
-              style={{ color: C.text?.muted }}
+              style={{ color: textSecondaryColor }}
             >
               {t('auth.loginDesc', 'أهلاً بك مجدداً، أدخل بياناتك للمتابعة إلى حسابك')}
             </p>
@@ -138,9 +135,9 @@ export default function LoginPage({
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
               style={{
-                backgroundColor: 'rgba(244, 63, 94, 0.1)',
-                borderColor: C.error?.DEFAULT,
-                color: C.error?.DEFAULT,
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderColor: dangerColor,
+                color: dangerColor,
               }}
             >
               <AlertCircle size={16} className="shrink-0" />
@@ -159,7 +156,7 @@ export default function LoginPage({
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: email ? C.amber?.DEFAULT : C.text?.muted,
+                  color: email ? actionPrimaryColor : textSecondaryColor,
                 }}
               />
               <input
@@ -176,9 +173,9 @@ export default function LoginPage({
                   isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
                 }`}
                 style={{
-                  borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.email ? dangerColor : borderInputColor,
+                  backgroundColor: surfaceInputColor,
+                  color: textPrimaryColor,
                 }}
               />
             </div>
@@ -191,7 +188,7 @@ export default function LoginPage({
                   isRtl ? 'right-3.5' : 'left-3.5'
                 }`}
                 style={{
-                  color: password ? C.amber?.DEFAULT : C.text?.muted,
+                  color: password ? actionPrimaryColor : textSecondaryColor,
                 }}
               />
               <input
@@ -208,9 +205,9 @@ export default function LoginPage({
                   isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
                 }`}
                 style={{
-                  borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.password ? dangerColor : borderInputColor,
+                  backgroundColor: surfaceInputColor,
+                  color: textPrimaryColor,
                 }}
               />
               <button
@@ -221,7 +218,7 @@ export default function LoginPage({
                 className={`absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                   isRtl ? 'left-1' : 'right-1'
                 }`}
-                style={{ color: C.text?.muted }}
+                style={{ color: textSecondaryColor }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -235,7 +232,7 @@ export default function LoginPage({
                 title={t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
                 aria-label={t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
                 className="bg-transparent border-none text-xs cursor-pointer min-h-[32px] inline-flex items-center px-1 font-medium hover:underline"
-                style={{ color: C.amber?.DEFAULT }}
+                style={{ color: actionPrimaryColor }}
               >
                 {t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
               </button>
@@ -249,13 +246,13 @@ export default function LoginPage({
 
           {/* الفاصل الزمني (OR) */}
           <div className="relative my-4 flex items-center justify-center">
-            <div className="border-t w-full" style={{ borderColor: C.inputs?.border }} />
+            <div className="border-t w-full" style={{ borderColor: borderInputColor }} />
             <span
               className="absolute px-3 text-[10px] uppercase font-mono rounded-full border"
               style={{
-                backgroundColor: C.dark?.surface,
-                color: C.text?.muted,
-                borderColor: C.inputs?.border,
+                backgroundColor: C.semantic?.surfaceCard || C.dark?.surface,
+                color: textSecondaryColor,
+                borderColor: borderInputColor,
               }}
             >
               {t('auth.or', 'أو')}
@@ -264,7 +261,7 @@ export default function LoginPage({
 
           {/* زر تسجيل الدخول عبر جوجل الموحد */}
           <GoogleButton 
-            onClick={onGoogleSubmit}
+            onClick={handleGoogleLogin}
             loading={googleLoading}
             disabled={loading}
             text={t('auth.loginWithGoogle', 'متابعة باستخدام Google')}
@@ -273,7 +270,7 @@ export default function LoginPage({
           {/* إنشاء حساب جديد */}
           <div
             className="text-center mt-5 text-xs flex items-center justify-center gap-1.5"
-            style={{ color: C.text?.muted }}
+            style={{ color: textSecondaryColor }}
           >
             <span>{t('auth.noAccount', 'ليس لديك حساب؟')}</span>
             <button
@@ -282,7 +279,7 @@ export default function LoginPage({
               title={t('auth.createNewAccount', 'إنشاء حساب جديد')}
               aria-label={t('auth.createNewAccount', 'إنشاء حساب جديد')}
               className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 min-h-[32px] inline-flex items-center px-1"
-              style={{ color: C.amber?.DEFAULT }}
+              style={{ color: actionPrimaryColor }}
             >
               {t('auth.createNewAccount', 'إنشاء حساب جديد')}
             </button>
