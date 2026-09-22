@@ -12,7 +12,6 @@ export interface FieldErrors {
   password?: string;
   confirmPassword?: string;
   agreeTerms?: string;
-  role?: string;
   general?: string;
 }
 
@@ -69,27 +68,23 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     const formData = {
       fullName: fullName.trim(),
       email: email.trim(),
-      role: 'student', // قيمة افتراضية لتلبية متطلب role في signUpSchema بدون تغيير auth.js
       password,
       confirmPassword,
       agreeTerms,
     };
 
-    // الاستدعاء متوافق مع ترتيب المعاملات والهيكل المرجّع من auth.js
     const validation = validateFormData(formData, signUpSchema);
 
     if (!validation.valid) {
       const errors = (validation.errors || {}) as FieldErrors;
       setFieldErrors(errors);
 
-      // تحديد أول خطأ لإرجاعه كرسالة نصية عند الحاجة
       const firstErrorMsg =
         errors.fullName ||
         errors.email ||
         errors.password ||
         errors.confirmPassword ||
         errors.agreeTerms ||
-        errors.role ||
         errors.general ||
         t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.');
 
@@ -122,7 +117,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
             emailRedirectTo: `${window.location.origin}/login`,
             data: {
               full_name: fullName.trim(),
-              role: 'student',
             },
           },
         });
