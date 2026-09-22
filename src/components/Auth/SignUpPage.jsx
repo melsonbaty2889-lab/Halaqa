@@ -111,7 +111,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
-  const activeErrorMessage = status?.type === 'error' ? status.msg : fieldErrors?.general;
+  // إخفاء المربع العلوي العام إذا كانت أخطاء الحقول موجودة لمنع التكرار
+  const hasFieldErrors = Object.values(fieldErrors || {}).some(Boolean);
+  const activeGeneralErrorMessage = !hasFieldErrors && status?.type === 'error' ? status.msg : fieldErrors?.general;
 
   return (
     <AuthLayout>
@@ -153,7 +155,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </span>
         </div>
 
-        {activeErrorMessage && (
+        {/* تنبيه الخطأ العام فقط في حال عدم وجود أخطاء في الحقول المحددة */}
+        {activeGeneralErrorMessage && (
           <div
             className="p-3 rounded-xl mb-3 text-xs leading-relaxed flex items-center gap-2 border transition-all"
             style={{
@@ -163,7 +166,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             }}
           >
             <AlertCircle size={16} className="shrink-0" />
-            <div>{activeErrorMessage}</div>
+            <div>{activeGeneralErrorMessage}</div>
           </div>
         )}
 
@@ -470,7 +473,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
-        {/* التوقيع/الزر للانتقال لتسجيل الدخول */}
+        {/* زر الانتقال لتسجيل الدخول */}
         {onSwitchToLogin && (
           <div className="text-center mt-3 text-xs" style={{ color: C.semantic.textSecondary }}>
             <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')} </span>
