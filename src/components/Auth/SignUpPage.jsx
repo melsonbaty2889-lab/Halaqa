@@ -59,7 +59,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   const hasFieldErrors = Object.values(fieldErrors || {}).some(Boolean);
 
-  // منع ظهور الـ Toast العائم إذا كانت هناك أخطاء في الحقول لتجنب التكرار البصري المزعج
   useEffect(() => {
     if (status?.msg && status?.type === 'success') {
       showToast(status.msg, 'success');
@@ -102,6 +101,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </p>
         </div>
 
+        {/* زر التسجيل بواسطة Google */}
         <div className="mb-4">
           <GoogleButton
             onClick={handleGoogleSignUp}
@@ -326,11 +326,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             )}
           </div>
 
-          {/* الشروط والأحكام */}
+          {/* الشروط والأحكام مع الإبراز البصري عند وجود خطأ */}
           <div
             className={`flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border ${
               fieldErrors?.agreeTerms
-                ? 'bg-semantic-dangerBg border-semantic-danger'
+                ? 'bg-semantic-dangerBg/20 border-semantic-danger'
                 : 'border-transparent bg-transparent'
             }`}
           >
