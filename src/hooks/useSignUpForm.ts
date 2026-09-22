@@ -54,13 +54,22 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     i18n.changeLanguage(nextLang);
   }, [i18n]);
 
+  const clearFieldError = useCallback((fieldName: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
+  }, []);
+
   const handleAgreeTermsChange = useCallback((checked: boolean) => {
     setAgreeTerms(checked);
     if (checked) {
-      setFieldErrors((prev) => ({ ...prev, agreeTerms: undefined }));
+      clearFieldError('agreeTerms');
       setStatus((prev) => (prev.type === 'error' ? { type: null, msg: '' } : prev));
     }
-  }, []);
+  }, [clearFieldError]);
 
   const validateFormDirectly = useCallback((): boolean => {
     const formData = {
@@ -121,7 +130,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       } catch (err: any) {
         console.error('Sign Up Detailed Error:', err);
 
-        // استخراج سلسلة النص بأمان لمنع استعراض كائنات `{}`
         let errorString = t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.');
         if (typeof err === 'string') {
           errorString = err;
@@ -200,8 +208,9 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setShowConfirmPassword,
     loading,
     googleLoading,
-    fieldErrors: hasSubmitted ? fieldErrors : {},
+    fieldErrors, // تم إلغاء ربط العرض بشرط hasSubmitted حتى تظهر أخطاء Google فوراً
     setFieldErrors,
+    clearFieldError,
     status,
     setStatus,
     toggleLanguage,
