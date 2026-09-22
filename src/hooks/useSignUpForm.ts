@@ -12,6 +12,7 @@ export interface FieldErrors {
   password?: string;
   confirmPassword?: string;
   agreeTerms?: string;
+  general?: string;
 }
 
 export interface StatusState {
@@ -61,6 +62,35 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     }
   }, []);
 
+  // دالة التحقق المباشر من الحقول وإرجاع مفتاح الترجمة أو النص المناسب
+  const validateFormDirectly = useCallback((): string | null => {
+    const cleanFullName = fullName.trim();
+    const cleanEmail = email.trim();
+
+    if (!cleanFullName) {
+      return 'auth.fullNameRequired';
+    }
+    if (!cleanEmail) {
+      return 'auth.emailRequired';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return 'auth.invalidEmail';
+    }
+    if (!password) {
+      return 'auth.passwordRequired';
+    }
+    if (password.length < 8) {
+      return 'auth.passwordMinLength';
+    }
+    if (password !== confirmPassword) {
+      return 'auth.passwordsDoNotMatch';
+    }
+    if (!agreeTerms) {
+      return 'auth.agreeTermsRequired';
+    }
+    return null;
+  }, [fullName, email, password, confirmPassword, agreeTerms]);
+
   const validateForm = useCallback(() => {
     const cleanFullName = fullName.trim();
     const cleanEmail = email.trim();
@@ -95,16 +125,10 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       errors.agreeTerms = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
     }
 
-    // التحقق المتقدم باستخدام Schema
     const validation = validateFormData(signUpSchema, formData);
 
     if (Object.keys(errors).length > 0 || !validation.success) {
       setFieldErrors(errors);
-
-      setStatus({
-        type: 'error',
-        msg: validation.error || t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.'),
-      });
       return false;
     }
 
@@ -194,6 +218,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     toggleLanguage,
     handleKeyUp,
     handleSignUp,
+    validateFormDirectly,
     navigate,
   };
 };
