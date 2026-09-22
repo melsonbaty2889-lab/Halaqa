@@ -90,11 +90,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     return null;
   }, [fullName, email, password, confirmPassword, agreeTerms, t]);
 
-  const validateForm = useCallback(() => {
-    const errorMsg = validateFormDirectly();
-    return errorMsg === null;
-  }, [validateFormDirectly]);
-
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
