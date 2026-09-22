@@ -56,13 +56,17 @@ export const Select = forwardRef(({
   // قفل تمرير الصفحة الخلفية عند فتح القائمة المنبثقة
   useEffect(() => {
     if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      document.body.style.touchAction = 'none';
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   const filteredOptions = useMemo(() => {
@@ -132,6 +136,11 @@ export const Select = forwardRef(({
       default:
         break;
     }
+  };
+
+  // إيقاف تسرب التمرير أثناء استخدام اللمس للجوال
+  const handleOverlayTouchMove = (e) => {
+    e.stopPropagation();
   };
 
   return (
@@ -208,11 +217,15 @@ export const Select = forwardRef(({
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
             onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
+            onTouchMove={handleOverlayTouchMove}
           >
-            <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary">
+            <div 
+              className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary"
+              onClick={(e) => e.stopPropagation()}
+            >
               
               {/* الهيدر */}
-              <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40 shrink-0">
                 <h3 className="text-sm font-bold m-0 text-semantic-textPrimary">
                   {title || label || placeholder}
                 </h3>
@@ -227,9 +240,9 @@ export const Select = forwardRef(({
                 </button>
               </div>
 
-              {/* حقل البحث (بدون تركيز تلقائي) */}
+              {/* حقل البحث */}
               {(searchable || options.length > 5) && (
-                <div className="p-3 border-b border-semantic-borderInput">
+                <div className="p-3 border-b border-semantic-borderInput shrink-0">
                   <div className="relative">
                     <input
                       type="text"
@@ -248,8 +261,9 @@ export const Select = forwardRef(({
 
               {/* قائمة الخيارات */}
               <div 
-                className="overflow-y-auto p-2 space-y-1 max-h-[50vh]"
+                className="overflow-y-auto p-2 space-y-1 max-h-[50vh] overscroll-contain"
                 style={{ overscrollBehavior: 'contain' }}
+                onTouchMove={(e) => e.stopPropagation()}
               >
                 {filteredOptions.length === 0 ? (
                   <div className="p-6 text-center text-xs text-semantic-textSecondary">
