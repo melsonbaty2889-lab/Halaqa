@@ -50,6 +50,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
 
+  const [localError, setLocalError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -61,10 +62,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
 
-  // إظهار Toast عند تغير حالة التسجيل من הـ Hook
   useEffect(() => {
     if (status?.msg) {
-      showToast(status.msg, status.type === 'success' ? 'success' : 'error');
+      if (status.type === 'error') {
+        showToast(status.msg, 'error');
+      } else if (status.type === 'success') {
+        showToast(status.msg, 'success');
+      }
     }
   }, [status, showToast]);
 
@@ -79,21 +83,56 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   }, [password]);
 
   const passwordStrength = useMemo(() => {
-    if (!password) return { score: 0, label: '', color: '' };
+    if (!password) return { score: 0, label: '', color: 'transparent' };
     const passedCount = Object.values(passwordCriteria).filter(Boolean).length;
-    if (passedCount <= 1) return { score: 25, label: t('auth.weak', 'ضعيفة جداً'), color: C.error?.DEFAULT || '#f43f5e' };
-    if (passedCount === 2) return { score: 50, label: t('auth.medium', 'ضعيفة'), color: '#f59e0b' };
-    if (passedCount === 3) return { score: 75, label: t('auth.good', 'جيدة'), color: '#3b82f6' };
-    return { score: 100, label: t('auth.strong', 'قوية ممتاز'), color: C.emerald?.DEFAULT || '#10b981' };
+    if (passedCount <= 1) return { score: 25, label: t('auth.weak', 'ضعيفة جداً'), color: C.semantic.danger };
+    if (passedCount === 2) return { score: 50, label: t('auth.medium', 'ضعيفة'), color: C.semantic.warning };
+    if (passedCount === 3) return { score: 75, label: t('auth.good', 'جيدة'), color: C.semantic.info };
+    return { score: 100, label: t('auth.strong', 'قوية ممتاز'), color: C.semantic.success };
   }, [password, passwordCriteria, t]);
 
+  const validateFormDirectly = () => {
+    if (!fullName || !fullName.trim()) {
+      return t('auth.fullNameRequired', 'يرجى إدخال الاسم الكامل');
+    }
+    if (!email || !email.trim()) {
+      return t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني');
+    }
+    if (!password) {
+      return t('auth.passwordRequired', 'يرجى إدخال كلمة المرور');
+    }
+    if (password.length < 8) {
+      return t('auth.passwordMinLength', 'كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+    }
+    if (password !== confirmPassword) {
+      return t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين');
+    }
+    if (!agreeTerms) {
+      return t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
+    }
+    return null;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLocalError('');
+    if (typeof setFieldErrors === 'function') setFieldErrors({});
+
+    const validationError = validateFormDirectly();
+    if (validationError) {
+      setLocalError(validationError);
+      showToast(validationError, 'error');
+      return;
+    }
+
+    handleSignUp(e);
+  };
+
   const handleGoogleSignUp = useCallback(async () => {
+    setLocalError('');
     if (!agreeTerms) {
       const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-      setFieldErrors((prev) => ({
-        ...prev,
-        agreeTerms: errorMsg,
-      }));
+      setLocalError(errorMsg);
       showToast(errorMsg, 'error');
       return;
     }
@@ -115,7 +154,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     } finally {
       setGoogleLoading(false);
     }
-  }, [agreeTerms, setFieldErrors, showToast, t]);
+  }, [agreeTerms, showToast, t]);
 
   const openTermsModal = useCallback((type) => {
     setModalType(type);
@@ -126,25 +165,26 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
+  const activeErrorMessage = localError || fieldErrors?.general || status?.msg;
+
   return (
     <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
       <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="text-center mb-4">
           <h1
             className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-            style={{ color: C.text?.title }}
+            style={{ color: C.semantic.textPrimary }}
           >
             {t('auth.createNewAccount', 'إنشاء حساب جديد')}
           </h1>
           <p
             className="text-xs font-medium leading-relaxed m-0"
-            style={{ color: C.text?.muted }}
+            style={{ color: C.semantic.textSecondary }}
           >
             {t('auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
           </p>
         </div>
 
-        {/* زر Google الموحد */}
         <div className="mb-4">
           <GoogleButton
             onClick={handleGoogleSignUp}
@@ -155,46 +195,69 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         </div>
 
         <div className="relative flex items-center justify-center mb-4">
-          <div className="border-t w-full" style={{ borderColor: C.inputs?.border }}></div>
+          <div className="border-t w-full" style={{ borderColor: C.semantic.borderInput }}></div>
           <span
             className="px-3 text-[11px] absolute font-medium"
             style={{
-              backgroundColor: C.dark?.surface,
-              color: C.text?.muted,
+              backgroundColor: C.semantic.surfaceCard,
+              color: C.semantic.textSecondary,
             }}
           >
             {t('auth.orViaEmail', 'أو عبر البريد')}
           </span>
         </div>
 
-        <form onSubmit={handleSignUp} className="flex flex-col gap-3" noValidate>
+        {activeErrorMessage && (
+          <div
+            className="p-3 rounded-xl mb-3 text-xs leading-relaxed flex items-center gap-2 border transition-all"
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              borderColor: C.semantic.danger,
+              color: C.semantic.danger,
+            }}
+          >
+            <AlertCircle size={16} className="shrink-0" />
+            <div>{activeErrorMessage}</div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>
           {/* الاسم الكامل */}
           <div>
             <div className="relative flex items-center">
               <User
                 size={18}
-                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
                 style={{
-                  color: fullName ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
+                  color: fullName ? C.semantic.actionPrimary : C.semantic.textSecondary,
                 }}
               />
               <input
                 type="text"
                 value={fullName || ''}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => {
+                  if (localError) setLocalError('');
+                  setFullName(e.target.value);
+                }}
                 placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
                 aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
                 required
-                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start min-h-[44px] ps-11 pe-4"
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
+                }`}
                 style={{
-                  borderColor: fieldErrors?.fullName ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.fullName ? C.semantic.danger : C.semantic.borderInput,
+                  backgroundColor: C.semantic.surfaceInput,
+                  color: C.semantic.textPrimary,
                 }}
               />
             </div>
             {fieldErrors?.fullName && (
-              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.fullName}</p>
+              <p className="text-[10px] mt-1 px-1" style={{ color: C.semantic.danger }}>
+                {fieldErrors.fullName}
+              </p>
             )}
           </div>
 
@@ -203,28 +266,37 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Mail
                 size={18}
-                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
                 style={{
-                  color: email ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
+                  color: email ? C.semantic.actionPrimary : C.semantic.textSecondary,
                 }}
               />
               <input
                 type="email"
                 value={email || ''}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  if (localError) setLocalError('');
+                  setEmail(e.target.value);
+                }}
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 required
-                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-4"
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
+                }`}
                 style={{
-                  borderColor: fieldErrors?.email ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.email ? C.semantic.danger : C.semantic.borderInput,
+                  backgroundColor: C.semantic.surfaceInput,
+                  color: C.semantic.textPrimary,
                 }}
               />
             </div>
             {fieldErrors?.email && (
-              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.email}</p>
+              <p className="text-[10px] mt-1 px-1" style={{ color: C.semantic.danger }}>
+                {fieldErrors.email}
+              </p>
             )}
           </div>
 
@@ -233,24 +305,31 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Lock
                 size={18}
-                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
                 style={{
-                  color: password ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
+                  color: password ? C.semantic.actionPrimary : C.semantic.textSecondary,
                 }}
               />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password || ''}
                 onKeyUp={handleKeyUp}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  if (localError) setLocalError('');
+                  setPassword(e.target.value);
+                }}
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 required
-                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-11"
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
+                }`}
                 style={{
-                  borderColor: fieldErrors?.password ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.password ? C.semantic.danger : C.semantic.borderInput,
+                  backgroundColor: C.semantic.surfaceInput,
+                  color: C.semantic.textPrimary,
                 }}
               />
               <button
@@ -258,8 +337,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
-                style={{ color: C.text?.muted }}
+                className={`absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  isRtl ? 'left-1' : 'right-1'
+                }`}
+                style={{ color: C.semantic.textSecondary }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -268,7 +349,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             {password && (
               <div className="mt-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 space-y-1.5">
                 <div className="flex items-center justify-between text-[10px] font-bold">
-                  <span style={{ color: C.text?.muted }}>
+                  <span style={{ color: C.semantic.textSecondary }}>
                     {t('auth.strength', 'قوة كلمة المرور:')}
                   </span>
                   <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
@@ -282,36 +363,36 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                     }}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-1 pt-1 text-[10px]" style={{ color: C.text?.muted }}>
+                <div className="grid grid-cols-2 gap-1 pt-1 text-[10px]" style={{ color: C.semantic.textSecondary }}>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.minLength ? (
-                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                      <CheckCircle2 size={12} className="shrink-0" style={{ color: C.semantic.success }} />
                     ) : (
-                      <XCircle size={12} className="text-gray-400 shrink-0" />
+                      <XCircle size={12} className="shrink-0" style={{ color: C.semantic.textSecondary }} />
                     )}
                     <span>{t('auth.min8Chars', '8 حروف على الأقل')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasLetter ? (
-                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                      <CheckCircle2 size={12} className="shrink-0" style={{ color: C.semantic.success }} />
                     ) : (
-                      <XCircle size={12} className="text-gray-400 shrink-0" />
+                      <XCircle size={12} className="shrink-0" style={{ color: C.semantic.textSecondary }} />
                     )}
                     <span>{t('auth.hasLetter', 'تتضمن حروف')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasNumber ? (
-                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                      <CheckCircle2 size={12} className="shrink-0" style={{ color: C.semantic.success }} />
                     ) : (
-                      <XCircle size={12} className="text-gray-400 shrink-0" />
+                      <XCircle size={12} className="shrink-0" style={{ color: C.semantic.textSecondary }} />
                     )}
                     <span>{t('auth.hasNumber', 'تتضمن أرقام')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasSpecial ? (
-                      <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+                      <CheckCircle2 size={12} className="shrink-0" style={{ color: C.semantic.success }} />
                     ) : (
-                      <XCircle size={12} className="text-gray-400 shrink-0" />
+                      <XCircle size={12} className="shrink-0" style={{ color: C.semantic.textSecondary }} />
                     )}
                     <span>{t('auth.hasSpecial', 'رمز خاص (@#$)')}</span>
                   </div>
@@ -319,7 +400,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               </div>
             )}
             {fieldErrors?.password && (
-              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.password}</p>
+              <p className="text-[10px] mt-1 px-1" style={{ color: C.semantic.danger }}>
+                {fieldErrors.password}
+              </p>
             )}
           </div>
 
@@ -328,23 +411,30 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <div className="relative flex items-center">
               <Lock
                 size={18}
-                className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
+                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
+                  isRtl ? 'right-3.5' : 'left-3.5'
+                }`}
                 style={{
-                  color: confirmPassword ? (C.amber?.DEFAULT || '#D97706') : C.text?.muted,
+                  color: confirmPassword ? C.semantic.actionPrimary : C.semantic.textSecondary,
                 }}
               />
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword || ''}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  if (localError) setLocalError('');
+                  setConfirmPassword(e.target.value);
+                }}
                 placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
                 aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
                 required
-                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans text-start min-h-[44px] ps-11 pe-11"
+                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
+                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
+                }`}
                 style={{
-                  borderColor: fieldErrors?.confirmPassword ? C.error?.DEFAULT : C.inputs?.border,
-                  backgroundColor: C.inputs?.bg,
-                  color: C.text?.title,
+                  borderColor: fieldErrors?.confirmPassword ? C.semantic.danger : C.semantic.borderInput,
+                  backgroundColor: C.semantic.surfaceInput,
+                  color: C.semantic.textPrimary,
                 }}
               />
               <button
@@ -352,14 +442,18 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
-                style={{ color: C.text?.muted }}
+                className={`absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                  isRtl ? 'left-1' : 'right-1'
+                }`}
+                style={{ color: C.semantic.textSecondary }}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {fieldErrors?.confirmPassword && (
-              <p className="text-[10px] mt-1 text-rose-500 px-1">{fieldErrors.confirmPassword}</p>
+              <p className="text-[10px] mt-1 px-1" style={{ color: C.semantic.danger }}>
+                {fieldErrors.confirmPassword}
+              </p>
             )}
           </div>
 
@@ -367,27 +461,30 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <div
             className="flex items-start gap-2.5 my-1 p-2 rounded-xl transition-all border"
             style={{
-              borderColor: fieldErrors?.agreeTerms ? C.error?.DEFAULT : 'transparent',
-              backgroundColor: fieldErrors?.agreeTerms ? 'rgba(244, 63, 94, 0.1)' : 'transparent',
+              borderColor: fieldErrors?.agreeTerms ? C.semantic.danger : 'transparent',
+              backgroundColor: fieldErrors?.agreeTerms ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
             }}
           >
             <input
               type="checkbox"
               id="agreeTerms"
               checked={Boolean(agreeTerms)}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
+              onChange={(e) => {
+                if (localError) setLocalError('');
+                setAgreeTerms(e.target.checked);
+              }}
               aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
               className="mt-1 rounded focus:ring-0 cursor-pointer min-h-[20px] min-w-[20px] shrink-0"
               style={{
-                borderColor: C.inputs?.border,
-                backgroundColor: C.inputs?.bg,
-                accentColor: C.amber?.DEFAULT,
+                borderColor: C.semantic.borderInput,
+                backgroundColor: C.semantic.surfaceInput,
+                accentColor: C.semantic.actionPrimary,
               }}
             />
             <label
               htmlFor="agreeTerms"
               className="text-[11px] cursor-pointer leading-tight select-none pt-0.5"
-              style={{ color: C.text?.muted }}
+              style={{ color: C.semantic.textSecondary }}
             >
               {t('auth.iAgreeTo', 'أوافق على')}{' '}
               <button
@@ -396,7 +493,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 title={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 aria-label={t('auth.termsAndConditions', 'الشروط والأحكام')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.amber?.DEFAULT }}
+                style={{ color: C.semantic.actionPrimary }}
               >
                 {t('auth.termsAndConditions', 'الشروط والأحكام')}
               </button>{' '}
@@ -407,53 +504,30 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 title={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 aria-label={t('auth.privacyPolicy', 'سياسة الخصوصية')}
                 className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
-                style={{ color: C.amber?.DEFAULT }}
+                style={{ color: C.semantic.actionPrimary }}
               >
                 {t('auth.privacyPolicy', 'سياسة الخصوصية')}
               </button>
             </label>
           </div>
 
-          {status?.msg && (
-            <div
-              className="p-3 rounded-xl my-1 text-xs leading-relaxed flex items-center gap-2 border"
-              style={{
-                backgroundColor:
-                  status.type === 'success'
-                    ? 'rgba(16, 185, 129, 0.1)'
-                    : 'rgba(244, 63, 94, 0.1)',
-                color:
-                  status.type === 'success'
-                    ? C.emerald?.DEFAULT
-                    : C.error?.DEFAULT,
-                borderColor:
-                  status.type === 'success'
-                    ? C.emerald?.DEFAULT
-                    : C.error?.DEFAULT,
-              }}
-            >
-              <AlertCircle size={16} className="shrink-0" />
-              <div>{status.msg}</div>
-            </div>
-          )}
-
-          {/* زر إنشاء الحساب الرئيسي الموحد */}
-          <PrimaryButton loading={loading}>
+          {/* زر إنشاء الحساب */}
+          <PrimaryButton loading={loading && !googleLoading} disabled={googleLoading}>
             {t('auth.createNewAccount', 'إنشاء حساب جديد')}
           </PrimaryButton>
         </form>
 
         <div
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4"
-          style={{ color: C.text?.muted }}
+          style={{ color: C.semantic.textSecondary }}
         >
-          <ShieldCheck size={14} style={{ color: C.emerald?.DEFAULT }} />
+          <ShieldCheck size={14} style={{ color: C.semantic.success }} />
           <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
         <div
           className="mt-3 text-center text-xs flex items-center justify-center gap-1"
-          style={{ color: C.text?.muted }}
+          style={{ color: C.semantic.textSecondary }}
         >
           <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>
           <button
@@ -462,7 +536,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             title={t('auth.signIn', 'تسجيل الدخول')}
             aria-label={t('auth.signIn', 'تسجيل الدخول')}
             className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 min-h-[44px] px-1 flex items-center"
-            style={{ color: C.amber?.DEFAULT }}
+            style={{ color: C.semantic.actionPrimary }}
           >
             {t('auth.signIn', 'تسجيل الدخول')}
           </button>
@@ -471,7 +545,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
         <TermsModal isOpen={showModal} onClose={closeTermsModal} contentType={modalType} isRtl={isRtl} />
       </div>
 
-      {/* مكون الـ Toast المنزلق أسفل الشاشة */}
       <Toast
         isOpen={toastState.isOpen}
         message={toastState.message}
