@@ -17,7 +17,8 @@ export const loginSchema = z.object({
 
 /**
  * Sign up form validation schema
- * Includes full name, role, terms agreement, and password confirmation
+ * Includes full name, terms agreement, and password confirmation
+ * Note: role is optional here as role selection occurs in a subsequent step in Smart Halaqa
  */
 export const signUpSchema = z.object({
   fullName: z
@@ -28,9 +29,7 @@ export const signUpSchema = z.object({
     .string()
     .min(1, { message: 'البريد الإلكتروني مطلوب' })
     .email({ message: 'البريد الإلكتروني غير صحيح' }),
-  role: z
-    .string()
-    .min(1, { message: 'يرجى تحديد نوع الحساب' }),
+  role: z.string().optional(),
   password: z
     .string()
     .min(1, { message: 'كلمة المرور مطلوبة' })
@@ -80,7 +79,7 @@ export const updatePasswordSchema = z.object({
  * Validate form data against schema
  * @param {object} data - Form data to validate
  * @param {ZodSchema} schema - Zod schema to validate against
- * @returns {object} { valid: boolean, errors: object }
+ * @returns {object} { valid: boolean, errors: object, data: object }
  */
 export const validateFormData = (data, schema) => {
   try {
