@@ -38,7 +38,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
 
-  const isMounted = useRef<boolean>(true);
+  const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
@@ -63,8 +63,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     }
   }, []);
 
-  // دالة التحقق المباشر باستخدام validateFormData و signUpSchema من auth.js
-  const validateFormDirectly = useCallback(() => {
+  const validateFormDirectly = useCallback((): string | null => {
     const formData = {
       fullName: fullName.trim(),
       email: email.trim(),
@@ -74,11 +73,9 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     };
 
     const validation = validateFormData(formData, signUpSchema);
-
     if (!validation.valid) {
       const errors = (validation.errors || {}) as FieldErrors;
       setFieldErrors(errors);
-
       const firstErrorMsg =
         errors.fullName ||
         errors.email ||
@@ -87,10 +84,8 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         errors.agreeTerms ||
         errors.general ||
         t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.');
-
       return firstErrorMsg;
     }
-
     setFieldErrors({});
     return null;
   }, [fullName, email, password, confirmPassword, agreeTerms, t]);
@@ -105,11 +100,16 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       if (e) e.preventDefault();
       if (isMounted.current) setStatus({ type: null, msg: '' });
 
-      if (!validateForm()) return;
+      const validationErrorMsg = validateFormDirectly();
+      if (validationErrorMsg) {
+        if (isMounted.current) {
+          setStatus({ type: 'error', msg: validationErrorMsg });
+        }
+        return false;
+      }
 
       try {
         if (isMounted.current) setLoading(true);
-
         const response: AuthResponse = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -129,10 +129,10 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
             msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
           });
         }
-
         if (onSignUpSuccess) {
           onSignUpSuccess();
         }
+        return true;
       } catch (err: unknown) {
         console.error('Sign Up Error:', err);
         const translatedError = handleAuthError(err);
@@ -142,11 +142,12 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
             msg: translatedError || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
           });
         }
+        return false;
       } finally {
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateForm, onSignUpSuccess, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, t]
   );
 
   return {
