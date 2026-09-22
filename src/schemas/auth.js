@@ -15,7 +15,7 @@ export const loginSchema = z.object({
 });
 
 /**
- * Sign up form validation schema
+ * Sign up form validation schema (Initial registration - no role required)
  */
 export const signUpSchema = z.object({
   fullName: z
@@ -26,7 +26,6 @@ export const signUpSchema = z.object({
     .string()
     .min(1, { message: 'البريد الإلكتروني مطلوب' })
     .email({ message: 'البريد الإلكتروني غير صحيح' }),
-  role: z.string().optional(),
   password: z
     .string()
     .min(1, { message: 'كلمة المرور مطلوبة' })
