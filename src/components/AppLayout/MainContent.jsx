@@ -89,9 +89,9 @@ export default function MainContent() {
     return String(reason);
   }, [academy, t]);
 
-  // فحص ما إذا كان المستخدم مسجلاً ولكنه بدون دور معتمد بعد
+  // فحص حالة احتياج المستخدم لتحديد الدور الحسابي
   const rawRole = userRole || profile?.role;
-  const isNeedsRoleSelection = appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole;
+  const isNeedsRoleSelection = (appState === 'ROLE_SELECTION' || (appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole));
 
   return (
     <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
@@ -126,7 +126,7 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* شاشة اختيار الدور: تظهر فقط عند وجود حساب بدون Role */}
+      {/* شاشة اختيار الدور: تظهر مباشرة عند تسجيل حساب جديد أو الدخول بـ Google بدون دور سابق */}
       {isNeedsRoleSelection && authView !== 'update_password' && (
         <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
       )}
@@ -275,7 +275,7 @@ export default function MainContent() {
         </Routes>
       )}
 
-      {!['LOADING', 'UNAUTHENTICATED', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
+      {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
         <div className="bg-semantic-bgPage min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
           <AlertTriangle size={40} className="text-semantic-danger mb-4" />
           <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
