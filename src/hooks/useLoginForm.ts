@@ -45,8 +45,8 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
   // استخراج كود اللغة الأساسي (مثلاً ur من ur-PK)
   const currentLangCode = (i18n?.language?.split('-')[0] || 'ar').toLowerCase();
   
-  // التحقق الصحيح من اتجاه RTL لجميع اللغات المدعومة
-  const isRtl = RTL_LANGUAGES.includes(currentLangCode);
+  // التحقق الصحيح من اتجاه RTL بمرونة عالية
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : RTL_LANGUAGES.includes(currentLangCode);
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -54,6 +54,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
   const [rememberMe, setRememberMe] = useState<boolean>(true);
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [redirecting, setRedirecting] = useState<boolean>(false);
   const [capsLockOn, setCapsLockOn] = useState<boolean>(false);
   const [cooldown, setCooldown] = useState<number>(0);
@@ -103,7 +104,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
   };
 
   const handleEmailLogin = async (e: FormEvent) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!isMounted.current) return;
 
     setStatus({ type: null, msg: '' });
@@ -119,7 +120,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       setFieldErrors(validationResult.errors || {});
       setStatus({
         type: 'error',
-        msg: t('auth.errors.fixHighlighted', isRtl ? 'يرجى تصحيح الأخطاء الموضحة أدناه.' : 'Please correct the highlighted errors.'),
+        msg: t('auth.errors.fixHighlighted', 'يرجى تصحيح الأخطاء الموضحة أدناه.'),
       });
       return;
     }
@@ -168,14 +169,14 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         await supabase.auth.signOut();
         if (isMounted.current) setRedirecting(false);
         throw new Error(
-          t('auth.errors.accountDeactivated', isRtl ? 'هذا الحساب معطل أو تم حذفه.' : 'This account is deactivated or deleted.')
+          t('auth.errors.accountDeactivated', 'هذا الحساب معطل أو تم حذفه.')
         );
       }
 
       if (isMounted.current) {
         setStatus({
           type: 'success',
-          msg: t('auth.success.login', isRtl ? '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...' : '✅ Logged in successfully! Redirecting...'),
+          msg: t('auth.success.login', '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...'),
         });
       }
 
@@ -229,7 +230,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
       if (isMounted.current) {
         setStatus({
           type: 'success',
-          msg: t('auth.success.resend', isRtl ? '✅ تم إعادة إرسال رابط التفعيل!' : '✅ Activation link sent!'),
+          msg: t('auth.success.resend', '✅ تم إعادة إرسال رابط التفعيل!'),
         });
         setShowResend(false);
         setCooldown(60);
@@ -246,7 +247,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
   const handleGoogleLogin = async () => {
     try {
-      setLoading(true);
+      if (isMounted.current) setGoogleLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -254,12 +255,15 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         },
       });
       if (error) throw error;
+      return true;
     } catch (err: unknown) {
       const userFriendlyMsg = handleAuthError(err, isRtl);
       if (isMounted.current) {
         setStatus({ type: 'error', msg: userFriendlyMsg });
-        setLoading(false);
       }
+      return false;
+    } finally {
+      if (isMounted.current) setGoogleLoading(false);
     }
   };
 
@@ -275,12 +279,14 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     rememberMe,
     setRememberMe,
     loading,
+    googleLoading,
     redirecting,
     capsLockOn,
     cooldown,
     fieldErrors,
     setFieldErrors,
     status,
+    setStatus,
     showResend,
     resendLoading,
     toggleLanguage,
