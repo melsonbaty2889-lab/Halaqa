@@ -35,7 +35,7 @@ export default function ForgotPassword({ onBackToLogin }) {
   } = useForgotPassword();
 
   const currentLang = i18n?.language?.split('-')[0] || hookLang || 'ar';
-  const appSubtitle = APP_SUBTITLES[currentLang] || APP_SUBTITLES.ar;
+  const appSubtitle = APP_SUBTITLES?.[currentLang] || APP_SUBTITLES?.ar || 'الحلقة الذكية';
 
   // التحقق المزدوج من نص الرسالة لمنع ظهور {} داخل Toast
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function ForgotPassword({ onBackToLogin }) {
     ) {
       showToast(status.msg, status.type === 'success' ? 'success' : 'error');
     }
-  }, [status?.msg, status?.type]);
+  }, [status?.msg, status?.type, showToast]);
 
   const onSubmitForm = (e) => {
     e.preventDefault();
@@ -60,6 +60,15 @@ export default function ForgotPassword({ onBackToLogin }) {
 
   const isMsgValid = status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '' && !status.msg.includes('{}');
 
+  // توحيد استخدام متغيرات ألوان نظام التصميم
+  const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
+  const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
+  const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
+  const dangerColor = C.semantic?.danger || C.error?.DEFAULT;
+  const successColor = C.semantic?.success || C.emerald?.DEFAULT;
+  const borderInputColor = C.semantic?.borderInput || C.inputs?.border;
+  const surfaceInputColor = C.semantic?.surfaceInput || C.inputs?.bg;
+
   return (
     <AuthLayout 
       langBtn={<LanguageSwitcher />} 
@@ -71,13 +80,13 @@ export default function ForgotPassword({ onBackToLogin }) {
             <div className="text-center mb-5">
               <h2 
                 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-                style={{ color: C?.text?.title }}
+                style={{ color: textPrimaryColor }}
               >
                 {t('auth.reset_password_heading', 'استعادة كلمة المرور')}
               </h2>
               <p 
                 className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
-                style={{ color: C?.text?.muted }}
+                style={{ color: textSecondaryColor }}
               >
                 {t('auth.reset_password_desc', 'أدخل بريدك الإلكتروني المسجل لإرسال رابط آمن لإعادة التعيين')}
               </p>
@@ -89,9 +98,9 @@ export default function ForgotPassword({ onBackToLogin }) {
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
                 role="alert"
                 style={{
-                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                  borderColor: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
-                  color: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
+                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  borderColor: status.type === 'success' ? successColor : dangerColor,
+                  color: status.type === 'success' ? successColor : dangerColor,
                 }}
               >
                 <AlertCircle size={16} className="shrink-0" />
@@ -104,7 +113,7 @@ export default function ForgotPassword({ onBackToLogin }) {
                 <Mail 
                   size={18} 
                   className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
-                  style={{ color: email ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted }}
+                  style={{ color: email ? actionPrimaryColor : textSecondaryColor }}
                 />
                 
                 <input 
@@ -116,9 +125,9 @@ export default function ForgotPassword({ onBackToLogin }) {
                   aria-label={t('auth.email_placeholder', 'البريد الإلكتروني')}
                   className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all font-sans min-h-[44px] ps-11 pe-4 text-start"
                   style={{
-                    backgroundColor: C?.inputs?.bg,
-                    borderColor: C?.inputs?.border,
-                    color: C?.text?.title,
+                    backgroundColor: surfaceInputColor,
+                    borderColor: borderInputColor,
+                    color: textPrimaryColor,
                   }}
                 />
               </div>
@@ -136,21 +145,21 @@ export default function ForgotPassword({ onBackToLogin }) {
             <CheckCircle2 
               size={48} 
               className="mx-auto mb-3"
-              style={{ color: C?.emerald?.DEFAULT || '#10B981' }} 
+              style={{ color: successColor }} 
             />
             <h2 
               className="text-lg font-bold mb-2"
-              style={{ color: C?.text?.title }}
+              style={{ color: textPrimaryColor }}
             >
               {t('auth.check_inbox_title', 'تحقق من صندوق البريد')}
             </h2>
             <p 
               className="text-xs leading-relaxed mb-4"
-              style={{ color: C?.text?.muted }}
+              style={{ color: textSecondaryColor }}
             >
               {t('auth.reset_link_sent_to', 'تم إرسال رابط إعادة تعيين كلمة المرور إلى:')}
               <br />
-              <strong className="break-all" style={{ color: C?.amber?.DEFAULT || '#D97706' }}>
+              <strong className="break-all" style={{ color: actionPrimaryColor }}>
                 {email}
               </strong>
             </p>
@@ -163,9 +172,9 @@ export default function ForgotPassword({ onBackToLogin }) {
               aria-label={t('auth.resend_link', 'إعادة إرسال الرابط')}
               className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-xs font-semibold border disabled:opacity-50 cursor-pointer transition-all mb-2"
               style={{
-                backgroundColor: C?.inputs?.bg,
-                borderColor: C?.inputs?.border,
-                color: C?.text?.title,
+                backgroundColor: surfaceInputColor,
+                borderColor: borderInputColor,
+                color: textPrimaryColor,
               }}
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -185,12 +194,12 @@ export default function ForgotPassword({ onBackToLogin }) {
             title={t('auth.back_to_login', 'العودة لتسجيل الدخول')}
             aria-label={t('auth.back_to_login', 'العودة لتسجيل الدخول')}
             className="bg-transparent border-none cursor-pointer inline-flex items-center gap-2 text-xs font-semibold transition-colors min-h-[44px] px-2 hover:underline"
-            style={{ color: C?.text?.muted }}
+            style={{ color: textSecondaryColor }}
           >
             {isRtl ? (
-              <ArrowRight size={16} style={{ color: C?.amber?.DEFAULT || '#D97706' }} />
+              <ArrowRight size={16} style={{ color: actionPrimaryColor }} />
             ) : (
-              <ArrowLeft size={16} style={{ color: C?.amber?.DEFAULT || '#D97706' }} />
+              <ArrowLeft size={16} style={{ color: actionPrimaryColor }} />
             )}
             <span>{t('auth.back_to_login', 'العودة لتسجيل الدخول')}</span>
           </button>
@@ -198,9 +207,9 @@ export default function ForgotPassword({ onBackToLogin }) {
 
         <div 
           className="flex items-center justify-center gap-1.5 text-[11px] mt-4 opacity-75"
-          style={{ color: C?.text?.muted }}
+          style={{ color: textSecondaryColor }}
         >
-          <ShieldCheck size={14} style={{ color: C?.emerald?.DEFAULT || '#10B981' }} />
+          <ShieldCheck size={14} style={{ color: successColor }} />
           <span>
             {t('auth.ssl_secured', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
           </span>
