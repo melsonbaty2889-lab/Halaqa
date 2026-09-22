@@ -16,18 +16,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-interface RoleSelectionPageProps {
-  onRoleSelected?: (role: string) => Promise<void> | void;
-}
-
-export default function RoleSelectionPage({ onRoleSelected }: RoleSelectionPageProps) {
+export default function RoleSelectionPage({ onRoleSelected }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
 
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // استخراج اللغة الحالية وتحديد اتجاه الصفحة
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
@@ -37,7 +33,7 @@ export default function RoleSelectionPage({ onRoleSelected }: RoleSelectionPageP
   // استخراج اسم المنصة الفرعي من المكون الرئيسي AuthLayout
   const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
 
-  // التأكد من استرجاع الجلسة عند العودة من مصادقة OAuth (جوجل) ومنع الطرد لصفحة تسجيل الدخول
+  // التأكد من استرجاع الجلسة عند العودة من مصادقة OAuth (جوجل)
   useEffect(() => {
     document.title = `${t('roles.select_header', 'تحديد نوع الحساب')} | ${appSubtitle}`;
 
@@ -113,9 +109,9 @@ export default function RoleSelectionPage({ onRoleSelected }: RoleSelectionPageP
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error('Role update error:', err);
       const message = t('roles.update_error', 'حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى');
       setErrorMsg(message);
