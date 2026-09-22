@@ -59,9 +59,7 @@ const FallbackLoader = () => (
     role="status"
     aria-label="جاري التحميل"
     className="bg-transparent min-h-screen flex items-center justify-center"
-    style={{ 
-      color: C?.primary?.DEFAULT || 'var(--primary, #E07A00)' 
-    }}
+    style={{ color: C.semantic?.actionPrimary || C.amber?.DEFAULT || '#D97706' }}
   >
     <Loader2 className="animate-spin" size={32} />
   </div>
@@ -71,7 +69,6 @@ export default function App() {
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
 
-  // فحص حالة الشاشة الافتتاحية مع السماح بإظهارها عبر ?view=splash
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -93,10 +90,8 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <div className="relative min-h-screen bg-transparent text-white font-cairo overflow-hidden">
-        {/* 🌟 إدراج خلفية الوهج الزمردي الثابتة لتعمل خلف كل المكونات */}
         <GlobalEmeraldBackground />
 
-        {/* 🌟 تم إضافة pb-24 للجوال لرفع المحتوى فوق شريط التنقل السفلي */}
         <div className="relative z-10 min-h-screen flex flex-col bg-transparent pb-24 md:pb-0">
           <OfflineAndUpdateBanner />
           
