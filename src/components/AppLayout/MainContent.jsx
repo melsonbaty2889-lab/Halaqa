@@ -5,7 +5,6 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import { ROLES } from '@/constants/roles';
-import { C } from '@/theme/colors';
 
 import ProtectedRoute from './ProtectedRoute';
 import InlineUpgradeModal from './InlineUpgradeModal';
@@ -27,14 +26,10 @@ const getText = (tFunc, key, fallback) => {
 };
 
 const FullPageLoader = ({ label }) => {
-  const bgColor = C.semantic?.background || C.dark?.bg || '#050811';
-  const actionColor = C.semantic?.actionPrimary || C.amber?.DEFAULT || '#D97706';
-  const textMutedColor = C.semantic?.textSecondary || C.text?.muted || '#94A3B8';
-
   return (
-    <div style={{ background: bgColor, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: actionColor, gap: '12px' }}>
+    <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-actionPrimary gap-3">
       <Loader2 className="animate-spin" size={32} />
-      <span style={{ fontSize: '0.85rem', color: textMutedColor, fontFamily: "'Cairo', system-ui, sans-serif" }}>
+      <span className="text-xs text-semantic-textSecondary font-['Cairo',system-ui,sans-serif]">
         {label}
       </span>
     </div>
@@ -50,16 +45,6 @@ export default function MainContent() {
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
   const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
-
-  // متغيرات الألوان الدلالية العامة
-  const bgColor = C.semantic?.background || C.dark?.bg || '#050811';
-  const cardBg = C.semantic?.cardBg || C.dark?.card || 'rgba(15, 23, 42, 0.85)';
-  const cardBorder = C.semantic?.cardBorder || C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)';
-  const textPrimary = C.semantic?.textPrimary || C.text?.title || '#FFFFFF';
-  const textMuted = C.semantic?.textSecondary || C.text?.muted || '#94A3B8';
-  const dangerColor = C.semantic?.danger || C.error?.DEFAULT || '#EF4444';
-  const actionPrimary = C.semantic?.actionPrimary || C.amber?.DEFAULT || '#D97706';
-  const primaryGradient = C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)';
 
   useEffect(() => {
     let subscription = null;
@@ -105,7 +90,6 @@ export default function MainContent() {
 
   return (
     <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
-      {/* 1. Update Password View */}
       {authView === 'update_password' && (
         <UpdatePassword 
           onSuccess={() => {
@@ -115,14 +99,12 @@ export default function MainContent() {
         />
       )}
 
-      {/* 2. Loading State */}
       {(appState === 'LOADING' || !appState) && authView !== 'update_password' && (
         <FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />
       )}
 
-      {/* 3. Unauthenticated State */}
       {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && (
-        <div style={{ background: bgColor, minHeight: '100vh' }}>
+        <div className="bg-semantic-bgPage min-h-screen">
           {authView === 'login' && (
             <LoginPage 
               onSwitchToSignUp={() => setAuthView('signup')} 
@@ -139,24 +121,23 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* 4. Pending Approval State */}
       {appState === 'PENDING_APPROVAL' && (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bgColor, padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-          <div style={{ width: '100%', maxWidth: '500px', background: cardBg, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${cardBorder}` }}>
-            <Clock size={40} style={{ color: actionPrimary, marginBlockEnd: '20px' }} />
-            <h2 style={{ color: textPrimary, marginBlockEnd: '15px' }}>
+        <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
+          <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
+            <Clock size={40} className="text-semantic-actionPrimary mx-auto mb-5" />
+            <h2 className="text-semantic-textPrimary text-xl font-bold mb-4">
               {getText(t, 'approval.pending_title', 'طلبك قيد المراجعة')}
             </h2>
-            <p style={{ color: textMuted, marginBlockEnd: '25px', lineHeight: '1.6' }}>
+            <p className="text-semantic-textSecondary mb-6 leading-relaxed">
               {getText(t, 'approval.pending_desc', 'حسابك وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.')}
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="flex gap-3 justify-center flex-wrap">
               <button 
                 onClick={handleManualRefresh} 
                 disabled={isRefreshing}
                 aria-label={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
                 title={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
-                style={{ padding: '10px 20px', minHeight: '44px', background: primaryGradient, color: textPrimary, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50"
               >
                 <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                 {isRefreshing ? getText(t, 'common.checking', 'جاري الفحص...') : getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
@@ -166,7 +147,7 @@ export default function MainContent() {
                 onClick={logout} 
                 aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                 title={getText(t, 'common.logout', 'تسجيل الخروج')}
-                style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: dangerColor, border: `1px solid ${dangerColor}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                className="px-5 min-h-[44px] bg-transparent text-semantic-danger border border-semantic-danger rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <LogOut size={16} />
                 {getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -176,31 +157,30 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* 5. Suspended State */}
       {appState === 'SUSPENDED' && (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: bgColor, padding: '20px', fontFamily: "'Cairo', system-ui, sans-serif" }}>
-          <div style={{ width: '100%', maxWidth: '500px', background: cardBg, padding: '40px', borderRadius: '20px', textAlign: 'center', border: `1px solid ${cardBorder}` }}>
-            <div style={{ background: 'rgba(239, 68, 68, 0.15)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: dangerColor }}>
+        <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
+          <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
+            <div className="bg-semantic-dangerBg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-semantic-danger">
               <ShieldAlert size={36} />
             </div>
-            <h2 style={{ color: textPrimary, marginBlockEnd: '12px', fontSize: '1.4rem', fontWeight: 'bold' }}>
+            <h2 className="text-semantic-textPrimary mb-3 text-2xl font-bold">
               {getText(t, 'suspension.title', 'تم إيقاف حساب الأكاديمية')}
             </h2>
-            <div style={{ background: C.dark?.surface || '#0A0F1C', padding: '16px', borderRadius: '12px', border: `1px solid ${cardBorder}`, marginBlockEnd: '24px', textAlign: 'start' }}>
-              <span style={{ fontSize: '0.8rem', color: textMuted, display: 'block', marginBlockEnd: '4px' }}>
+            <div className="bg-semantic-surfaceInput p-4 rounded-xl border border-semantic-borderCard mb-6 text-start">
+              <span className="text-xs text-semantic-textSecondary block mb-1">
                 {getText(t, 'suspension.reason_label', 'سبب الإيقاف:')}
               </span>
-              <p style={{ color: '#FCA5A5', margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>
+              <p className="text-[#FCA5A5] m-0 text-sm leading-relaxed">
                 {getSuspensionReason()}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="flex gap-3 justify-center flex-wrap">
               <button 
                 onClick={handleManualRefresh} 
                 disabled={isRefreshing}
                 aria-label={getText(t, 'common.refresh', 'إعادة التحديث')}
                 title={getText(t, 'common.refresh', 'إعادة التحديث')}
-                style={{ padding: '10px 20px', minHeight: '44px', background: primaryGradient, color: textPrimary, border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50"
               >
                 <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
                 {isRefreshing ? getText(t, 'common.checking', 'جاري التحقق...') : getText(t, 'common.refresh', 'إعادة التحديث')}
@@ -210,7 +190,7 @@ export default function MainContent() {
                 onClick={logout} 
                 aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                 title={getText(t, 'common.logout', 'تسجيل الخروج')}
-                style={{ padding: '10px 20px', minHeight: '44px', background: 'transparent', color: dangerColor, border: `1px solid ${dangerColor}`, borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                className="px-5 min-h-[44px] bg-transparent text-semantic-danger border border-semantic-danger rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
               >
                 <LogOut size={16} />
                 {getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -220,14 +200,12 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* 6. Super Admin State */}
       {appState === 'SUPER_ADMIN' && (
         <ProtectedRoute allowedRoles={[ROLES?.SUPER_ADMIN || 'super_admin']}>
           <AdminDashboard session={{ user }} onLogout={logout} />
         </ProtectedRoute>
       )}
 
-      {/* 7. No Academy State */}
       {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && (
         !profile?.academy_id && cachedSlug ? (
           <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
@@ -244,7 +222,6 @@ export default function MainContent() {
         )
       )}
 
-      {/* 8. Fully Active State */}
       {appState === 'FULLY_ACTIVE' && profile?.academy_id && (
         <Routes>
           <Route 
@@ -288,24 +265,16 @@ export default function MainContent() {
         </Routes>
       )}
 
-      {/* 9. Unknown/Fallback State */}
       {!['LOADING', 'UNAUTHENTICATED', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && (
-        <div style={{
-          background: bgColor, minHeight: '100vh', display: 'flex', flexDirection:
-          'column', justifyContent: 'center', alignItems: 'center', color: textPrimary,
-          fontFamily: "'Cairo', system-ui, sans-serif", padding: '20px',
-          textAlign: 'center' }}>
-          <AlertTriangle size={40} style={{ color: dangerColor, marginBlockEnd: '15px' }} />
-          <h2 style={{ marginBlockEnd: '10px' }}>{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
-          <p style={{ color: textMuted, marginBlockEnd: '5px' }}>App State: <strong style={{ color: actionPrimary }}>{appState || 'NULL'}</strong></p>
+        <div className="bg-semantic-bgPage min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
+          <AlertTriangle size={40} className="text-semantic-danger mb-4" />
+          <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
+          <p className="text-semantic-textSecondary mb-2">App State: <strong className="text-semantic-actionPrimary">{appState || 'NULL'}</strong></p>
           <button 
             onClick={logout} 
             aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
             title={getText(t, 'common.logout', 'تسجيل الخروج')}
-            style={{
-              background: primaryGradient, color: textPrimary, padding: '10px 25px',
-              minHeight: '44px', border: 'none', borderRadius: '6px', cursor: 'pointer',
-              fontWeight: 'bold' }}
+            className="bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary px-6 min-h-[44px] border-none rounded-md cursor-pointer font-bold transition-all active:scale-[0.99]"
           >
             {getText(t, 'common.logout', 'تسجيل الخروج')}
           </button>
