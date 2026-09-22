@@ -924,6 +924,7 @@
     "admin": "مدير النظام",
     "admin_desc": "To manage the entire Quranic institution, teachers, and halaqas",
     "admin_title": "Supervisor / Quranic Entity Manager",
+    "invalid_role": "يرجى اختيار دور صحيح متاح في المنصة",
     "parent": "ولي أمر",
     "parent_desc": "To follow up on children's progress and attendance in halaqas",
     "parent_title": "Parent / Guardian",

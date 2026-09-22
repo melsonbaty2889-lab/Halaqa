@@ -924,6 +924,7 @@
     "admin": "مدير النظام",
     "admin_desc": "Pour gérer toute l'institution coranique, les enseignants et les halaqas",
     "admin_title": "Superviseur / Directeur de l'entité",
+    "invalid_role": "يرجى اختيار دور صحيح متاح في المنصة",
     "parent": "ولي أمر",
     "parent_desc": "Pour suivre la progression et la présence des enfants aux halaqas",
     "parent_title": "Parent / Tuteur",

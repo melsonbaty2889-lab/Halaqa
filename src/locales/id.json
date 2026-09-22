@@ -924,6 +924,7 @@
     "admin": "مدير النظام",
     "admin_desc": "Untuk mengelola seluruh lembaga Quran, pengajar, dan halaqah",
     "admin_title": "Manajer / Pengawas Lembaga Quran",
+    "invalid_role": "يرجى اختيار دور صحيح متاح في المنصة",
     "parent": "ولي أمر",
     "parent_desc": "Untuk memantau perkembangan dan kehadiran anak di halaqah",
     "parent_title": "Orang Tua / Wali Santri",

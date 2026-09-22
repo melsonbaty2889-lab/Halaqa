@@ -924,6 +924,7 @@
     "admin": "مدير النظام",
     "admin_desc": "Kurumun tamamını, öğretmenleri ve halkaları yönetmek için",
     "admin_title": "Yönetici / Kurum Müdürü",
+    "invalid_role": "يرجى اختيار دور صحيح متاح في المنصة",
     "parent": "ولي أمر",
     "parent_desc": "Çocukların halkadaki takibini ve devamını izlemek için",
     "parent_title": "Veli / Vasisi",
