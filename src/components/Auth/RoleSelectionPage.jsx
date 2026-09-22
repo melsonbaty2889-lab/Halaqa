@@ -8,6 +8,12 @@ import { PrimaryButton } from '@/components/UI/AuthButtons';
 import Toast from '@/components/UI/Toast';
 import { useToast } from '@/hooks/useToast';
 import { 
+  ROLES, 
+  SELECTABLE_ROLES, 
+  isValidSelectableRole, 
+  getRouteForRole 
+} from '@/constants/roles';
+import { 
   GraduationCap, 
   BookOpen, 
   Users, 
@@ -51,36 +57,45 @@ export default function RoleSelectionPage({ onRoleSelected }) {
     checkUserSession();
   }, [i18n.language, t, appSubtitle, navigate]);
 
-  // ترتيب الأدوار حسب الأولوية الأكثر استخداماً وحسب شبكة (Grid 2x2)
-  const roles = [
-    {
-      id: 'student',
+  // ربط بطاقات الأدوار بالقيم المركزية الموحدة لنظام الهوية
+  const roleCardsMap = {
+    [ROLES.STUDENT]: {
       title: t('roles.student_title', 'طالب / قارئ'),
-      desc: t('roles.student_desc', 'الانضمام للحلقات ومتابعة أوراد الحفظ والمراجع والدروس'),
+      desc: t('roles.student_desc', 'الانضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
       icon: GraduationCap,
     },
-    {
-      id: 'teacher',
+    [ROLES.TEACHER]: {
       title: t('roles.teacher_title', 'معلم / محفظ'),
       desc: t('roles.teacher_desc', 'إدارة الحلقات القرآنية ورصد المتابعة وتقييم مستوى الإتقان'),
       icon: BookOpen,
     },
-    {
-      id: 'parent',
+    [ROLES.PARENT]: {
       title: t('roles.parent_title', 'ولي أمر / راعٍ'),
       desc: t('roles.parent_desc', 'لمتابعة إنجاز الأبناء ومواظبتهم في الحلقات القرآنية'),
       icon: Users,
     },
-    {
-      id: 'admin',
+    [ROLES.ADMIN]: {
       title: t('roles.admin_title', 'مشرف / مدير كيان قرآني'),
       desc: t('roles.admin_desc', 'لإدارة المؤسسة القرآنية بالكامل والمعلمين والحلقات'),
       icon: Building2,
     },
-  ];
+  };
+
+  // حصر الأدوار المعروضة فقط على الأدوار العامة القابلة للاختيار (SELECTABLE_ROLES)
+  const rolesList = SELECTABLE_ROLES.map((roleKey) => ({
+    id: roleKey,
+    ...roleCardsMap[roleKey],
+  }));
 
   const handleSaveRole = async () => {
-    if (!selectedRole) return;
+    // 1. التحقق من أمان القيمة ومنع التزوير من الواجهة الأمامية
+    if (!selectedRole || !isValidSelectableRole(selectedRole)) {
+      const invalidMsg = t('roles.invalid_role', 'يرجى اختيار دور صحيح متاح في المنصة');
+      setErrorMsg(invalidMsg);
+      showToast(invalidMsg, 'error');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
 
@@ -90,13 +105,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
       }
 
-      // 1. تحديث بيانات المستخدم في Supabase Auth Metadata
-      const { error: updateAuthError } = await supabase.auth.updateUser({
-        data: { role: selectedRole }
-      });
-      if (updateAuthError) throw updateAuthError;
-
-      // 2. تحديث دور المستخدم في جدول profiles
+      // 2. تحديث دور المستخدم في جدول profiles المركزية
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -107,10 +116,21 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
       if (profileError) throw profileError;
 
+      // 3. تحديث Auth Metadata لضمان التزامن المباشر
+      const { error: updateAuthError } = await supabase.auth.updateUser({
+        data: { role: selectedRole }
+      });
+      if (updateAuthError) throw updateAuthError;
+
+      // 4. إنعاش الجلسة لتحديث الـ Context ونظام الصلاحيات الموحد
+      await supabase.auth.refreshSession();
+
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
       } else {
-        navigate('/', { replace: true });
+        // 5. التوجيه التلقائي الموحد بناءً على جدول المسارات المركزي
+        const targetRoute = getRouteForRole(selectedRole);
+        navigate(targetRoute, { replace: true });
       }
     } catch (err) {
       console.error('Role update error:', err);
@@ -148,7 +168,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-          {roles.map((item) => {
+          {rolesList.map((item) => {
             const Icon = item.icon;
             const isSelected = selectedRole === item.id;
 
