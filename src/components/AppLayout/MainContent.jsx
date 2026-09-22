@@ -89,10 +89,14 @@ export default function MainContent() {
     return String(reason);
   }, [academy, t]);
 
-  // فحص حالة احتياج المستخدم لتحديد الدور الحسابي
-  const rawRole = userRole || profile?.role;
+  // 1. استخراج الدور الحالي الموثق إن وجد من جميع المصادر المتاحة
+  const activeRole = userRole || profile?.role || user?.user_metadata?.role;
+
+  // 2. التحقق مما إذا كان المسار الحالي هو /select-role صراحة
   const isExplicitRoleRoute = typeof window !== 'undefined' && window.location.pathname === '/select-role';
-  const isNeedsRoleSelection = (appState === 'ROLE_SELECTION' || (appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole)) || isExplicitRoleRoute;
+
+  // 3. حصر شرط اختيار الدور فقط للحسابات الجديدة الحقيقية التي لا تملك أي دور مُسجل سابقاً
+  const isNeedsRoleSelection = !activeRole && !!user && (appState === 'ROLE_SELECTION' || isExplicitRoleRoute);
 
   return (
     <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
@@ -109,7 +113,7 @@ export default function MainContent() {
         <FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />
       )}
 
-      {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && !isExplicitRoleRoute && (
+      {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && !isNeedsRoleSelection && (
         <div className="bg-semantic-bgPage min-h-screen">
           {authView === 'login' && (
             <LoginPage 
@@ -127,7 +131,7 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* شاشة اختيار الدور: تظهر مباشرة عند الحاجة أو عند طلب الرابط /select-role مباشرة */}
+      {/* شاشة اختيار الدور: تظهر فقط للمستخدم الجديد المسجل والذي لم يحدد دوره بعد */}
       {isNeedsRoleSelection && authView !== 'update_password' && (
         <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
       )}
@@ -217,7 +221,7 @@ export default function MainContent() {
         </ProtectedRoute>
       )}
 
-      {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
+      {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && activeRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
         !profile?.academy_id && cachedSlug ? (
           <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
         ) : (
@@ -237,7 +241,13 @@ export default function MainContent() {
         <Routes>
           <Route 
             path="/select-role" 
-            element={<RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />} 
+            element={
+              activeRole ? (
+                <Navigate to={`/${academy?.slug || cachedSlug}`} replace />
+              ) : (
+                <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
+              )
+            } 
           />
           <Route 
             path="/:slug/*" 
@@ -245,7 +255,7 @@ export default function MainContent() {
               <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
                 <MainApp 
                   session={user ? { user } : null} 
-                  userRole={(userRole || profile?.role || 'student').toString().toLowerCase().trim()} 
+                  userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
                   setShowEarlyUpgrade={setShowEarlyUpgrade}
                 />
                 <InlineUpgradeModal 
@@ -261,16 +271,16 @@ export default function MainContent() {
             element={
               (academy?.slug || cachedSlug) ? (
                 <Navigate to={`/${academy?.slug || cachedSlug}/${
-                  ['admin', 'super_admin'].includes((userRole || profile?.role || '').toLowerCase()) ? 'dashboard' :
-                  (userRole || profile?.role || '').toLowerCase() === 'teacher' ? 'teacher' :
-                  (userRole || profile?.role || '').toLowerCase() === 'student' ? 'student' :
-                  (userRole || profile?.role || '').toLowerCase() === 'parent' ? 'parent' : 'dashboard'
+                  ['admin', 'super_admin'].includes((activeRole || '').toLowerCase()) ? 'dashboard' :
+                  (activeRole || '').toLowerCase() === 'teacher' ? 'teacher' :
+                  (activeRole || '').toLowerCase() === 'student' ? 'student' :
+                  (activeRole || '').toLowerCase() === 'parent' ? 'parent' : 'dashboard'
                 }`} replace />
               ) : (
                 <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
                   <MainApp 
                     session={user ? { user } : null} 
-                    userRole={(userRole || profile?.role || 'student').toString().toLowerCase().trim()} 
+                    userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
                     setShowEarlyUpgrade={setShowEarlyUpgrade}
                   />
                 </ProtectedRoute>
