@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
+import { useSignUpValidation } from '@/hooks/useSignUpValidation';
 import { C } from '@/theme/colors';
 import { supabase } from '@/lib/supabase';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
@@ -45,10 +46,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     fieldErrors,
     setFieldErrors,
     status,
-    setStatus,
     handleKeyUp,
     handleSignUp,
+    validateFormDirectly,
   } = useSignUpForm(onSignUpSuccess);
+
+  const { passwordCriteria, passwordStrength } = useSignUpValidation(password);
 
   const [localError, setLocalError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -72,56 +75,16 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     }
   }, [status, showToast]);
 
-  const passwordCriteria = useMemo(() => {
-    const val = password || '';
-    return {
-      minLength: val.length >= 8,
-      hasLetter: /[a-zA-Z]/.test(val),
-      hasNumber: /\d/.test(val),
-      hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(val),
-    };
-  }, [password]);
-
-  const passwordStrength = useMemo(() => {
-    if (!password) return { score: 0, label: '', color: 'transparent' };
-    const passedCount = Object.values(passwordCriteria).filter(Boolean).length;
-    if (passedCount <= 1) return { score: 25, label: t('auth.weak', 'ضعيفة جداً'), color: C.semantic.danger };
-    if (passedCount === 2) return { score: 50, label: t('auth.medium', 'ضعيفة'), color: C.semantic.warning };
-    if (passedCount === 3) return { score: 75, label: t('auth.good', 'جيدة'), color: C.semantic.info };
-    return { score: 100, label: t('auth.strong', 'قوية ممتاز'), color: C.semantic.success };
-  }, [password, passwordCriteria, t]);
-
-  const validateFormDirectly = () => {
-    if (!fullName || !fullName.trim()) {
-      return t('auth.fullNameRequired', 'يرجى إدخال الاسم الكامل');
-    }
-    if (!email || !email.trim()) {
-      return t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني');
-    }
-    if (!password) {
-      return t('auth.passwordRequired', 'يرجى إدخال كلمة المرور');
-    }
-    if (password.length < 8) {
-      return t('auth.passwordMinLength', 'كلمة المرور يجب أن تكون 8 أحرف على الأقل');
-    }
-    if (password !== confirmPassword) {
-      return t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين');
-    }
-    if (!agreeTerms) {
-      return t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-    }
-    return null;
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setLocalError('');
     if (typeof setFieldErrors === 'function') setFieldErrors({});
 
-    const validationError = validateFormDirectly();
-    if (validationError) {
-      setLocalError(validationError);
-      showToast(validationError, 'error');
+    // التحقق المباشر من خلال Schema الموحدة
+    const validationErrorMsg = validateFormDirectly();
+    if (validationErrorMsg) {
+      setLocalError(validationErrorMsg);
+      showToast(validationErrorMsg, 'error');
       return;
     }
 
@@ -546,9 +509,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       </div>
 
       <Toast
-        isOpen={toastState.isOpen}
-        message={toastState.message}
-        type={toastState.type}
+        isOpen={toastState?.isOpen || toastState?.show}
+        message={toastState?.message}
+        type={toastState?.type}
         onClose={hideToast}
       />
     </AuthLayout>
