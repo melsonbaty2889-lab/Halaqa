@@ -99,7 +99,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
           email: email.trim(),
           password,
           options: {
-            // توجيه المستخدم لصفحة التحديد عند تأكيد البريد الإلكتروني
             emailRedirectTo: `${window.location.origin}/select-role`,
             data: {
               full_name: fullName.trim(),
@@ -112,7 +111,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         if (isMounted.current) {
           setStatus({
             type: 'success',
-            msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! yرجى مراجعة بريدك الإلكتروني للتأكيد.'),
+            msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
           });
         }
         if (onSignUpSuccess) {
@@ -120,16 +119,22 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         }
         return true;
       } catch (err: any) {
-        // طباعة تفاصيل الخطأ في كونسول المتصفح
         console.error('Sign Up Detailed Error:', err);
 
-        // استخراج النص الصريح للخطأ القادم من Supabase
-        const rawErrorMessage = err?.message || err?.error_description;
+        // استخراج سلسلة النص بأمان لمنع استعراض كائنات `{}`
+        let errorString = t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.');
+        if (typeof err === 'string') {
+          errorString = err;
+        } else if (err?.message && typeof err.message === 'string') {
+          errorString = err.message;
+        } else if (err?.error_description && typeof err.error_description === 'string') {
+          errorString = err.error_description;
+        }
 
         if (isMounted.current) {
           setStatus({
             type: 'error',
-            msg: rawErrorMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+            msg: errorString,
           });
         }
         return false;
@@ -154,6 +159,9 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
           provider: 'google',
           options: {
             redirectTo: `${window.location.origin}/select-role`,
+            queryParams: {
+              prompt: 'select_account',
+            },
           },
         });
         if (error) throw error;
@@ -161,10 +169,11 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       return true;
     } catch (err: any) {
       console.error('Google Auth Error:', err);
+      const errorString = err?.message || t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google');
       if (isMounted.current) {
         setStatus({
           type: 'error',
-          msg: err?.message || t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
+          msg: errorString,
         });
       }
       return false;
