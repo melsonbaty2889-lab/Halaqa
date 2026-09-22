@@ -44,7 +44,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowConfirmPassword,
     loading,
     fieldErrors,
-    setFieldErrors,
     status,
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
@@ -72,7 +71,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
-    if (typeof setFieldErrors === 'function') setFieldErrors({});
     await handleSignUp(e);
   };
 
