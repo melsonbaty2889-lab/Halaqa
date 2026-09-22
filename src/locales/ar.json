@@ -102,6 +102,7 @@
     "hasLetter": "تتضمن حروف",
     "hasNumber": "تتضمن أرقام",
     "hasSpecial": "رمز خاص (@#$)",
+    "hasUppercase": "حرف كبير (A-Z)",
     "hidePassword": "إخفاء كلمة المرور",
     "iAgreeTo": "أوافق على",
     "invalid_email": "يرجى إدخال بريد إلكتروني صحيح.",

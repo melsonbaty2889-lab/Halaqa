@@ -123,6 +123,7 @@
     "hasLetter": "Mengandung huruf",
     "hasNumber": "Mengandung angka",
     "hasSpecial": "Simbol khusus (@#$)",
+    "hasUppercase": "حرف كبير (A-Z)",
     "hide_password": "Sembunyikan kata sandi",
     "hidePassword": "Sembunyikan kata sandi",
     "iAgreeTo": "Saya menyetujui",

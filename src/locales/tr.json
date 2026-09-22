@@ -123,6 +123,7 @@
     "hasLetter": "Harf içeriyor",
     "hasNumber": "Rakam içeriyor",
     "hasSpecial": "Özel sembol (@#$)",
+    "hasUppercase": "حرف كبير (A-Z)",
     "hide_password": "Şifreyi gizle",
     "hidePassword": "Şifreyi gizle",
     "iAgreeTo": "Kabul ediyorum:",
