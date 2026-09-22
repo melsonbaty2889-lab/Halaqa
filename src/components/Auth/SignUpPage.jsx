@@ -44,6 +44,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowConfirmPassword,
     loading,
     fieldErrors,
+    setFieldErrors,
     status,
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
@@ -67,6 +68,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
       showToast(status.msg, status.type === 'error' ? 'error' : 'success');
     }
   }, [status, showToast]);
+
+  const clearFieldError = (fieldName) => {
+    if (fieldErrors?.[fieldName]) {
+      setFieldErrors((prev) => ({ ...prev, [fieldName]: undefined }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,7 +118,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
-  const activeErrorMessage = localError || fieldErrors?.general || status?.msg;
+  // حصر الخطأ العلوي في الأخطاء العامة لمنع التكرار مع أسفل الحقول
+  const activeErrorMessage = localError || fieldErrors?.general;
 
   return (
     <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
@@ -153,7 +161,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </span>
         </div>
 
-        {activeErrorMessage && status?.type === 'error' && (
+        {activeErrorMessage && (
           <div
             className="p-3 rounded-xl mb-3 text-xs leading-relaxed flex items-center gap-2 border transition-all"
             style={{
@@ -185,6 +193,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 value={fullName || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
+                  clearFieldError('fullName');
                   setFullName(e.target.value);
                 }}
                 placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
@@ -224,6 +233,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 value={email || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
+                  clearFieldError('email');
                   setEmail(e.target.value);
                 }}
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
@@ -263,6 +273,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 value={password || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
+                  clearFieldError('password');
                   setPassword(e.target.value);
                 }}
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
@@ -368,6 +379,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 value={confirmPassword || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
+                  clearFieldError('confirmPassword');
                   setConfirmPassword(e.target.value);
                 }}
                 placeholder={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
@@ -416,6 +428,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               checked={Boolean(agreeTerms)}
               onChange={(e) => {
                 if (localError) setLocalError('');
+                clearFieldError('agreeTerms');
                 setAgreeTerms(e.target.checked);
               }}
               aria-label={t('auth.agreeTermsLabel', 'أوافق على الشروط وسياسة الخصوصية')}
