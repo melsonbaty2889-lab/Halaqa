@@ -59,11 +59,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${t('app.title', 'الحلقة الذكية')}`;
   }, [i18n.language, t]);
 
+  const hasFieldErrors = Object.values(fieldErrors || {}).some(Boolean);
+
   useEffect(() => {
-    if (status?.msg) {
-      showToast(status.msg, status.type === 'error' ? 'error' : 'success');
+    if (status?.msg && status?.type === 'success') {
+      showToast(status.msg, 'success');
+    } else if (status?.msg && status?.type === 'error' && !hasFieldErrors) {
+      showToast(status.msg, 'error');
     }
-  }, [status, showToast]);
+  }, [status, showToast, hasFieldErrors]);
 
   const clearFieldError = (fieldName) => {
     if (fieldErrors?.[fieldName]) {
@@ -111,8 +115,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
-  // إخفاء المربع العلوي العام إذا كانت أخطاء الحقول موجودة لمنع التكرار
-  const hasFieldErrors = Object.values(fieldErrors || {}).some(Boolean);
   const activeGeneralErrorMessage = !hasFieldErrors && status?.type === 'error' ? status.msg : fieldErrors?.general;
 
   return (
@@ -155,7 +157,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </span>
         </div>
 
-        {/* تنبيه الخطأ العام فقط في حال عدم وجود أخطاء في الحقول المحددة */}
         {activeGeneralErrorMessage && (
           <div
             className="p-3 rounded-xl mb-3 text-xs leading-relaxed flex items-center gap-2 border transition-all"
