@@ -19,7 +19,10 @@ export interface StatusState {
   msg: string;
 }
 
-export const useSignUpForm = (onSignUpSuccess?: () => void) => {
+export const useSignUpForm = (
+  onSignUpSuccess?: () => void,
+  onSwitchToLogin?: (email?: string) => void
+) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
@@ -101,11 +104,13 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         return false;
       }
 
+      const cleanEmail = email.trim();
+
       try {
         if (isMounted.current) setLoading(true);
 
         const response: AuthResponse = await supabase.auth.signUp({
-          email: email.trim(),
+          email: cleanEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/select-role`,
@@ -116,6 +121,26 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         });
 
         if (response.error) throw response.error;
+
+        // في حال كان البريد مسجلاً سابقاً بدون تفعيل أو بدون إرجاع خطأ مباشر من Supabase
+        if (
+          response.data?.user &&
+          response.data.user.identities &&
+          response.data.user.identities.length === 0
+        ) {
+          if (isMounted.current) {
+            setStatus({
+              type: 'error',
+              msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
+            });
+          }
+          setTimeout(() => {
+            if (isMounted.current && onSwitchToLogin) {
+              onSwitchToLogin(cleanEmail);
+            }
+          }, 1500);
+          return false;
+        }
 
         if (isMounted.current) {
           setStatus({
@@ -130,14 +155,37 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       } catch (err: any) {
         console.error('Sign Up Detailed Error:', err);
 
-        let errorString = t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.');
+        let rawMessage = '';
         if (typeof err === 'string') {
-          errorString = err;
+          rawMessage = err;
         } else if (err?.message && typeof err.message === 'string') {
-          errorString = err.message;
+          rawMessage = err.message;
         } else if (err?.error_description && typeof err.error_description === 'string') {
-          errorString = err.error_description;
+          rawMessage = err.error_description;
         }
+
+        const isAlreadyRegistered =
+          rawMessage.toLowerCase().includes('already registered') ||
+          rawMessage.toLowerCase().includes('already in use') ||
+          rawMessage.toLowerCase().includes('user_already_exists') ||
+          err?.status === 400;
+
+        if (isAlreadyRegistered) {
+          if (isMounted.current) {
+            setStatus({
+              type: 'error',
+              msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
+            });
+          }
+          setTimeout(() => {
+            if (isMounted.current && onSwitchToLogin) {
+              onSwitchToLogin(cleanEmail);
+            }
+          }, 1500);
+          return false;
+        }
+
+        let errorString = rawMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.');
 
         if (isMounted.current) {
           setStatus({
@@ -150,7 +198,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateFormDirectly, onSignUpSuccess, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, onSwitchToLogin, t]
   );
 
   const handleGoogleSignUp = useCallback(async () => {
@@ -208,7 +256,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setShowConfirmPassword,
     loading,
     googleLoading,
-    fieldErrors, // تم إلغاء ربط العرض بشرط hasSubmitted حتى تظهر أخطاء Google فوراً
+    fieldErrors,
     setFieldErrors,
     clearFieldError,
     status,
