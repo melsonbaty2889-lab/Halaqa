@@ -4,8 +4,7 @@ import { useSignUpForm } from '@/hooks/useSignUpForm';
 import { useSignUpValidation } from '@/hooks/useSignUpValidation';
 import { C } from '@/theme/colors';
 import { supabase } from '@/lib/supabase';
-import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
-import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
+import AuthLayout from './AuthLayout';
 import { TermsModal } from '@/components/UI/TermsModal';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
 import Toast from '@/components/UI/Toast';
@@ -46,22 +45,19 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     fieldErrors,
     setFieldErrors,
     status,
+    setStatus,
     handleSignUp,
   } = useSignUpForm(onSignUpSuccess);
 
   const { passwordCriteria, passwordStrength } = useSignUpValidation(password);
 
-  const [localError, setLocalError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
-  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
-
   useEffect(() => {
-    document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${appSubtitle}`;
-  }, [i18n.language, t, appSubtitle]);
+    document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${t('app.title', 'الحلقة الذكية')}`;
+  }, [i18n.language, t]);
 
   useEffect(() => {
     if (status?.msg) {
@@ -77,16 +73,13 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError('');
     await handleSignUp(e);
   };
 
   const handleGoogleSignUp = useCallback(async () => {
-    setLocalError('');
     if (!agreeTerms) {
       const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-      setLocalError(errorMsg);
-      showToast(errorMsg, 'error');
+      setStatus({ type: 'error', msg: errorMsg });
       return;
     }
 
@@ -107,7 +100,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     } finally {
       setGoogleLoading(false);
     }
-  }, [agreeTerms, showToast, t]);
+  }, [agreeTerms, setStatus, showToast, t]);
 
   const openTermsModal = useCallback((type) => {
     setModalType(type);
@@ -118,11 +111,10 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     setShowModal(false);
   }, []);
 
-  // حصر الخطأ العلوي في الأخطاء العامة لمنع التكرار مع أسفل الحقول
-  const activeErrorMessage = localError || fieldErrors?.general;
+  const activeErrorMessage = status?.type === 'error' ? status.msg : fieldErrors?.general;
 
   return (
-    <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
+    <AuthLayout>
       <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="text-center mb-4">
           <h1
@@ -192,7 +184,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 type="text"
                 value={fullName || ''}
                 onChange={(e) => {
-                  if (localError) setLocalError('');
                   clearFieldError('fullName');
                   setFullName(e.target.value);
                 }}
@@ -232,7 +223,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 type="email"
                 value={email || ''}
                 onChange={(e) => {
-                  if (localError) setLocalError('');
                   clearFieldError('email');
                   setEmail(e.target.value);
                 }}
@@ -272,7 +262,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 type={showPassword ? 'text' : 'password'}
                 value={password || ''}
                 onChange={(e) => {
-                  if (localError) setLocalError('');
                   clearFieldError('password');
                   setPassword(e.target.value);
                 }}
@@ -378,7 +367,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword || ''}
                 onChange={(e) => {
-                  if (localError) setLocalError('');
                   clearFieldError('confirmPassword');
                   setConfirmPassword(e.target.value);
                 }}
@@ -427,7 +415,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               id="agreeTerms"
               checked={Boolean(agreeTerms)}
               onChange={(e) => {
-                if (localError) setLocalError('');
                 clearFieldError('agreeTerms');
                 setAgreeTerms(e.target.checked);
               }}
@@ -483,30 +470,33 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           <span>{t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}</span>
         </div>
 
-        <div
-          className="mt-3 text-center text-xs flex items-center justify-center gap-1"
-          style={{ color: C.semantic.textSecondary }}
-        >
-          <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')}</span>
-          <button
-            type="button"
-            onClick={onSwitchToLogin}
-            title={t('auth.signIn', 'تسجيل الدخول')}
-            aria-label={t('auth.signIn', 'تسجيل الدخول')}
-            className="bg-transparent border-none font-bold cursor-pointer hover:underline p-0 min-h-[44px] px-1 flex items-center"
-            style={{ color: C.semantic.actionPrimary }}
-          >
-            {t('auth.signIn', 'تسجيل الدخول')}
-          </button>
-        </div>
-
-        <TermsModal isOpen={showModal} onClose={closeTermsModal} contentType={modalType} isRtl={isRtl} />
+        {/* التوقيع/الزر للانتقال لتسجيل الدخول */}
+        {onSwitchToLogin && (
+          <div className="text-center mt-3 text-xs" style={{ color: C.semantic.textSecondary }}>
+            <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')} </span>
+            <button
+              type="button"
+              onClick={onSwitchToLogin}
+              className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
+              style={{ color: C.semantic.actionPrimary }}
+            >
+              {t('auth.loginNow', 'تسجيل الدخول')}
+            </button>
+          </div>
+        )}
       </div>
 
+      <TermsModal
+        isOpen={showModal}
+        onClose={closeTermsModal}
+        initialTab={modalType}
+        isRtl={isRtl}
+      />
+
       <Toast
-        isOpen={toastState?.isOpen || toastState?.show}
-        message={toastState?.message}
-        type={toastState?.type}
+        isOpen={toastState.isOpen}
+        message={toastState.message}
+        type={toastState.type}
         onClose={hideToast}
       />
     </AuthLayout>
