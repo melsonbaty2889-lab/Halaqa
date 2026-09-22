@@ -4,7 +4,7 @@ import { C } from '@/theme/colors';
 
 export interface PasswordCriteria {
   minLength: boolean;
-  hasLetter: boolean;
+  hasUppercase: boolean;
   hasNumber: boolean;
   hasSpecial: boolean;
 }
@@ -22,7 +22,7 @@ export const useSignUpValidation = (password: string) => {
     const val = password || '';
     return {
       minLength: val.length >= 8,
-      hasLetter: /[a-zA-Z]/.test(val),
+      hasUppercase: /[A-Z]/.test(val),
       hasNumber: /\d/.test(val),
       hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(val),
     };
