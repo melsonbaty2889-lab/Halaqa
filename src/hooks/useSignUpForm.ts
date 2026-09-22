@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, FormEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthResponse } from '@supabase/supabase-js';
@@ -48,7 +48,8 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   }, []);
 
   const toggleLanguage = useCallback(() => {
-    const nextLang = i18n.language === 'ar' ? 'en' : 'ar';
+    const currentLang = i18n.language || 'ar';
+    const nextLang = currentLang.startsWith('ar') ? 'en' : 'ar';
     i18n.changeLanguage(nextLang);
   }, [i18n]);
 
@@ -62,79 +63,33 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     }
   }, []);
 
-  // دالة التحقق المباشر من الحقول وإرجاع مفتاح الترجمة أو النص المناسب
+  // دالة التحقق المباشر باستخدام الـ Schema فقط (Single Source of Truth)
   const validateFormDirectly = useCallback((): string | null => {
-    const cleanFullName = fullName.trim();
-    const cleanEmail = email.trim();
-
-    if (!cleanFullName) {
-      return 'auth.fullNameRequired';
-    }
-    if (!cleanEmail) {
-      return 'auth.emailRequired';
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      return 'auth.invalidEmail';
-    }
-    if (!password) {
-      return 'auth.passwordRequired';
-    }
-    if (password.length < 8) {
-      return 'auth.passwordMinLength';
-    }
-    if (password !== confirmPassword) {
-      return 'auth.passwordsDoNotMatch';
-    }
-    if (!agreeTerms) {
-      return 'auth.agreeTermsRequired';
-    }
-    return null;
-  }, [fullName, email, password, confirmPassword, agreeTerms]);
-
-  const validateForm = useCallback(() => {
-    const cleanFullName = fullName.trim();
-    const cleanEmail = email.trim();
-
     const formData = {
-      fullName: cleanFullName,
-      email: cleanEmail,
+      fullName: fullName.trim(),
+      email: email.trim(),
       password,
       confirmPassword,
       agreeTerms,
     };
 
-    const errors: FieldErrors = {};
-
-    if (!cleanFullName) {
-      errors.fullName = t('auth.fullNameRequired', 'الاسم الكامل مطلوب');
-    }
-    if (!cleanEmail) {
-      errors.email = t('auth.emailRequired', 'البريد الإلكتروني مطلوب');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      errors.email = t('auth.invalidEmail', 'البريد الإلكتروني غير صحيح');
-    }
-    if (!password) {
-      errors.password = t('auth.passwordRequired', 'كلمة المرور مطلوبة');
-    } else if (password.length < 8) {
-      errors.password = t('auth.passwordMinLength', 'كلمة المرور يجب أن لا تقل عن 8 أحرف');
-    }
-    if (password !== confirmPassword) {
-      errors.confirmPassword = t('auth.passwordsDoNotMatch', 'كلمتا المرور غير متطابقتين');
-    }
-    if (!agreeTerms) {
-      errors.agreeTerms = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-    }
-
     const validation = validateFormData(signUpSchema, formData);
 
-    if (Object.keys(errors).length > 0 || !validation.success) {
-      setFieldErrors(errors);
-      return false;
+    if (!validation.success) {
+      if (validation.fieldErrors) {
+        setFieldErrors(validation.fieldErrors as FieldErrors);
+      }
+      return validation.error || 'auth.fillRequiredFields';
     }
 
     setFieldErrors({});
-    return true;
-  }, [fullName, email, password, confirmPassword, agreeTerms, t]);
+    return null;
+  }, [fullName, email, password, confirmPassword, agreeTerms]);
+
+  const validateForm = useCallback(() => {
+    const errorKey = validateFormDirectly();
+    return errorKey === null;
+  }, [validateFormDirectly]);
 
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
@@ -169,7 +124,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         if (onSignUpSuccess) {
           onSignUpSuccess();
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Sign Up Error:', err);
         const translatedError = handleAuthError(err);
         if (isMounted.current) {
@@ -183,15 +138,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
       }
     },
     [email, password, fullName, validateForm, onSignUpSuccess, t]
-  );
-
-  const handleKeyUp = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        handleSignUp();
-      }
-    },
-    [handleSignUp]
   );
 
   return {
@@ -216,7 +162,6 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     status,
     setStatus,
     toggleLanguage,
-    handleKeyUp,
     handleSignUp,
     validateFormDirectly,
     navigate,
