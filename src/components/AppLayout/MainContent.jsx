@@ -91,7 +91,8 @@ export default function MainContent() {
 
   // فحص حالة احتياج المستخدم لتحديد الدور الحسابي
   const rawRole = userRole || profile?.role;
-  const isNeedsRoleSelection = (appState === 'ROLE_SELECTION' || (appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole));
+  const isExplicitRoleRoute = typeof window !== 'undefined' && window.location.pathname === '/select-role';
+  const isNeedsRoleSelection = (appState === 'ROLE_SELECTION' || (appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole)) || isExplicitRoleRoute;
 
   return (
     <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
@@ -108,7 +109,7 @@ export default function MainContent() {
         <FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />
       )}
 
-      {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && (
+      {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && !isExplicitRoleRoute && (
         <div className="bg-semantic-bgPage min-h-screen">
           {authView === 'login' && (
             <LoginPage 
@@ -126,7 +127,7 @@ export default function MainContent() {
         </div>
       )}
 
-      {/* شاشة اختيار الدور: تظهر مباشرة عند تسجيل حساب جديد أو الدخول بـ Google بدون دور سابق */}
+      {/* شاشة اختيار الدور: تظهر مباشرة عند الحاجة أو عند طلب الرابط /select-role مباشرة */}
       {isNeedsRoleSelection && authView !== 'update_password' && (
         <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
       )}
@@ -234,6 +235,10 @@ export default function MainContent() {
 
       {appState === 'FULLY_ACTIVE' && profile?.academy_id && !isNeedsRoleSelection && (
         <Routes>
+          <Route 
+            path="/select-role" 
+            element={<RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />} 
+          />
           <Route 
             path="/:slug/*" 
             element={
