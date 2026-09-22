@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Loader2, Lock } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
 
@@ -15,6 +15,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   const { profile, appState, academy, userRole, logout, t } = useAcademy();
   const { slug } = useParams();
 
+  // حالة التحميل أثناء فحص الجلسة
   if (appState === 'LOADING') {
     return (
       <div className="bg-semantic-bgPage min-h-screen flex justify-center items-center text-semantic-actionPrimary">
@@ -23,21 +24,30 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     );
   }
 
-  // 1. التحقق من وجود دور فعلي (ترقيع الثغرة الأمنية)
+  // 1. استخراج دور المستخدم
   const rawRole = userRole || profile?.role;
+  
+  // 2. إذا لم يكن هناك دور محدد للمستخدم المسجل -> تحويله لصفحة تحديد الدور
+  if (profile && !rawRole) {
+    return <Navigate to="/select-role" replace />;
+  }
+
   const currentRole = rawRole ? rawRole.toString().toLowerCase().trim() : 'guest';
 
-  // 2. التحقق من الصلاحيات
+  // إذا لم يكن مسجلاً للدخول مطلقاً
+  if (currentRole === 'guest') {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 3. التحقق من الصلاحيات للأدوار المسموحة
   const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
   const isAllowed = 
-    currentRole !== 'guest' && ( // يجب أن يكون مسجلاً للدخول
-      normalizedAllowed.length === 0 || 
-      normalizedAllowed.includes(currentRole) || 
-      currentRole === 'admin' || 
-      currentRole === 'super_admin'
-    );
+    normalizedAllowed.length === 0 || 
+    normalizedAllowed.includes(currentRole) || 
+    currentRole === 'admin' || 
+    currentRole === 'super_admin';
 
-  // 3. التحقق من رابط الأكاديمية (Slug)
+  // 4. التحقق من رابط الأكاديمية (Slug)
   const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
   const isCorrectAcademy = 
     !slug || 
@@ -47,26 +57,24 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     currentRole === 'super_admin' || 
     currentRole === 'admin';
 
-  // واجهة الرفض الموحدة
+  // واجهة الرفض الموحدة في حال عدم امتلاك صلاحية الوصول للمسار الحالي
   if (!isAllowed || !isCorrectAcademy) {
     return (
       <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
         <div className="bg-semantic-dangerBg p-5 rounded-full mb-4 text-semantic-danger">
           <Lock size={40} />
         </div>
-        <h2 className="text-xl font-bold mb-2">
+        <h2 className="text-xl font-bold mb-2 text-semantic-textPrimary">
           {getText(t, 'auth.unauthorized_title', 'غير مصرح لك بالوصول لهذه الشاشة')}
         </h2>
         <p className="text-semantic-textSecondary text-sm max-w-sm mb-6">
-          {currentRole === 'guest' 
-            ? getText(t, 'auth.must_login_desc', 'يرجى تسجيل الدخول أولاً للوصول إلى هذه الصفحة.')
-            : getText(t, 'auth.unauthorized_desc', 'دور حسابك الحالي غير مجاز لاستخدام هذه الصفحة.')}
+          {getText(t, 'auth.unauthorized_desc', 'دور حسابك الحالي غير مجاز لاستخدام هذه الصفحة.')}
         </p>
         <button
           onClick={logout}
           aria-label={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
           title={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
-          className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary border-none rounded-lg font-bold cursor-pointer transition-all active:scale-[0.99]"
+          className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-white border-none rounded-lg font-bold cursor-pointer transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-actionPrimary/50"
         >
           {getText(t, 'common.logout_return', 'العودة لتسجيل الدخول')}
         </button>
