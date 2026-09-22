@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
@@ -6,7 +7,6 @@ import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { PrimaryButton } from '@/components/UI/AuthButtons';
 import Toast from '@/components/UI/Toast';
 import { useToast } from '@/hooks/useToast';
-import { C } from '@/theme/colors';
 import { 
   GraduationCap, 
   BookOpen, 
@@ -16,13 +16,18 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-export default function RoleSelectionPage({ onRoleSelected }) {
+interface RoleSelectionPageProps {
+  onRoleSelected?: (role: string) => Promise<void> | void;
+}
+
+export default function RoleSelectionPage({ onRoleSelected }: RoleSelectionPageProps) {
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
 
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   // استخراج اللغة الحالية وتحديد اتجاه الصفحة
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
@@ -32,9 +37,23 @@ export default function RoleSelectionPage({ onRoleSelected }) {
   // استخراج اسم المنصة الفرعي من المكون الرئيسي AuthLayout
   const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
 
+  // التأكد من استرجاع الجلسة عند العودة من مصادقة OAuth (جوجل) ومنع الطرد لصفحة تسجيل الدخول
   useEffect(() => {
     document.title = `${t('roles.select_header', 'تحديد نوع الحساب')} | ${appSubtitle}`;
-  }, [i18n.language, t, appSubtitle]);
+
+    const checkUserSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+          navigate('/login', { replace: true });
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+      }
+    };
+
+    checkUserSession();
+  }, [i18n.language, t, appSubtitle, navigate]);
 
   const roles = [
     {
@@ -74,10 +93,13 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
       }
 
-      await supabase.auth.updateUser({
+      // 1. تحديث بيانات المستخدم في Supabase Auth Metadata
+      const { error: updateAuthError } = await supabase.auth.updateUser({
         data: { role: selectedRole }
       });
+      if (updateAuthError) throw updateAuthError;
 
+      // 2. تحديث دور المستخدم في جدول profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -90,8 +112,10 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
+      } else {
+        navigate('/dashboard', { replace: true });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Role update error:', err);
       const message = t('roles.update_error', 'حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى');
       setErrorMsg(message);
@@ -108,29 +132,18 @@ export default function RoleSelectionPage({ onRoleSelected }) {
     >
       <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center mb-5 text-center">
-          <h1 
-            className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-            style={{ color: C?.text?.title }}
-          >
+          <h1 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1 text-semantic-textPrimary">
             {t('roles.select_header', 'كيف تود استخدام المنصة؟')}
           </h1>
-          <p 
-            className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
-            style={{ color: C?.text?.muted }}
-          >
+          <p className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0 text-semantic-textSecondary">
             {t('roles.select_subheader', 'حدد صفة استخدامك لنقوم بتخصيص الواجهة المناسبة لك')}
           </p>
         </div>
 
         {errorMsg && (
           <div 
-            className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border transition-all"
+            className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border transition-all bg-semantic-dangerBg border-semantic-danger text-semantic-danger"
             role="alert"
-            style={{
-              backgroundColor: 'rgba(244, 63, 94, 0.1)',
-              borderColor: C?.error?.DEFAULT || '#EF4444',
-              color: C?.error?.DEFAULT || '#EF4444'
-            }}
           >
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMsg}</span>
@@ -154,53 +167,35 @@ export default function RoleSelectionPage({ onRoleSelected }) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') setSelectedRole(item.id);
                 }}
-                className="relative p-3.5 rounded-xl border text-start cursor-pointer transition-all flex flex-col justify-between group"
-                style={{
-                  backgroundColor: isSelected 
-                    ? 'rgba(217, 119, 6, 0.12)' 
-                    : C?.inputs?.bg,
-                  borderColor: isSelected 
-                    ? C?.amber?.DEFAULT 
-                    : C?.inputs?.border
-                }}
+                className={`relative p-3.5 rounded-xl border text-start cursor-pointer transition-all flex flex-col justify-between group ${
+                  isSelected 
+                    ? 'bg-semantic-actionPrimary/10 border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary/30' 
+                    : 'bg-semantic-surfaceInput border-semantic-borderInput hover:border-semantic-borderHover'
+                }`}
               >
                 {isSelected && (
                   <CheckCircle2 
                     size={16} 
-                    className="absolute top-2.5 end-2.5" 
-                    style={{ color: C?.amber?.DEFAULT }}
+                    className="absolute top-2.5 end-2.5 text-semantic-actionPrimary" 
                   />
                 )}
                 
                 <div className="flex items-center gap-2.5 mb-1.5 pe-5">
                   <div 
-                    className="p-2 rounded-lg shrink-0 border transition-colors"
-                    style={{
-                      backgroundColor: isSelected 
-                        ? C?.amber?.DEFAULT 
-                        : 'rgba(255, 255, 255, 0.05)',
-                      borderColor: isSelected 
-                        ? C?.amber?.DEFAULT 
-                        : 'rgba(255, 255, 255, 0.08)',
-                      color: isSelected 
-                        ? '#FFFFFF' 
-                        : C?.amber?.DEFAULT
-                    }}
+                    className={`p-2 rounded-lg shrink-0 border transition-colors ${
+                      isSelected 
+                        ? 'bg-semantic-actionPrimary border-semantic-actionPrimary text-white' 
+                        : 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-actionPrimary'
+                    }`}
                   >
                     <Icon size={18} />
                   </div>
-                  <h3 
-                    className="font-bold text-xs m-0"
-                    style={{ color: C?.text?.title }}
-                  >
+                  <h3 className="font-bold text-xs m-0 text-semantic-textPrimary">
                     {item.title}
                   </h3>
                 </div>
                 
-                <p 
-                  className="text-[11px] leading-relaxed m-0"
-                  style={{ color: C?.text?.muted }}
-                >
+                <p className="text-[11px] leading-relaxed m-0 text-semantic-textSecondary">
                   {item.desc}
                 </p>
               </div>
