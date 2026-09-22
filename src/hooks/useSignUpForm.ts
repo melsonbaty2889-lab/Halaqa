@@ -12,6 +12,7 @@ export interface FieldErrors {
   password?: string;
   confirmPassword?: string;
   agreeTerms?: string;
+  role?: string;
   general?: string;
 }
 
@@ -63,32 +64,45 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     }
   }, []);
 
-  // دالة التحقق المباشر باستخدام الـ Schema فقط (Single Source of Truth)
-  const validateFormDirectly = useCallback((): string | null => {
+  // دالة التحقق المباشر باستخدام validateFormData و signUpSchema من auth.js
+  const validateFormDirectly = useCallback(() => {
     const formData = {
       fullName: fullName.trim(),
       email: email.trim(),
+      role: 'student', // قيمة افتراضية لتلبية متطلب role في signUpSchema بدون تغيير auth.js
       password,
       confirmPassword,
       agreeTerms,
     };
 
-    const validation = validateFormData(signUpSchema, formData);
+    // الاستدعاء متوافق مع ترتيب المعاملات والهيكل المرجّع من auth.js
+    const validation = validateFormData(formData, signUpSchema);
 
-    if (!validation.success) {
-      if (validation.fieldErrors) {
-        setFieldErrors(validation.fieldErrors as FieldErrors);
-      }
-      return validation.error || 'auth.fillRequiredFields';
+    if (!validation.valid) {
+      const errors = (validation.errors || {}) as FieldErrors;
+      setFieldErrors(errors);
+
+      // تحديد أول خطأ لإرجاعه كرسالة نصية عند الحاجة
+      const firstErrorMsg =
+        errors.fullName ||
+        errors.email ||
+        errors.password ||
+        errors.confirmPassword ||
+        errors.agreeTerms ||
+        errors.role ||
+        errors.general ||
+        t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.');
+
+      return firstErrorMsg;
     }
 
     setFieldErrors({});
     return null;
-  }, [fullName, email, password, confirmPassword, agreeTerms]);
+  }, [fullName, email, password, confirmPassword, agreeTerms, t]);
 
   const validateForm = useCallback(() => {
-    const errorKey = validateFormDirectly();
-    return errorKey === null;
+    const errorMsg = validateFormDirectly();
+    return errorMsg === null;
   }, [validateFormDirectly]);
 
   const handleSignUp = useCallback(
@@ -108,6 +122,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
             emailRedirectTo: `${window.location.origin}/login`,
             data: {
               full_name: fullName.trim(),
+              role: 'student',
             },
           },
         });
