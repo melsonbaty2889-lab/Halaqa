@@ -51,11 +51,12 @@ export default function RoleSelectionPage({ onRoleSelected }) {
     checkUserSession();
   }, [i18n.language, t, appSubtitle, navigate]);
 
+  // ترتيب الأدوار حسب الأولوية الأكثر استخداماً وحسب شبكة (Grid 2x2)
   const roles = [
     {
       id: 'student',
       title: t('roles.student_title', 'طالب / قارئ'),
-      desc: t('roles.student_desc', 'الانضمام للحلقات ومتابعة أوراد الحفظ والمراجعة والدروس'),
+      desc: t('roles.student_desc', 'الانضمام للحلقات ومتابعة أوراد الحفظ والمراجع والدروس'),
       icon: GraduationCap,
     },
     {
