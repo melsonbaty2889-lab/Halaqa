@@ -79,7 +79,8 @@
   },
   "app": {
     "name": "Smart Halaqa",
-    "tagline": "Platform for Managing Quran Academies"
+    "tagline": "Platform for Managing Quran Academies",
+    "title": "الحلقة الذكية"
   },
   "archive": "Archive",
   "assignTeacher": "Assign Responsible Teacher",
@@ -134,6 +135,7 @@
     "login_subtitle": "Welcome back! Login to continue managing your learning halaqas",
     "login_title": "Login",
     "loginDesc": "Please enter your account details to continue",
+    "loginNow": "تسجيل الدخول",
     "loginTitle": "Welcome Back",
     "loginWithGoogle": "Continue with Google",
     "medium": "Medium",

@@ -79,7 +79,8 @@
   },
   "app": {
     "name": "Smart Halaqa",
-    "tagline": "Kur'an Akademileri ve Kurs Yönetim Platformu"
+    "tagline": "Kur'an Akademileri ve Kurs Yönetim Platformu",
+    "title": "الحلقة الذكية"
   },
   "archive": "Arşivle",
   "assignTeacher": "Sorumlu Öğretmeni Ata",
@@ -134,6 +135,7 @@
     "login_subtitle": "Tekrar hoş geldiniz! Ders halkalarınızı yönetmeye devam etmek için giriş yapın",
     "login_title": "Giriş Yap",
     "loginDesc": "Devam etmek için hesap bilgilerinizi girin",
+    "loginNow": "تسجيل الدخول",
     "loginTitle": "Tekrar Hoş Geldiniz",
     "loginWithGoogle": "Google ile Devam Et",
     "medium": "Orta",

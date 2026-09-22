@@ -79,7 +79,8 @@
   },
   "app": {
     "name": "Smart Halaqa",
-    "tagline": "Platform Manajemen Akademi Quran"
+    "tagline": "Platform Manajemen Akademi Quran",
+    "title": "الحلقة الذكية"
   },
   "archive": "Arsipkan",
   "assignTeacher": "Tugaskan Pengajar Penanggung Jawab",
@@ -134,6 +135,7 @@
     "login_subtitle": "Selamat datang kembali! Masuk untuk melanjutkan manajemen halaqah Anda",
     "login_title": "Masuk",
     "loginDesc": "Harap masukkan rincian akun Anda untuk melanjutkan",
+    "loginNow": "تسجيل الدخول",
     "loginTitle": "Selamat Datang Kembali",
     "loginWithGoogle": "Lanjutkan dengan Google",
     "medium": "Sedang",

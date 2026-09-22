@@ -64,6 +64,9 @@
     "whatsapp": "whatsapp",
     "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
+  "app": {
+    "title": "الحلقة الذكية"
+  },
   "archive": "أرشفة",
   "assignTeacher": "تعيين المعلم المسؤول",
   "attendance": {
@@ -109,6 +112,7 @@
     "invalidEmail": "البريد الإلكتروني غير صحيح",
     "login": "تسجيل الدخول",
     "loginDesc": "أهلاً بك مجدداً، أدخل بياناتك للمتابعة إلى حسابك",
+    "loginNow": "تسجيل الدخول",
     "loginTitle": "تسجيل الدخول",
     "loginWithGoogle": "متابعة باستخدام Google",
     "medium": "ضعيفة",

@@ -79,7 +79,8 @@
   },
   "app": {
     "name": "Smart Halaqa",
-    "tagline": "Plateforme de gestion des académies coraniques"
+    "tagline": "Plateforme de gestion des académies coraniques",
+    "title": "الحلقة الذكية"
   },
   "archive": "Archiver",
   "assignTeacher": "Attribuer l'enseignant responsable",
@@ -134,6 +135,7 @@
     "login_subtitle": "Bon retour ! Connectez-vous pour continuer à gérer vos halaqas",
     "login_title": "Connexion",
     "loginDesc": "Veuillez entrer vos identifiants pour continuer",
+    "loginNow": "تسجيل الدخول",
     "loginTitle": "Bon retour parmi nous",
     "loginWithGoogle": "Continuer avec Google",
     "medium": "Moyenne",
