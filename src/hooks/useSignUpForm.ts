@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { handleAuthError } from '@/utils/errorHandler';
 import { signUpSchema, validateFormData } from '@/schemas/auth';
 
 export interface FieldErrors {
@@ -38,7 +37,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
-  const [hasSubmitted, setHasSubmitted] = useState(false); // لمنع ظهور الأخطاء قبل أول محاولة إرسال
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const isMounted = useRef(true);
 
@@ -85,7 +84,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
-      setHasSubmitted(true); // تفعيل إظهار الأخطاء عند محاولة الإرسال
+      setHasSubmitted(true);
       if (isMounted.current) setStatus({ type: null, msg: '' });
 
       const isValid = validateFormDirectly();
@@ -95,11 +94,13 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
 
       try {
         if (isMounted.current) setLoading(true);
+
         const response: AuthResponse = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/login`,
+            // توجيه المستخدم لصفحة التحديد عند تأكيد البريد الإلكتروني
+            emailRedirectTo: `${window.location.origin}/select-role`,
             data: {
               full_name: fullName.trim(),
             },
@@ -111,20 +112,24 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         if (isMounted.current) {
           setStatus({
             type: 'success',
-            msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
+            msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! yرجى مراجعة بريدك الإلكتروني للتأكيد.'),
           });
         }
         if (onSignUpSuccess) {
           onSignUpSuccess();
         }
         return true;
-      } catch (err: unknown) {
-        console.error('Sign Up Error:', err);
-        const translatedError = handleAuthError(err);
+      } catch (err: any) {
+        // طباعة تفاصيل الخطأ في كونسول المتصفح
+        console.error('Sign Up Detailed Error:', err);
+
+        // استخراج النص الصريح للخطأ القادم من Supabase
+        const rawErrorMessage = err?.message || err?.error_description;
+
         if (isMounted.current) {
           setStatus({
             type: 'error',
-            msg: translatedError || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+            msg: rawErrorMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
           });
         }
         return false;
@@ -154,12 +159,12 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
         if (error) throw error;
       }
       return true;
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Google Auth Error:', err);
       if (isMounted.current) {
         setStatus({
           type: 'error',
-          msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
+          msg: err?.message || t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
         });
       }
       return false;
@@ -186,7 +191,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setShowConfirmPassword,
     loading,
     googleLoading,
-    fieldErrors: hasSubmitted ? fieldErrors : {}, // إخفاء الأخطاء قبل محاولة الإرسال الأولى
+    fieldErrors: hasSubmitted ? fieldErrors : {},
     setFieldErrors,
     status,
     setStatus,
