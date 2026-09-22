@@ -104,6 +104,7 @@
     "create_account": "Créer un nouveau compte",
     "createNewAccount": "Créer un nouveau compte",
     "email_placeholder": "Adresse e-mail",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...",
     "emailPlaceholder": "Adresse e-mail",
     "emailRequired": "L'e-mail est requis",
     "encryptionNotice": "Vos données sont cryptées selon les normes SSL 256 bits",

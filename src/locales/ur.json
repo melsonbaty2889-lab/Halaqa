@@ -104,6 +104,7 @@
     "create_account": "نیا اکاؤنٹ بنائیں",
     "createNewAccount": "نیا اکاؤنٹ بنائیں",
     "email_placeholder": "ای میل ایڈریس",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...",
     "emailPlaceholder": "ای میل ایڈریس",
     "emailRequired": "ای میل لازمی ہے",
     "encryptionNotice": "آپ کا ڈیٹا 256-bit SSL کے تحت محفوظ ہے",

@@ -104,6 +104,7 @@
     "create_account": "Yeni Hesap Oluştur",
     "createNewAccount": "Yeni Hesap Oluştur",
     "email_placeholder": "E-posta Adresi",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...",
     "emailPlaceholder": "E-posta Adresi",
     "emailRequired": "E-posta gereklidir",
     "encryptionNotice": "Verileriniz 256-bit SSL standartlarıyla korunmaktadır",

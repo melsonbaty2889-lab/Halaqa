@@ -86,6 +86,7 @@
     "containerLabel": "حاوية تسجيل الدخول",
     "createNewAccount": "إنشاء حساب جديد",
     "email_placeholder": "البريد الإلكتروني",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...",
     "emailPlaceholder": "البريد الإلكتروني",
     "emailRequired": "البريد الإلكتروني مطلوب",
     "encryptionNotice": "بياناتك مشفرة ومحمية وفق معايير 256-bit",

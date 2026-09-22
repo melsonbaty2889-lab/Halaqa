@@ -104,6 +104,7 @@
     "create_account": "Buat Akun Baru",
     "createNewAccount": "Buat Akun Baru",
     "email_placeholder": "Alamat Email",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...",
     "emailPlaceholder": "Alamat Email",
     "emailRequired": "Email wajib diisi",
     "encryptionNotice": "Data Anda dienkripsi dan dilindungi dengan standar SSL 256-bit",
