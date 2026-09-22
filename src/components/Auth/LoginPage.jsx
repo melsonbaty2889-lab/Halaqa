@@ -34,7 +34,9 @@ export default function LoginPage({
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
-  
+  // فصل حالة تحميل Google عن التحميل المباشر للنموذج
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
 
@@ -47,6 +49,7 @@ export default function LoginPage({
     const errorMsg = status?.msg || fieldErrors?.email || fieldErrors?.password;
     if (errorMsg) {
       showToast(errorMsg, 'error');
+      setGoogleLoading(false);
     }
   }, [status, fieldErrors, showToast]);
 
@@ -93,6 +96,15 @@ export default function LoginPage({
     }
 
     handleEmailLogin(e);
+  };
+
+  const onGoogleSubmit = async (e) => {
+    setGoogleLoading(true);
+    try {
+      await handleGoogleLogin(e);
+    } catch (err) {
+      setGoogleLoading(false);
+    }
   };
 
   const activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
@@ -160,7 +172,6 @@ export default function LoginPage({
                 }}
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
-                dir="ltr"
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
                   isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
                 }`}
@@ -193,7 +204,6 @@ export default function LoginPage({
                 }}
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
-                dir="ltr"
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
                   isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
                 }`}
@@ -232,7 +242,7 @@ export default function LoginPage({
             </div>
 
             {/* زر الدخول الرئيسي الموحد */}
-            <PrimaryButton loading={loading}>
+            <PrimaryButton loading={loading && !googleLoading} disabled={googleLoading}>
               {t('auth.login', 'تسجيل الدخول')}
             </PrimaryButton>
           </form>
@@ -254,8 +264,9 @@ export default function LoginPage({
 
           {/* زر تسجيل الدخول عبر جوجل الموحد */}
           <GoogleButton 
-            onClick={handleGoogleLogin}
-            loading={loading}
+            onClick={onGoogleSubmit}
+            loading={googleLoading}
+            disabled={loading}
             text={t('auth.loginWithGoogle', 'متابعة باستخدام Google')}
           />
 
