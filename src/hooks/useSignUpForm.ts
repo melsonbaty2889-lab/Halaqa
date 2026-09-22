@@ -34,6 +34,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
@@ -57,9 +58,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setAgreeTerms(checked);
     if (checked) {
       setFieldErrors((prev) => ({ ...prev, agreeTerms: undefined }));
-      setStatus((prev) =>
-        prev.msg?.includes('الشروط') || prev.msg?.includes('Terms') ? { type: null, msg: '' } : prev
-      );
+      setStatus((prev) => (prev.type === 'error' ? { type: null, msg: '' } : prev));
     }
   }, []);
 
@@ -134,6 +133,41 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     [email, password, fullName, validateFormDirectly, onSignUpSuccess, t]
   );
 
+  const handleGoogleSignUp = useCallback(async () => {
+    if (!agreeTerms) {
+      const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
+      if (isMounted.current) {
+        setStatus({ type: 'error', msg: errorMsg });
+      }
+      return false;
+    }
+
+    try {
+      if (isMounted.current) setGoogleLoading(true);
+      if (supabase?.auth?.signInWithOAuth) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/select-role`,
+          },
+        });
+        if (error) throw error;
+      }
+      return true;
+    } catch (err: unknown) {
+      console.error('Google Auth Error:', err);
+      if (isMounted.current) {
+        setStatus({
+          type: 'error',
+          msg: t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
+        });
+      }
+      return false;
+    } finally {
+      if (isMounted.current) setGoogleLoading(false);
+    }
+  }, [agreeTerms, t]);
+
   return {
     isRtl,
     fullName,
@@ -151,12 +185,14 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     showConfirmPassword,
     setShowConfirmPassword,
     loading,
+    googleLoading,
     fieldErrors,
     setFieldErrors,
     status,
     setStatus,
     toggleLanguage,
     handleSignUp,
+    handleGoogleSignUp,
     validateFormDirectly,
     navigate,
   };
