@@ -63,7 +63,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     }
   }, []);
 
-  const validateFormDirectly = useCallback((): string | null => {
+  const validateFormDirectly = useCallback((): boolean => {
     const formData = {
       fullName: fullName.trim(),
       email: email.trim(),
@@ -76,30 +76,19 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     if (!validation.valid) {
       const errors = (validation.errors || {}) as FieldErrors;
       setFieldErrors(errors);
-      const firstErrorMsg =
-        errors.fullName ||
-        errors.email ||
-        errors.password ||
-        errors.confirmPassword ||
-        errors.agreeTerms ||
-        errors.general ||
-        t('auth.fillRequiredFields', 'يرجى ملء جميع الحقول المطلوبة بشكل صحيح.');
-      return firstErrorMsg;
+      return false;
     }
     setFieldErrors({});
-    return null;
-  }, [fullName, email, password, confirmPassword, agreeTerms, t]);
+    return true;
+  }, [fullName, email, password, confirmPassword, agreeTerms]);
 
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
       if (isMounted.current) setStatus({ type: null, msg: '' });
 
-      const validationErrorMsg = validateFormDirectly();
-      if (validationErrorMsg) {
-        if (isMounted.current) {
-          setStatus({ type: 'error', msg: validationErrorMsg });
-        }
+      const isValid = validateFormDirectly();
+      if (!isValid) {
         return false;
       }
 
