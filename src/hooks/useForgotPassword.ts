@@ -21,6 +21,9 @@ export interface UseForgotPasswordReturn {
   currentLang: string;
 }
 
+// لغات الـ RTL المعتمدة في النظام
+const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he'];
+
 export function useForgotPassword(): UseForgotPasswordReturn {
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState<string>('');
@@ -29,11 +32,13 @@ export function useForgotPassword(): UseForgotPasswordReturn {
   const [cooldown, setCooldown] = useState<number>(0);
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
 
-  const currentLang = i18n?.language || 'ar';
-  const isRtl = i18n?.dir() === 'rtl' || currentLang === 'ar';
+  const currentLang = (i18n?.language?.split('-')[0] || 'ar').toLowerCase();
+  
+  // توحيد التحقق من RTL مع باقي النظام
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : RTL_LANGUAGES.includes(currentLang);
 
   useEffect(() => {
-    document.title = t('auth.forgot_password_title', 'استعادة كلمة المرور | الحلقة الذكية');
+    document.title = t('auth.forgot_password_title', 'استعادة كلمة المرور');
     document.dir = isRtl ? 'rtl' : 'ltr';
   }, [t, currentLang, isRtl]);
 
@@ -58,7 +63,6 @@ export function useForgotPassword(): UseForgotPasswordReturn {
   const parseErrorMessage = (err: any): string => {
     if (!err) return t('errors.generic', 'حدث خطأ غير متوقع');
     
-    // استخراج النص من مختلف خواص الأخطاء الممكنة في Supabase
     let rawMsg = '';
     if (typeof err === 'string') {
       rawMsg = err;
@@ -66,11 +70,9 @@ export function useForgotPassword(): UseForgotPasswordReturn {
       rawMsg = err.message || err.error_description || err.msg || err.details || '';
     }
 
-    // تنظيف النص وتصفية الكائنات المجوفة
     rawMsg = typeof rawMsg === 'string' ? rawMsg.trim() : '';
 
     if (!rawMsg || rawMsg === '{}' || rawMsg === '[object Object]') {
-      // التعامل مع حالات عدم وجود شبكة أو رفض الطلب من السيرفر
       if (err?.status === 0 || err?.name === 'FetchError') {
         return t('errors.network_error', 'فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.');
       }
