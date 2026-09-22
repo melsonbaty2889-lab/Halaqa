@@ -13,6 +13,7 @@ const LoginPage = lazy(() => import('@/components/Auth/LoginPage'));
 const SignUpPage = lazy(() => import('@/components/Auth/SignUpPage'));
 const ForgotPassword = lazy(() => import('@/components/Auth/ForgotPassword'));
 const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
+const RoleSelectionPage = lazy(() => import('@/components/Auth/RoleSelectionPage'));
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
@@ -88,6 +89,10 @@ export default function MainContent() {
     return String(reason);
   }, [academy, t]);
 
+  // فحص ما إذا كان المستخدم مسجلاً ولكنه بدون دور معتمد بعد
+  const rawRole = userRole || profile?.role;
+  const isNeedsRoleSelection = appState !== 'LOADING' && appState !== 'UNAUTHENTICATED' && user && !rawRole;
+
   return (
     <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
       {authView === 'update_password' && (
@@ -121,7 +126,12 @@ export default function MainContent() {
         </div>
       )}
 
-      {appState === 'PENDING_APPROVAL' && (
+      {/* شاشة اختيار الدور: تظهر فقط عند وجود حساب بدون Role */}
+      {isNeedsRoleSelection && authView !== 'update_password' && (
+        <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
+      )}
+
+      {appState === 'PENDING_APPROVAL' && !isNeedsRoleSelection && (
         <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
           <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
             <Clock size={40} className="text-semantic-actionPrimary mx-auto mb-5" />
@@ -157,7 +167,7 @@ export default function MainContent() {
         </div>
       )}
 
-      {appState === 'SUSPENDED' && (
+      {appState === 'SUSPENDED' && !isNeedsRoleSelection && (
         <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
           <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
             <div className="bg-semantic-dangerBg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-semantic-danger">
@@ -200,13 +210,13 @@ export default function MainContent() {
         </div>
       )}
 
-      {appState === 'SUPER_ADMIN' && (
+      {appState === 'SUPER_ADMIN' && !isNeedsRoleSelection && (
         <ProtectedRoute allowedRoles={[ROLES?.SUPER_ADMIN || 'super_admin']}>
           <AdminDashboard session={{ user }} onLogout={logout} />
         </ProtectedRoute>
       )}
 
-      {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && (
+      {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && userRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
         !profile?.academy_id && cachedSlug ? (
           <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
         ) : (
@@ -222,7 +232,7 @@ export default function MainContent() {
         )
       )}
 
-      {appState === 'FULLY_ACTIVE' && profile?.academy_id && (
+      {appState === 'FULLY_ACTIVE' && profile?.academy_id && !isNeedsRoleSelection && (
         <Routes>
           <Route 
             path="/:slug/*" 
@@ -265,7 +275,7 @@ export default function MainContent() {
         </Routes>
       )}
 
-      {!['LOADING', 'UNAUTHENTICATED', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && (
+      {!['LOADING', 'UNAUTHENTICATED', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
         <div className="bg-semantic-bgPage min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
           <AlertTriangle size={40} className="text-semantic-danger mb-4" />
           <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
