@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Lock } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
-import { C } from '@/theme/colors';
 
 const getText = (tFunc, key, fallback) => {
   if (typeof tFunc === 'function') {
@@ -16,17 +15,9 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   const { profile, appState, academy, userRole, logout, t } = useAcademy();
   const { slug } = useParams();
 
-  // متغيرات الألوان الدلالية
-  const bgColor = C.semantic?.background || C.dark?.bg;
-  const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
-  const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
-  const dangerColor = C.semantic?.danger || C.error?.DEFAULT;
-  const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
-  const primaryGradient = C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)';
-
   if (appState === 'LOADING') {
     return (
-      <div style={{ background: bgColor, minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: actionPrimaryColor }}>
+      <div className="bg-semantic-bgPage min-h-screen flex justify-center items-center text-semantic-actionPrimary">
         <Loader2 className="animate-spin" size={28} />
       </div>
     );
@@ -59,31 +50,14 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   // واجهة الرفض الموحدة
   if (!isAllowed || !isCorrectAcademy) {
     return (
-      <div style={{
-        background: bgColor,
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: textPrimaryColor,
-        padding: '20px',
-        textAlign: 'center',
-        fontFamily: "'Cairo', system-ui, sans-serif"
-      }}>
-        <div style={{ 
-          background: 'rgba(239, 68, 68, 0.15)', 
-          padding: '20px', 
-          borderRadius: '50%', 
-          marginBlockEnd: '16px', 
-          color: dangerColor 
-        }}>
+      <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
+        <div className="bg-semantic-dangerBg p-5 rounded-full mb-4 text-semantic-danger">
           <Lock size={40} />
         </div>
-        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBlockEnd: '8px' }}>
+        <h2 className="text-xl font-bold mb-2">
           {getText(t, 'auth.unauthorized_title', 'غير مصرح لك بالوصول لهذه الشاشة')}
         </h2>
-        <p style={{ color: textSecondaryColor, fontSize: '14px', maxWidth: '400px', marginBlockEnd: '24px' }}>
+        <p className="text-semantic-textSecondary text-sm max-w-sm mb-6">
           {currentRole === 'guest' 
             ? getText(t, 'auth.must_login_desc', 'يرجى تسجيل الدخول أولاً للوصول إلى هذه الصفحة.')
             : getText(t, 'auth.unauthorized_desc', 'دور حسابك الحالي غير مجاز لاستخدام هذه الصفحة.')}
@@ -92,16 +66,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
           onClick={logout}
           aria-label={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
           title={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
-          style={{
-            padding: '10px 20px',
-            minHeight: '44px',
-            background: primaryGradient,
-            color: '#FFFFFF',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}
+          className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary border-none rounded-lg font-bold cursor-pointer transition-all active:scale-[0.99]"
         >
           {getText(t, 'common.logout_return', 'العودة لتسجيل الدخول')}
         </button>
