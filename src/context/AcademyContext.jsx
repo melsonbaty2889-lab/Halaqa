@@ -1,4 +1,5 @@
 /* src/context/AcademyContext.jsx */
+
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -100,16 +101,28 @@ export const AcademyProvider = ({ children }) => {
         console.error("🚨 خطأ في جلب البروفايل:", profError);
       }
 
+      // القراءة من الـ User Metadata إذا تعذر الوصول لجدول البروفايل فوراً
+      const userMetaRole = currentUser.user_metadata?.role;
       const activeProfile = profData || {
         id: currentUser.id,
-        role: 'admin',
+        role: userMetaRole || null,
         is_activated: true,
-        full_name: currentUser.email || 'مستخدم'
+        full_name: currentUser.user_metadata?.full_name || currentUser.email || 'مستخدم'
       };
 
       if (isMounted.current) {
         setProfile(activeProfile);
-        setUserRole(activeProfile.role || 'admin');
+        setUserRole(activeProfile.role || null);
+      }
+
+      // 🛑 الفحص الحاسم: إذا كان الحساب يفتقر لتحديد الدور (Role Selection)
+      if (!activeProfile.role) {
+        if (isMounted.current) {
+          setAcademy(null);
+          setAcademiesList([]);
+          setAppState('ROLE_SELECTION');
+        }
+        return;
       }
 
       // حسابات Super Admin
@@ -134,7 +147,7 @@ export const AcademyProvider = ({ children }) => {
 
       let fetchedList = [];
       let currentAcademy = null;
-      let detectedRole = activeProfile.role || 'admin';
+      let detectedRole = activeProfile.role;
 
       // 2. البحث عبر profile.academy_id
       if (activeProfile.academy_id) {
