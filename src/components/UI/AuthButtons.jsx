@@ -46,7 +46,7 @@ export function PrimaryButton({
       onClick={onClick}
       variant="primary"
       isLoading={loading}
-      disabled={disabled}
+      disabled={disabled || loading}
       fullWidth
       className={className}
       {...restProps}
@@ -75,7 +75,7 @@ export function GoogleButton({
       onClick={onClick}
       variant="google"
       isLoading={loading}
-      disabled={disabled}
+      disabled={disabled || loading}
       fullWidth
       startIcon={<GoogleIcon />}
       className={className}
