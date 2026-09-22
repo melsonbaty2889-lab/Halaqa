@@ -16,6 +16,8 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
+const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he'];
+
 export default function UpdatePassword({ onSuccess }) {
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
@@ -28,9 +30,11 @@ export default function UpdatePassword({ onSuccess }) {
   const [isDone, setIsDone] = useState(false);
   const [status, setStatus] = useState({ type: null, msg: '' });
 
-  const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
-  const isRtl = ['ar', 'ur'].includes(currentLangCode);
-  const appSubtitle = APP_SUBTITLES[currentLangCode] || APP_SUBTITLES.ar;
+  const currentLangCode = (i18n?.language?.split('-')[0] || 'ar').toLowerCase();
+  
+  // توحيد منطق RTL
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : RTL_LANGUAGES.includes(currentLangCode);
+  const appSubtitle = APP_SUBTITLES?.[currentLangCode] || APP_SUBTITLES?.ar || 'الحلقة الذكية';
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -102,6 +106,15 @@ export default function UpdatePassword({ onSuccess }) {
     }
   };
 
+  // توحيد استخدام متغيرات ألوان نظام التصميم
+  const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
+  const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
+  const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
+  const dangerColor = C.semantic?.danger || C.error?.DEFAULT;
+  const successColor = C.semantic?.success || C.emerald?.DEFAULT;
+  const borderInputColor = C.semantic?.borderInput || C.inputs?.border;
+  const surfaceInputColor = C.semantic?.surfaceInput || C.inputs?.bg;
+
   return (
     <AuthLayout 
       langBtn={<LanguageSwitcher />} 
@@ -114,13 +127,13 @@ export default function UpdatePassword({ onSuccess }) {
             <div className="text-center mb-5">
               <h2 
                 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
-                style={{ color: C?.text?.title }}
+                style={{ color: textPrimaryColor }}
               >
                 {t('auth.setNewPassword', 'تعيين كلمة مرور جديدة')}
               </h2>
               <p 
                 className="text-xs font-medium leading-relaxed max-w-xs mx-auto m-0"
-                style={{ color: C?.text?.muted }}
+                style={{ color: textSecondaryColor }}
               >
                 {t('auth.setNewPasswordDesc', 'يرجى إدخال كلمة المرور الجديدة وتأكيدها')}
               </p>
@@ -132,9 +145,9 @@ export default function UpdatePassword({ onSuccess }) {
                 className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
                 role="alert"
                 style={{
-                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                  borderColor: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
-                  color: status.type === 'success' ? (C?.emerald?.DEFAULT || '#10B981') : (C?.error?.DEFAULT || '#EF4444'),
+                  backgroundColor: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  borderColor: status.type === 'success' ? successColor : dangerColor,
+                  color: status.type === 'success' ? successColor : dangerColor,
                 }}
               >
                 <AlertCircle size={16} className="shrink-0" />
@@ -151,7 +164,7 @@ export default function UpdatePassword({ onSuccess }) {
                   size={18} 
                   className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{
-                    color: password ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
+                    color: password ? actionPrimaryColor : textSecondaryColor
                   }} 
                 />
                 <input 
@@ -163,9 +176,9 @@ export default function UpdatePassword({ onSuccess }) {
                   required
                   className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ps-11 pe-11"
                   style={{
-                    borderColor: C?.inputs?.border,
-                    backgroundColor: C?.inputs?.bg,
-                    color: C?.text?.title,
+                    borderColor: borderInputColor,
+                    backgroundColor: surfaceInputColor,
+                    color: textPrimaryColor,
                   }}
                 />
                 <button
@@ -174,7 +187,7 @@ export default function UpdatePassword({ onSuccess }) {
                   title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
-                  style={{ color: C?.text?.muted }}
+                  style={{ color: textSecondaryColor }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -186,7 +199,7 @@ export default function UpdatePassword({ onSuccess }) {
                   size={18} 
                   className="absolute start-3.5 pointer-events-none transition-colors inset-y-auto z-10"
                   style={{
-                    color: confirmPassword ? (C?.amber?.DEFAULT || '#D97706') : C?.text?.muted
+                    color: confirmPassword ? actionPrimaryColor : textSecondaryColor
                   }} 
                 />
                 <input 
@@ -198,9 +211,9 @@ export default function UpdatePassword({ onSuccess }) {
                   required
                   className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all text-start font-sans min-h-[44px] ps-11 pe-11"
                   style={{
-                    borderColor: C?.inputs?.border,
-                    backgroundColor: C?.inputs?.bg,
-                    color: C?.text?.title,
+                    borderColor: borderInputColor,
+                    backgroundColor: surfaceInputColor,
+                    color: textPrimaryColor,
                   }}
                 />
                 <button
@@ -209,7 +222,7 @@ export default function UpdatePassword({ onSuccess }) {
                   title={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   aria-label={showConfirmPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                   className="absolute end-1 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center z-10"
-                  style={{ color: C?.text?.muted }}
+                  style={{ color: textSecondaryColor }}
                 >
                   {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -224,16 +237,16 @@ export default function UpdatePassword({ onSuccess }) {
         ) : (
           /* حالة النجاح */
           <div className="text-center py-4 animate-fadeIn">
-            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: C?.emerald?.DEFAULT || '#10B981' }} />
+            <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: successColor }} />
             <h2 
               className="text-lg font-bold mb-2"
-              style={{ color: C?.text?.title }}
+              style={{ color: textPrimaryColor }}
             >
               {t('auth.updateSuccessTitle', 'تم التحديث بنجاح!')}
             </h2>
             <p 
               className="text-xs leading-relaxed"
-              style={{ color: C?.text?.muted }}
+              style={{ color: textSecondaryColor }}
             >
               {t('auth.updateSuccessDesc', 'تم تغيير كلمة المرور الخاصة بك، جارٍ تحويلك لتسجيل الدخول...')}
             </p>
@@ -243,9 +256,9 @@ export default function UpdatePassword({ onSuccess }) {
         {/* شارة الأمان */}
         <div 
           className="flex items-center justify-center gap-1.5 text-[11px] mt-5 opacity-75"
-          style={{ color: C?.text?.muted }}
+          style={{ color: textSecondaryColor }}
         >
-          <ShieldCheck size={14} style={{ color: C?.emerald?.DEFAULT || '#10B981' }} />
+          <ShieldCheck size={14} style={{ color: successColor }} />
           <span>
             {t('auth.encryptionNotice', 'بياناتك مشفرة ومحمية وفق معايير 256-bit')}
           </span>
