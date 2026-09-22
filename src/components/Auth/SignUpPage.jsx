@@ -46,9 +46,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     fieldErrors,
     setFieldErrors,
     status,
-    handleKeyUp,
     handleSignUp,
-    validateFormDirectly,
   } = useSignUpForm(onSignUpSuccess);
 
   const { passwordCriteria, passwordStrength } = useSignUpValidation(password);
@@ -67,28 +65,15 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   useEffect(() => {
     if (status?.msg) {
-      if (status.type === 'error') {
-        showToast(status.msg, 'error');
-      } else if (status.type === 'success') {
-        showToast(status.msg, 'success');
-      }
+      showToast(status.msg, status.type === 'error' ? 'error' : 'success');
     }
   }, [status, showToast]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
     if (typeof setFieldErrors === 'function') setFieldErrors({});
-
-    // التحقق المباشر من خلال Schema الموحدة
-    const validationErrorMsg = validateFormDirectly();
-    if (validationErrorMsg) {
-      setLocalError(validationErrorMsg);
-      showToast(validationErrorMsg, 'error');
-      return;
-    }
-
-    handleSignUp(e);
+    await handleSignUp(e);
   };
 
   const handleGoogleSignUp = useCallback(async () => {
@@ -170,7 +155,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
           </span>
         </div>
 
-        {activeErrorMessage && (
+        {activeErrorMessage && status?.type === 'error' && (
           <div
             className="p-3 rounded-xl mb-3 text-xs leading-relaxed flex items-center gap-2 border transition-all"
             style={{
@@ -278,7 +263,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password || ''}
-                onKeyUp={handleKeyUp}
                 onChange={(e) => {
                   if (localError) setLocalError('');
                   setPassword(e.target.value);
@@ -336,12 +320,12 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                     <span>{t('auth.min8Chars', '8 حروف على الأقل')}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    {passwordCriteria.hasLetter ? (
+                    {passwordCriteria.hasUppercase ? (
                       <CheckCircle2 size={12} className="shrink-0" style={{ color: C.semantic.success }} />
                     ) : (
                       <XCircle size={12} className="shrink-0" style={{ color: C.semantic.textSecondary }} />
                     )}
-                    <span>{t('auth.hasLetter', 'تتضمن حروف')}</span>
+                    <span>{t('auth.hasUppercase', 'حرف كبير (A-Z)')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {passwordCriteria.hasNumber ? (
