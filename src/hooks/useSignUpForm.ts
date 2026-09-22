@@ -38,6 +38,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
+  const [hasSubmitted, setHasSubmitted] = useState(false); // لمنع ظهور الأخطاء قبل أول محاولة إرسال
 
   const isMounted = useRef(true);
 
@@ -84,6 +85,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
+      setHasSubmitted(true); // تفعيل إظهار الأخطاء عند محاولة الإرسال
       if (isMounted.current) setStatus({ type: null, msg: '' });
 
       const isValid = validateFormDirectly();
@@ -136,9 +138,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
   const handleGoogleSignUp = useCallback(async () => {
     if (!agreeTerms) {
       const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-      if (isMounted.current) {
-        setStatus({ type: 'error', msg: errorMsg });
-      }
+      setFieldErrors((prev) => ({ ...prev, agreeTerms: errorMsg }));
       return false;
     }
 
@@ -186,7 +186,7 @@ export const useSignUpForm = (onSignUpSuccess?: () => void) => {
     setShowConfirmPassword,
     loading,
     googleLoading,
-    fieldErrors,
+    fieldErrors: hasSubmitted ? fieldErrors : {}, // إخفاء الأخطاء قبل محاولة الإرسال الأولى
     setFieldErrors,
     status,
     setStatus,
