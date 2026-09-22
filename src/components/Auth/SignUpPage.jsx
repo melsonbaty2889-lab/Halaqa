@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
 import { useSignUpValidation } from '@/hooks/useSignUpValidation';
 import { C } from '@/theme/colors';
-import { supabase } from '@/lib/supabase';
 import AuthLayout from './AuthLayout';
 import { TermsModal } from '@/components/UI/TermsModal';
 import { PrimaryButton, GoogleButton } from '@/components/UI/AuthButtons';
@@ -42,18 +41,18 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     showConfirmPassword,
     setShowConfirmPassword,
     loading,
+    googleLoading,
     fieldErrors,
     setFieldErrors,
     status,
-    setStatus,
     handleSignUp,
+    handleGoogleSignUp,
   } = useSignUpForm(onSignUpSuccess);
 
   const { passwordCriteria, passwordStrength } = useSignUpValidation(password);
 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('terms');
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     document.title = `${t('auth.createNewAccount', 'إنشاء حساب جديد')} | ${t('app.title', 'الحلقة الذكية')}`;
@@ -79,32 +78,6 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     e.preventDefault();
     await handleSignUp(e);
   };
-
-  const handleGoogleSignUp = useCallback(async () => {
-    if (!agreeTerms) {
-      const errorMsg = t('auth.agreeTermsRequired', 'يرجى الموافقة على الشروط وسياسة الخصوصية أولاً.');
-      setStatus({ type: 'error', msg: errorMsg });
-      return;
-    }
-
-    try {
-      setGoogleLoading(true);
-      if (supabase?.auth?.signInWithOAuth) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/select-role`,
-          },
-        });
-        if (error) throw error;
-      }
-    } catch (err) {
-      console.error('Google Auth Error:', err);
-      showToast(t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'), 'error');
-    } finally {
-      setGoogleLoading(false);
-    }
-  }, [agreeTerms, setStatus, showToast, t]);
 
   const openTermsModal = useCallback((type) => {
     setModalType(type);
