@@ -70,6 +70,10 @@ export const AcademyProvider = ({ children }) => {
   );
 
   const clearAuthState = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('current_academy_slug');
+      sessionStorage.clear();
+    }
     if (isMounted.current) {
       setUser(null);
       setProfile(null);
@@ -333,10 +337,6 @@ export const AcademyProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        sessionStorage.clear();
-        localStorage.removeItem('current_academy_slug');
-      }
       clearAuthState();
       await supabase.auth.signOut();
     } catch (error) {
