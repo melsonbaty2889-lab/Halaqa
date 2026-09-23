@@ -57,7 +57,7 @@ export default function ProfileMenu({
     : t('header.defaultUser', 'الحساب الشخصي');
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <button
         type="button"
         onClick={onToggle}
@@ -71,12 +71,16 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-60 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3 text-xs ${
-            activeRtl ? 'right-0 md:left-0 md:right-auto' : 'left-0 md:right-0 md:left-auto'
+          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3 text-xs ${
+            activeRtl ? 'left-0' : 'right-0'
           }`}
-          style={{ backgroundColor: 'var(--surface-card)', opacity: 1 }}
+          style={{ 
+            backgroundColor: 'var(--surface-card)', 
+            opacity: 1,
+            maxWidth: 'calc(100vw - 24px)'
+          }}
         >
-          {/* معلومات المستخدم والدور بتنسيق عمودي مرتب */}
+          {/* معلومات المستخدم والدور */}
           <div className="pb-2.5 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
             <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate w-full">
               {displayName}
