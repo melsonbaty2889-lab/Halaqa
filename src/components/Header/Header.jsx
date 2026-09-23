@@ -51,6 +51,28 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  // دالة تسجيل الخروج الشاملة (تتعامل مع Props وتدعم Supabase بشكل مباشر)
+  const handleLogout = async () => {
+    try {
+      if (typeof onLogout === 'function') {
+        await onLogout();
+      }
+      
+      if (supabase?.auth) {
+        await supabase.auth.signOut();
+      }
+
+      // تنظيف التخزين المحلي وإعادة التوجيه إذا لزم الأمر
+      localStorage.removeItem('sb-access-token');
+      localStorage.removeItem('sb-refresh-token');
+      
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Error logging out:', err);
+      window.location.reload();
+    }
+  };
+
   // جلب اسم الشخص المسجل حالياً من Supabase Auth
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -239,7 +261,7 @@ export default function Header({
         <button
           type="button"
           onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-xl bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] text-[var(--emerald-text)] transition-all shrink-0 active:scale-95 shadow-sm"
+          className="p-2 rounded-xl bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] text-[var(--emerald-text)] transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer"
           title={t('header.toggleSidebar', 'القائمة الجانبية')}
         >
           <Menu size={18} />
@@ -262,7 +284,7 @@ export default function Header({
         <button
           type="button"
           onClick={toggleFullscreen}
-          className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all shrink-0 hidden md:flex items-center justify-center active:scale-95"
+          className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all shrink-0 hidden md:flex items-center justify-center active:scale-95 cursor-pointer"
           title={t('header.fullscreen', 'وضع الشاشة الكاملة')}
         >
           {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
@@ -305,7 +327,7 @@ export default function Header({
             }}
             userName={currentUserName || activeAcademy?.owner_name || activeAcademy?.name}
             userRole={userRole}
-            onLogout={onLogout}
+            onLogout={handleLogout}
             activeRtl={activeRtl}
           />
         </div>
