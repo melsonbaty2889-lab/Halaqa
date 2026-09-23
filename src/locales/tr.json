@@ -834,7 +834,13 @@
   "no_search_results": "Aramanızla eşleşen sonuç bulunamadı.",
   "noData": "Aramanızla eşleşen kayıtlı ders oturumu bulunamadı",
   "notifications": {
-    "title": "Bildirimler"
+    "all": "الكل",
+    "clearAll": "حذف الكل",
+    "empty": "لا توجد إشعارات جديدة",
+    "markAllRead": "تحديد الكل كمقروء",
+    "new": "جديد",
+    "title": "Bildirimler",
+    "unread": "غير مقروء"
   },
   "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "Genel URL hatası",

@@ -834,7 +834,13 @@
   "no_search_results": "Tidak ada hasil yang cocok dengan pencarian Anda.",
   "noData": "Tidak ada sesi pembelajaran yang cocok dengan pencarian Anda",
   "notifications": {
-    "title": "Notifikasi"
+    "all": "الكل",
+    "clearAll": "حذف الكل",
+    "empty": "لا توجد إشعارات جديدة",
+    "markAllRead": "تحديد الكل كمقروء",
+    "new": "جديد",
+    "title": "Notifikasi",
+    "unread": "غير مقروء"
   },
   "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
   "public_url_error": "Kesalahan URL Publik",
