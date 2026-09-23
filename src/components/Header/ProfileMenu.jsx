@@ -89,11 +89,11 @@ export default function ProfileMenu({
             </div>
 
             {userEmail && (
-              <div className="text-[var(--text-sub)] text-[10px] truncate w-full flex items-center gap-1 font-medium dir-ltr">
-                <Mail size={11} className="shrink-0" />
-                <span className="truncate">{userEmail}</span>
-              </div>
-            )}
+  <div className="text-[var(--text-sub)] text-[11px] truncate w-full flex items-center gap-1.5 font-medium opacity-80 mt-0.5">
+    <Mail size={12} className="shrink-0 text-[var(--emerald-text)]" />
+    <span className="truncate dir-ltr text-left">{userEmail}</span>
+  </div>
+)}
             
             <div className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${roleConfig.colorClass}`}>
               <RoleIcon size={12} />
