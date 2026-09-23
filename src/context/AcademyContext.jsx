@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase';
 
 const AcademyContext = createContext(null);
 
-// ── Helper Function for Multilingual Name Extraction ──────────────
 const extractAcademyName = (nameData, lang = 'ar') => {
   if (!nameData) return '';
   
@@ -61,7 +60,6 @@ export const AcademyProvider = ({ children }) => {
     }
   }, []);
 
-  // دالة مساعدة لاستخراج اسم الأكاديمية الحالية حسب اللغة النشطة
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
       if (!targetAcademy) return '';
@@ -71,16 +69,20 @@ export const AcademyProvider = ({ children }) => {
     [academy, i18n.language]
   );
 
+  const clearAuthState = useCallback(() => {
+    if (isMounted.current) {
+      setUser(null);
+      setProfile(null);
+      setAcademy(null);
+      setAcademiesList([]);
+      setUserRole(null);
+      setAppState('UNAUTHENTICATED');
+    }
+  }, []);
+
   const fetchUserStatus = useCallback(async (currentUser) => {
     if (!currentUser) {
-      if (isMounted.current) {
-        setUser(null);
-        setProfile(null);
-        setAcademy(null);
-        setAcademiesList([]);
-        setUserRole(null);
-        setAppState('UNAUTHENTICATED');
-      }
+      clearAuthState();
       return;
     }
 
@@ -90,32 +92,27 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل الرسمية
+      // 1. جلب بيانات البروفايل الرسمية حصرياً من قاعدة البيانات
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .maybeSingle();
 
-      if (profError) {
-        console.error("🚨 خطأ في جلب البروفايل:", profError);
+      if (profError || !profData) {
+        console.error("🚨 تعذر جلب البروفايل المعتمد:", profError);
+        clearAuthState();
+        return;
       }
 
-      // القراءة من الـ User Metadata إذا تعذر الوصول لجدول البروفايل فوراً
-      const userMetaRole = currentUser.user_metadata?.role;
-      const activeProfile = profData || {
-        id: currentUser.id,
-        role: userMetaRole || null,
-        is_activated: true,
-        full_name: currentUser.user_metadata?.full_name || currentUser.email || 'مستخدم'
-      };
+      const activeProfile = profData;
 
       if (isMounted.current) {
         setProfile(activeProfile);
         setUserRole(activeProfile.role || null);
       }
 
-      // 🛑 الفحص الحاسم: إذا كان الحساب يفتقر لتحديد الدور (Role Selection)
+      // حسابات تفتقر لدور محدد
       if (!activeProfile.role) {
         if (isMounted.current) {
           setAcademy(null);
@@ -149,7 +146,7 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
-      // 2. البحث عبر profile.academy_id
+      // 2. الاستعلام عن الأكاديمية المرتبطة عبر profile.academy_id
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -160,7 +157,7 @@ export const AcademyProvider = ({ children }) => {
         if (profileAcademy) fetchedList.push(profileAcademy);
       }
 
-      // 3. البحث في academy_teachers
+      // 3. الاستعلام عن الأكاديميات كمعلم
       if (fetchedList.length === 0) {
         const { data: teacherList } = await supabase
           .from('academy_teachers')
@@ -174,7 +171,7 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-      // 4. البحث في الأكاديميات المملوكة owner_id
+      // 4. الاستعلام عن الأكاديميات كمالك (Owner)
       if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -189,7 +186,7 @@ export const AcademyProvider = ({ children }) => {
 
       currentAcademy = fetchedList[0] || null;
 
-      // 5. تعيين الحالة النهائية
+      // 5. تعيين الحالة المعيارية الحقيقية
       if (isMounted.current) {
         setUserRole(detectedRole);
         setAcademiesList(fetchedList);
@@ -206,22 +203,23 @@ export const AcademyProvider = ({ children }) => {
             setAppState('FULLY_ACTIVE');
           }
         } else {
-          setAcademy({
-            id: activeProfile.academy_id || 'default',
-            name: { ar: 'الأكاديمية الافتراضية', en: 'Default Academy' },
-            is_active: true
-          });
-          setAppState('FULLY_ACTIVE');
+          // إذا كان مديراً أو مستخدماً بدون أكاديمية حقيقية
+          setAcademy(null);
+          if (detectedRole === 'admin') {
+            setAppState('NO_ACADEMY');
+          } else {
+            setAppState('FULLY_ACTIVE');
+          }
         }
       }
 
     } catch (e) {
-      console.error("🚨 خطأ غير متوقع في معالجة الصلاحيات:", e);
-      if (isMounted.current) setAppState('FULLY_ACTIVE');
+      console.error("🚨 خطأ أثناء معالجة الصلاحيات:", e);
+      clearAuthState();
     } finally {
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [clearAuthState]);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -229,9 +227,9 @@ export const AcademyProvider = ({ children }) => {
       await fetchUserStatus(data?.user || null);
     } catch (err) {
       console.error("🚨 خطأ أثناء تحديث الحالة:", err);
-      if (isMounted.current) setAppState('FULLY_ACTIVE');
+      clearAuthState();
     }
-  }, [fetchUserStatus]);
+  }, [fetchUserStatus, clearAuthState]);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -240,18 +238,18 @@ export const AcademyProvider = ({ children }) => {
       try {
         const { data } = await supabase.auth.getSession();
         if (isSubscribed) {
-          // حماية إضافية عند التهيئة الأولية
           const initUser = data?.session?.user;
+          // حماية عند التهيئة الأولية للجلسة المتروكة من SignUp
           if (initUser && Array.isArray(initUser.identities) && initUser.identities.length === 0) {
             await supabase.auth.signOut();
-            if (isMounted.current) setAppState('UNAUTHENTICATED');
+            clearAuthState();
             return;
           }
           await fetchUserStatus(initUser || null);
         }
       } catch (err) {
-        console.error("🚨 Auth initialization error:", err);
-        if (isSubscribed && isMounted.current) setAppState('UNAUTHENTICATED');
+        console.error("🚨 خطأ إقلاع المصادقة:", err);
+        if (isSubscribed) clearAuthState();
       }
     }
 
@@ -262,22 +260,17 @@ export const AcademyProvider = ({ children }) => {
       const res = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'INITIAL_SESSION') return;
 
-        // 🛑 الحماية المركزية: كشف الجلسات الوهمية الناتجة عن محاولة SignUp لبريد مسجل مسبقاً
         const currentUser = session?.user;
+        // 🛑 الحماية المركزية: اعتراض أي جلسة ناتجة عن محاولة SignUp ببريد مسجل
         const isExistingUserFromSignUp =
           currentUser &&
           Array.isArray(currentUser.identities) &&
           currentUser.identities.length === 0;
 
         if (isExistingUserFromSignUp) {
-          // تدمير الجلسة فوراً لتفادي تحميل البيانات أو التوجيه لـ Dashboard
           await supabase.auth.signOut();
-          if (isSubscribed && isMounted.current) {
-            setUser(null);
-            setProfile(null);
-            setAcademy(null);
-            setUserRole(null);
-            setAppState('UNAUTHENTICATED');
+          if (isSubscribed) {
+            clearAuthState();
           }
           return;
         }
@@ -291,7 +284,7 @@ export const AcademyProvider = ({ children }) => {
 
     const safetyTimer = setTimeout(() => {
       if (isMounted.current) {
-        setAppState((prev) => (prev === 'LOADING' ? 'FULLY_ACTIVE' : prev));
+        setAppState((prev) => (prev === 'LOADING' ? 'UNAUTHENTICATED' : prev));
       }
     }, 3000);
 
@@ -302,7 +295,7 @@ export const AcademyProvider = ({ children }) => {
         authListener.unsubscribe();
       }
     };
-  }, [fetchUserStatus]);
+  }, [fetchUserStatus, clearAuthState]);
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
@@ -328,7 +321,7 @@ export const AcademyProvider = ({ children }) => {
           .subscribe();
       }
     } catch (err) {
-      console.error("🚨 Realtime subscription error:", err);
+      console.error("🚨 خطأ الاشتراك اللحظي:", err);
     }
 
     return () => {
@@ -344,14 +337,7 @@ export const AcademyProvider = ({ children }) => {
         sessionStorage.clear();
         localStorage.removeItem('current_academy_slug');
       }
-      if (isMounted.current) {
-        setAcademy(null);
-        setAcademiesList([]);
-        setUser(null);
-        setProfile(null);
-        setUserRole(null);
-        setAppState('UNAUTHENTICATED');
-      }
+      clearAuthState();
       await supabase.auth.signOut();
     } catch (error) {
       console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
