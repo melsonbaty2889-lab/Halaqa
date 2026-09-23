@@ -33,6 +33,9 @@ export default function Header({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  // state لحفظ اسم المستخدم المسجل حالياً
+  const [currentUserName, setCurrentUserName] = useState('');
 
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
@@ -47,6 +50,28 @@ export default function Header({
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  // جلب اسم الشخص المسجل حالياً من Supabase Auth
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      if (!supabase?.auth) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const fullName = user.user_metadata?.full_name || 
+                           user.user_metadata?.name || 
+                           user.email?.split('@')[0];
+          if (fullName) {
+            setCurrentUserName(fullName);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -233,7 +258,7 @@ export default function Header({
 
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
-        {/* زر الشاشة الكاملة يظهر بدءاً من الحواسيب والشاشات الكبيرة فقط */}
+        {/* زر الشاشة الكاملة */}
         <button
           type="button"
           onClick={toggleFullscreen}
@@ -272,18 +297,18 @@ export default function Header({
         </div>
 
         <div ref={profileRef}>
-  <ProfileMenu
-  showMenu={showProfileMenu}
-  onToggle={() => {
-    setShowProfileMenu(!showProfileMenu);
-    setShowNotifMenu(false);
-  }}
-  userName={currentUser?.name || user?.user_metadata?.full_name} // 👈 اسم المستخدم الفعلي
-  userRole={userRole}
-  onLogout={onLogout}
-  activeRtl={activeRtl}
-/>
-</div>
+          <ProfileMenu
+            showMenu={showProfileMenu}
+            onToggle={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowNotifMenu(false);
+            }}
+            userName={currentUserName || activeAcademy?.owner_name || activeAcademy?.name}
+            userRole={userRole}
+            onLogout={onLogout}
+            activeRtl={activeRtl}
+          />
+        </div>
 
       </div>
     </header>
