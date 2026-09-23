@@ -1,3 +1,5 @@
+/* src/hooks/useSignUpForm.ts */
+
 import { useState, useEffect, useCallback, useRef, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -87,6 +89,13 @@ export const useSignUpForm = (
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
   const handleExistingUserFlow = useCallback(async (cleanEmail: string) => {
+    // 1. تنظيف الذاكرة المحلية فوراً لمنع Navigate في MainContent من استخدام Slug سابق
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('current_academy_slug');
+      sessionStorage.clear();
+    }
+
+    // 2. إنهاء الجلسة فوراً
     await supabase.auth.signOut();
 
     if (isMounted.current) {
@@ -96,6 +105,7 @@ export const useSignUpForm = (
       });
     }
 
+    // 3. التوجيه لصفحة تسجيل الدخول
     if (onSwitchToLogin) {
       onSwitchToLogin(cleanEmail);
     } else {
