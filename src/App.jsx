@@ -20,13 +20,19 @@ const DevPlayground = lazy(() => {
   return Promise.resolve({ default: () => null });
 });
 
-// 🌟 مكون الوهج الزمردي الديناميكي الخفيف
+// 🌟 مكون الخلفية الموحد المطابق لشاشة SplashScreen (الشبكة + التوهج الزمردي)
 const GlobalEmeraldBackground = () => (
-  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-[#10B981]/20 rounded-full blur-[140px]" />
-    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#10B981]/15 rounded-full blur-[130px]" />
-    <div className="absolute -bottom-[10%] right-[15%] w-[600px] h-[600px] bg-[#10B981]/10 rounded-full blur-[160px]" />
-  </div>
+  <div 
+    className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
+    style={{
+      backgroundImage: `
+        radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0)
+      `,
+      backgroundSize: '100% 100%, 28px 28px',
+      backgroundPosition: 'center center, 0 0'
+    }}
+  />
 );
 
 if (typeof window !== 'undefined') {
