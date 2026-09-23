@@ -13,13 +13,12 @@ export default function ProfileMenu({
 }) {
   const { t } = useTranslation();
 
-  // تحديد اسم الدور والأيقونة واللون بناءً على نوع المستخدم
   const getRoleConfig = (role) => {
     switch (role) {
       case 'admin':
       case 'super_admin':
         return {
-          label: t('roles.admin', 'مدير النظام / الأكاديمية'),
+          label: t('roles.admin', 'مدير النظام'),
           icon: ShieldCheck,
           colorClass: 'bg-amber-500/10 text-amber-500 border-amber-500/20'
         };
@@ -73,22 +72,22 @@ export default function ProfileMenu({
       {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-60 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3 text-xs ${
-            activeRtl ? 'left-0' : 'right-0'
+            activeRtl ? 'right-0 md:left-0 md:right-auto' : 'left-0 md:right-0 md:left-auto'
           }`}
           style={{ backgroundColor: 'var(--surface-card)', opacity: 1 }}
         >
-          {/* معلومات المستخدم والدور */}
-          <div className="pb-2.5 border-b border-[var(--border-card)] mb-2">
-            <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate">
+          {/* معلومات المستخدم والدور بتنسيق عمودي مرتب */}
+          <div className="pb-2.5 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
+            <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate w-full">
               {displayName}
             </div>
             
-            <div className={`mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${roleConfig.colorClass}`}>
+            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${roleConfig.colorClass}`}>
               <RoleIcon size={12} />
               <span>{roleConfig.label}</span>
             </div>
 
-            <div className="text-[var(--emerald-text)] text-[10px] mt-2 flex items-center gap-1.5 font-bold">
+            <div className="text-[var(--emerald-text)] text-[10px] mt-1 flex items-center gap-1.5 font-bold">
               <span className="w-2 h-2 rounded-full bg-[var(--emerald-text)] inline-block shadow-[0_0_6px_var(--emerald-text)]" />
               <span>{t('header.activeSession', 'جلسة نشطة')}</span>
             </div>
