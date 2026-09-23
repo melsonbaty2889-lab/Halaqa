@@ -48,7 +48,6 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  // متابعة حالة الاتصال بالشبكة
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -60,7 +59,6 @@ export default function Header({
     };
   }, []);
 
-  // وضع الشاشة الكاملة (Fullscreen)
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
@@ -78,7 +76,6 @@ export default function Header({
     }
   }, [activeAcademy?.currency]);
 
-  // جلب التنبيهات من Supabase
   const fetchNotifications = useCallback(async () => {
     if (!supabase) return;
     setLoadingNotifs(true);
@@ -98,7 +95,6 @@ export default function Header({
     }
   }, []);
 
-  // المزامنة اللحظية للإشعارات (Realtime)
   useEffect(() => {
     fetchNotifications();
     let channel = null;
@@ -131,7 +127,6 @@ export default function Header({
     };
   }, [fetchNotifications]);
 
-  // الإغلاق عند النقر بالخارج
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
@@ -153,8 +148,7 @@ export default function Header({
   const activeKey = rawKey.split('/')[0].trim();
 
   const menuSections = useMemo(() => getMenuSections(activeRtl, userRole), [activeRtl, userRole]);
-  
-  // استخراج اسم الصفحة الحالية ديناميكياً
+
   const pageTitle = useMemo(() => {
     for (const section of menuSections) {
       const foundItem = section.items.find(item => item.id === activeKey);
@@ -162,7 +156,7 @@ export default function Header({
         return foundItem.label;
       }
     }
-    return t(`nav.${activeKey}`, t('nav.dashboard', 'Smart Halaqa'));
+    return t(`nav.${activeKey}`, t('nav.dashboard', 'الحلقة الذكية'));
   }, [menuSections, activeKey, t]);
 
   const unreadCount = useMemo(() => {
@@ -216,7 +210,6 @@ export default function Header({
       className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-3 shadow-xl w-full transition-all" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      {/* الجانب الأيمن: القائمة والعنوان ومؤشر الاتصال */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <button
           type="button"
@@ -238,20 +231,18 @@ export default function Header({
         </div>
       </div>
 
-      {/* الجانب الأيسر: الشاشة الكاملة، العملة، اللغة، التنبيهات، والبروفايل */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
-        {/* زر الشاشة الكاملة */}
+        {/* زر الشاشة الكاملة يظهر بدءاً من الحواسيب والشاشات الكبيرة فقط */}
         <button
           type="button"
           onClick={toggleFullscreen}
-          className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all shrink-0 hidden sm:flex items-center justify-center active:scale-95"
+          className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all shrink-0 hidden md:flex items-center justify-center active:scale-95"
           title={t('header.fullscreen', 'وضع الشاشة الكاملة')}
         >
           {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
         </button>
 
-        {/* عرض العملة */}
         <div 
           title={t('header.currency', 'العملة المعتمدة')}
           className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl text-[11px] font-bold select-none text-[var(--text-main)]"
@@ -260,10 +251,8 @@ export default function Header({
           <span>{selectedCurrency}</span>
         </div>
 
-        {/* محول اللغة الموحد */}
         <LanguageSwitcher i18n={i18n} />
 
-        {/* قائمة التنبيهات المنسدلة */}
         <div ref={notifRef}>
           <NotificationMenu
             notifications={notifications}
@@ -282,20 +271,19 @@ export default function Header({
           />
         </div>
 
-        {/* قائمة حساب المستخدم المنسدلة */}
-<div ref={profileRef}>
-  <ProfileMenu
-    showMenu={showProfileMenu}
-    onToggle={() => {
-      setShowProfileMenu(!showProfileMenu);
-      setShowNotifMenu(false);
-    }}
-    academyName={activeAcademy?.name}
-    setActiveTab={setActiveTab}
-    onLogout={onLogout}
-    activeRtl={activeRtl}
-  />
-</div>
+        <div ref={profileRef}>
+          <ProfileMenu
+            showMenu={showProfileMenu}
+            onToggle={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowNotifMenu(false);
+            }}
+            academyName={activeAcademy?.name}
+            setActiveTab={setActiveTab}
+            onLogout={onLogout}
+            activeRtl={activeRtl}
+          />
+        </div>
 
       </div>
     </header>
