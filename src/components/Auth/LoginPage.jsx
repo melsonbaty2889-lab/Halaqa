@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
@@ -15,6 +16,7 @@ export default function LoginPage({
   onForgotPassword, 
   onSuccess 
 }) {
+  const location = useLocation();
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
 
@@ -35,6 +37,14 @@ export default function LoginPage({
   } = useLoginForm(onSuccess);
 
   const [localError, setLocalError] = useState('');
+
+  // 🛑 استلام البريد الإلكتروني الممرر تلقائياً من صفحة Sign Up إن وجد
+  useEffect(() => {
+    const passedEmail = location?.state?.email;
+    if (passedEmail) {
+      setEmail(passedEmail);
+    }
+  }, [location?.state, setEmail]);
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const appSubtitle = APP_SUBTITLES?.[currentLangCode] || APP_SUBTITLES?.ar || 'الحلقة الذكية';
@@ -135,7 +145,7 @@ export default function LoginPage({
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: C.semantic?.dangerBg || 'rgba(239, 68, 68, 0.15)',
                 borderColor: dangerColor,
                 color: dangerColor,
               }}
