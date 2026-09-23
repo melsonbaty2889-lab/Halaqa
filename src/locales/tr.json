@@ -759,8 +759,13 @@
     "academyOwner": "صاحب الأكاديمية",
     "activeSession": "جلسة نشطة",
     "admin": "Yönetici",
+    "currency": "العملة المعتمدة",
+    "fullscreen": "وضع الشاشة الكاملة",
     "logout": "تسجيل الخروج",
-    "settings": "إعدادات المنظومة"
+    "offline": "غير متصل",
+    "onlineSync": "متصل بالمزامنة",
+    "settings": "إعدادات المنظومة",
+    "toggleSidebar": "القائمة الجانبية"
   },
   "hub": {
     "communications": "İletişim ve Bildirim Merkezi",
