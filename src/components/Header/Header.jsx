@@ -283,19 +283,19 @@ export default function Header({
         </div>
 
         {/* قائمة حساب المستخدم المنسدلة */}
-        <div ref={profileRef}>
-          <ProfileMenu
-            showMenu={showProfileMenu}
-            onToggle={() => {
-              setShowProfileMenu(!showProfileMenu);
-              setShowNotifMenu(false);
-            }}
-            academyName={activeAcademy?.name}
-            setActiveTab={setActiveTab}
-            onLogout={onLogout}
-            activeRtl={activeRtl}
-          />
-        </div>
+<div ref={profileRef}>
+  <ProfileMenu
+    showMenu={showProfileMenu}
+    onToggle={() => {
+      setShowProfileMenu(!showProfileMenu);
+      setShowNotifMenu(false);
+    }}
+    academyName={activeAcademy?.name}
+    setActiveTab={setActiveTab}
+    onLogout={onLogout}
+    activeRtl={activeRtl}
+  />
+</div>
 
       </div>
     </header>
