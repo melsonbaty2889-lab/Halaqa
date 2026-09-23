@@ -1,12 +1,13 @@
 // src/components/Header/ProfileMenu.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserCheck, LogOut, ShieldCheck, GraduationCap, HeartHandshake, User } from 'lucide-react';
+import { UserCheck, LogOut, ShieldCheck, GraduationCap, HeartHandshake, User, Mail } from 'lucide-react';
 
 export default function ProfileMenu({
   showMenu = false,
   onToggle = () => {},
   userName = '',
+  userEmail = '', // تمت إضافة البريد هنا
   userRole = 'admin',
   onLogout,
   activeRtl = true
@@ -71,7 +72,7 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3 text-xs ${
+          className={`absolute top-full mt-2 w-60 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3 text-xs ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ 
@@ -81,20 +82,22 @@ export default function ProfileMenu({
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
-          {/* معلومات المستخدم والدور */}
+          {/* معلومات المستخدم والدور والبريد */}
           <div className="pb-2.5 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
             <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate w-full">
               {displayName}
             </div>
+
+            {userEmail && (
+              <div className="text-[var(--text-sub)] text-[10px] truncate w-full flex items-center gap-1 font-medium dir-ltr">
+                <Mail size={11} className="shrink-0" />
+                <span className="truncate">{userEmail}</span>
+              </div>
+            )}
             
-            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${roleConfig.colorClass}`}>
+            <div className={`mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${roleConfig.colorClass}`}>
               <RoleIcon size={12} />
               <span>{roleConfig.label}</span>
-            </div>
-
-            <div className="text-[var(--emerald-text)] text-[10px] mt-1 flex items-center gap-1.5 font-bold">
-              <span className="w-2 h-2 rounded-full bg-[var(--emerald-text)] inline-block shadow-[0_0_6px_var(--emerald-text)]" />
-              <span>{t('header.activeSession', activeRtl ? 'جلسة نشطة' : 'Active Session')}</span>
             </div>
           </div>
 
@@ -106,7 +109,7 @@ export default function ProfileMenu({
                 onToggle();
                 if (typeof onLogout === 'function') onLogout();
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-medium cursor-pointer ltr:justify-start rtl:justify-start"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-medium cursor-pointer"
             >
               <LogOut size={14} className="shrink-0" />
               <span>{t('header.logout', activeRtl ? 'تسجيل الخروج' : 'Log Out')}</span>
