@@ -40,7 +40,6 @@ export const useSignUpForm = (
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<StatusState>({ type: null, msg: '' });
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const isMounted = useRef(true);
 
@@ -50,12 +49,6 @@ export const useSignUpForm = (
       isMounted.current = false;
     };
   }, []);
-
-  const toggleLanguage = useCallback(() => {
-    const currentLang = i18n.language || 'ar';
-    const nextLang = currentLang.startsWith('ar') ? 'en' : 'ar';
-    i18n.changeLanguage(nextLang);
-  }, [i18n]);
 
   const clearFieldError = useCallback((fieldName: keyof FieldErrors) => {
     setFieldErrors((prev) => {
@@ -93,31 +86,24 @@ export const useSignUpForm = (
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
+  // إغلاق الجلسة فوراً لمنع التوجيه التلقائي للوحة التحكم
   const redirectExistingUserToLogin = useCallback(async (cleanEmail: string) => {
-    await supabase.auth.signOut();
-    if (isMounted.current) {
-      setStatus({
-        type: 'error',
-        msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
-      });
+    await supabase.auth.signOut(); // إنهاء الجلسة فوراً لمنع الدخول التلقائي
+    
+    if (onSwitchToLogin) {
+      onSwitchToLogin(cleanEmail);
+    } else {
+      navigate('/login', { state: { email: cleanEmail } });
     }
-    setTimeout(() => {
-      if (isMounted.current && onSwitchToLogin) {
-        onSwitchToLogin(cleanEmail);
-      }
-    }, 1500);
-  }, [onSwitchToLogin, t]);
+  }, [onSwitchToLogin, navigate]);
 
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
-      setHasSubmitted(true);
       if (isMounted.current) setStatus({ type: null, msg: '' });
 
       const isValid = validateFormDirectly();
-      if (!isValid) {
-        return false;
-      }
+      if (!isValid) return false;
 
       const cleanEmail = email.trim();
 
@@ -137,7 +123,7 @@ export const useSignUpForm = (
 
         if (response.error) throw response.error;
 
-        // حالة البريد المسجل سابقاً دون إرجاع خطأ صريح من Supabase
+        // إذا كان المستخدم مسجلاً مسبقاً (Supabase يُرجع identities فارغة في هذه الحالة)
         if (
           response.data?.user &&
           response.data.user.identities &&
@@ -158,15 +144,13 @@ export const useSignUpForm = (
         }
         return true;
       } catch (err: any) {
-        console.error('Sign Up Detailed Error:', err);
+        console.error('Sign Up Error:', err);
 
         let rawMessage = '';
         if (typeof err === 'string') {
           rawMessage = err;
         } else if (err?.message && typeof err.message === 'string') {
           rawMessage = err.message;
-        } else if (err?.error_description && typeof err.error_description === 'string') {
-          rawMessage = err.error_description;
         }
 
         const isAlreadyRegistered =
@@ -180,12 +164,10 @@ export const useSignUpForm = (
           return false;
         }
 
-        let errorString = rawMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.');
-
         if (isMounted.current) {
           setStatus({
             type: 'error',
-            msg: errorString,
+            msg: rawMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
           });
         }
         return false;
@@ -220,11 +202,10 @@ export const useSignUpForm = (
       return true;
     } catch (err: any) {
       console.error('Google Auth Error:', err);
-      const errorString = err?.message || t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google');
       if (isMounted.current) {
         setStatus({
           type: 'error',
-          msg: errorString,
+          msg: err?.message || t('auth.googleSignUpFailed', 'فشل التسجيل بواسطة Google'),
         });
       }
       return false;
@@ -256,7 +237,6 @@ export const useSignUpForm = (
     clearFieldError,
     status,
     setStatus,
-    toggleLanguage,
     handleSignUp,
     handleGoogleSignUp,
     validateFormDirectly,
