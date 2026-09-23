@@ -86,16 +86,25 @@ export const useSignUpForm = (
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
-  // إغلاق الجلسة فوراً لمنع التوجيه التلقائي للوحة التحكم
-  const redirectExistingUserToLogin = useCallback(async (cleanEmail: string) => {
-    await supabase.auth.signOut(); // إنهاء الجلسة فوراً لمنع الدخول التلقائي
-    
+  // دالة التعامل مع الحسابات المسجلة مسبقاً وإغلاق الجلسة فوراً
+  const handleExistingUserRedirect = useCallback(async (cleanEmail: string) => {
+    // 1. تسجيل الخروج فوراً لقطع الجلسة المسجلة تلقائياً وإلغاء توجيه Router للأكاديمية
+    await supabase.auth.signOut();
+
+    if (isMounted.current) {
+      setStatus({
+        type: 'error',
+        msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول.'),
+      });
+    }
+
+    // 2. التحويل لصفحة تسجيل الدخول
     if (onSwitchToLogin) {
       onSwitchToLogin(cleanEmail);
     } else {
       navigate('/login', { state: { email: cleanEmail } });
     }
-  }, [onSwitchToLogin, navigate]);
+  }, [onSwitchToLogin, navigate, t]);
 
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
@@ -123,13 +132,13 @@ export const useSignUpForm = (
 
         if (response.error) throw response.error;
 
-        // إذا كان المستخدم مسجلاً مسبقاً (Supabase يُرجع identities فارغة في هذه الحالة)
+        // حالة الحساب المسجل سابقاً: يرجع Supabase مصفوفة identities فارغة
         if (
           response.data?.user &&
           response.data.user.identities &&
           response.data.user.identities.length === 0
         ) {
-          await redirectExistingUserToLogin(cleanEmail);
+          await handleExistingUserRedirect(cleanEmail);
           return false;
         }
 
@@ -160,7 +169,7 @@ export const useSignUpForm = (
           err?.status === 400;
 
         if (isAlreadyRegistered) {
-          await redirectExistingUserToLogin(cleanEmail);
+          await handleExistingUserRedirect(cleanEmail);
           return false;
         }
 
@@ -175,7 +184,7 @@ export const useSignUpForm = (
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateFormDirectly, onSignUpSuccess, redirectExistingUserToLogin, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, handleExistingUserRedirect, t]
   );
 
   const handleGoogleSignUp = useCallback(async () => {
