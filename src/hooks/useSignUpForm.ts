@@ -86,9 +86,9 @@ export const useSignUpForm = (
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
-  // دالة التعامل مع الحسابات المسجلة مسبقاً وإغلاق الجلسة فوراً
-  const handleExistingUserRedirect = useCallback(async (cleanEmail: string) => {
-    // 1. تسجيل الخروج فوراً لقطع الجلسة المسجلة تلقائياً وإلغاء توجيه Router للأكاديمية
+  // دالة التعامل مع البريد المسجل مسبقاً وتدمير الجلسة فوراً
+  const handleExistingUserFlow = useCallback(async (cleanEmail: string) => {
+    // 1. إنهاء الجلسة فوراً لقطع الطريق على AcademyContext والـ Router Guards
     await supabase.auth.signOut();
 
     if (isMounted.current) {
@@ -98,7 +98,7 @@ export const useSignUpForm = (
       });
     }
 
-    // 2. التحويل لصفحة تسجيل الدخول
+    // 2. التحويل لصفحة تسجيل الدخول فقط وتكليفها بالتعامل مع الـ Role لاحقاً
     if (onSwitchToLogin) {
       onSwitchToLogin(cleanEmail);
     } else {
@@ -132,22 +132,23 @@ export const useSignUpForm = (
 
         if (response.error) throw response.error;
 
-        // حالة الحساب المسجل سابقاً: يرجع Supabase مصفوفة identities فارغة
-        if (
-          response.data?.user &&
-          response.data.user.identities &&
-          response.data.user.identities.length === 0
-        ) {
-          await handleExistingUserRedirect(cleanEmail);
+        // اكتشاف حالة الحساب المسجل بكتلة identities فارغة
+        const user = response.data?.user;
+        const isExistingUserByIdentities = Array.isArray(user?.identities) && user.identities.length === 0;
+
+        if (isExistingUserByIdentities) {
+          await handleExistingUserFlow(cleanEmail);
           return false;
         }
 
+        // إذا كان حساماً جديداً وتم إنشاؤه بنجاح
         if (isMounted.current) {
           setStatus({
             type: 'success',
             msg: t('auth.signUpSuccess', 'تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني للتأكيد.'),
           });
         }
+
         if (onSignUpSuccess) {
           onSignUpSuccess();
         }
@@ -155,28 +156,25 @@ export const useSignUpForm = (
       } catch (err: any) {
         console.error('Sign Up Error:', err);
 
-        let rawMessage = '';
-        if (typeof err === 'string') {
-          rawMessage = err;
-        } else if (err?.message && typeof err.message === 'string') {
-          rawMessage = err.message;
-        }
+        const errorCode = err?.code || '';
+        const rawMessage = (err?.message || err?.error_description || '').toLowerCase();
 
+        // تضييق نطاق الفحص لمنع تعميم أخطاء 400 الأخرى
         const isAlreadyRegistered =
-          rawMessage.toLowerCase().includes('already registered') ||
-          rawMessage.toLowerCase().includes('already in use') ||
-          rawMessage.toLowerCase().includes('user_already_exists') ||
-          err?.status === 400;
+          errorCode === 'user_already_exists' ||
+          rawMessage.includes('already registered') ||
+          rawMessage.includes('already in use') ||
+          rawMessage.includes('user_already_exists');
 
         if (isAlreadyRegistered) {
-          await handleExistingUserRedirect(cleanEmail);
+          await handleExistingUserFlow(cleanEmail);
           return false;
         }
 
         if (isMounted.current) {
           setStatus({
             type: 'error',
-            msg: rawMessage || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
+            msg: err?.message || t('auth.signUpFailed', 'حدث خطأ أثناء إنشاء الحساب.'),
           });
         }
         return false;
@@ -184,7 +182,7 @@ export const useSignUpForm = (
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateFormDirectly, onSignUpSuccess, handleExistingUserRedirect, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, handleExistingUserFlow, t]
   );
 
   const handleGoogleSignUp = useCallback(async () => {
