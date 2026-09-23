@@ -72,7 +72,7 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-64 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-3.5 text-xs backdrop-blur-md bg-[var(--surface-card)] ${
+          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs backdrop-blur-md bg-[var(--surface-card)] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ 
@@ -81,20 +81,20 @@ export default function ProfileMenu({
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
           {/* معلومات المستخدم والدور والبريد */}
-          <div className="pb-3 border-b border-[var(--border-card)] mb-2.5 flex flex-col items-start gap-1.5">
-            <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate w-full">
+          <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
+            <div className="font-extrabold text-[var(--text-main)] text-[12px] truncate w-full">
               {displayName}
             </div>
 
             {userEmail && (
-              <div className="text-[var(--text-sub)] text-[11px] w-full flex items-center gap-1.5 font-medium dir-ltr justify-start">
-                <Mail size={13} className="shrink-0 text-[var(--emerald-text)]" />
+              <div className="text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium dir-ltr justify-start overflow-hidden">
+                <Mail size={12} className="shrink-0 text-[var(--emerald-text)]" />
                 <span className="truncate">{userEmail}</span>
               </div>
             )}
             
-            <div className={`mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold ${roleConfig.colorClass}`}>
-              <RoleIcon size={12} />
+            <div className={`mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-bold ${roleConfig.colorClass}`}>
+              <RoleIcon size={11} />
               <span>{roleConfig.label}</span>
             </div>
           </div>
@@ -107,9 +107,9 @@ export default function ProfileMenu({
                 onToggle();
                 if (typeof onLogout === 'function') onLogout();
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-semibold cursor-pointer"
+              className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-semibold cursor-pointer text-[11.5px]"
             >
-              <LogOut size={14} className="shrink-0" />
+              <LogOut size={13} className="shrink-0" />
               <span>{t('header.logout', activeRtl ? 'تسجيل الخروج' : 'Log Out')}</span>
             </button>
           </div>
