@@ -11,7 +11,17 @@ export default function ProfileMenu({
   onLogout,
   activeRtl = true
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
+
+  // معالجة اسم الأكاديمية في حال كان كائناً يحتوي على لغات متعدّدة أو نصاً عادياً
+  const getDisplayAcademyName = () => {
+    if (!academyName) return t('header.academyOwner', 'صاحب الأكاديمية');
+    if (typeof academyName === 'object') {
+      return academyName[currentLang] || academyName.ar || academyName.en || t('header.academyOwner', 'صاحب الأكاديمية');
+    }
+    return academyName;
+  };
 
   return (
     <div className="relative">
@@ -34,7 +44,7 @@ export default function ProfileMenu({
         >
           <div className="p-2 border-b border-[var(--border-card)] mb-1">
             <div className="font-extrabold text-[var(--text-main)] text-[13px] truncate">
-              {academyName || t('header.academyOwner', 'صاحب الأكاديمية')}
+              {getDisplayAcademyName()}
             </div>
             <div className="text-[var(--emerald-text)] text-[10px] mt-1 flex items-center gap-1.5 font-bold">
               <span className="w-2 h-2 rounded-full bg-[var(--emerald-text)] inline-block shadow-[0_0_6px_var(--emerald-text)]" />
