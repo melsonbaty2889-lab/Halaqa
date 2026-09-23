@@ -28,7 +28,7 @@ const getText = (tFunc, key, fallback) => {
 
 const FullPageLoader = ({ label }) => {
   return (
-    <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-actionPrimary gap-3">
+    <div className="bg-transparent min-h-screen flex flex-col items-center justify-center text-semantic-actionPrimary gap-3">
       <Loader2 className="animate-spin" size={32} />
       <span className="text-xs text-semantic-textSecondary font-['Cairo',system-ui,sans-serif]">
         {label}
@@ -122,7 +122,7 @@ export default function MainContent() {
       )}
 
       {appState === 'UNAUTHENTICATED' && authView !== 'update_password' && !isNeedsRoleSelection && (
-        <div className="bg-semantic-bgPage min-h-screen">
+        <div className="bg-transparent min-h-screen">
           {authView === 'login' && (
             <LoginPage 
               initialEmail={prefilledEmail}
@@ -146,7 +146,7 @@ export default function MainContent() {
       )}
 
       {appState === 'PENDING_APPROVAL' && !isNeedsRoleSelection && (
-        <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
+        <div className="min-h-screen flex items-center justify-center bg-transparent p-5 font-['Cairo',system-ui,sans-serif]">
           <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
             <Clock size={40} className="text-semantic-actionPrimary mx-auto mb-5" />
             <h2 className="text-semantic-textPrimary text-xl font-bold mb-4">
@@ -182,7 +182,7 @@ export default function MainContent() {
       )}
 
       {appState === 'SUSPENDED' && !isNeedsRoleSelection && (
-        <div className="min-h-screen flex items-center justify-center bg-semantic-bgPage p-5 font-['Cairo',system-ui,sans-serif]">
+        <div className="min-h-screen flex items-center justify-center bg-transparent p-5 font-['Cairo',system-ui,sans-serif]">
           <div className="w-full max-w-lg bg-semantic-surfaceCard p-10 rounded-[20px] text-center border border-semantic-borderCard">
             <div className="bg-semantic-dangerBg w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-semantic-danger">
               <ShieldAlert size={36} />
@@ -300,7 +300,7 @@ export default function MainContent() {
       )}
 
       {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
-        <div className="bg-semantic-bgPage min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
+        <div className="bg-transparent min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
           <AlertTriangle size={40} className="text-semantic-danger mb-4" />
           <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
           <p className="text-semantic-textSecondary mb-2">App State: <strong className="text-semantic-actionPrimary">{appState || 'NULL'}</strong></p>
