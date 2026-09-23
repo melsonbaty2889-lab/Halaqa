@@ -14,7 +14,7 @@ export default class GlobalErrorBoundary extends Component {
   }
 
   handleReload = () => {
-    if ('caches' in window) {
+    if (typeof window !== 'undefined' && 'caches' in window) {
       caches.keys().then((names) => {
         for (let name of names) caches.delete(name);
       });
@@ -25,26 +25,27 @@ export default class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       const errorMessage = this.state.error?.toString() || 'حدث خطأ غير متوقع في النظام';
+
       return (
         <div style={{
           minHeight: '100vh',
-          background: C.dark.bg,
+          background: C.semantic.bgPage,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
-          color: C.appText.main
+          color: C.semantic.textPrimary
         }}>
           <div style={{
             width: '100%',
             maxWidth: '520px',
-            background: C.dark.card,
-            border: `1px solid ${C.border.card}`,
+            background: C.semantic.surfaceCard,
+            border: `1px solid ${C.semantic.borderCard}`,
             borderRadius: '24px',
             padding: '36px 28px',
             textAlign: 'center',
-            boxShadow: 'var(--shadow-main)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
             position: 'relative',
             overflow: 'hidden'
           }}>
@@ -56,7 +57,7 @@ export default class GlobalErrorBoundary extends Component {
               transform: 'translateX(-50%)',
               width: '180px',
               height: '180px',
-              background: C.error,
+              background: C.semantic.danger,
               filter: 'blur(90px)',
               opacity: 0.25,
               pointerEvents: 'none'
@@ -67,9 +68,9 @@ export default class GlobalErrorBoundary extends Component {
               width: '72px',
               height: '72px',
               borderRadius: '20px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: `1px solid ${C.error}`,
-              color: C.error,
+              background: C.semantic.dangerBg,
+              border: `1px solid ${C.semantic.danger}`,
+              color: C.semantic.danger,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -78,29 +79,29 @@ export default class GlobalErrorBoundary extends Component {
               <AlertTriangle size={36} />
             </div>
 
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.appText.main }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBlockEnd: '8px', color: C.semantic.textPrimary }}>
               عذراً، حدث خطأ تقني غير متوقع
             </h2>
-            <p style={{ fontSize: '0.875rem', color: C.text.sub, marginBlockEnd: '24px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: '0.875rem', color: C.semantic.textSecondary, marginBlockEnd: '24px', lineHeight: '1.6' }}>
               واجه النظام مشكلة أثناء تحميل هذه الصفحة. حاول تفريغ الذاكرة المؤقتة وإعادة التحديث.
             </p>
 
             {/* Error Log Box */}
             <div style={{
-              background: C.dark.input,
-              border: `1px solid ${C.border.card}`,
+              background: C.semantic.surfaceInput,
+              border: `1px solid ${C.semantic.borderInput}`,
               borderRadius: '12px',
               padding: '14px 16px',
               textAlign: 'start',
               marginBlockEnd: '28px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: C.text.sub, marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '0.75rem', color: C.semantic.textSecondary, marginBlockEnd: '6px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>تفاصيل الخطأ:</span>
-                <span style={{ color: C.error }}>CRASH_REPORT</span>
+                <span style={{ color: C.semantic.danger, fontWeight: '600' }}>CRASH_REPORT</span>
               </div>
               <p style={{
                 fontSize: '0.8rem',
-                color: C.error,
+                color: C.semantic.danger,
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -120,8 +121,8 @@ export default class GlobalErrorBoundary extends Component {
                 width: '100%',
                 padding: '12px 20px',
                 minHeight: '44px',
-                background: `linear-gradient(180deg, ${C.primary.btnStart} 0%, ${C.primary.btnEnd} 100%)`,
-                color: C.text.main,
+                background: C.semantic.actionPrimary,
+                color: C.semantic.textPrimary,
                 border: 'none',
                 borderRadius: '12px',
                 fontWeight: '700',
@@ -131,7 +132,8 @@ export default class GlobalErrorBoundary extends Component {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: `0 4px 14px ${C.primary.glow}`
+                boxShadow: `0 4px 14px ${C.semantic.actionPrimaryGlow}`,
+                transition: 'all 0.2s ease'
               }}
             >
               <RefreshCw size={18} />
