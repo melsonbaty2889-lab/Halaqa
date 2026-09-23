@@ -240,7 +240,14 @@ export const AcademyProvider = ({ children }) => {
       try {
         const { data } = await supabase.auth.getSession();
         if (isSubscribed) {
-          await fetchUserStatus(data?.session?.user || null);
+          // حماية إضافية عند التهيئة الأولية
+          const initUser = data?.session?.user;
+          if (initUser && Array.isArray(initUser.identities) && initUser.identities.length === 0) {
+            await supabase.auth.signOut();
+            if (isMounted.current) setAppState('UNAUTHENTICATED');
+            return;
+          }
+          await fetchUserStatus(initUser || null);
         }
       } catch (err) {
         console.error("🚨 Auth initialization error:", err);
@@ -252,10 +259,31 @@ export const AcademyProvider = ({ children }) => {
 
     let authListener = null;
     if (supabase?.auth && typeof supabase.auth.onAuthStateChange === 'function') {
-      const res = supabase.auth.onAuthStateChange((event, session) => {
+      const res = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'INITIAL_SESSION') return;
+
+        // 🛑 الحماية المركزية: كشف الجلسات الوهمية الناتجة عن محاولة SignUp لبريد مسجل مسبقاً
+        const currentUser = session?.user;
+        const isExistingUserFromSignUp =
+          currentUser &&
+          Array.isArray(currentUser.identities) &&
+          currentUser.identities.length === 0;
+
+        if (isExistingUserFromSignUp) {
+          // تدمير الجلسة فوراً لتفادي تحميل البيانات أو التوجيه لـ Dashboard
+          await supabase.auth.signOut();
+          if (isSubscribed && isMounted.current) {
+            setUser(null);
+            setProfile(null);
+            setAcademy(null);
+            setUserRole(null);
+            setAppState('UNAUTHENTICATED');
+          }
+          return;
+        }
+
         if (isSubscribed) {
-          fetchUserStatus(session?.user || null);
+          fetchUserStatus(currentUser || null);
         }
       });
       authListener = res?.data?.subscription || res?.subscription || null;
