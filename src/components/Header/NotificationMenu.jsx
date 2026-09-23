@@ -43,27 +43,27 @@ export default function NotificationMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-72 sm:w-80 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs backdrop-blur-md bg-[var(--surface-card)] ${
+          className={`absolute top-full mt-2 w-64 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-card)] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ maxWidth: 'calc(100vw - 24px)' }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
-          {/* الرأس: العنوان والأزرار */}
-          <div className="flex justify-between items-center pb-2 mb-2 border-b border-[var(--border-card)]">
+          {/* الرأس: العنوان المصلح والأزرار */}
+          <div className="flex justify-between items-center pb-2 mb-2 border-b border-[var(--border-card)] w-full">
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-[var(--text-main)] text-[12px] sm:text-[13px]">
-                {t('notifications.title', activeRtl ? 'التنبيهات القرآنيّة' : 'Quranic Notifications')}
+              <span className="font-extrabold text-[var(--text-main)] text-[12px] truncate">
+                {t('notifications.title', activeRtl ? 'التنبيهات القرآنيّة' : 'Notifications')}
               </span>
               {unreadCount > 0 && (
-                <span className="bg-[var(--emerald-bg)] text-[var(--emerald-text)] border border-[var(--emerald-border)] text-[9px] px-1.5 py-0.5 rounded-full font-extrabold">
+                <span className="bg-[var(--emerald-bg)] text-[var(--emerald-text)] border border-[var(--emerald-border)] text-[9px] px-1.5 py-0.5 rounded-full font-extrabold shrink-0">
                   {unreadCount} {t('notifications.new', activeRtl ? 'جديد' : 'New')}
                 </span>
               )}
             </div>
 
             {notifications.length > 0 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <button 
                   type="button"
                   onClick={onMarkAllAsRead} 
@@ -85,11 +85,11 @@ export default function NotificationMenu({
           </div>
 
           {/* تصفية التنبيهات */}
-          <div className="flex items-center gap-1 mb-2 bg-[var(--surface-input)] p-0.5 rounded-xl border border-[var(--border-input)]">
+          <div className="flex items-center gap-1 mb-2 bg-[var(--surface-input)] p-0.5 rounded-xl border border-[var(--border-input)] w-full">
             <button
               type="button"
               onClick={() => setNotifFilter('all')}
-              className={`flex-1 py-1 text-[10px] sm:text-[10.5px] font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
                 notifFilter === 'all' 
                   ? 'bg-[var(--surface-card)] text-[var(--text-main)] shadow-sm' 
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
@@ -100,7 +100,7 @@ export default function NotificationMenu({
             <button
               type="button"
               onClick={() => setNotifFilter('unread')}
-              className={`flex-1 py-1 text-[10px] sm:text-[10.5px] font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
                 notifFilter === 'unread' 
                   ? 'bg-[var(--surface-card)] text-[var(--primary)] shadow-sm' 
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
@@ -110,17 +110,17 @@ export default function NotificationMenu({
             </button>
           </div>
 
-          {/* القائمة أو الحالة الفارغة */}
+          {/* المحتوى والقائمة */}
           {loadingNotifs ? (
-            <div className="py-5 text-[var(--text-sub)] text-center font-medium text-[11px]">
+            <div className="py-4 text-[var(--text-sub)] text-center font-medium text-[11px]">
               {t('common.loading', activeRtl ? 'جاري التحميل...' : 'Loading...')}
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="py-5 text-[var(--text-sub)] text-center font-medium text-[11px]">
-              {t('notifications.empty', activeRtl ? 'لا توجد تنبيهات جديدة' : 'No new notifications')}
+            <div className="py-4 text-[var(--text-sub)] text-center font-medium text-[11px]">
+              {t('notifications.empty', activeRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications')}
             </div>
           ) : (
-            <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+            <div className="max-h-60 overflow-y-auto space-y-1.5 custom-scrollbar">
               {filteredNotifications.map((item) => (
                 <div 
                   key={item.id} 
@@ -131,7 +131,7 @@ export default function NotificationMenu({
                       : 'bg-[var(--surface-input)]/50 border-[var(--border-input)] text-[var(--text-sub)] hover:bg-[var(--surface-input)] hover:text-[var(--text-main)]'
                   }`}
                 >
-                  <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                     <span className={`text-[10.5px] leading-snug ${!item.is_read ? 'font-bold text-[var(--text-main)]' : 'font-medium'}`}>
                       {item.title}
                     </span>
