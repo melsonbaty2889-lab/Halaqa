@@ -272,18 +272,18 @@ export default function Header({
         </div>
 
         <div ref={profileRef}>
-          <ProfileMenu
-            showMenu={showProfileMenu}
-            onToggle={() => {
-              setShowProfileMenu(!showProfileMenu);
-              setShowNotifMenu(false);
-            }}
-            academyName={activeAcademy?.name}
-            setActiveTab={setActiveTab}
-            onLogout={onLogout}
-            activeRtl={activeRtl}
-          />
-        </div>
+  <ProfileMenu
+    showMenu={showProfileMenu}
+    onToggle={() => {
+      setShowProfileMenu(!showProfileMenu);
+      setShowNotifMenu(false);
+    }}
+    userName={activeAcademy?.owner_name || activeAcademy?.name}
+    userRole={userRole}
+    onLogout={onLogout}
+    activeRtl={activeRtl}
+  />
+</div>
 
       </div>
     </header>
