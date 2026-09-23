@@ -7,7 +7,7 @@ export default function ProfileMenu({
   showMenu = false,
   onToggle = () => {},
   userName = '',
-  userEmail = '', // تمت إضافة البريد هنا
+  userEmail = '',
   userRole = 'admin',
   onLogout,
   activeRtl = true
