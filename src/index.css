@@ -181,3 +181,19 @@
     border-color: var(--color-border-hover);
   }
 }
+
+@layer utilities {
+  /* كلاس لتفريغ الشاشات والحاويات الرئيسية لضمان ظهور خلفية الـ body */
+  .bg-app-layout {
+    background-color: transparent !important;
+  }
+
+  /* بطاقات شفافة زجاجية مخصصة للشبكة والتوهج */
+  .card-glass {
+    background-color: var(--surface-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-card);
+    border-radius: 1rem;
+  }
+}
