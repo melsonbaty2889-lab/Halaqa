@@ -86,9 +86,9 @@ export const useSignUpForm = (
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
-  // دالة التعامل مع البريد المسجل مسبقاً وتدمير الجلسة فوراً
+  // دالة التعامل مع البريد المسجل مسبقاً وتدمير الجلسة
   const handleExistingUserFlow = useCallback(async (cleanEmail: string) => {
-    // 1. إنهاء الجلسة فوراً لقطع الطريق على AcademyContext والـ Router Guards
+    // إنهاء الجلسة احتياطياً
     await supabase.auth.signOut();
 
     if (isMounted.current) {
@@ -98,7 +98,7 @@ export const useSignUpForm = (
       });
     }
 
-    // 2. التحويل لصفحة تسجيل الدخول فقط وتكليفها بالتعامل مع الـ Role لاحقاً
+    // التحويل لصفحة تسجيل الدخول
     if (onSwitchToLogin) {
       onSwitchToLogin(cleanEmail);
     } else {
@@ -141,7 +141,7 @@ export const useSignUpForm = (
           return false;
         }
 
-        // إذا كان حساماً جديداً وتم إنشاؤه بنجاح
+        // إذا كان حساباً جديداً وتم إنشاؤه بنجاح
         if (isMounted.current) {
           setStatus({
             type: 'success',
@@ -159,7 +159,6 @@ export const useSignUpForm = (
         const errorCode = err?.code || '';
         const rawMessage = (err?.message || err?.error_description || '').toLowerCase();
 
-        // تضييق نطاق الفحص لمنع تعميم أخطاء 400 الأخرى
         const isAlreadyRegistered =
           errorCode === 'user_already_exists' ||
           rawMessage.includes('already registered') ||
