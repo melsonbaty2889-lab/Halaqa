@@ -68,26 +68,19 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden !important;
-    background-color: var(--color-bg-page);
+    background-color: var(--bg-dark) !important;
+    /* دمج خلفية التوهج الزمردي والشبكة المُنقطة مباشرة في قاعدة التطبيق */
+    background-image: 
+      radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
+      radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0) !important;
+    background-size: 100% 100%, 28px 28px !important;
+    background-position: center center, 0 0 !important;
+    background-attachment: fixed !important;
     color: var(--color-text-primary);
     font-family: 'Cairo', sans-serif;
     direction: rtl;
     -webkit-font-smoothing: antialiased;
     position: relative;
-  }
-
-  /* تطبيق خلفية الشاشة الافتتاحية المُنقطة والتوهج الزمردي الدائم لكل الشاشات */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-image: 
-      radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
-      radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0);
-    background-size: 100% 100%, 28px 28px;
-    background-position: center center, 0 0;
-    pointer-events: none;
   }
 
   *, *::before, *::after {
