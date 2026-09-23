@@ -37,7 +37,9 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-60 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs ${activeRtl ? 'right-0' : 'left-0'}`}
+          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs ${
+            activeRtl ? 'left-0' : 'right-0'
+          }`}
           style={{ backgroundColor: 'var(--surface-card)', opacity: 1 }}
         >
           <div className="p-2 border-b border-[var(--border-card)] mb-1">
@@ -57,9 +59,9 @@ export default function ProfileMenu({
                 if (setActiveTab) setActiveTab('settings');
                 onToggle();
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-medium text-right"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-medium text-right ltr:text-left"
             >
-              <Settings size={14} className="text-[var(--primary)]" />
+              <Settings size={14} className="text-[var(--primary)] shrink-0" />
               <span>{t('header.centerSettings', 'إعدادات المركز القرآني')}</span>
             </button>
 
@@ -70,9 +72,9 @@ export default function ProfileMenu({
                   onToggle();
                   onLogout();
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-medium text-right"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-medium text-right ltr:text-left"
               >
-                <LogOut size={14} />
+                <LogOut size={14} className="shrink-0" />
                 <span>{t('header.logout', 'تسجيل الخروج')}</span>
               </button>
             )}
