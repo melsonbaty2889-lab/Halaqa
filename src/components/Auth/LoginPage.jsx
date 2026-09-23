@@ -11,6 +11,8 @@ import { C } from '@/theme/colors';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function LoginPage({ 
+  initialEmail,
+  email: propEmail,
   onNavigate, 
   onSwitchToSignUp, 
   onForgotPassword, 
@@ -38,13 +40,13 @@ export default function LoginPage({
 
   const [localError, setLocalError] = useState('');
 
-  // 🛑 استلام البريد الإلكتروني الممرر تلقائياً من صفحة Sign Up إن وجد
+  // 🛑 استلام البريد الإلكتروني الممرر سواء من الـ State أو من الـ Props مباشرة
   useEffect(() => {
-    const passedEmail = location?.state?.email;
-    if (passedEmail) {
-      setEmail(passedEmail);
+    const targetEmail = location?.state?.email || initialEmail || propEmail;
+    if (targetEmail) {
+      setEmail(targetEmail);
     }
-  }, [location?.state, setEmail]);
+  }, [location?.state, initialEmail, propEmail, setEmail]);
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const appSubtitle = APP_SUBTITLES?.[currentLangCode] || APP_SUBTITLES?.ar || 'الحلقة الذكية';
