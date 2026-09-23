@@ -14,13 +14,16 @@ import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
-// خلفية موحدة تعتمد على كلاسات Tailwind المعرفة
+// خلفية موحدة شفافة تضمن ظهور التوهج الزمردي والشبكة بشكل واضح
 const OriginalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-card to-dark-bg" />
-    <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-brandEmerald-bg/20 rounded-full blur-[140px]" />
-    <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-brandEmerald-bg/15 rounded-full blur-[130px]" />
-    <div className="absolute -bottom-[20%] right-[15%] w-[600px] h-[600px] bg-brandEmerald-bg/10 rounded-full blur-[160px]" />
+    {/* طبقة تدرج شبه شفافة تسمح بمرور التوهج وشبكة النقاط */}
+    <div className="absolute inset-0 bg-gradient-to-br from-dark-bg/80 via-dark-card/60 to-dark-bg/90 backdrop-blur-[2px]" />
+    
+    {/* دوائر التوهج الزمردي الدائرية */}
+    <div className="absolute -top-[10%] -right-[10%] w-[650px] h-[650px] bg-brandEmerald-bg/25 rounded-full blur-[140px] animate-pulse" />
+    <div className="absolute top-[25%] -left-[10%] w-[550px] h-[550px] bg-brandEmerald-bg/20 rounded-full blur-[130px]" />
+    <div className="absolute -bottom-[10%] right-[15%] w-[650px] h-[650px] bg-brandEmerald-bg/15 rounded-full blur-[160px]" />
   </div>
 );
 
