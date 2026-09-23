@@ -34,8 +34,9 @@ export default function Header({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
-  // state لحفظ اسم المستخدم المسجل حالياً
+  // state لحفظ اسم وبريد المستخدم المسجل حالياً
   const [currentUserName, setCurrentUserName] = useState('');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
 
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
@@ -62,7 +63,7 @@ export default function Header({
         await supabase.auth.signOut();
       }
 
-      // تنظيف التخزين المحلي وإعادة التوجيه إذا لزم الأمر
+      // تنظيف التخزين المحلي وإعادة التوجيه
       localStorage.removeItem('sb-access-token');
       localStorage.removeItem('sb-refresh-token');
       
@@ -73,7 +74,7 @@ export default function Header({
     }
   };
 
-  // جلب اسم الشخص المسجل حالياً من Supabase Auth
+  // جلب معلومات الشخص المسجل حالياً من Supabase Auth
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
@@ -85,6 +86,9 @@ export default function Header({
                            user.email?.split('@')[0];
           if (fullName) {
             setCurrentUserName(fullName);
+          }
+          if (user.email) {
+            setCurrentUserEmail(user.email);
           }
         }
       } catch (err) {
@@ -326,6 +330,7 @@ export default function Header({
               setShowNotifMenu(false);
             }}
             userName={currentUserName || activeAcademy?.owner_name || activeAcademy?.name}
+            userEmail={currentUserEmail}
             userRole={userRole}
             onLogout={handleLogout}
             activeRtl={activeRtl}
