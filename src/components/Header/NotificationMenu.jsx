@@ -27,12 +27,11 @@ export default function NotificationMenu({
 
   return (
     <div className="relative">
-      {/* زر فتح قائمة التنبيهات */}
       <button 
         type="button"
         onClick={onToggle}
         className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all relative flex items-center justify-center active:scale-95 shadow-sm"
-        title={t('notifications.title', 'التنبيهات')}
+        title={t('notifications.title', 'مركز التنبيهات')}
       >
         <Bell size={16} className="text-[var(--primary)]" />
         {unreadCount > 0 && (
@@ -42,17 +41,15 @@ export default function NotificationMenu({
         )}
       </button>
 
-      {/* القائمة المنسدلة للتنبيهات */}
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-80 sm:w-88 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-4 text-xs ${activeRtl ? 'left-0' : 'right-0'}`}
+          className={`absolute top-full mt-2 w-80 sm:w-88 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-4 text-xs ${activeRtl ? 'right-0' : 'left-0'}`}
           style={{ backgroundColor: 'var(--surface-card)', opacity: 1 }}
         >
-          {/* هيدر القائمة */}
           <div className="flex justify-between items-center pb-3 mb-2 border-b border-[var(--border-card)]">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[var(--text-main)] text-sm">
-                {t('notifications.title', 'التنبيهات')}
+                {t('notifications.title', 'التنبيهات القرآنيّة')}
               </span>
               {unreadCount > 0 && (
                 <span className="bg-[var(--emerald-bg)] text-[var(--emerald-text)] border border-[var(--emerald-border)] text-[10px] px-2 py-0.5 rounded-full font-extrabold">
@@ -83,7 +80,6 @@ export default function NotificationMenu({
             )}
           </div>
 
-          {/* تبويب التصفية (الكل / غير مقروء) */}
           <div className="flex items-center gap-2 mb-3 bg-[var(--surface-input)] p-1 rounded-xl border border-[var(--border-input)]">
             <button
               type="button"
@@ -109,14 +105,13 @@ export default function NotificationMenu({
             </button>
           </div>
 
-          {/* عناصر الإشعارات */}
           {loadingNotifs ? (
             <div className="py-8 text-[var(--text-sub)] text-center font-medium">
               {t('common.loading', 'جاري التحميل...')}
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="py-8 text-[var(--text-sub)] text-center font-medium">
-              {t('notifications.empty', 'لا توجد إشعارات جديدة')}
+              {t('notifications.empty', 'لا توجد تنبيهات جديدة')}
             </div>
           ) : (
             <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
