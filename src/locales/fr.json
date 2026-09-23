@@ -756,7 +756,11 @@
   "halaqasManager": "Gestionnaire des halaqas coraniques et académiques",
   "halaqaSub": "Gérer les sessions, répartir les enseignants et suivre la progression sur le Cloud",
   "header": {
-    "admin": "Admin"
+    "academyOwner": "صاحب الأكاديمية",
+    "activeSession": "جلسة نشطة",
+    "admin": "Admin",
+    "logout": "تسجيل الخروج",
+    "settings": "إعدادات المنظومة"
   },
   "hub": {
     "communications": "Centre de communication et notifications",

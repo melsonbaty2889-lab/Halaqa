@@ -756,7 +756,11 @@
   "halaqasManager": "Quranic & Academic Halaqas Management Platform",
   "halaqaSub": "Manage learning sessions, assign teachers, and track Quranic progress via Cloud",
   "header": {
-    "admin": "Admin"
+    "academyOwner": "صاحب الأكاديمية",
+    "activeSession": "جلسة نشطة",
+    "admin": "Admin",
+    "logout": "تسجيل الخروج",
+    "settings": "إعدادات المنظومة"
   },
   "hub": {
     "communications": "Communication & Notifications Center",

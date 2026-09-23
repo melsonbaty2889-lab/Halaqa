@@ -756,7 +756,11 @@
   "halaqasManager": "Platform Manajemen Halaqah Quran & Akademi",
   "halaqaSub": "Kelola sesi pembelajaran, alokasi pengajar, dan pantau hafalan via Cloud",
   "header": {
-    "admin": "Admin"
+    "academyOwner": "صاحب الأكاديمية",
+    "activeSession": "جلسة نشطة",
+    "admin": "Admin",
+    "logout": "تسجيل الخروج",
+    "settings": "إعدادات المنظومة"
   },
   "hub": {
     "communications": "Pusat Komunikasi & Notifikasi",

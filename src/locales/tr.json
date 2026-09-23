@@ -756,7 +756,11 @@
   "halaqasManager": "Kur'an ve Akademi Halkaları Yönetim Platformu",
   "halaqaSub": "Ders oturumlarını yönetin, öğretmenleri görevlendirin ve Kur'an takibini bulutta yapın",
   "header": {
-    "admin": "Yönetici"
+    "academyOwner": "صاحب الأكاديمية",
+    "activeSession": "جلسة نشطة",
+    "admin": "Yönetici",
+    "logout": "تسجيل الخروج",
+    "settings": "إعدادات المنظومة"
   },
   "hub": {
     "communications": "İletişim ve Bildirim Merkezi",
