@@ -46,7 +46,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
     status,
     handleSignUp,
     handleGoogleSignUp,
-  } = useSignUpForm(onSignUpSuccess);
+  } = useSignUpForm(onSignUpSuccess, onSwitchToLogin);
 
   const { passwordCriteria, passwordStrength } = useSignUpValidation(password);
 
@@ -394,7 +394,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             <span>{t('auth.alreadyHaveAccount', 'لديك حساب بالفعل؟')} </span>
             <button
               type="button"
-              onClick={onSwitchToLogin}
+              onClick={() => onSwitchToLogin(email)}
               className="font-bold hover:underline bg-transparent border-none p-0 cursor-pointer text-semantic-actionPrimary"
             >
               {t('auth.loginNow', 'تسجيل الدخول')}
