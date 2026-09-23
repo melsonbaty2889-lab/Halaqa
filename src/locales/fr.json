@@ -956,7 +956,8 @@
     "teacher": "معلم الحلقة",
     "teacher_desc": "Pour gérer les halaqas, enregistrer le suivi et évaluer le niveau",
     "teacher_title": "Enseignant / Récitateur",
-    "update_error": "Erreur lors de l'enregistrement du rôle. Veuillez réessayer."
+    "update_error": "Erreur lors de l'enregistrement du rôle. Veuillez réessayer.",
+    "user": "مستخدم"
   },
   "save_fail": "Échec de la sauvegarde",
   "save_success": "Enregistré avec succès",

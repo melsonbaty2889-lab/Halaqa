@@ -956,7 +956,8 @@
     "teacher": "معلم الحلقة",
     "teacher_desc": "Untuk mengelola halaqah, mencatat kemajuan, dan menilai penguasaan",
     "teacher_title": "Pengajar / Ustadz",
-    "update_error": "Terjadi kesalahan saat menyimpan peran. Silakan coba lagi."
+    "update_error": "Terjadi kesalahan saat menyimpan peran. Silakan coba lagi.",
+    "user": "مستخدم"
   },
   "save_fail": "Gagal menyimpan data",
   "save_success": "Berhasil disimpan",

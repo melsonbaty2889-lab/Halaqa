@@ -956,7 +956,8 @@
     "teacher": "معلم الحلقة",
     "teacher_desc": "To manage halaqas, record progress, and evaluate mastery",
     "teacher_title": "Teacher / Memorization Tutor",
-    "update_error": "An error occurred while saving role. Please try again."
+    "update_error": "An error occurred while saving role. Please try again.",
+    "user": "مستخدم"
   },
   "save_fail": "Failed to save data",
   "save_success": "Saved successfully",

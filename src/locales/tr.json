@@ -956,7 +956,8 @@
     "teacher": "معلم الحلقة",
     "teacher_desc": "Halkaları yönetmek, takipleri girmek ve seviyeleri değerlendirmek için",
     "teacher_title": "Öğretmen / Eğitmen",
-    "update_error": "Rol kaydedilirken bir hata oluştu. Lütfen tekrar deneyin."
+    "update_error": "Rol kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
+    "user": "مستخدم"
   },
   "save_fail": "Kaydetme başarısız",
   "save_success": "Başarıyla kaydedildi",
