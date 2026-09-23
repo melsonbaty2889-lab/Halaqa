@@ -93,6 +93,21 @@ export const useSignUpForm = (
     return true;
   }, [fullName, email, password, confirmPassword, agreeTerms]);
 
+  const redirectExistingUserToLogin = useCallback(async (cleanEmail: string) => {
+    await supabase.auth.signOut();
+    if (isMounted.current) {
+      setStatus({
+        type: 'error',
+        msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
+      });
+    }
+    setTimeout(() => {
+      if (isMounted.current && onSwitchToLogin) {
+        onSwitchToLogin(cleanEmail);
+      }
+    }, 1500);
+  }, [onSwitchToLogin, t]);
+
   const handleSignUp = useCallback(
     async (e?: FormEvent) => {
       if (e) e.preventDefault();
@@ -122,23 +137,13 @@ export const useSignUpForm = (
 
         if (response.error) throw response.error;
 
-        // في حال كان البريد مسجلاً سابقاً بدون تفعيل أو بدون إرجاع خطأ مباشر من Supabase
+        // حالة البريد المسجل سابقاً دون إرجاع خطأ صريح من Supabase
         if (
           response.data?.user &&
           response.data.user.identities &&
           response.data.user.identities.length === 0
         ) {
-          if (isMounted.current) {
-            setStatus({
-              type: 'error',
-              msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
-            });
-          }
-          setTimeout(() => {
-            if (isMounted.current && onSwitchToLogin) {
-              onSwitchToLogin(cleanEmail);
-            }
-          }, 1500);
+          await redirectExistingUserToLogin(cleanEmail);
           return false;
         }
 
@@ -171,17 +176,7 @@ export const useSignUpForm = (
           err?.status === 400;
 
         if (isAlreadyRegistered) {
-          if (isMounted.current) {
-            setStatus({
-              type: 'error',
-              msg: t('auth.emailAlreadyRegistered', 'هذا البريد الإلكتروني مسجل بالفعل. جاري تحويلك لتسجيل الدخول...'),
-            });
-          }
-          setTimeout(() => {
-            if (isMounted.current && onSwitchToLogin) {
-              onSwitchToLogin(cleanEmail);
-            }
-          }, 1500);
+          await redirectExistingUserToLogin(cleanEmail);
           return false;
         }
 
@@ -198,7 +193,7 @@ export const useSignUpForm = (
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateFormDirectly, onSignUpSuccess, onSwitchToLogin, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, redirectExistingUserToLogin, t]
   );
 
   const handleGoogleSignUp = useCallback(async () => {
