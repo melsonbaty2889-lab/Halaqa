@@ -37,7 +37,7 @@ export default function EditProfileModal({
       });
       setErrors({});
     }
-  }, [isOpen]);
+  }, [isOpen, currentUser]);
 
   if (!isOpen) return null;
 
@@ -52,8 +52,9 @@ export default function EditProfileModal({
   const validate = () => {
     const newErrors = {};
     const nameTrimmed = formData.name.trim();
+    // تنظيف البريد ومقارنته بدون التأثر بحالة الأحرف أو المسافات
     const emailTrimmed = formData.email.trim().toLowerCase();
-    const currentEmailTrimmed = (currentUser.email || '').trim().toLowerCase();
+    const currentEmailTrimmed = (currentUser?.email || '').trim().toLowerCase();
 
     if (!nameTrimmed) {
       newErrors.name = t('profile.errors.nameRequired', 'الاسم مطلوب');
@@ -65,7 +66,7 @@ export default function EditProfileModal({
     const isEmailChanged = emailTrimmed !== currentEmailTrimmed;
     const isPasswordChanging = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
 
-    // يتطلب كلمة المرور الحالية فقط إذا تغير البريد الإلكتروني فعلياً أو تم إدخال كلمة مرور جديدة
+    // إظهار الخطأ فقط إذا قام المستخدم بتغيير البريد أو كلمة المرور فعلياً دون إدخال كلمة المرور الحالية
     if ((isEmailChanged || isPasswordChanging) && !formData.currentPassword) {
       newErrors.currentPassword = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
     }
@@ -109,9 +110,11 @@ export default function EditProfileModal({
       onClose={onClose}
       title={t('profile.title', 'تعديل الملف الشخصي')}
     >
-      <div className="flex flex-col max-h-[70vh] sm:max-h-[75vh]">
-        {/* جسم المودال القابل للتمرير بمرونة مع حواشي حماية */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-2 py-1 custom-scrollbar">
+      {/* حاوية المودال: منع overflow من الأب لمنع شريط التمرير المزدوج */}
+      <div className="flex flex-col h-full max-h-[75vh] overflow-hidden">
+        
+        {/* النموذج: شريط تمرير واحد فقط سينشأ هنا عند الحاجة */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-2 py-2">
           {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
@@ -186,8 +189,8 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي الأزرار ثابت وواضح لا ينقطع */}
-        <div className="pt-3 mt-2 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0">
+        {/* الشريط السفلي: ثابت تماماً ومفصول عن السكرول */}
+        <div className="pt-3 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0 px-2 pb-1">
           <Btn
             type="button"
             variant="secondary"
