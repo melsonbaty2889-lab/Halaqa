@@ -762,7 +762,9 @@
     "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
     "emailLabel": "البريد الإلكتروني",
     "errors": {
+      "currentPasswordRequired": "كلمة المرور الحالية مطلوبة لتأكيد التغييرات",
       "emailRequired": "البريد الإلكتروني مطلوب",
+      "invalidCurrentPassword": "كلمة المرور الحالية غير صحيحة",
       "nameRequired": "الاسم مطلوب",
       "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
       "passwordMismatch": "كلمات المرور غير متطابقة",
