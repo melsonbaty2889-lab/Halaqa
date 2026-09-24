@@ -169,7 +169,7 @@ export const Modal = ({
           maxHeight: "85vh", 
           display: "flex",
           flexDirection: "column",
-          overflowY: "auto", 
+          overflow: "hidden", 
           overscrollBehavior: "contain", 
           touchAction: "pan-y", 
           boxSizing: "border-box", 
