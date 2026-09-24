@@ -101,37 +101,41 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-    // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+      // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
   const handleSaveProfile = async ({ name, email, newPassword }) => {
     if (!supabase?.auth) return;
 
-    // 1. تحديث الاسم المخصص في الميتاداتا
-    const updatePayload = {
-      data: { full_name: name, name: name }
-    };
+    // 1. تجهيز بيانات التحديث
+    const updatePayload = {};
 
-    // 2. تحديث البريد الإلكتروني فقط في حال تم تغييره عن البريد الحالي
-    if (email && email !== currentUserEmail) {
-      updatePayload.email = email;
+    // تحديث الاسم
+    if (name) {
+      updatePayload.data = { full_name: name, name: name };
     }
 
-    // 3. تحديث كلمة المرور إذا تم إدخالها
+    // تحديث كلمة المرور فقط إذا تم إدخالها
     if (newPassword && newPassword.trim() !== '') {
       updatePayload.password = newPassword.trim();
+    }
+
+    // تحديث البريد فقط إذا تغير فعلياً
+    if (email && email !== currentUserEmail) {
+      updatePayload.email = email;
     }
 
     const { data, error } = await supabase.auth.updateUser(updatePayload);
 
     if (error) {
-      alert(t('profile.errors.updateFailed', `حدث خطأ أثناء التحديث: ${error.message}`));
+      // إظهار نص الخطأ الحقيقي القادم من Supabase بالكامل
+      alert(`فشل التحديث: ${error.message}`);
       throw error;
     }
 
-    // 4. تحديث الحالة المحلية بعد النجاح
+    // 2. تحديث الحالة المحلية بعد النجاح
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
-    
-    alert(t('profile.successUpdate', 'تم تحديث البيانات وكلمة المرور بنجاح'));
+
+    alert('تم تحديث البيانات وكلمة المرور بنجاح!');
   };
 
   useEffect(() => {
