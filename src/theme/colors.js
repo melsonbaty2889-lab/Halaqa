@@ -1,7 +1,3 @@
-/**
- * Smart Halaqa Design System - Dynamic Theme Provider
- */
-
 export const getCssVar = (varName) => {
   if (typeof window !== 'undefined') {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -14,6 +10,7 @@ export const colors = {
   dark: {
     bg: 'var(--bg-dark)',
     card: 'var(--surface-card)',
+    dropdown: 'var(--surface-dropdown)',
     input: 'var(--surface-input)',
     google: 'var(--surface-google)',
   },
@@ -48,6 +45,7 @@ export const colors = {
   semantic: {
     bgPage: 'var(--color-bg-page)',
     surfaceCard: 'var(--color-surface-card)',
+    surfaceDropdown: 'var(--color-surface-dropdown)',
     surfaceInput: 'var(--color-surface-input)',
     surfaceSecondary: 'var(--color-surface-secondary)',
     actionPrimary: 'var(--color-action-primary)',
