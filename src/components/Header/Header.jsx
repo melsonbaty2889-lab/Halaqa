@@ -105,20 +105,16 @@ export default function Header({
   const handleSaveProfile = async ({ name, email, newPassword }) => {
     if (!supabase?.auth) return;
 
-    // 1. تجهيز بيانات التحديث
     const updatePayload = {};
 
-    // تحديث الاسم
     if (name) {
       updatePayload.data = { full_name: name, name: name };
     }
 
-    // تحديث كلمة المرور فقط إذا تم إدخالها
     if (newPassword && newPassword.trim() !== '') {
       updatePayload.password = newPassword.trim();
     }
 
-    // تحديث البريد فقط إذا تغير فعلياً
     if (email && email !== currentUserEmail) {
       updatePayload.email = email;
     }
@@ -126,16 +122,14 @@ export default function Header({
     const { data, error } = await supabase.auth.updateUser(updatePayload);
 
     if (error) {
-      // إظهار نص الخطأ الحقيقي القادم من Supabase بالكامل
-      alert(`فشل التحديث: ${error.message}`);
+      showToastMessage(`فشل التحديث: ${error.message}`, 'error');
       throw error;
     }
 
-    // 2. تحديث الحالة المحلية بعد النجاح
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
 
-    alert('تم تحديث البيانات وكلمة المرور بنجاح!');
+    showToastMessage('تم تحديث البيانات وكلمة المرور بنجاح', 'success');
   };
 
   useEffect(() => {
