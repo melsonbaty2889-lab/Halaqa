@@ -26,7 +26,7 @@ export default function EditProfileModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && isOpen) {
       setFormData({
         name: currentUser.name || '',
         email: currentUser.email || '',
@@ -70,7 +70,7 @@ export default function EditProfileModal({
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
@@ -78,11 +78,11 @@ export default function EditProfileModal({
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim(),
-        ...(formData.newPassword ? { newPassword: formData.newPassword } : {})
+        newPassword: formData.newPassword
       });
       onClose();
     } catch (err) {
-      console.error(err);
+      console.error('Save profile error:', err);
     } finally {
       setLoading(false);
     }
@@ -166,8 +166,9 @@ export default function EditProfileModal({
             {t('common.cancel', 'إلغاء')}
           </Btn>
           <Btn
-            type="submit"
+            type="button"
             variant="primary"
+            onClick={handleSubmit}
             loading={loading}
           >
             {t('common.save', 'حفظ التغييرات')}
