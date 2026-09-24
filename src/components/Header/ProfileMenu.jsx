@@ -82,7 +82,7 @@ export default function ProfileMenu({
       {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'right-0' : 'left-0'
+            activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
