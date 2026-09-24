@@ -11,6 +11,7 @@ import { getMenuSections } from '@/constants/sidebarMenu';
 
 import NotificationMenu from './NotificationMenu';
 import ProfileMenu from './ProfileMenu';
+import EditProfileModal from './EditProfileModal';
 
 export default function Header({ 
   activeTab, 
@@ -31,6 +32,7 @@ export default function Header({
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
@@ -98,6 +100,30 @@ export default function Header({
 
     fetchCurrentUser();
   }, []);
+
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  const handleSaveProfile = async ({ name, email, newPassword }) => {
+    if (!supabase?.auth) return;
+
+    // 1. تحديث الاسم والبريد في الميتاداتا والبريد الرئيسي
+    const updateData = {
+      email: email,
+      data: { full_name: name, name: name }
+    };
+
+    if (newPassword) {
+      updateData.password = newPassword;
+    }
+
+    const { data, error } = await supabase.auth.updateUser(updateData);
+    if (error) {
+      throw error;
+    }
+
+    // 2. تحديث الـ state المحلي مباشرة
+    if (name) setCurrentUserName(name);
+    if (email) setCurrentUserEmail(email);
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -333,11 +359,24 @@ export default function Header({
             userEmail={currentUserEmail}
             userRole={userRole}
             onLogout={handleLogout}
+            onEditProfile={() => setShowEditProfileModal(true)}
             activeRtl={activeRtl}
           />
         </div>
 
       </div>
+
+      {/* مودال تعديل الملف الشخصي */}
+      <EditProfileModal
+        isOpen={showEditProfileModal}
+        onClose={() => setShowEditProfileModal(false)}
+        currentUser={{
+          name: currentUserName || activeAcademy?.owner_name || activeAcademy?.name || '',
+          email: currentUserEmail || ''
+        }}
+        onSave={handleSaveProfile}
+        activeRtl={activeRtl}
+      />
     </header>
   );
 }
