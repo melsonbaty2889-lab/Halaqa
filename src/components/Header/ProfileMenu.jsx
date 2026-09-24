@@ -77,7 +77,7 @@ export default function ProfileMenu({
             activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
-            maxWidth: 'calc(100vw - 24px)'
+            maxWidth: 'calc(100vw - 16px)'
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
@@ -90,9 +90,7 @@ export default function ProfileMenu({
             {userEmail && (
               <div 
                 dir="ltr" 
-                className={`text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium overflow-hidden ${
-                  activeRtl ? 'justify-end' : 'justify-start'
-                }`}
+                className="text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium overflow-hidden justify-start"
               >
                 <Mail size={12} className="shrink-0 text-[var(--emerald-text)]" />
                 <span className="truncate">{userEmail}</span>
