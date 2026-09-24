@@ -765,12 +765,14 @@
       "emailRequired": "البريد الإلكتروني مطلوب",
       "nameRequired": "الاسم مطلوب",
       "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
-      "passwordMismatch": "كلمات المرور غير متطابقة"
+      "passwordMismatch": "كلمات المرور غير متطابقة",
+      "updateFailed": "updateFailed"
     },
     "nameLabel": "الاسم الكامل",
     "namePlaceholder": "أدخل اسمك",
     "newPasswordLabel": "كلمة المرور الجديدة",
     "subtitle": "تحديث بيانات الحساب وكلمة المرور",
+    "successUpdate": "تم تحديث البيانات وكلمة المرور بنجاح",
     "title": "تعديل الملف الشخصي"
   },
   "pwa": {
