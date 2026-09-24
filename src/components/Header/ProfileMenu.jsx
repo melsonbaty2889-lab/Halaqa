@@ -58,11 +58,11 @@ export default function ProfileMenu({
     ? userName.trim()
     : t('header.defaultUser', 'الحساب الشخصي');
 
-  const handleOpenEditProfile = (e) => {
+  const handleEditProfileClick = (e) => {
     e.stopPropagation();
-    onToggle(); // إغلاق القائمة المنبثقة أولاً
+    onToggle();
     if (typeof onEditProfile === 'function') {
-      onEditProfile(); // فتح المودال
+      onEditProfile();
     }
   };
 
@@ -82,7 +82,7 @@ export default function ProfileMenu({
       {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'left-0' : 'right-0'
+            activeRtl ? 'right-0' : 'left-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
@@ -115,7 +115,7 @@ export default function ProfileMenu({
           <div className="space-y-1">
             <button
               type="button"
-              onClick={handleOpenEditProfile}
+              onClick={handleEditProfileClick}
               className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-semibold cursor-pointer text-[11.5px] text-start"
             >
               <UserCog size={13} className="shrink-0 text-[var(--primary)]" />
