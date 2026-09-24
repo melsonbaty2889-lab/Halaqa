@@ -7,12 +7,19 @@ const getTextTitle = () => 'var(--color-text-primary)';
 const getTextSub = () => 'var(--color-text-secondary)';
 const getCardBg = () => 'var(--color-surface-card)';
 
-// عداد عالمي لتتبع عدد النوافذ المفتوحة لمنع استعادة تمرير الـ body عند وجود مودال آخر مفتوح
 let activeModalsCount = 0;
 let originalBodyOverflow = '';
 let originalBodyTouchAction = '';
 
-export const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
+export const Modal = ({ 
+  open, 
+  onClose, 
+  title, 
+  children, 
+  className = "", 
+  style = {},
+  closeOnBackdropClick = true // خيار التحكم بالإغلاق عند النقر بالخارج
+}) => {
   const titleId = useId();
   const modalRef = useRef(null);
   const previousActiveElementRef = useRef(null);
@@ -20,12 +27,10 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
   useEffect(() => {
     if (!open) return;
 
-    // حفظ العنصر الذي كان يمتلك التركيز قبل فتح المودال لإعادة التركيز عليه لاحقاً
     if (typeof document !== 'undefined' && document.activeElement) {
       previousActiveElementRef.current = document.activeElement;
     }
 
-    // إدارة قفل التمرير مع دعم Nested Modals
     if (activeModalsCount === 0) {
       originalBodyOverflow = document.body.style.overflow;
       originalBodyTouchAction = document.body.style.touchAction;
@@ -34,14 +39,12 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
     }
     activeModalsCount++;
 
-    // التركيز الفوري على المودال عند الفتح لإتاحة الوصول بقارئات الشاشة
     const focusTimeout = setTimeout(() => {
       if (modalRef.current) {
         modalRef.current.focus();
       }
     }, 50);
 
-    // التعامل مع زر Escape وحصر التركيز (Focus Trap)
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
@@ -80,13 +83,11 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
       window.removeEventListener('keydown', handleKeyDown);
 
       activeModalsCount--;
-      // إعادة استعادة التمرير فقط عندما تُغلق جميع النوافذ المفتوحة
       if (activeModalsCount === 0) {
         document.body.style.overflow = originalBodyOverflow;
         document.body.style.touchAction = originalBodyTouchAction;
       }
 
-      // إعادة التركيز للعنصر السابق بعد إغلاق النافذة
       if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
         previousActiveElementRef.current.focus();
       }
@@ -96,7 +97,7 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
   if (!open || typeof window === 'undefined') return null;
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (closeOnBackdropClick && e.target === e.currentTarget) {
       onClose?.();
     }
   };
