@@ -860,6 +860,7 @@
   "profile": {
     "changePasswordSection": "تغيير كلمة المرور (اختياري)",
     "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
+    "currentPasswordLabel": "كلمة المرور الحالية (لتأكيد التعديل)",
     "emailLabel": "البريد الإلكتروني",
     "errors": {
       "currentPasswordRequired": "كلمة المرور الحالية مطلوبة لتأكيد التغييرات",
