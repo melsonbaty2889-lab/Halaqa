@@ -79,15 +79,14 @@ export default function ProfileMenu({
         </div>
       </button>
 
-      {showMenu && (
+            {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'right-0 ltr:left-0' : 'left-0 rtl:right-0'
+            activeRtl ? 'right-0' : 'left-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
           }}
-          dir={activeRtl ? 'rtl' : 'ltr'}
         >
           {/* تفاصيل الحساب */}
           <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
