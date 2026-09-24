@@ -52,7 +52,6 @@ export default function EditProfileModal({
   const validate = () => {
     const newErrors = {};
     const nameTrimmed = formData.name.trim();
-    // تنظيف البريد ومقارنته بدون التأثر بحالة الأحرف أو المسافات
     const emailTrimmed = formData.email.trim().toLowerCase();
     const currentEmailTrimmed = (currentUser?.email || '').trim().toLowerCase();
 
@@ -66,7 +65,6 @@ export default function EditProfileModal({
     const isEmailChanged = emailTrimmed !== currentEmailTrimmed;
     const isPasswordChanging = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
 
-    // إظهار الخطأ فقط إذا قام المستخدم بتغيير البريد أو كلمة المرور فعلياً دون إدخال كلمة المرور الحالية
     if ((isEmailChanged || isPasswordChanging) && !formData.currentPassword) {
       newErrors.currentPassword = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
     }
@@ -109,11 +107,9 @@ export default function EditProfileModal({
       open={isOpen}
       onClose={onClose}
       title={t('profile.title', 'تعديل الملف الشخصي')}
+      closeOnBackdropClick={false}
     >
-      {/* حاوية المودال: منع overflow من الأب لمنع شريط التمرير المزدوج */}
       <div className="flex flex-col h-full max-h-[75vh] overflow-hidden">
-        
-        {/* النموذج: شريط تمرير واحد فقط سينشأ هنا عند الحاجة */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-2 py-2">
           {/* الاسم الكامل */}
           <Input
@@ -189,7 +185,7 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي: ثابت تماماً ومفصول عن السكرول */}
+        {/* الشريط السفلي الثابت */}
         <div className="pt-3 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0 px-2 pb-1">
           <Btn
             type="button"
