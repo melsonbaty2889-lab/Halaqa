@@ -74,14 +74,14 @@ export default function ProfileMenu({
       {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'left-0' : 'right-0'
+            activeRtl ? 'right-0' : 'left-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
-          {/* معلومات المستخدم والدور والبريد */}
+          {/* معلومات المستخدم */}
           <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
             <div className="font-extrabold text-[var(--text-main)] text-[12px] truncate w-full text-start">
               {displayName}
@@ -105,7 +105,6 @@ export default function ProfileMenu({
 
           {/* الخيارات والتصرفات */}
           <div className="space-y-1">
-            {/* زر تعديل الملف الشخصي */}
             <button
               type="button"
               onClick={() => {
@@ -118,7 +117,6 @@ export default function ProfileMenu({
               <span>{t('header.editProfile', 'الملف الشخصي')}</span>
             </button>
 
-            {/* زر تسجيل الخروج */}
             <button
               type="button"
               onClick={() => {
