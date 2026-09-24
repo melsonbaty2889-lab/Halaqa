@@ -89,93 +89,95 @@ export default function EditProfileModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('profile.title', 'تعديل الملف الشخصي')}
-      icon={<User className="text-[var(--primary)]" size={18} />}
-      activeRtl={activeRtl}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* الاسم الكامل */}
-        <Input
-          label={t('profile.nameLabel', 'الاسم الكامل')}
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          error={errors.name}
-          icon={<User size={16} />}
-          placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
-          activeRtl={activeRtl}
-        />
+    <div className="relative z-[100]">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={t('profile.title', 'تعديل الملف الشخصي')}
+        icon={<User className="text-[var(--primary)]" size={18} />}
+        activeRtl={activeRtl}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* الاسم الكامل */}
+          <Input
+            label={t('profile.nameLabel', 'الاسم الكامل')}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+            icon={<User size={16} />}
+            placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
+            activeRtl={activeRtl}
+          />
 
-        {/* البريد الإلكتروني */}
-        <Input
-          label={t('profile.emailLabel', 'البريد الإلكتروني')}
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          icon={<Mail size={16} />}
-          placeholder="example@mail.com"
-          dir="ltr"
-          activeRtl={activeRtl}
-        />
+          {/* البريد الإلكتروني */}
+          <Input
+            label={t('profile.emailLabel', 'البريد الإلكتروني')}
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+            icon={<Mail size={16} />}
+            placeholder="example@mail.com"
+            dir="ltr"
+            activeRtl={activeRtl}
+          />
 
-        {/* فاصل تغيير كلمة المرور */}
-        <div className="pt-2 border-t border-[var(--border-card)]">
-          <span className="text-[11px] font-bold text-[var(--primary)] flex items-center gap-1.5 mb-2">
-            <KeyRound size={13} />
-            {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
-          </span>
-        </div>
+          {/* فاصل تغيير كلمة المرور */}
+          <div className="pt-2 border-t border-[var(--border-card)]">
+            <span className="text-[11px] font-bold text-[var(--primary)] flex items-center gap-1.5 mb-2">
+              <KeyRound size={13} />
+              {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
+            </span>
+          </div>
 
-        {/* كلمة المرور الجديدة */}
-        <Input
-          label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
-          type="password"
-          name="newPassword"
-          value={formData.newPassword}
-          onChange={handleChange}
-          error={errors.newPassword}
-          icon={<Lock size={16} />}
-          placeholder="••••••••"
-          activeRtl={activeRtl}
-        />
+          {/* كلمة المرور الجديدة */}
+          <Input
+            label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
+            type="password"
+            name="newPassword"
+            value={formData.newPassword}
+            onChange={handleChange}
+            error={errors.newPassword}
+            icon={<Lock size={16} />}
+            placeholder="••••••••"
+            activeRtl={activeRtl}
+          />
 
-        {/* تأكيد كلمة المرور */}
-        <Input
-          label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
-          type="password"
-          name="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          error={errors.confirmPassword}
-          icon={<Lock size={16} />}
-          placeholder="••••••••"
-          activeRtl={activeRtl}
-        />
+          {/* تأكيد كلمة المرور */}
+          <Input
+            label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
+            icon={<Lock size={16} />}
+            placeholder="••••••••"
+            activeRtl={activeRtl}
+          />
 
-        {/* أزرار الإجراءات */}
-        <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)]">
-          <Btn
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={loading}
-          >
-            {t('common.cancel', 'إلغاء')}
-          </Btn>
-          <Btn
-            type="submit"
-            variant="primary"
-            loading={loading}
-          >
-            {t('common.save', 'حفظ التغييرات')}
-          </Btn>
-        </div>
-      </form>
-    </Modal>
+          {/* أزرار الإجراءات */}
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)]">
+            <Btn
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              {t('common.cancel', 'إلغاء')}
+            </Btn>
+            <Btn
+              type="submit"
+              variant="primary"
+              loading={loading}
+            >
+              {t('common.save', 'حفظ التغييرات')}
+            </Btn>
+          </div>
+        </form>
+      </Modal>
+    </div>
   );
 }
