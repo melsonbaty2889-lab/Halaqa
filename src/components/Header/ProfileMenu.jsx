@@ -58,6 +58,14 @@ export default function ProfileMenu({
     ? userName.trim()
     : t('header.defaultUser', 'الحساب الشخصي');
 
+  const handleOpenEditProfile = (e) => {
+    e.stopPropagation();
+    onToggle(); // إغلاق القائمة المنبثقة أولاً
+    if (typeof onEditProfile === 'function') {
+      onEditProfile(); // فتح المودال
+    }
+  };
+
   return (
     <div className="relative inline-block">
       <button
@@ -74,14 +82,14 @@ export default function ProfileMenu({
       {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'right-0' : 'left-0'
+            activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
-          {/* معلومات المستخدم */}
+          {/* تفاصيل الحساب */}
           <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
             <div className="font-extrabold text-[var(--text-main)] text-[12px] truncate w-full text-start">
               {displayName}
@@ -103,14 +111,11 @@ export default function ProfileMenu({
             </div>
           </div>
 
-          {/* الخيارات والتصرفات */}
+          {/* خيارات القائمة */}
           <div className="space-y-1">
             <button
               type="button"
-              onClick={() => {
-                onToggle();
-                if (typeof onEditProfile === 'function') onEditProfile();
-              }}
+              onClick={handleOpenEditProfile}
               className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-semibold cursor-pointer text-[11.5px] text-start"
             >
               <UserCog size={13} className="shrink-0 text-[var(--primary)]" />
