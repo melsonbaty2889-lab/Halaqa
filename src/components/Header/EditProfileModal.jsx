@@ -1,10 +1,10 @@
 // src/components/Header/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
-import Btn from '@/components//UI/Btn';
+import Btn from '@/components/UI/Btn';
 
 export default function EditProfileModal({
   isOpen = false,
@@ -18,6 +18,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -30,6 +31,7 @@ export default function EditProfileModal({
       setFormData({
         name: currentUser.name || '',
         email: currentUser.email || '',
+        currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
@@ -56,6 +58,14 @@ export default function EditProfileModal({
       newErrors.email = t('profile.errors.emailRequired', 'البريد الإلكتروني مطلوب');
     }
 
+    const isEmailChanged = formData.email.trim() !== (currentUser.email || '').trim();
+    const isPasswordChanging = Boolean(formData.newPassword);
+
+    // حقل كلمة المرور الحالية يصبح إجبارياً إذا تم تعديل البريد أو محاولة تغيير كلمة المرور
+    if ((isEmailChanged || isPasswordChanging) && !formData.currentPassword) {
+      newErrors.currentPassword = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
+    }
+
     if (formData.newPassword) {
       if (formData.newPassword.length < 6) {
         newErrors.newPassword = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
@@ -78,6 +88,7 @@ export default function EditProfileModal({
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim(),
+        currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
       onClose();
@@ -121,6 +132,19 @@ export default function EditProfileModal({
           activeRtl={activeRtl}
         />
 
+        {/* كلمة المرور الحالية للتوثيق والتأكيد */}
+        <Input
+          label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
+          type="password"
+          name="currentPassword"
+          value={formData.currentPassword}
+          onChange={handleChange}
+          error={errors.currentPassword}
+          icon={<ShieldCheck size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
+
         {/* فاصل تغيير كلمة المرور */}
         <div className="pt-2 border-t border-[var(--border-card)]">
           <span className="text-[11px] font-bold text-[var(--primary)] flex items-center gap-1.5 mb-2">
@@ -155,7 +179,7 @@ export default function EditProfileModal({
           activeRtl={activeRtl}
         />
 
-        {/* أزرار الإجراءات مع تثبيت الأبعاد لمنع الانزياح */}
+        {/* أزرار الإجراءات */}
         <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)]">
           <Btn
             type="button"
