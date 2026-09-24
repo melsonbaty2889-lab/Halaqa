@@ -5,6 +5,7 @@ import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
+import { COUNTRIES_LIST } from '@/constants/countries';
 
 export default function EditProfileModal({
   isOpen = false,
@@ -13,11 +14,13 @@ export default function EditProfileModal({
   onSave = () => {},
   activeRtl = true
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    countryDialCode: '+966',
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -27,13 +30,25 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // تحديث البيانات فقط عند فتح المودال بشكل صريح
+  // استخراج رمز الدولة والهاتف عند فتح المودال
   useEffect(() => {
     if (isOpen) {
+      let rawPhone = currentUser?.phone || '';
+      let matchedDialCode = '+966';
+      let mainPhone = rawPhone;
+
+      // مطابقة الهاتف المسجل بقائمة الدول الموجودة
+      const foundCountry = COUNTRIES_LIST.find((c) => rawPhone.startsWith(c.dialCode));
+      if (foundCountry) {
+        matchedDialCode = foundCountry.dialCode;
+        mainPhone = rawPhone.replace(foundCountry.dialCode, '').trim();
+      }
+
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        phone: currentUser?.phone || '',
+        countryDialCode: matchedDialCode,
+        phone: mainPhone,
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -87,14 +102,19 @@ export default function EditProfileModal({
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+
     if (!validate()) return;
 
     setLoading(true);
     try {
+      const fullPhone = formData.phone.trim() 
+        ? `${formData.countryDialCode}${formData.phone.trim().replace(/^0+/, '')}`
+        : '';
+
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        phone: fullPhone,
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
@@ -113,8 +133,7 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '68vh', overflow: 'hidden' }}>
-        {/* منطقة الحقول مع تمرير فاخر فردي */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '68vh', overflow: 'hidden' }}>
         <form 
           onSubmit={handleSubmit} 
           style={{ 
@@ -153,19 +172,53 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف */}
-          <Input
-            label={t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            error={errors.phone}
-            icon={<Phone size={16} />}
-            placeholder="+966 50 000 0000"
-            dir="ltr"
-            activeRtl={activeRtl}
-          />
+          {/* رقم الهاتف + القائمة المنسدلة المربوطة بـ COUNTRIES_LIST */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+              {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+            </label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+              <select
+                name="countryDialCode"
+                value={formData.countryDialCode}
+                onChange={handleChange}
+                style={{
+                  background: 'var(--color-surface-card)',
+                  border: '1px solid var(--color-border-input)',
+                  borderRadius: 12,
+                  color: 'var(--color-text-primary)',
+                  padding: '0 8px',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  outline: 'none',
+                  direction: 'ltr'
+                }}
+              >
+                {COUNTRIES_LIST.map((item) => {
+                  const countryName = currentLang.startsWith('ar') ? item.nameAr : item.nameEn;
+                  return (
+                    <option key={`${item.code}-${item.dialCode}`} value={item.dialCode} style={{ background: '#1e293b', color: '#fff' }}>
+                      {item.flag} {item.dialCode} ({countryName})
+                    </option>
+                  );
+                })}
+              </select>
+
+              <div style={{ flex: 1 }}>
+                <Input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={errors.phone}
+                  icon={<Phone size={16} />}
+                  placeholder="50 000 0000"
+                  dir="ltr"
+                  activeRtl={activeRtl}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* كلمة المرور الحالية */}
           <Input
@@ -180,7 +233,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* فاصل قسم كلمة المرور الجديد */}
+          {/* فاصل قسم تغيير كلمة المرور */}
           <div style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))' }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-action-primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <KeyRound size={14} />
@@ -201,7 +254,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* تأكيد كلمة المرور */}
+          {/* تأكيد كلمة المرور الجديدة */}
           <Input
             label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
             type="password"
@@ -215,7 +268,7 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي الثابت للأزرار بدون اقتطاع */}
+        {/* الشريط السفلي الثابت للأزرار */}
         <div 
           style={{ 
             paddingTop: 16, 
