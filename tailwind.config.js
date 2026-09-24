@@ -22,6 +22,7 @@ export default {
         dark: {
           bg: 'var(--bg-dark)',
           card: 'var(--surface-card)',
+          dropdown: 'var(--surface-dropdown)',
           input: 'var(--surface-input)',
           google: 'var(--surface-google)',
         },
@@ -56,6 +57,7 @@ export default {
         semantic: {
           bgPage: 'var(--color-bg-page)',
           surfaceCard: 'var(--color-surface-card)',
+          surfaceDropdown: 'var(--color-surface-dropdown)',
           surfaceInput: 'var(--color-surface-input)',
           surfaceSecondary: 'var(--color-surface-secondary)',
           actionPrimary: 'var(--color-action-primary)',
