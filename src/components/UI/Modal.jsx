@@ -9,11 +9,10 @@ const getTextTitle = () => 'var(--color-text-primary)';
 const getTextSub = () => 'var(--color-text-secondary)';
 const getCardBg = () => 'var(--color-surface-card)';
 
-// إدارة الحالة العالمية للـ Nested Modals والوقاية من تسريب التمرير
 let activeModalsCount = 0;
 let originalBodyOverflow = '';
 let originalBodyTouchAction = '';
-const modalStack = []; // مكدس لتحديد Top-most Modal
+const modalStack = [];
 
 export const Modal = ({ 
   open, 
@@ -36,12 +35,10 @@ export const Modal = ({
     const currentModalId = modalIdRef.current;
     modalStack.push(currentModalId);
 
-    // حفظ العنصر الذي كان يمتلك التركيز قبل الفتح
     if (typeof document !== 'undefined' && document.activeElement) {
       previousActiveElementRef.current = document.activeElement;
     }
 
-    // قفل تمرير الـ body فقط عند فتح المودال الأول
     if (activeModalsCount === 0) {
       originalBodyOverflow = document.body.style.overflow;
       originalBodyTouchAction = document.body.style.touchAction;
@@ -50,7 +47,6 @@ export const Modal = ({
     }
     activeModalsCount++;
 
-    // نقل التركيز فوراً للنافذة
     const focusTimeout = setTimeout(() => {
       if (modalRef.current) {
         modalRef.current.focus();
@@ -58,7 +54,6 @@ export const Modal = ({
     }, 50);
 
     const handleKeyDown = (e) => {
-      // تنفيذ الأحداث فقط إذا كان هذا المودال هو الأخير في المكدس (Top-most)
       const isTopModal = modalStack[modalStack.length - 1] === currentModalId;
       if (!isTopModal) return;
 
@@ -69,7 +64,6 @@ export const Modal = ({
         return;
       }
 
-      // إدارة Focus Trap
       if (e.key === 'Tab' && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
           'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -103,7 +97,6 @@ export const Modal = ({
       clearTimeout(focusTimeout);
       window.removeEventListener('keydown', handleKeyDown);
 
-      // إزالة هذا المودال من المكدس
       const stackIndex = modalStack.indexOf(currentModalId);
       if (stackIndex !== -1) {
         modalStack.splice(stackIndex, 1);
@@ -111,14 +104,12 @@ export const Modal = ({
 
       activeModalsCount--;
       
-      // استعادة التمرير فقط عند إغلاق جميع المودالات
       if (activeModalsCount <= 0) {
         activeModalsCount = 0;
         document.body.style.overflow = originalBodyOverflow;
         document.body.style.touchAction = originalBodyTouchAction;
       }
 
-      // إعادة التركيز بأمان للعنصر السابق
       const prevEl = previousActiveElementRef.current;
       if (prevEl && typeof prevEl.focus === 'function' && document.body.contains(prevEl)) {
         prevEl.focus();
@@ -129,7 +120,6 @@ export const Modal = ({
   if (!open || typeof window === 'undefined') return null;
 
   const handleBackdropClick = (e) => {
-    // التأكد من أن النقر تم على الخلفية المعتمة للمودال الأعلى فقط
     const isTopModal = modalStack[modalStack.length - 1] === modalIdRef.current;
     if (closeOnBackdropClick && isTopModal && e.target === e.currentTarget) {
       onClose?.();
@@ -164,8 +154,7 @@ export const Modal = ({
           border: `1px solid ${getBorder()}`, 
           borderRadius: 20, 
           padding: 24, 
-          width: "100%", 
-          maxWidth: 460, 
+          width: "min(92vw, 500px)", 
           maxHeight: "85vh", 
           display: "flex",
           flexDirection: "column",
@@ -179,7 +168,7 @@ export const Modal = ({
           ...style 
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexShrink: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexShrink: 0 }}>
           {title && <h3 id={titleId} style={{ fontWeight: 800, color: getPrimary(), fontSize: "1.05rem", margin: 0 }}>{title}</h3>}
           <button 
             type="button"
@@ -203,7 +192,7 @@ export const Modal = ({
             ×
           </button>
         </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           {children}
         </div>
       </div>
