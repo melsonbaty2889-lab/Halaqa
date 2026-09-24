@@ -26,7 +26,6 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // إعطاء القيم الأولية فقط مرة واحدة عند فتح المودال لمنع مسح الحقول أثناء الكتابة أو التفاعل
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -38,7 +37,7 @@ export default function EditProfileModal({
       });
       setErrors({});
     }
-  }, [isOpen]); // الاعتماد على isOpen فقط لحماية البيانات من التفريغ المفاجئ
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,16 +51,21 @@ export default function EditProfileModal({
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) {
+    const nameTrimmed = formData.name.trim();
+    const emailTrimmed = formData.email.trim().toLowerCase();
+    const currentEmailTrimmed = (currentUser.email || '').trim().toLowerCase();
+
+    if (!nameTrimmed) {
       newErrors.name = t('profile.errors.nameRequired', 'الاسم مطلوب');
     }
-    if (!formData.email.trim()) {
+    if (!emailTrimmed) {
       newErrors.email = t('profile.errors.emailRequired', 'البريد الإلكتروني مطلوب');
     }
 
-    const isEmailChanged = formData.email.trim() !== (currentUser.email || '').trim();
-    const isPasswordChanging = Boolean(formData.newPassword);
+    const isEmailChanged = emailTrimmed !== currentEmailTrimmed;
+    const isPasswordChanging = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
 
+    // يتطلب كلمة المرور الحالية فقط إذا تغير البريد الإلكتروني فعلياً أو تم إدخال كلمة مرور جديدة
     if ((isEmailChanged || isPasswordChanging) && !formData.currentPassword) {
       newErrors.currentPassword = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
     }
@@ -99,18 +103,15 @@ export default function EditProfileModal({
     }
   };
 
-  // نص زر الحفظ المضمون بدعم العربية
-  const saveButtonText = t('common.saveChanges', t('common.save', 'حفظ التغييرات'));
-  const finalSaveText = saveButtonText === 'save' || saveButtonText === 'Save' ? 'حفظ التغييرات' : saveButtonText;
-
   return (
     <Modal
       open={isOpen}
       onClose={onClose}
       title={t('profile.title', 'تعديل الملف الشخصي')}
     >
-      <div className="flex flex-col max-h-[75vh] sm:max-h-[80vh]">
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-1 pb-4">
+      <div className="flex flex-col max-h-[70vh] sm:max-h-[75vh]">
+        {/* جسم المودال القابل للتمرير بمرونة مع حواشي حماية */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-2 py-1 custom-scrollbar">
           {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
@@ -185,8 +186,8 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* أزرار الإجراءات ثابتة بشكل ممتاز في الأسفل دون اقتطاع */}
-        <div className="pt-3 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0">
+        {/* الشريط السفلي الأزرار ثابت وواضح لا ينقطع */}
+        <div className="pt-3 mt-2 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0">
           <Btn
             type="button"
             variant="secondary"
@@ -200,9 +201,9 @@ export default function EditProfileModal({
             onClick={handleSubmit}
             variant="primary"
             loading={loading}
-            className="min-w-[110px] justify-center"
+            className="min-w-[120px] justify-center"
           >
-            {finalSaveText}
+            {t('common.saveChanges', 'حفظ التغييرات')}
           </Btn>
         </div>
       </div>
