@@ -58,11 +58,18 @@ export default function ProfileMenu({
     ? userName.trim()
     : t('header.defaultUser', 'الحساب الشخصي');
 
-  const handleEditProfileClick = (e) => {
+    const handleEditProfileClick = (e) => {
+    e.preventDefault();
     e.stopPropagation();
-    onToggle();
+    
+    // استدعاء دالة فتح المودال مباشرة
     if (typeof onEditProfile === 'function') {
       onEditProfile();
+    }
+    
+    // إغلاق القائمة المنبثقة
+    if (typeof onToggle === 'function') {
+      onToggle();
     }
   };
 
