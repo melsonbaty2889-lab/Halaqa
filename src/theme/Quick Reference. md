@@ -1,0 +1,133 @@
+72. Quick Reference — جدول المرجع السريع
+
+العنصر| استخدم| المصدر الأساسي| تجنب
+Page Background| "bg-dark-bg" / "semantic-bgPage"| "index.css"| خلفية جديدة
+Card| "card-surface" / "UI.card"| "index.css" + "styles.js"| Card Style جديد
+Glass Card| "card-glass" / "UI.cardGlass"| "index.css" + "styles.js"| Glass مخصص
+Dropdown| "dropdown-surface"| "index.css"| Surface شفاف عشوائي
+Input| "app-input" / "UI.input"| "index.css" + "styles.js"| Input CSS جديد
+Primary Button| "btn-primary" / "UI.btnPrimary"| "index.css" + "styles.js"| Button برتقالي جديد
+Secondary Button| "btn-secondary" / "UI.btnSecondary"| "index.css" + "styles.js"| Button رمادي جديد
+Success Button| "UI.btnEmerald"| "styles.js"| Green Button جديد
+Primary Color| "semantic-actionPrimary"| CSS Tokens| Hex برتقالي مباشر
+Primary Hover| "semantic-actionPrimaryHover"| CSS Tokens| Orange مختلف
+Success| "semantic-success"| CSS Tokens| Green مختلف
+Success Background| "semantic-successBg"| CSS Tokens| خلفية خضراء جديدة
+Danger/Error| "semantic-danger"| CSS Tokens| Red جديد
+Primary Text| "semantic-textPrimary"| CSS Tokens| "text-white" عشوائي
+Secondary Text| "semantic-textSecondary"| CSS Tokens| Gray عشوائي
+Muted Text| "semantic-textMuted"| CSS Tokens| Gray عشوائي
+Card Border| "semantic-borderCard"| CSS Tokens| Border جديد
+Input Border| "semantic-borderInput"| CSS Tokens| Border جديد
+Hover Border| "semantic-borderHover"| CSS Tokens| Border Hover جديد
+Page Title| "UI.title"| "styles.js"| Typography جديدة
+Subtitle| "UI.subtitle"| "styles.js"| Typography جديدة
+Error Text| "UI.errorText"| "styles.js"| Error Style جديد
+Link| "UI.link"| "styles.js"| Link Style جديد
+Logo Wrapper| "UI.logoWrapper"| "styles.js"| Logo Container جديد
+Font| "Cairo" / "font-cairo"| "index.css" + Tailwind| Font آخر
+Shadow| "shadow-main"| "index.css" + Tailwind| Shadow عشوائي
+Animation| "fade-in", "spin-slow"| Tailwind| Animation مبالغ فيه
+RTL| حسب اللغة| Global/i18n| RTL ثابت داخل Component
+LTR| حسب اللغة| Global/i18n| افتراض RTL دائم
+Translation| نظام i18n الحالي| المشروع| Hardcoded text
+Responsive| Mobile → "sm" → "md" → "lg" → "xl"| Tailwind| Desktop-only UI
+Colors from JS| "colors" / "C"| "theme/colors.js"| Hex داخل JS
+Reusable UI| "UI"| "theme/styles.js"| Duplicate styles
+Global Tokens| CSS Variables| "index.css"| Local CSS variables
+Tailwind Colors| "semantic-*", "primary-*", "dark-*"| "tailwind.config.js"| ألوان غير معرفة
+
+---
+
+73. Color Quick Reference
+
+المعنى| Token| القيمة الحالية
+Background| "--bg-dark"| "#070B11"
+Card| "--surface-card"| "#0F172A"
+Dropdown| "--surface-dropdown"| "#0F172A"
+Input| "--surface-input"| "#0A101D"
+Secondary Surface| "--surface-google"| "#162032"
+Primary| "--primary"| "#E07A00"
+Primary Hover| "--primary-hover"| "#C66B00"
+Success| "--emerald-text"| "#10B981"
+Success Dark| "--emerald-dark"| "#059669"
+Success Light| "--emerald-light"| "#34D399"
+Success Background| "--emerald-bg"| "#09332C"
+Success Border| "--emerald-border"| "#0D5C4D"
+Main Text| "--text-main"| "#FFFFFF"
+Secondary Text| "--text-sub"| "#94A3B8"
+Muted Text| "--text-muted"| "#475569"
+Card Border| "--border-card"| "rgba(255,255,255,0.08)"
+Input Border| "--border-input"| "#1B2738"
+Hover Border| "--border-hover"| "#2E3E56"
+Error| "--error"| "#EF4444"
+
+---
+
+74. Fast Decision Tree
+
+عند إنشاء أي UI جديد:
+
+هل يوجد Component جاهز؟
+        │
+       نعم ──→ أعد استخدامه
+        │
+       لا
+        ↓
+هل يوجد UI Style جاهز؟
+        │
+       نعم ──→ استخدم UI.*
+        │
+       لا
+        ↓
+هل يوجد Semantic Token مناسب؟
+        │
+       نعم ──→ استخدم semantic-*
+        │
+       لا
+        ↓
+هل يوجد Direct Token مناسب؟
+        │
+       نعم ──→ استخدمه
+        │
+       لا
+        ↓
+هل الحاجة عامة وقابلة لإعادة الاستخدام؟
+        │
+       نعم ──→ أضف Token/Style مركزي
+        │
+       لا ──→ Style محلي محدود
+
+---
+
+75. Gemini — Ultra Short Rule
+
+يمكن وضع هذه النسخة في بداية أي Prompt موجه إلى Gemini:
+
+SMART HALAQA — DESIGN SYSTEM RULE
+
+Before creating or modifying any file:
+
+1. Reuse existing Components first.
+2. Reuse UI styles from src/theme/styles.js.
+3. Reuse CSS/Tailwind semantic tokens.
+4. Never hardcode colors when a token exists.
+5. Never create a parallel theme or design system.
+6. Preserve Cairo typography.
+7. Preserve RTL/LTR behavior.
+8. Preserve i18n.
+9. Preserve responsive behavior.
+10. Preserve existing functionality and APIs.
+11. Make global design changes centrally.
+12. Make the smallest safe change necessary.
+13. Do not invent new colors, shadows, radii, buttons, inputs, or cards without a real requirement.
+14. Any new reusable visual rule belongs in the central Design System.
+15. Every new component must visually belong to Smart Halaqa.
+
+Core Principle
+
+REUSE → EXTEND CENTRALLY → IMPLEMENT
+
+NOT:
+
+INVENT → DUPLICATE → OVERRIDE
