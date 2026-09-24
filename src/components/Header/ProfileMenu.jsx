@@ -22,31 +22,31 @@ export default function ProfileMenu({
         return {
           label: t('roles.admin', 'مدير النظام'),
           icon: ShieldCheck,
-          colorClass: 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+          colorClass: 'bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/20'
         };
       case 'teacher':
         return {
           label: t('roles.teacher', 'معلم / محفظ'),
           icon: User,
-          colorClass: 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+          colorClass: 'bg-[var(--emerald-bg)] text-[var(--emerald-text)] border-[var(--emerald-border)]'
         };
       case 'student':
         return {
           label: t('roles.student', 'طالب'),
           icon: GraduationCap,
-          colorClass: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+          colorClass: 'bg-[var(--emerald-bg)] text-[var(--emerald-text)] border-[var(--emerald-border)]'
         };
       case 'parent':
         return {
           label: t('roles.parent', 'ولي أمر'),
           icon: HeartHandshake,
-          colorClass: 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+          colorClass: 'bg-[var(--surface-google)] text-[var(--text-sub)] border-[var(--border-input)]'
         };
       default:
         return {
           label: t('roles.user', 'مستخدم'),
           icon: User,
-          colorClass: 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+          colorClass: 'bg-[var(--surface-input)] text-[var(--text-sub)] border-[var(--border-input)]'
         };
     }
   };
@@ -73,7 +73,7 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--bg-main)] opacity-100 ${
+          className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
             activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
