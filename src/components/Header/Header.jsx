@@ -36,6 +36,9 @@ export default function Header({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
+  // حالة التنبيه المخصص (Toast)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
   // state لحفظ اسم وبريد المستخدم المسجل حالياً
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
@@ -53,6 +56,14 @@ export default function Header({
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  // دالة إظهار التنبيه المخصص
+  const showToastMessage = useCallback((message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 4000);
+  }, []);
 
   // دالة تسجيل الخروج الشاملة (تتعامل مع Props وتدعم Supabase بشكل مباشر)
   const handleLogout = async () => {
@@ -101,7 +112,7 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-      // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
   const handleSaveProfile = async ({ name, email, newPassword }) => {
     if (!supabase?.auth) return;
 
@@ -384,6 +395,20 @@ export default function Header({
         onSave={handleSaveProfile}
         activeRtl={activeRtl}
       />
+
+      {/* تنبيه مخصص عند التحديث أو الفشل */}
+      {toast.show && (
+        <div 
+          className={`fixed bottom-5 ${activeRtl ? 'left-5' : 'right-5'} z-[10000] flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
+            toast.type === 'error'
+              ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--error)]'
+              : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--emerald-text)]'
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-current animate-ping" />
+          <span className="text-xs font-bold">{toast.message}</span>
+        </div>
+      )}
     </header>
   );
 }
