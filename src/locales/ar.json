@@ -757,6 +757,22 @@
     "unread": "غير مقروء"
   },
   "offlineNotice": "أنت تعمل حالياً بدون اتصال بالإنترنت (وضع الأوفلاين)",
+  "profile": {
+    "changePasswordSection": "تغيير كلمة المرور (اختياري)",
+    "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
+    "emailLabel": "البريد الإلكتروني",
+    "errors": {
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "nameRequired": "الاسم مطلوب",
+      "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+      "passwordMismatch": "كلمات المرور غير متطابقة"
+    },
+    "nameLabel": "الاسم الكامل",
+    "namePlaceholder": "أدخل اسمك",
+    "newPasswordLabel": "كلمة المرور الجديدة",
+    "subtitle": "تحديث بيانات الحساب وكلمة المرور",
+    "title": "تعديل الملف الشخصي"
+  },
   "pwa": {
     "updateAvailable": "يتوفر تحديث جديد للمنظومة!",
     "updateNow": "تحديث الآن"
