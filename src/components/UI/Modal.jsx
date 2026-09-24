@@ -13,9 +13,12 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
   useEffect(() => {
     if (!open) return;
 
-    // قفل تمرير خلفية الصفحة عند فتح النافذة
-    const originalStyle = window.getComputedStyle(document.body).overflow;
+    // حفظ القيم المباشرة للـ body وقفل التمرير
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
 
     const handleEscape = (e) => { 
       if (e.key === 'Escape') onClose(); 
@@ -24,7 +27,9 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
     window.addEventListener('keydown', handleEscape);
 
     return () => {
-      document.body.style.overflow = originalStyle;
+      // إعادة القيم كما كانت بدقة عند الإغلاق
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
       window.removeEventListener('keydown', handleEscape);
     };
   }, [open, onClose]);
@@ -36,7 +41,18 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
-      style={{ position: "fixed", inset: 0, background: "rgba(7, 11, 17, 0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16 }} 
+      style={{ 
+        position: "fixed", 
+        inset: 0, 
+        background: "rgba(7, 11, 17, 0.8)", 
+        backdropFilter: "blur(6px)", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        zIndex: 9999, 
+        padding: 16,
+        touchAction: "none" // منع سحب خلفية الحاوية الرئيسية
+      }} 
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div 
@@ -50,6 +66,8 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
           maxWidth: 460, 
           maxHeight: "85vh", 
           overflowY: "auto", 
+          overscrollBehavior: "contain", // منع تسريب التمرير للبدن/الخلفية
+          touchAction: "pan-y", // السماح بالتمرير العمودي فقط داخل المودال
           boxSizing: "border-box", 
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
           textAlign: "start",
