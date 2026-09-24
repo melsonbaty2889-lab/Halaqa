@@ -1,5 +1,6 @@
 // src/components/Header/Header.jsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, Coins, Maximize, Minimize } from 'lucide-react';
@@ -65,7 +66,7 @@ export default function Header({
     }, 4000);
   }, []);
 
-  // دالة تسجيل الخروج الشاملة (تتعامل مع Props وتدعم Supabase بشكل مباشر)
+  // دالة تسجيل الخروج الشاملة
   const handleLogout = async () => {
     try {
       if (typeof onLogout === 'function') {
@@ -76,7 +77,6 @@ export default function Header({
         await supabase.auth.signOut();
       }
 
-      // تنظيف التخزين المحلي وإعادة التوجيه
       localStorage.removeItem('sb-access-token');
       localStorage.removeItem('sb-refresh-token');
       
@@ -396,18 +396,20 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص عند التحديث أو الفشل */}
-      {toast.show && (
+      {/* تنبيه مخصص يظهر مباشرة فوق الشاشة بالكامل والمودال عبر createPortal */}
+      {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
-          className={`fixed bottom-5 ${activeRtl ? 'left-5' : 'right-5'} z-[10000] flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
             toast.type === 'error'
               ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--error)]'
               : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--emerald-text)]'
           }`}
+          style={{ direction: activeRtl ? 'rtl' : 'ltr' }}
         >
-          <span className="w-2 h-2 rounded-full bg-current animate-ping" />
-          <span className="text-xs font-bold">{toast.message}</span>
-        </div>
+          <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping shrink-0" />
+          <span className="text-xs font-extrabold whitespace-nowrap">{toast.message}</span>
+        </div>,
+        document.body
       )}
     </header>
   );
