@@ -79,14 +79,15 @@ export default function ProfileMenu({
         </div>
       </button>
 
-            {showMenu && (
+      {showMenu && (
         <div 
           className={`absolute top-full mt-2 w-56 dropdown-surface border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs text-[var(--text-main)] bg-[var(--surface-dropdown)] opacity-100 ${
-            activeRtl ? 'right-0' : 'left-0'
+            activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
             maxWidth: 'calc(100vw - 16px)'
           }}
+          dir={activeRtl ? 'rtl' : 'ltr'}
         >
           {/* تفاصيل الحساب */}
           <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
@@ -96,10 +97,11 @@ export default function ProfileMenu({
 
             {userEmail && (
               <div 
+                dir="ltr" 
                 className="text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium overflow-hidden justify-start"
               >
                 <Mail size={12} className="shrink-0 text-[var(--emerald-text)]" />
-                <span dir="ltr" className="truncate text-left">{userEmail}</span>
+                <span className="truncate">{userEmail}</span>
               </div>
             )}
             
