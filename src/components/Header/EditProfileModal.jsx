@@ -61,7 +61,6 @@ export default function EditProfileModal({
     const isEmailChanged = formData.email.trim() !== (currentUser.email || '').trim();
     const isPasswordChanging = Boolean(formData.newPassword);
 
-    // حقل كلمة المرور الحالية يصبح إجبارياً إذا تم تعديل البريد أو محاولة تغيير كلمة المرور
     if ((isEmailChanged || isPasswordChanging) && !formData.currentPassword) {
       newErrors.currentPassword = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
     }
@@ -105,7 +104,7 @@ export default function EditProfileModal({
       onClose={onClose}
       title={t('profile.title', 'تعديل الملف الشخصي')}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto px-1">
         {/* الاسم الكامل */}
         <Input
           label={t('profile.nameLabel', 'الاسم الكامل')}
@@ -132,7 +131,7 @@ export default function EditProfileModal({
           activeRtl={activeRtl}
         />
 
-        {/* كلمة المرور الحالية للتوثيق والتأكيد */}
+        {/* كلمة المرور الحالية */}
         <Input
           label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
           type="password"
@@ -180,7 +179,7 @@ export default function EditProfileModal({
         />
 
         {/* أزرار الإجراءات */}
-        <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)]">
+        <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)] sticky bottom-0 bg-[var(--surface-card)] pb-1">
           <Btn
             type="button"
             variant="secondary"
