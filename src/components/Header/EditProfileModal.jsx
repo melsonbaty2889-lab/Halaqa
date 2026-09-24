@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound } from 'lucide-react';
-import Modal from '../UI/Modal';
-import Input from '../UI/Input';
-import Btn from '../UI/Btn';
+import Modal from '@/components/UI/Modal';
+import Input from '@/components/UI/Input';
+import Btn from '@/components//UI/Btn';
 
 export default function EditProfileModal({
   isOpen = false,
@@ -155,7 +155,7 @@ export default function EditProfileModal({
           activeRtl={activeRtl}
         />
 
-        {/* أزرار الإجراءات */}
+        {/* أزرار الإجراءات مع تثبيت الأبعاد لمنع الانزياح */}
         <div className="pt-3 flex items-center justify-end gap-2 border-t border-[var(--border-card)]">
           <Btn
             type="button"
@@ -166,10 +166,10 @@ export default function EditProfileModal({
             {t('common.cancel', 'إلغاء')}
           </Btn>
           <Btn
-            type="button"
+            type="submit"
             variant="primary"
-            onClick={handleSubmit}
             loading={loading}
+            className="min-w-[110px] justify-center"
           >
             {t('common.save', 'حفظ التغييرات')}
           </Btn>
