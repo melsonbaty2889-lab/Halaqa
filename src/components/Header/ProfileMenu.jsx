@@ -73,7 +73,7 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-card)] ${
+          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[#0F172A] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ 
