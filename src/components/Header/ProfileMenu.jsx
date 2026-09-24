@@ -17,8 +17,8 @@ export default function ProfileMenu({
 
   const getRoleConfig = (role) => {
     switch (role) {
-      case 'admin':
       case 'super_admin':
+      case 'admin':
         return {
           label: t('roles.admin', 'مدير النظام'),
           icon: ShieldCheck,
@@ -73,22 +73,26 @@ export default function ProfileMenu({
 
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[#0F172A] ${
+          className={`absolute top-full mt-2 w-56 border border-[var(--border-input)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-card)] text-[var(--text-main)] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ 
-            maxWidth: 'calc(100vw - 24px)'
+            maxWidth: 'calc(100vw - 24px)',
+            backgroundColor: 'var(--surface-card)'
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
           {/* معلومات المستخدم والدور والبريد */}
           <div className="pb-2 border-b border-[var(--border-card)] mb-2 flex flex-col items-start gap-1">
-            <div className="font-extrabold text-[var(--text-main)] text-[12px] truncate w-full">
+            <div className="font-extrabold text-[var(--text-main)] text-[12px] truncate w-full text-start">
               {displayName}
             </div>
 
             {userEmail && (
-              <div className="text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium dir-ltr justify-start overflow-hidden">
+              <div 
+                dir="ltr" 
+                className="text-[var(--text-sub)] text-[10.5px] w-full flex items-center gap-1.5 font-medium justify-start overflow-hidden"
+              >
                 <Mail size={12} className="shrink-0 text-[var(--emerald-text)]" />
                 <span className="truncate">{userEmail}</span>
               </div>
@@ -109,7 +113,7 @@ export default function ProfileMenu({
                 onToggle();
                 if (typeof onEditProfile === 'function') onEditProfile();
               }}
-              className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-semibold cursor-pointer text-[11.5px]"
+              className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--text-main)] hover:bg-[var(--surface-input)] transition-all font-semibold cursor-pointer text-[11.5px] text-start"
             >
               <UserCog size={13} className="shrink-0 text-[var(--primary)]" />
               <span>{t('header.editProfile', 'الملف الشخصي')}</span>
@@ -122,7 +126,7 @@ export default function ProfileMenu({
                 onToggle();
                 if (typeof onLogout === 'function') onLogout();
               }}
-              className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-semibold cursor-pointer text-[11.5px]"
+              className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-semibold cursor-pointer text-[11.5px] text-start"
             >
               <LogOut size={13} className="shrink-0" />
               <span>{t('header.logout', 'تسجيل الخروج')}</span>
