@@ -112,35 +112,62 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
-  const handleSaveProfile = async ({ name, email, newPassword }) => {
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التعامل مع المصادقة بكلمة المرور الحالية
+  const handleSaveProfile = async ({ name, email, currentPassword, newPassword }) => {
     if (!supabase?.auth) return;
 
-    const updatePayload = {};
+    try {
+      const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
+      const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    if (name) {
-      updatePayload.data = { full_name: name, name: name };
+      // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
+      if ((isEmailChanged || isPasswordChanged) && currentPassword) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: currentUserEmail,
+          password: currentPassword
+        });
+
+        if (signInError) {
+          showToastMessage(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'), 'error');
+          throw signInError;
+        }
+      }
+
+      const updatePayload = {};
+
+      if (name) {
+        updatePayload.data = { full_name: name, name: name };
+      }
+
+      if (isPasswordChanged) {
+        updatePayload.password = newPassword.trim();
+      }
+
+      if (isEmailChanged) {
+        updatePayload.email = email.trim();
+      }
+
+      const { error } = await supabase.auth.updateUser(updatePayload);
+
+      if (error) {
+        let errorMsg = t('profile.errors.updateFailed', 'فشل التحديث');
+        if (error.message.includes('Current password required')) {
+          errorMsg = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
+        } else if (error.message.includes('Password should be')) {
+          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        }
+        showToastMessage(errorMsg, 'error');
+        throw error;
+      }
+
+      if (name) setCurrentUserName(name);
+      if (email) setCurrentUserEmail(email);
+
+      showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      throw err;
     }
-
-    if (newPassword && newPassword.trim() !== '') {
-      updatePayload.password = newPassword.trim();
-    }
-
-    if (email && email !== currentUserEmail) {
-      updatePayload.email = email;
-    }
-
-    const { data, error } = await supabase.auth.updateUser(updatePayload);
-
-    if (error) {
-      showToastMessage(`فشل التحديث: ${error.message}`, 'error');
-      throw error;
-    }
-
-    if (name) setCurrentUserName(name);
-    if (email) setCurrentUserEmail(email);
-
-    showToastMessage('تم تحديث البيانات وكلمة المرور بنجاح', 'success');
   };
 
   useEffect(() => {
@@ -396,10 +423,10 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص يظهر مباشرة فوق الشاشة بالكامل والمودال عبر createPortal */}
+      {/* تنبيه مخصص في منتصف الشاشة مع الحفاظ على التجاوب وأولوية العرض فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
-          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 max-w-[90vw] rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
             toast.type === 'error'
               ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--error)]'
               : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--emerald-text)]'
@@ -407,7 +434,7 @@ export default function Header({
           style={{ direction: activeRtl ? 'rtl' : 'ltr' }}
         >
           <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping shrink-0" />
-          <span className="text-xs font-extrabold whitespace-nowrap">{toast.message}</span>
+          <span className="text-xs font-extrabold text-center leading-relaxed break-words">{toast.message}</span>
         </div>,
         document.body
       )}
