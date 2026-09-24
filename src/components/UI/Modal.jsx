@@ -1,4 +1,4 @@
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -7,34 +7,99 @@ const getTextTitle = () => 'var(--color-text-primary)';
 const getTextSub = () => 'var(--color-text-secondary)';
 const getCardBg = () => 'var(--color-surface-card)';
 
+// عداد عالمي لتتبع عدد النوافذ المفتوحة لمنع استعادة تمرير الـ body عند وجود مودال آخر مفتوح
+let activeModalsCount = 0;
+let originalBodyOverflow = '';
+let originalBodyTouchAction = '';
+
 export const Modal = ({ open, onClose, title, children, className = "", style = {} }) => {
   const titleId = useId();
+  const modalRef = useRef(null);
+  const previousActiveElementRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
 
-    // حفظ القيم المباشرة للـ body وقفل التمرير
-    const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
+    // حفظ العنصر الذي كان يمتلك التركيز قبل فتح المودال لإعادة التركيز عليه لاحقاً
+    if (typeof document !== 'undefined' && document.activeElement) {
+      previousActiveElementRef.current = document.activeElement;
+    }
 
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+    // إدارة قفل التمرير مع دعم Nested Modals
+    if (activeModalsCount === 0) {
+      originalBodyOverflow = document.body.style.overflow;
+      originalBodyTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    }
+    activeModalsCount++;
 
-    const handleEscape = (e) => { 
-      if (e.key === 'Escape') onClose(); 
+    // التركيز الفوري على المودال عند الفتح لإتاحة الوصول بقارئات الشاشة
+    const focusTimeout = setTimeout(() => {
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+    }, 50);
+
+    // التعامل مع زر Escape وحصر التركيز (Focus Trap)
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose?.();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement || document.activeElement === modalRef.current) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
     };
 
-    window.addEventListener('keydown', handleEscape);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      // إعادة القيم كما كانت بدقة عند الإغلاق
-      document.body.style.overflow = originalOverflow;
-      document.body.style.touchAction = originalTouchAction;
-      window.removeEventListener('keydown', handleEscape);
+      clearTimeout(focusTimeout);
+      window.removeEventListener('keydown', handleKeyDown);
+
+      activeModalsCount--;
+      // إعادة استعادة التمرير فقط عندما تُغلق جميع النوافذ المفتوحة
+      if (activeModalsCount === 0) {
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.touchAction = originalBodyTouchAction;
+      }
+
+      // إعادة التركيز للعنصر السابق بعد إغلاق النافذة
+      if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+        previousActiveElementRef.current.focus();
+      }
     };
   }, [open, onClose]);
 
   if (!open || typeof window === 'undefined') return null;
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose?.();
+    }
+  };
 
   return createPortal(
     <div 
@@ -51,12 +116,14 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
         justifyContent: "center", 
         zIndex: 9999, 
         padding: 16,
-        touchAction: "none" // منع سحب خلفية الحاوية الرئيسية
+        touchAction: "none"
       }} 
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onClick={handleBackdropClick}
     >
       <div 
-        className={`ui-modal ${className}`}
+        ref={modalRef}
+        tabIndex={-1}
+        className={`ui-modal outline-none ${className}`}
         style={{ 
           background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
@@ -65,9 +132,11 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
           width: "100%", 
           maxWidth: 460, 
           maxHeight: "85vh", 
+          display: "flex",
+          flexDirection: "column",
           overflowY: "auto", 
-          overscrollBehavior: "contain", // منع تسريب التمرير للبدن/الخلفية
-          touchAction: "pan-y", // السماح بالتمرير العمودي فقط داخل المودال
+          overscrollBehavior: "contain", 
+          touchAction: "pan-y", 
           boxSizing: "border-box", 
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
           textAlign: "start",
@@ -75,12 +144,12 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
           ...style 
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, shrink: 0 }}>
           {title && <h3 id={titleId} style={{ fontWeight: 800, color: getPrimary(), fontSize: "1.05rem", margin: 0 }}>{title}</h3>}
           <button 
             type="button"
             onClick={onClose} 
-            aria-label="إغلاق النافذة"
+            aria-label="Close modal"
             style={{ 
               background: "none", 
               border: "none", 
@@ -99,7 +168,9 @@ export const Modal = ({ open, onClose, title, children, className = "", style = 
             ×
           </button>
         </div>
-        {children}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          {children}
+        </div>
       </div>
     </div>,
     document.body
