@@ -8,7 +8,8 @@
   :root {
     /* Direct Color Scale */
     --bg-dark: #070B11;
-    --surface-card: rgba(15, 23, 42, 0.85);
+    --surface-card: #0F172A; /* تم تحويل اللون من rgba الشفاف إلى لون صلب لمنع الشفافية خلف القوائم */
+    --surface-dropdown: #0F172A; /* متغير مخصص للأسطح والقوائم المعلقة بصلابة 100% */
     --surface-input: #0A101D;
     --surface-google: #162032;
 
@@ -40,6 +41,7 @@
     /* Semantic Color Tokens Layer */
     --color-bg-page: var(--bg-dark);
     --color-surface-card: var(--surface-card);
+    --color-surface-dropdown: var(--surface-dropdown);
     --color-surface-input: var(--surface-input);
     --color-surface-secondary: var(--surface-google);
 
@@ -69,7 +71,6 @@
     padding: 0;
     overflow-x: hidden !important;
     background-color: var(--bg-dark) !important;
-    /* دمج خلفية التوهج الزمردي والشبكة المُنقطة مباشرة في قاعدة التطبيق */
     background-image: 
       radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
       radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0) !important;
@@ -111,6 +112,14 @@
     border: 1px solid var(--color-border-card);
     border-radius: 1.25rem;
     padding: 1.25rem 1rem;
+    box-shadow: var(--shadow-main);
+  }
+
+  /* فئة خاصة بالأسطح المعلقة والقوائم المنسدلة بصلابة كاملة */
+  .dropdown-surface {
+    background-color: var(--color-surface-dropdown) !important;
+    border: 1px solid var(--color-border-input);
+    border-radius: 1rem;
     box-shadow: var(--shadow-main);
   }
 
@@ -183,12 +192,10 @@
 }
 
 @layer utilities {
-  /* كلاس لتفريغ الشاشات والحاويات الرئيسية لضمان ظهور خلفية الـ body */
   .bg-app-layout {
     background-color: transparent !important;
   }
 
-  /* بطاقات شفافة زجاجية مخصصة للشبكة والتوهج */
   .card-glass {
     background-color: var(--surface-card);
     backdrop-filter: blur(12px);
