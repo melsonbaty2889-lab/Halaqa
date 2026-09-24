@@ -332,9 +332,9 @@
     "restore": "استعادة",
     "restore_confirm": "تأكيد الاستعادة",
     "same_as_phone": "نفس الهاتف",
-    "save": "save",
+    "save": "حفظ",
     "save_changes": "حفظ التعديلات",
-    "saveChanges": "saveChanges",
+    "saveChanges": "حفظ التغييرات",
     "saving": "جاري الحفظ...",
     "search": "بحث...",
     "search_placeholder": "بحث...",
@@ -440,13 +440,13 @@
     "yearsUnit": "سنة"
   },
   "days": {
-    "friday": "friday",
-    "monday": "monday",
-    "saturday": "saturday",
-    "sunday": "sunday",
-    "thursday": "thursday",
-    "tuesday": "tuesday",
-    "wednesday": "wednesday"
+    "friday": "الجمعة",
+    "monday": "الإثنين",
+    "saturday": "السبت",
+    "sunday": "الأحد",
+    "thursday": "الخميس",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء"
   },
   "dev": {
     "close_splash": "إغلاق شاشة التحميل (SplashScreen)",
