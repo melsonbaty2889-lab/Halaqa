@@ -27,7 +27,7 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // تحديث البيانات فقط عند فتح المودال لمنع اختفاء كلمة المرور لحظة الإغلاق
+  // تحديث البيانات فقط عند فتح المودال بشكل صريح
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -40,7 +40,7 @@ export default function EditProfileModal({
       });
       setErrors({});
     }
-  }, [isOpen]);
+  }, [isOpen, currentUser]);
 
   if (!isOpen) return null;
 
@@ -113,8 +113,20 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col max-h-[70vh] overflow-hidden">
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-1 py-2">
+      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '68vh', overflow: 'hidden' }}>
+        {/* منطقة الحقول مع تمرير فاخر فردي */}
+        <form 
+          onSubmit={handleSubmit} 
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            paddingLeft: 4, 
+            paddingRight: 4, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 16 
+          }}
+        >
           {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
@@ -168,10 +180,10 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* فاصل تغيير كلمة المرور */}
-          <div className="pt-2 border-t border-[var(--border-card)]">
-            <span className="text-[11px] font-bold text-[var(--primary)] flex items-center gap-1.5 mb-2">
-              <KeyRound size={13} />
+          {/* فاصل قسم كلمة المرور الجديد */}
+          <div style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-action-primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+              <KeyRound size={14} />
               {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
             </span>
           </div>
@@ -203,8 +215,19 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي الثابت */}
-        <div className="pt-3 mt-2 border-t border-[var(--border-card)] flex items-center justify-end gap-2 shrink-0">
+        {/* الشريط السفلي الثابت للأزرار بدون اقتطاع */}
+        <div 
+          style={{ 
+            paddingTop: 16, 
+            marginTop: 12, 
+            borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'flex-end', 
+            gap: 10, 
+            flexShrink: 0 
+          }}
+        >
           <Btn
             type="button"
             variant="secondary"
@@ -218,7 +241,7 @@ export default function EditProfileModal({
             onClick={handleSubmit}
             variant="primary"
             loading={loading}
-            className="min-w-[120px] justify-center"
+            style={{ minWidth: 120 }}
           >
             {t('common.saveChanges', 'حفظ التغييرات')}
           </Btn>
