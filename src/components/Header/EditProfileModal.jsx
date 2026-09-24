@@ -1,7 +1,7 @@
 // src/components/Header/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
@@ -9,7 +9,7 @@ import Btn from '@/components/UI/Btn';
 export default function EditProfileModal({
   isOpen = false,
   onClose = () => {},
-  currentUser = { name: '', email: '' },
+  currentUser = { name: '', email: '', phone: '' },
   onSave = () => {},
   activeRtl = true
 }) {
@@ -18,6 +18,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -26,18 +27,20 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // تحديث البيانات فقط عند فتح المودال لمنع اختفاء كلمة المرور لحظة الإغلاق
   useEffect(() => {
     if (isOpen) {
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
+        phone: currentUser?.phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
       setErrors({});
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -91,6 +94,7 @@ export default function EditProfileModal({
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim(),
+        phone: formData.phone.trim(),
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
@@ -133,6 +137,20 @@ export default function EditProfileModal({
             error={errors.email}
             icon={<Mail size={16} />}
             placeholder="example@mail.com"
+            dir="ltr"
+            activeRtl={activeRtl}
+          />
+
+          {/* رقم الهاتف */}
+          <Input
+            label={t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            error={errors.phone}
+            icon={<Phone size={16} />}
+            placeholder="+966 50 000 0000"
             dir="ltr"
             activeRtl={activeRtl}
           />
