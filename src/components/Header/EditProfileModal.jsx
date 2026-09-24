@@ -1,5 +1,6 @@
 // src/components/Header/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound } from 'lucide-react';
 import Modal from '../UI/Modal';
@@ -88,8 +89,8 @@ export default function EditProfileModal({
     }
   };
 
-  return (
-    <div className="relative z-[100]">
+  return createPortal(
+    <div className="relative z-[9999]">
       <Modal
         isOpen={isOpen}
         onClose={onClose}
@@ -178,6 +179,7 @@ export default function EditProfileModal({
           </div>
         </form>
       </Modal>
-    </div>
+    </div>,
+    document.body
   );
 }
