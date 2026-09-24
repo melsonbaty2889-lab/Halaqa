@@ -109,8 +109,8 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col h-full max-h-[75vh] overflow-hidden">
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-2 py-2">
+      <div className="flex flex-col max-h-[70vh] overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 px-1 py-2">
           {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
@@ -186,7 +186,7 @@ export default function EditProfileModal({
         </form>
 
         {/* الشريط السفلي الثابت */}
-        <div className="pt-3 border-t border-[var(--border-card)] flex items-center justify-end gap-2 bg-[var(--surface-card)] shrink-0 px-2 pb-1">
+        <div className="pt-3 mt-2 border-t border-[var(--border-card)] flex items-center justify-end gap-2 shrink-0">
           <Btn
             type="button"
             variant="secondary"
