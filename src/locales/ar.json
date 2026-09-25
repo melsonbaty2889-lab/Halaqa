@@ -770,6 +770,7 @@
       "generalSaveError": "حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة لاحقاً",
       "invalidCurrentPassword": "كلمة المرور الحالية غير صحيحة",
       "nameRequired": "الاسم مطلوب",
+      "noAuth": "غير مصرح",
       "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
       "passwordMismatch": "كلمات المرور غير متطابقة",
       "updateFailed": "updateFailed"
