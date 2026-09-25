@@ -11,13 +11,13 @@ import CountrySelect from '@/components/UI/CountrySelect';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-// دالة عامة موحدة لاكتشاف رمز الدولة التلقائي بناءً على المنطقة الزمنية للجهاز
+// دالة عامة لاكتشاف رمز الدولة التلقائي بناءً على المنطقة الزمنية للجهاز
 const detectUserCountryCode = () => {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!tz) return 'EG';
+    if (!tz) return '';
 
-    // 1. مطابقة مباشرة ودقيقة
+    // 1. مطابقة مباشرة ودقيقة مع الـ timezone
     const matched = COUNTRIES_LIST.find((c) => c.timezone === tz);
     if (matched) return matched.code;
 
@@ -32,7 +32,7 @@ const detectUserCountryCode = () => {
   } catch {
     // تجاهل الأخطاء
   }
-  return 'EG';
+  return '';
 };
 
 export default function EditProfileModal({
@@ -48,7 +48,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryCode: 'EG',
+    countryCode: '',
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -214,7 +214,7 @@ export default function EditProfileModal({
             </label>
             
             <div className="flex items-start gap-2">
-              <div className="w-36 sm:w-40 shrink-0">
+              <div className="w-40 sm:w-44 shrink-0">
                 <CountrySelect
                   value={formData.countryCode}
                   onChange={handleCountryChange}
@@ -232,7 +232,7 @@ export default function EditProfileModal({
                   onChange={handleChange}
                   error={errors.phone}
                   icon={<Phone size={16} />}
-                  placeholder="500000000"
+                  placeholder=""
                   dir="ltr"
                   activeRtl={activeRtl}
                 />
