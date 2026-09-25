@@ -112,67 +112,69 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التعامل مع المصادقة بكلمة المرور الحالية
-  const handleSaveProfile = async ({ name, email, currentPassword, newPassword }) => {
-    if (!supabase?.auth) return;
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
+    if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
-    try {
-      const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
-      const isPasswordChanged = newPassword && newPassword.trim() !== '';
+    const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
+    const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-      // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
-      if ((isEmailChanged || isPasswordChanged) && currentPassword) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: currentUserEmail,
-          password: currentPassword
-        });
+    // 1. إعادة التوثيق بكلمة المرور الحالية إذا كان هناك تغيير في الإيميل أو كلمة المرور
+    if ((isEmailChanged || isPasswordChanged) && currentPassword) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentUserEmail,
+        password: currentPassword
+      });
 
-        if (signInError) {
-          showToastMessage(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'), 'error');
-          throw signInError;
-        }
+      if (signInError) {
+        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
       }
-
-      const updatePayload = {};
-
-      if (name) {
-        updatePayload.data = { full_name: name, name: name };
-      }
-
-      if (isPasswordChanged) {
-        updatePayload.password = newPassword.trim();
-      }
-
-      if (isEmailChanged) {
-        updatePayload.email = email.trim();
-      }
-
-      const { error } = await supabase.auth.updateUser(updatePayload);
-
-      if (error) {
-        let errorMsg = t('profile.errors.updateFailed', 'فشل التحديث');
-        if (error.message.includes('Current password required')) {
-          errorMsg = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
-        } else if (error.message.includes('Password should be')) {
-          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        }
-        showToastMessage(errorMsg, 'error');
-        throw error;
-      }
-
-      if (name) setCurrentUserName(name);
-      if (email) setCurrentUserEmail(email);
-
-      showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      throw err;
     }
+
+    const updatePayload = {
+      data: {}
+    };
+
+    if (name) {
+      updatePayload.data.full_name = name;
+      updatePayload.data.name = name;
+    }
+
+    if (phone) {
+      updatePayload.data.phone = phone;
+    }
+
+    if (isPasswordChanged) {
+      updatePayload.password = newPassword.trim();
+    }
+
+    if (isEmailChanged) {
+      updatePayload.email = email.trim();
+    }
+
+    // 2. تحديث الحساب لدى Supabase Auth
+    const { error } = await supabase.auth.updateUser(updatePayload);
+
+    if (error) {
+      let errorMsg = error.message;
+      if (error.message.includes('Current password required')) {
+        errorMsg = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
+      } else if (error.message.includes('Password should be')) {
+        errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      }
+      throw new Error(errorMsg);
+    }
+
+    // 3. التحديث بنجاح فقط وإظهار الرسالة
+    if (name) setCurrentUserName(name);
+    if (email) setCurrentUserEmail(email);
+
+    showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
   };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => setIsOffline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -423,7 +425,7 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص في منتصف الشاشة مع الحفاظ على التجاوب وأولوية العرض فوق المودال */}
+      {/* تنبيه مخصص في منتصف الشاشة */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 max-w-[90vw] rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
