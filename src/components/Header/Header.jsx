@@ -112,14 +112,14 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التعامل مع المصادقة بكلمة المرور الحالية
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
     const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    // 1. إعادة التوثيق بكلمة المرور الحالية إذا كان هناك تغيير في الإيميل أو كلمة المرور
+    // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
     if ((isEmailChanged || isPasswordChanged) && currentPassword) {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: currentUserEmail,
@@ -152,7 +152,6 @@ export default function Header({
       updatePayload.email = email.trim();
     }
 
-    // 2. تحديث الحساب لدى Supabase Auth
     const { error } = await supabase.auth.updateUser(updatePayload);
 
     if (error) {
@@ -165,7 +164,6 @@ export default function Header({
       throw new Error(errorMsg);
     }
 
-    // 3. التحديث بنجاح فقط وإظهار الرسالة
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
 
@@ -425,7 +423,7 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص في منتصف الشاشة */}
+      {/* تنبيه مخصص في منتصف الشاشة مع الحفاظ على التجاوب وأولوية العرض فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 max-w-[90vw] rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
