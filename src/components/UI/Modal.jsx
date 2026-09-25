@@ -31,7 +31,6 @@ export const Modal = ({
   const previousActiveElementRef = useRef(null);
   const modalIdRef = useRef(titleId);
 
-  // حفظ مرجع دالة onClose الحالية تجنباً لإعادة تشغيل الـ Lifecycle
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -151,7 +150,7 @@ export const Modal = ({
         alignItems: "center", 
         justifyContent: "center", 
         zIndex: 9999, 
-        padding: "16px 12px",
+        padding: "12px 8px",
         touchAction: "none"
       }} 
       onClick={handleBackdropClick}
@@ -163,10 +162,10 @@ export const Modal = ({
         style={{ 
           background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
-          borderRadius: 20, 
-          padding: "20px 16px", 
-          width: "min(92vw, 500px)", 
-          maxHeight: "90vh", 
+          borderRadius: 16, 
+          padding: "16px 14px", 
+          width: "min(94vw, 480px)", 
+          maxHeight: "88vh", 
           display: "flex",
           flexDirection: "column",
           overflow: "hidden", 
@@ -179,9 +178,13 @@ export const Modal = ({
           ...style 
         }}
       >
-        {/* Header ثابت لعدم اختفائه عند التمرير */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
-          {title && <h3 id={titleId} style={{ fontWeight: 800, color: getPrimary(), fontSize: "1.05rem", margin: 0 }}>{title}</h3>}
+        {/* Header ثابت ومصمم بأبعاد متناسقة */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexShrink: 0, paddingBottom: 6, borderBottom: `1px solid ${getBorder()}` }}>
+          {title && (
+            <h3 id={titleId} style={{ fontWeight: 700, color: getPrimary(), fontSize: "1rem", margin: 0, lineHeight: 1.2 }}>
+              {title}
+            </h3>
+          )}
           <button 
             type="button"
             onClick={() => onCloseRef.current?.()} 
@@ -191,20 +194,19 @@ export const Modal = ({
               border: "none", 
               color: getTextSub(), 
               cursor: "pointer", 
-              padding: 0, 
+              padding: 4, 
               lineHeight: 1,
-              minWidth: "44px",
-              minHeight: "44px",
               display: "inline-flex",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              borderRadius: "6px"
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* جسم المودال القابل للتمرير للمحتوى الطويل */}
+        {/* محتوى المودال القابل للتمرير */}
         <div 
           style={{ 
             flex: 1, 
