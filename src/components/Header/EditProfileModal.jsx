@@ -11,18 +11,16 @@ import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-// دالة مساعدة لتحديد كود الدولة التلقائي حسب المنطقة الزمنية للعميل
-const detectUserDefaultDialCode = () => {
+// دالة مساعدة معتمدة للاكتشاف التلقائي لرمز الدولة الاحتياطي عبر المنطقة الزمنية
+const getDefaultDialCode = () => {
   try {
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (userTimeZone) {
-      const matchedCountry = COUNTRIES_LIST.find((c) =>
-        c.timezones && c.timezones.includes(userTimeZone)
-      );
-      if (matchedCountry) return matchedCountry.dialCode;
+      const matched = COUNTRIES_LIST.find((c) => c.timezones && c.timezones.includes(userTimeZone));
+      if (matched) return matched.dialCode;
     }
   } catch (e) {
-    console.warn('Could not detect user timezone:', e);
+    // التغاضي عن الخطأ في البيئات غير الداعمة
   }
   return COUNTRIES_LIST[0]?.dialCode || '+966';
 };
@@ -40,7 +38,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryDialCode: '',
+    countryDialCode: '+966',
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -53,17 +51,14 @@ export default function EditProfileModal({
 
   useEffect(() => {
     if (isOpen) {
-      // 1. محاولة تفكيك رقم المستخدم المسجل
       const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
-      
-      // 2. إذا لم يوجد كود مسجل، يتم اكتشاف دولة المستخدم تلقائياً حسب مكانه/منطقته
-      const initialDialCode = dialCode || detectUserDefaultDialCode();
+      const fallbackCode = getDefaultDialCode();
 
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        countryDialCode: initialDialCode,
-        phone: phone || '', // إزالة أي قيمة افتراضية صريحة للرقم
+        countryDialCode: dialCode || fallbackCode,
+        phone: phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -165,128 +160,120 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col max-h-[75vh]">
-        {/* منطقة التمرير المنضبطة بحسب اتجاه اللغة (RTL / LTR) */}
-        <div 
-          className="flex-1 overflow-y-auto px-1 space-y-4 pb-4 custom-scrollbar"
-          dir={activeRtl ? 'rtl' : 'ltr'}
-        >
-          {submitError && (
-            <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
-              {submitError}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {submitError && (
+          <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
+            {submitError}
+          </div>
+        )}
+
+        {/* الاسم الكامل */}
+        <Input
+          label={t('profile.nameLabel', 'الاسم الكامل')}
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          error={errors.name}
+          icon={<User size={16} />}
+          placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
+          activeRtl={activeRtl}
+        />
+
+        {/* البريد الإلكتروني */}
+        <Input
+          label={t('profile.emailLabel', 'البريد الإلكتروني')}
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+          icon={<Mail size={16} />}
+          placeholder="example@mail.com"
+          dir="ltr"
+          activeRtl={activeRtl}
+        />
+
+        {/* رقم الهاتف والرمز الدولي */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-semantic-textSecondary">
+            {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+          </label>
+          
+          <div className="flex items-start gap-2">
+            <div className="w-36 shrink-0">
+              <Select
+                options={countryOptions}
+                value={formData.countryDialCode}
+                onChange={handleCountryChange}
+                dir="ltr"
+              />
             </div>
-          )}
 
-          {/* الاسم الكامل */}
-          <Input
-            label={t('profile.nameLabel', 'الاسم الكامل')}
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            error={errors.name}
-            icon={<User size={16} />}
-            placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
-            activeRtl={activeRtl}
-          />
-
-          {/* البريد الإلكتروني */}
-          <Input
-            label={t('profile.emailLabel', 'البريد الإلكتروني')}
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            icon={<Mail size={16} />}
-            placeholder="example@mail.com"
-            dir="ltr"
-            activeRtl={activeRtl}
-          />
-
-          {/* رقم الهاتف والرمز الدولي */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-semantic-textSecondary">
-              {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
-            </label>
-            
-            <div className="flex items-start gap-2">
-              {/* حقل اختيار كود الدولة */}
-              <div className="w-36 shrink-0">
-                <Select
-                  options={countryOptions}
-                  value={formData.countryDialCode}
-                  onChange={handleCountryChange}
-                  dir="ltr"
-                />
-              </div>
-
-              {/* حقل إدخال رقم الهاتف بدون قيم افتراضية حقيقية */}
-              <div className="flex-1">
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  icon={<Phone size={16} />}
-                  placeholder={t('profile.phonePlaceholder', '500000000')}
-                  dir="ltr"
-                  activeRtl={activeRtl}
-                />
-              </div>
+            <div className="flex-1">
+              <Input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                icon={<Phone size={16} />}
+                placeholder="500000000"
+                dir="ltr"
+                activeRtl={activeRtl}
+              />
             </div>
           </div>
-
-          {/* كلمة المرور الحالية */}
-          <Input
-            label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
-            type="password"
-            name="currentPassword"
-            value={formData.currentPassword}
-            onChange={handleChange}
-            error={errors.currentPassword}
-            icon={<ShieldCheck size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
-
-          {/* فاصل قسم تغيير كلمة المرور */}
-          <div className="pt-2 mt-1 border-t border-semantic-borderCard">
-            <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-2">
-              <KeyRound size={14} />
-              {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
-            </span>
-          </div>
-
-          {/* كلمة المرور الجديدة */}
-          <Input
-            label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
-            type="password"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            error={errors.newPassword}
-            icon={<Lock size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
-
-          {/* تأكيد كلمة المرور الجديدة */}
-          <Input
-            label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-            icon={<Lock size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
         </div>
 
-        {/* أزرار التحكم الثابتة في الأسفل */}
-        <div className="pt-4 mt-auto border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0 bg-semantic-surfaceCard">
+        {/* كلمة المرور الحالية */}
+        <Input
+          label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
+          type="password"
+          name="currentPassword"
+          value={formData.currentPassword}
+          onChange={handleChange}
+          error={errors.currentPassword}
+          icon={<ShieldCheck size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
+
+        {/* فاصل قسم تغيير كلمة المرور */}
+        <div className="pt-2 border-t border-semantic-borderCard">
+          <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-2">
+            <KeyRound size={14} />
+            {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
+          </span>
+        </div>
+
+        {/* كلمة المرور الجديدة */}
+        <Input
+          label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
+          type="password"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleChange}
+          error={errors.newPassword}
+          icon={<Lock size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
+
+        {/* تأكيد كلمة المرور الجديدة */}
+        <Input
+          label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
+          type="password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+          icon={<Lock size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
+
+        {/* أزرار التحكم الثابتة أسفل المودال */}
+        <div className="pt-4 border-t border-semantic-borderCard flex items-center justify-end gap-2 bg-semantic-surfaceCard sticky bottom-0">
           <Btn
             type="button"
             variant="secondary"
