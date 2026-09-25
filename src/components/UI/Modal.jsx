@@ -150,7 +150,7 @@ export const Modal = ({
         alignItems: "center", 
         justifyContent: "center", 
         zIndex: 9999, 
-        padding: "12px 8px",
+        padding: "16px 10px",
         touchAction: "none"
       }} 
       onClick={handleBackdropClick}
@@ -162,26 +162,34 @@ export const Modal = ({
         style={{ 
           background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
-          borderRadius: 16, 
-          padding: "16px 14px", 
-          width: "min(94vw, 480px)", 
-          maxHeight: "88vh", 
+          borderRadius: 18, 
+          padding: "18px 16px", 
+          width: "min(92vw, 460px)", 
+          maxHeight: "85vh", 
           display: "flex",
           flexDirection: "column",
           overflow: "hidden", 
           overscrollBehavior: "contain", 
           touchAction: "pan-y", 
           boxSizing: "border-box", 
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6)",
           textAlign: "start",
           color: getTextTitle(),
           ...style 
         }}
       >
-        {/* Header ثابت ومصمم بأبعاد متناسقة */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexShrink: 0, paddingBottom: 6, borderBottom: `1px solid ${getBorder()}` }}>
+        {/* Header بتنظيم وتباعد متناسق */}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          marginBottom: 12, 
+          flexShrink: 0, 
+          paddingBottom: 8, 
+          borderBottom: `1px solid ${getBorder()}` 
+        }}>
           {title && (
-            <h3 id={titleId} style={{ fontWeight: 700, color: getPrimary(), fontSize: "1rem", margin: 0, lineHeight: 1.2 }}>
+            <h3 id={titleId} style={{ fontWeight: 700, color: getPrimary(), fontSize: "1.05rem", margin: 0, lineHeight: 1.2 }}>
               {title}
             </h3>
           )}
@@ -202,11 +210,11 @@ export const Modal = ({
               borderRadius: "6px"
             }}
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* محتوى المودال القابل للتمرير */}
+        {/* الحاوية الداخلية للمحتوى مجهزة للحفاظ على هوامش ممتازة أثناء التمرير */}
         <div 
           style={{ 
             flex: 1, 
@@ -214,7 +222,8 @@ export const Modal = ({
             display: "flex", 
             flexDirection: "column",
             overflowY: "auto",
-            overscrollBehavior: "contain"
+            overscrollBehavior: "contain",
+            padding: "2px 4px 2px 2px"
           }}
         >
           {children}
