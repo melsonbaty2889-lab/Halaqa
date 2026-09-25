@@ -153,10 +153,11 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col h-full max-h-[68vh] overflow-hidden">
+      <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
+        {/* أضيف الكلاس no-scrollbar [&::-webkit-scrollbar]:hidden لتنظيف التمرير بصرياً */}
         <form 
           onSubmit={handleSubmit} 
-          className="flex-1 overflow-y-auto px-1 flex flex-col gap-4"
+          className="flex-1 overflow-y-auto px-1 flex flex-col gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {/* حقل الاسم الكامل */}
           <Input
@@ -184,14 +185,14 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* قسم رقم الهاتف بالدمج بين Select الموحد و Input الموحد */}
+          {/* قسم رقم الهاتف بالدمج الصحيح للاتجاهات LTR/RTL */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
             
-            <div className="flex gap-2 items-start">
-              {/* قائمة الاختيار المنسدلة الموحدة للمفتاح الدولي */}
+            <div className="flex items-start gap-2 dir-ltr">
+              {/* اختيار رمز الدولة */}
               <div className="w-32 shrink-0">
                 <Select
                   options={countryOptions}
@@ -201,7 +202,7 @@ export default function EditProfileModal({
                 />
               </div>
 
-              {/* حقل إدخال رقم الهاتف الموحد */}
+              {/* حقل إدخال الرقم */}
               <div className="flex-1">
                 <Input
                   type="tel"
