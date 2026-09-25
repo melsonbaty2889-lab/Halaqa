@@ -133,15 +133,30 @@ export default function EditProfileModal({
     setSubmitError('');
     if (!validate()) return;
 
+    // 1. التحقق مما إذا كانت البيانات قد تغيرت بالفعل أم لا
+    const originalEmail = (currentUser?.email || '').trim().toLowerCase();
+    const originalName = (currentUser?.name || '').trim();
+    const originalPhone = currentUser?.phone || '';
+
+    const selectedCountry = COUNTRIES_MAP[formData.countryCode] || COUNTRIES_LIST.find((c) => c.code === formData.countryCode);
+    const dialCode = selectedCountry ? selectedCountry.dialCode : '';
+    const fullPhone = formData.phone.trim() 
+      ? `${dialCode}${formData.phone.trim().replace(/^0+/, '')}`
+      : '';
+
+    const isNameChanged = formData.name.trim() !== originalName;
+    const isEmailChanged = formData.email.trim().toLowerCase() !== originalEmail;
+    const isPhoneChanged = fullPhone !== originalPhone;
+    const isPasswordChanged = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
+
+    // إذا لم يتم أي تعديل، نغلق النافذة فوراً دون إجراء استدعاء الحفظ أو إظهار رسالة
+    if (!isNameChanged && !isEmailChanged && !isPhoneChanged && !isPasswordChanged) {
+      onClose();
+      return;
+    }
+
     setLoading(true);
     try {
-      const selectedCountry = COUNTRIES_MAP[formData.countryCode] || COUNTRIES_LIST.find((c) => c.code === formData.countryCode);
-      const dialCode = selectedCountry ? selectedCountry.dialCode : '';
-
-      const fullPhone = formData.phone.trim() 
-        ? `${dialCode}${formData.phone.trim().replace(/^0+/, '')}`
-        : '';
-
       await onSave({
         name: formData.name.trim(),
         email: formData.email.trim(),
