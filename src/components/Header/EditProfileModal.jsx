@@ -1,7 +1,7 @@
 // src/components/Header/EditProfileModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck, Phone, ChevronDown } from 'lucide-react';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
@@ -29,7 +29,21 @@ export default function EditProfileModal({
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const countryDropdownRef = useRef(null);
 
+  // إغلاق قائمة الدول عند النقر خارجها
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+        setIsCountryOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // استخراج كود الدولة ورقم الهاتف الأساسي عند الفتح
   useEffect(() => {
     if (isOpen) {
       let rawPhone = currentUser?.phone || '';
@@ -52,6 +66,7 @@ export default function EditProfileModal({
         confirmPassword: ''
       });
       setErrors({});
+      setIsCountryOpen(false);
     }
   }, [isOpen, currentUser]);
 
@@ -63,6 +78,11 @@ export default function EditProfileModal({
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+  };
+
+  const handleSelectCountry = (dialCode) => {
+    setFormData((prev) => ({ ...prev, countryDialCode: dialCode }));
+    setIsCountryOpen(false);
   };
 
   const validate = () => {
@@ -124,6 +144,9 @@ export default function EditProfileModal({
     }
   };
 
+  const selectedCountry = COUNTRIES_LIST.find((c) => c.dialCode === formData.countryDialCode) || COUNTRIES_LIST[0];
+  const selectedCountryName = currentLang.startsWith('ar') ? selectedCountry.nameAr : selectedCountry.nameEn;
+
   return (
     <Modal
       open={isOpen}
@@ -144,7 +167,7 @@ export default function EditProfileModal({
             gap: 16 
           }}
         >
-          {/* Name */}
+          {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
             name="name"
@@ -156,7 +179,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* Email */}
+          {/* البريد الإلكتروني */}
           <Input
             label={t('profile.emailLabel', 'البريد الإلكتروني')}
             type="email"
@@ -170,39 +193,92 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* Phone & Country Code */}
+          {/* رقم الهاتف + القائمة المخصصة لتفادي حواف المتصفح الافتراضية */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
+            
             <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-              <select
-                name="countryDialCode"
-                value={formData.countryDialCode}
-                onChange={handleChange}
-                style={{
-                  background: 'var(--color-surface-card)',
-                  border: '1px solid var(--color-border-input)',
-                  borderRadius: 12,
-                  color: 'var(--color-text-primary)',
-                  padding: '0 8px',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  outline: 'none',
-                  direction: 'ltr',
-                  maxWidth: '140px'
-                }}
-              >
-                {COUNTRIES_LIST.map((item) => {
-                  const countryName = currentLang.startsWith('ar') ? item.nameAr : item.nameEn;
-                  return (
-                    <option key={`${item.code}-${item.dialCode}`} value={item.dialCode} style={{ background: '#1e293b', color: '#fff' }}>
-                      {item.flag} {item.dialCode} ({countryName})
-                    </option>
-                  );
-                })}
-              </select>
+              {/* قائمة القطر المخصصة Custom Select */}
+              <div ref={countryDropdownRef} style={{ position: 'relative', width: '160px', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsCountryOpen(!isCountryOpen)}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    minHeight: '42px',
+                    background: 'var(--color-surface-card)',
+                    border: '1px solid var(--color-border-input)',
+                    borderRadius: 12,
+                    color: 'var(--color-text-primary)',
+                    padding: '0 10px',
+                    fontSize: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    gap: 4
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span>{selectedCountry.flag}</span>
+                    <span dir="ltr">{selectedCountry.dialCode}</span>
+                  </span>
+                  <ChevronDown size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
+                </button>
 
+                {/* القائمة المنسدلة عند الفتح */}
+                {isCountryOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 4px)',
+                      right: 0,
+                      left: 0,
+                      maxHeight: '180px',
+                      overflowY: 'auto',
+                      background: 'var(--color-surface-card, #1e293b)',
+                      border: '1px solid var(--color-border-input, #334155)',
+                      borderRadius: 12,
+                      zIndex: 100,
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                    }}
+                  >
+                    {COUNTRIES_LIST.map((item) => {
+                      const cName = currentLang.startsWith('ar') ? item.nameAr : item.nameEn;
+                      return (
+                        <div
+                          key={`${item.code}-${item.dialCode}`}
+                          onClick={() => handleSelectCountry(item.dialCode)}
+                          style={{
+                            padding: '8px 10px',
+                            fontSize: 12,
+                            color: 'var(--color-text-primary, #fff)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 6,
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            background: item.dialCode === formData.countryDialCode ? 'rgba(255, 255, 255, 0.08)' : 'transparent'
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>{item.flag}</span>
+                            <span>{cName}</span>
+                          </span>
+                          <span dir="ltr" style={{ opacity: 0.7, fontSize: 11 }}>{item.dialCode}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* حقل ادخال الرقم الأساسي */}
               <div style={{ flex: 1 }}>
                 <Input
                   type="tel"
@@ -219,7 +295,7 @@ export default function EditProfileModal({
             </div>
           </div>
 
-          {/* Current Password */}
+          {/* كلمة المرور الحالية */}
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
             type="password"
@@ -232,7 +308,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* Divider */}
+          {/* فاصل قسم تغيير كلمة المرور */}
           <div style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))' }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-action-primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <KeyRound size={14} />
@@ -240,7 +316,7 @@ export default function EditProfileModal({
             </span>
           </div>
 
-          {/* New Password */}
+          {/* كلمة المرور الجديدة */}
           <Input
             label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
             type="password"
@@ -253,7 +329,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* Confirm New Password */}
+          {/* تأكيد كلمة المرور الجديدة */}
           <Input
             label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
             type="password"
@@ -267,7 +343,7 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* Action Buttons */}
+        {/* الشريط السفلي الثابت للأزرار */}
         <div 
           style={{ 
             paddingTop: 16, 
