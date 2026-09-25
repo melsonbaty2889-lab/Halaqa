@@ -2,12 +2,14 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
 const getBorder = () => 'var(--color-border-input)';
 const getTextTitle = () => 'var(--color-text-primary)';
 const getTextSub = () => 'var(--color-text-secondary)';
 const getCardBg = () => 'var(--color-surface-card)';
+const getOverlayBg = () => 'var(--color-surface-overlay, rgba(7, 11, 17, 0.8))';
 
 let activeModalsCount = 0;
 let originalBodyOverflow = '';
@@ -23,11 +25,17 @@ export const Modal = ({
   style = {},
   closeOnBackdropClick = true 
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const titleId = useId();
   const modalRef = useRef(null);
   const previousActiveElementRef = useRef(null);
   const modalIdRef = useRef(titleId);
+
+  // حفظ مرجع دالة onClose الحالية تجنباً لإعادة تشغيل الـ Lifecycle
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -60,13 +68,13 @@ export const Modal = ({
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
 
       if (e.key === 'Tab' && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
-          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          'a[href]:not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]):not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'
         );
         
         if (focusableElements.length === 0) {
@@ -115,26 +123,29 @@ export const Modal = ({
         prevEl.focus();
       }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || typeof window === 'undefined') return null;
 
   const handleBackdropClick = (e) => {
     const isTopModal = modalStack[modalStack.length - 1] === modalIdRef.current;
     if (closeOnBackdropClick && isTopModal && e.target === e.currentTarget) {
-      onClose?.();
+      onCloseRef.current?.();
     }
   };
+
+  const isRtl = i18n.dir ? i18n.dir() === 'rtl' : true;
 
   return createPortal(
     <div 
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
+      dir={isRtl ? 'rtl' : 'ltr'}
       style={{ 
         position: "fixed", 
         inset: 0, 
-        background: "rgba(7, 11, 17, 0.8)", 
+        background: getOverlayBg(), 
         backdropFilter: "blur(6px)", 
         display: "flex", 
         alignItems: "center", 
@@ -168,18 +179,17 @@ export const Modal = ({
           ...style 
         }}
       >
-        {/* الهيدر ثابت في الأعلى */}
+        {/* Header ثابت لعدم اختفائه عند التمرير */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
           {title && <h3 id={titleId} style={{ fontWeight: 800, color: getPrimary(), fontSize: "1.05rem", margin: 0 }}>{title}</h3>}
           <button 
             type="button"
-            onClick={onClose} 
+            onClick={() => onCloseRef.current?.()} 
             aria-label={t('common.close', 'إغلاق')}
             style={{ 
               background: "none", 
               border: "none", 
               color: getTextSub(), 
-              fontSize: 28, 
               cursor: "pointer", 
               padding: 0, 
               lineHeight: 1,
@@ -190,17 +200,17 @@ export const Modal = ({
               justifyContent: "center"
             }}
           >
-            ×
+            <X size={20} />
           </button>
         </div>
 
-        {/* جسم المودال قابل للتمرير التلقائي والسلس عند زيادة الارتفاع فقط */}
+        {/* جسم المودال القابل للتمرير للمحتوى الطويل */}
         <div 
           style={{ 
             flex: 1, 
             minHeight: 0, 
             display: "flex", 
-            flexDirection: "column", 
+            flexDirection: "column",
             overflowY: "auto",
             overscrollBehavior: "contain"
           }}
