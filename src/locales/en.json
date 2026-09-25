@@ -866,6 +866,7 @@
     "errors": {
       "currentPasswordRequired": "كلمة المرور الحالية مطلوبة لتأكيد التغييرات",
       "emailRequired": "البريد الإلكتروني مطلوب",
+      "generalSaveError": "حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة لاحقاً",
       "invalidCurrentPassword": "كلمة المرور الحالية غير صحيحة",
       "nameRequired": "الاسم مطلوب",
       "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
