@@ -11,7 +11,6 @@ import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-// دالة مساعدة معتمدة للاكتشاف التلقائي لرمز الدولة الاحتياطي عبر المنطقة الزمنية
 const getDefaultDialCode = () => {
   try {
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -20,7 +19,7 @@ const getDefaultDialCode = () => {
       if (matched) return matched.dialCode;
     }
   } catch (e) {
-    // التغاضي عن الخطأ في البيئات غير الداعمة
+    // التغاضي عن أي أخطاء في البيئات غير المدعومة
   }
   return COUNTRIES_LIST[0]?.dialCode || '+966';
 };
@@ -200,7 +199,7 @@ export default function EditProfileModal({
           </label>
           
           <div className="flex items-start gap-2">
-            <div className="w-36 shrink-0">
+            <div className="w-32 sm:w-36 shrink-0">
               <Select
                 options={countryOptions}
                 value={formData.countryDialCode}
@@ -217,7 +216,7 @@ export default function EditProfileModal({
                 onChange={handleChange}
                 error={errors.phone}
                 icon={<Phone size={16} />}
-                placeholder="500000000"
+                placeholder="50 000 0000"
                 dir="ltr"
                 activeRtl={activeRtl}
               />
@@ -272,13 +271,14 @@ export default function EditProfileModal({
           activeRtl={activeRtl}
         />
 
-        {/* أزرار التحكم الثابتة أسفل المودال */}
-        <div className="pt-4 border-t border-semantic-borderCard flex items-center justify-end gap-2 bg-semantic-surfaceCard sticky bottom-0">
+        {/* شريط الأزرار الموحد والمحسن */}
+        <div className="pt-4 border-t border-semantic-borderCard grid grid-cols-2 gap-3 bg-semantic-surfaceCard sticky bottom-0">
           <Btn
             type="button"
             variant="secondary"
             onClick={onClose}
             disabled={loading}
+            className="w-full justify-center"
           >
             {t('common.cancel', 'إلغاء')}
           </Btn>
@@ -286,7 +286,7 @@ export default function EditProfileModal({
             type="submit"
             variant="primary"
             loading={loading}
-            className="min-w-[120px]"
+            className="w-full justify-center"
           >
             {t('common.saveChanges', 'حفظ التغييرات')}
           </Btn>
