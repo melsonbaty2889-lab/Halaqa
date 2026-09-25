@@ -48,19 +48,16 @@ export default function CountrySelect({
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      {/* زر فتح القائمة */}
+      {/* زر فتح القائمة: يعرض العلم وكود الاتصال فقط بدون اسم الدولة لمنع التمدد أو القطع */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[42px] px-2.5 py-2 bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-lg text-semantic-textPrimary flex items-center justify-between gap-1.5 hover:border-semantic-actionPrimary/50 transition-colors focus:outline-none focus:ring-1 focus:ring-semantic-actionPrimary"
+        className="w-full h-[42px] px-2.5 py-2 bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-lg text-semantic-textPrimary flex items-center justify-between gap-1 hover:border-semantic-actionPrimary/50 transition-colors focus:outline-none focus:ring-1 focus:ring-semantic-actionPrimary"
       >
-        <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-base shrink-0">{selectedCountry?.flag}</span>
-          <span className="text-xs text-semantic-textSecondary shrink-0 dir-ltr font-mono">
+          <span className="text-xs text-semantic-textPrimary font-mono dir-ltr shrink-0">
             ({selectedCountry?.dialCode})
-          </span>
-          <span className="text-xs truncate text-semantic-textPrimary">
-            {isArabic ? selectedCountry?.nameAr : selectedCountry?.nameEn}
           </span>
         </div>
         <ChevronDown
@@ -71,9 +68,9 @@ export default function CountrySelect({
         />
       </button>
 
-      {/* القائمة المنسدلة */}
+      {/* القائمة المنسدلة: بعرض محدد ومنتظم يطابق الحقل */}
       {isOpen && (
-        <div className="absolute top-full mt-1 z-50 w-64 max-w-[85vw] bg-semantic-surfaceCard border border-semantic-borderCard rounded-lg shadow-xl overflow-hidden start-0">
+        <div className="absolute top-full mt-1 z-50 w-56 bg-semantic-surfaceCard border border-semantic-borderCard rounded-lg shadow-xl overflow-hidden start-0">
           {/* حقل البحث */}
           <div className="p-2 border-b border-semantic-borderCard bg-semantic-surfaceBorder/10">
             <div className="relative flex items-center">
@@ -86,13 +83,13 @@ export default function CountrySelect({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={t('common.searchCountry', 'ابحث باسم الدولة أو الكود...')}
-                className="w-full h-8 start-0 ps-8 pe-2.5 text-xs bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-md text-semantic-textPrimary placeholder:text-semantic-textSecondary/60 focus:outline-none focus:border-semantic-actionPrimary"
+                className="w-full h-8 ps-8 pe-2.5 text-xs bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-md text-semantic-textPrimary placeholder:text-semantic-textSecondary/60 focus:outline-none focus:border-semantic-actionPrimary"
                 autoFocus
               />
             </div>
           </div>
 
-          {/* قائمة الدول */}
+          {/* قائمة الدول مع عرض الأسماء كاملة داخل القائمة */}
           <div className="max-h-48 overflow-y-auto divide-y divide-semantic-borderCard/30">
             {filteredCountries.length > 0 ? (
               filteredCountries.map((country) => {
