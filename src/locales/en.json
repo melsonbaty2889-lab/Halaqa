@@ -877,6 +877,7 @@
     "namePlaceholder": "أدخل اسمك",
     "newPasswordLabel": "كلمة المرور الجديدة",
     "phoneLabel": "رقم الهاتف / الواتساب",
+    "phonePlaceholder": "500000000",
     "subtitle": "تحديث بيانات الحساب وكلمة المرور",
     "successUpdate": "تم تحديث البيانات وكلمة المرور بنجاح",
     "title": "تعديل الملف الشخصي"
