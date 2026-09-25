@@ -9,7 +9,6 @@ import Btn from '@/components/UI/Btn';
 import Select from '@/components/UI/Select';
 
 import { COUNTRIES_LIST } from '@/constants/countries';
-// استدعى الدالة من ملف formatters.js الموجود بالفعل
 import { parsePhoneNumber } from '@/utils/formatters';
 
 export default function EditProfileModal({
@@ -141,10 +140,11 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col h-full max-h-[75vh] overflow-hidden">
+      <div className="flex flex-col h-full max-h-[75vh]">
+        {/* إزالة overflow-hidden والسماح بظهور القوائم المنسدلة بدون انقاطاع */}
         <form 
           onSubmit={handleSubmit} 
-          className="flex-1 overflow-y-auto px-1 flex flex-col gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex-1 overflow-y-visible px-1 flex flex-col gap-4 pb-4"
         >
           {/* الاسم الكامل */}
           <Input
@@ -172,14 +172,14 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف والرمز الدولي */}
-          <div className="flex flex-col gap-1.5">
+          {/* رقم الهاتف والرمز الدولي - مع إعطاء القائمة z-index مرتفع */}
+          <div className="flex flex-col gap-1.5 relative z-20">
             <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
             
             <div className="flex items-start gap-2 dir-ltr">
-              <div className="w-32 shrink-0">
+              <div className="w-32 shrink-0 relative z-30">
                 <Select
                   options={countryOptions}
                   value={formData.countryDialCode}
@@ -252,8 +252,8 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* أزرار العمليات */}
-        <div className="pt-4 mt-3 border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0">
+        {/* أزرار العمليات الموحدة */}
+        <div className="pt-4 mt-auto border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0 z-10">
           <Btn
             type="button"
             variant="secondary"
