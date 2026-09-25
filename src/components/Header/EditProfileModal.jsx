@@ -10,24 +10,38 @@ import CountrySelect from '@/components/UI/CountrySelect';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
+// دالة الكشف الحيادي والذكي عن دولة المستخدم
 const detectUserCountryCode = () => {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!tz) return '';
+    // 1. فحص المنطقة الزمنية للمستخدم
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // مثال: "Africa/Cairo"
+    if (tz) {
+      // البحث عن تطابق تام أولاً لمنع التخمين الخاطئ
+      const exactMatch = COUNTRIES_LIST.find((c) => c.timezone === tz);
+      if (exactMatch) return exactMatch.code;
 
-    const matched = COUNTRIES_LIST.find((c) => c.timezone === tz);
-    if (matched) return matched.code;
+      // فحص المدينة/المنطقة بدقة
+      const tzCity = tz.split('/')[1];
+      if (tzCity) {
+        const partialMatch = COUNTRIES_LIST.find(
+          (c) => c.timezone && c.timezone.split('/')[1] === tzCity
+        );
+        if (partialMatch) return partialMatch.code;
+      }
+    }
 
-    const tzCity = tz.split('/')[1];
-    if (tzCity) {
-      const partialMatch = COUNTRIES_LIST.find(
-        (c) => c.timezone && c.timezone.includes(tzCity)
-      );
-      if (partialMatch) return partialMatch.code;
+    // 2. فحص لغة المتصفح (مثال: "ar-EG" أو "en-US")
+    const lang = navigator.language || (navigator.languages && navigator.languages[0]);
+    if (lang && lang.includes('-')) {
+      const countryCodeFromLang = lang.split('-')[1].toUpperCase();
+      const langMatch = COUNTRIES_LIST.find((c) => c.code === countryCodeFromLang);
+      if (langMatch) return langMatch.code;
     }
   } catch {
     // تجاهل الأخطاء
   }
+
+  // عدم فرض أي دولة تلقائياً عند الفشل لضمان الحيادية
   return '';
 };
 
