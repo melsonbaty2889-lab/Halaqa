@@ -1,11 +1,17 @@
 // src/components/Header/EditProfileModal.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound, ShieldCheck, Phone, ChevronDown } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
+
+// استيراد مكونات الواجهة الموحدة من مجلد UI المعتمد
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
+import Select from '@/components/UI/Select';
+
+// استيراد القواعد والأكواد من المرجع الموحد
 import { COUNTRIES_LIST } from '@/constants/countries';
+import UI from '@/theme/styles';
 
 export default function EditProfileModal({
   isOpen = false,
@@ -29,21 +35,8 @@ export default function EditProfileModal({
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [isCountryOpen, setIsCountryOpen] = useState(false);
-  const countryDropdownRef = useRef(null);
 
-  // إغلاق قائمة الدول عند النقر خارجها
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
-        setIsCountryOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // استخراج كود الدولة ورقم الهاتف الأساسي عند الفتح
+  // استخراج كود الدولة ورقم الهاتف الأساسي عند فتح النافذة
   useEffect(() => {
     if (isOpen) {
       let rawPhone = currentUser?.phone || '';
@@ -66,7 +59,6 @@ export default function EditProfileModal({
         confirmPassword: ''
       });
       setErrors({});
-      setIsCountryOpen(false);
     }
   }, [isOpen, currentUser]);
 
@@ -80,9 +72,8 @@ export default function EditProfileModal({
     }
   };
 
-  const handleSelectCountry = (dialCode) => {
-    setFormData((prev) => ({ ...prev, countryDialCode: dialCode }));
-    setIsCountryOpen(false);
+  const handleCountryChange = (selectedDialCode) => {
+    setFormData((prev) => ({ ...prev, countryDialCode: selectedDialCode }));
   };
 
   const validate = () => {
@@ -144,8 +135,16 @@ export default function EditProfileModal({
     }
   };
 
-  const selectedCountry = COUNTRIES_LIST.find((c) => c.dialCode === formData.countryDialCode) || COUNTRIES_LIST[0];
-  const selectedCountryName = currentLang.startsWith('ar') ? selectedCountry.nameAr : selectedCountry.nameEn;
+  // تجهيز خيارات قائمة المفاتيح الدولية المنسدلة للـ Select الموحد
+  const countryOptions = COUNTRIES_LIST.map((c) => {
+    const cName = currentLang.startsWith('ar') ? c.nameAr : c.nameEn;
+    return {
+      value: c.dialCode,
+      label: `${c.flag} ${c.dialCode}`,
+      subLabel: cName,
+      icon: c.flag
+    };
+  });
 
   return (
     <Modal
@@ -154,20 +153,12 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '68vh', overflow: 'hidden' }}>
+      <div className="flex flex-col h-full max-h-[68vh] overflow-hidden">
         <form 
           onSubmit={handleSubmit} 
-          style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            paddingLeft: 4, 
-            paddingRight: 4, 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 16 
-          }}
+          className="flex-1 overflow-y-auto px-1 flex flex-col gap-4"
         >
-          {/* الاسم الكامل */}
+          {/* حقل الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
             name="name"
@@ -179,7 +170,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* البريد الإلكتروني */}
+          {/* حقل البريد الإلكتروني */}
           <Input
             label={t('profile.emailLabel', 'البريد الإلكتروني')}
             type="email"
@@ -193,93 +184,25 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف + القائمة المخصصة لتفادي حواف المتصفح الافتراضية */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+          {/* قسم رقم الهاتف بالدمج بين Select الموحد و Input الموحد */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
             
-            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-              {/* قائمة القطر المخصصة Custom Select */}
-              <div ref={countryDropdownRef} style={{ position: 'relative', width: '160px', flexShrink: 0 }}>
-                <button
-                  type="button"
-                  onClick={() => setIsCountryOpen(!isCountryOpen)}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    minHeight: '42px',
-                    background: 'var(--color-surface-card)',
-                    border: '1px solid var(--color-border-input)',
-                    borderRadius: 12,
-                    color: 'var(--color-text-primary)',
-                    padding: '0 10px',
-                    fontSize: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    gap: 4
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span>{selectedCountry.flag}</span>
-                    <span dir="ltr">{selectedCountry.dialCode}</span>
-                  </span>
-                  <ChevronDown size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
-                </button>
-
-                {/* القائمة المنسدلة عند الفتح */}
-                {isCountryOpen && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 'calc(100% + 4px)',
-                      right: 0,
-                      left: 0,
-                      maxHeight: '180px',
-                      overflowY: 'auto',
-                      background: 'var(--color-surface-card, #1e293b)',
-                      border: '1px solid var(--color-border-input, #334155)',
-                      borderRadius: 12,
-                      zIndex: 100,
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                    }}
-                  >
-                    {COUNTRIES_LIST.map((item) => {
-                      const cName = currentLang.startsWith('ar') ? item.nameAr : item.nameEn;
-                      return (
-                        <div
-                          key={`${item.code}-${item.dialCode}`}
-                          onClick={() => handleSelectCountry(item.dialCode)}
-                          style={{
-                            padding: '8px 10px',
-                            fontSize: 12,
-                            color: 'var(--color-text-primary, #fff)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 6,
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                            background: item.dialCode === formData.countryDialCode ? 'rgba(255, 255, 255, 0.08)' : 'transparent'
-                          }}
-                        >
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span>{item.flag}</span>
-                            <span>{cName}</span>
-                          </span>
-                          <span dir="ltr" style={{ opacity: 0.7, fontSize: 11 }}>{item.dialCode}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            <div className="flex gap-2 items-start">
+              {/* قائمة الاختيار المنسدلة الموحدة للمفتاح الدولي */}
+              <div className="w-32 shrink-0">
+                <Select
+                  options={countryOptions}
+                  value={formData.countryDialCode}
+                  onChange={handleCountryChange}
+                  dir="ltr"
+                />
               </div>
 
-              {/* حقل ادخال الرقم الأساسي */}
-              <div style={{ flex: 1 }}>
+              {/* حقل إدخال رقم الهاتف الموحد */}
+              <div className="flex-1">
                 <Input
                   type="tel"
                   name="phone"
@@ -295,7 +218,7 @@ export default function EditProfileModal({
             </div>
           </div>
 
-          {/* كلمة المرور الحالية */}
+          {/* حقل كلمة المرور الحالية */}
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
             type="password"
@@ -308,9 +231,9 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* فاصل قسم تغيير كلمة المرور */}
-          <div style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-action-primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          {/* فاصل قسم تغيير كلمة المرور باستخدام Semantic Tokens */}
+          <div className="pt-3 mt-1 border-t border-semantic-borderCard">
+            <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-3">
               <KeyRound size={14} />
               {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
             </span>
@@ -343,19 +266,8 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي الثابت للأزرار */}
-        <div 
-          style={{ 
-            paddingTop: 16, 
-            marginTop: 12, 
-            borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'flex-end', 
-            gap: 10, 
-            flexShrink: 0 
-          }}
-        >
+        {/* أزرار العمليات الموحدة عبر Btn */}
+        <div className="pt-4 mt-3 border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0">
           <Btn
             type="button"
             variant="secondary"
@@ -369,7 +281,7 @@ export default function EditProfileModal({
             onClick={handleSubmit}
             variant="primary"
             loading={loading}
-            style={{ minWidth: 120 }}
+            className="min-w-[120px]"
           >
             {t('common.saveChanges', 'حفظ التغييرات')}
           </Btn>
