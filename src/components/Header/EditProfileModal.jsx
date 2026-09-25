@@ -1,4 +1,3 @@
-// src/components/Header/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
@@ -11,17 +10,14 @@ import CountrySelect from '@/components/UI/CountrySelect';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-// دالة عامة لاكتشاف رمز الدولة التلقائي بناءً على المنطقة الزمنية للجهاز
 const detectUserCountryCode = () => {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (!tz) return '';
 
-    // 1. مطابقة مباشرة ودقيقة مع الـ timezone
     const matched = COUNTRIES_LIST.find((c) => c.timezone === tz);
     if (matched) return matched.code;
 
-    // 2. مطابقة مرنة بناءً على اسم المدينة في المنطقة الزمنية
     const tzCity = tz.split('/')[1];
     if (tzCity) {
       const partialMatch = COUNTRIES_LIST.find(
@@ -63,7 +59,6 @@ export default function EditProfileModal({
     if (isOpen) {
       const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
       
-      // البحث عن كود الدولة المطابق لرمز الاتصال أو اكتشاف الدولة تلقائياً
       let matchedCode = '';
       if (dialCode) {
         const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
@@ -214,7 +209,7 @@ export default function EditProfileModal({
             </label>
             
             <div className="flex items-start gap-2">
-              <div className="w-40 sm:w-44 shrink-0">
+              <div className="w-[45%] sm:w-48 shrink-0">
                 <CountrySelect
                   value={formData.countryCode}
                   onChange={handleCountryChange}
