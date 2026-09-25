@@ -6,22 +6,33 @@ import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
-import Select from '@/components/UI/Select';
+import CountrySelect from '@/components/UI/CountrySelect';
 
-import { COUNTRIES_LIST } from '@/constants/countries';
+import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-const getDefaultDialCode = () => {
+// دالة عامة موحدة لاكتشاف رمز الدولة التلقائي بناءً على المنطقة الزمنية للجهاز
+const detectUserCountryCode = () => {
   try {
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (userTimeZone) {
-      const matched = COUNTRIES_LIST.find((c) => c.timezones && c.timezones.includes(userTimeZone));
-      if (matched) return matched.dialCode;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz) return 'EG';
+
+    // 1. مطابقة مباشرة ودقيقة
+    const matched = COUNTRIES_LIST.find((c) => c.timezone === tz);
+    if (matched) return matched.code;
+
+    // 2. مطابقة مرنة بناءً على اسم المدينة في المنطقة الزمنية
+    const tzCity = tz.split('/')[1];
+    if (tzCity) {
+      const partialMatch = COUNTRIES_LIST.find(
+        (c) => c.timezone && c.timezone.includes(tzCity)
+      );
+      if (partialMatch) return partialMatch.code;
     }
-  } catch (e) {
-    // التغاضي عن الأخطاء في البيئات غير المدعومة
+  } catch {
+    // تجاهل الأخطاء
   }
-  return COUNTRIES_LIST[0]?.dialCode || '+966';
+  return 'EG';
 };
 
 export default function EditProfileModal({
@@ -37,7 +48,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryDialCode: '+966',
+    countryCode: 'EG',
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -51,12 +62,22 @@ export default function EditProfileModal({
   useEffect(() => {
     if (isOpen) {
       const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
-      const fallbackCode = getDefaultDialCode();
+      
+      // البحث عن كود الدولة المطابق لرمز الاتصال أو اكتشاف الدولة تلقائياً
+      let matchedCode = '';
+      if (dialCode) {
+        const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
+        if (found) matchedCode = found.code;
+      }
+
+      if (!matchedCode) {
+        matchedCode = detectUserCountryCode();
+      }
 
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        countryDialCode: dialCode || fallbackCode,
+        countryCode: matchedCode,
         phone: phone || '',
         currentPassword: '',
         newPassword: '',
@@ -76,8 +97,8 @@ export default function EditProfileModal({
     if (submitError) setSubmitError('');
   };
 
-  const handleCountryChange = (selectedDialCode) => {
-    setFormData((prev) => ({ ...prev, countryDialCode: selectedDialCode }));
+  const handleCountryChange = (selectedCode) => {
+    setFormData((prev) => ({ ...prev, countryCode: selectedCode }));
     if (submitError) setSubmitError('');
   };
 
@@ -119,8 +140,11 @@ export default function EditProfileModal({
 
     setLoading(true);
     try {
+      const selectedCountry = COUNTRIES_MAP[formData.countryCode] || COUNTRIES_LIST.find((c) => c.code === formData.countryCode);
+      const dialCode = selectedCountry ? selectedCountry.dialCode : '';
+
       const fullPhone = formData.phone.trim() 
-        ? `${formData.countryDialCode}${formData.phone.trim().replace(/^0+/, '')}`
+        ? `${dialCode}${formData.phone.trim().replace(/^0+/, '')}`
         : '';
 
       await onSave({
@@ -142,16 +166,6 @@ export default function EditProfileModal({
     }
   };
 
-  const countryOptions = COUNTRIES_LIST.map((c) => {
-    const cName = currentLang.startsWith('ar') ? c.nameAr : c.nameEn;
-    return {
-      value: c.dialCode,
-      label: `${c.flag} ${c.dialCode}`,
-      subLabel: cName,
-      icon: c.flag
-    };
-  });
-
   return (
     <Modal
       open={isOpen}
@@ -160,7 +174,6 @@ export default function EditProfileModal({
       closeOnBackdropClick={false}
     >
       <form onSubmit={handleSubmit} className="flex flex-col h-full min-h-0">
-        {/* حاوية حقول المدخلات قابلة للتمرير عند تجاوز الارتفاع */}
         <div className="flex-1 overflow-y-auto space-y-3 px-0.5 pb-3">
           {submitError && (
             <div className="p-2.5 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
@@ -194,19 +207,20 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف والرمز الدولي */}
+          {/* رقم الهاتف واختيار الدولة الموحد */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
             
             <div className="flex items-start gap-2">
-              <div className="w-28 sm:w-32 shrink-0">
-                <Select
-                  options={countryOptions}
-                  value={formData.countryDialCode}
+              <div className="w-36 sm:w-40 shrink-0">
+                <CountrySelect
+                  value={formData.countryCode}
                   onChange={handleCountryChange}
-                  dir="ltr"
+                  lang={currentLang}
+                  isArabic={activeRtl}
+                  t={t}
                 />
               </div>
 
@@ -274,7 +288,7 @@ export default function EditProfileModal({
           />
         </div>
 
-        {/* شريط الأزرار السفلية الثابت والمستقر */}
+        {/* أزرار الحفظ والإلغاء */}
         <div className="pt-3 border-t border-semantic-borderCard grid grid-cols-2 gap-2.5 shrink-0 bg-semantic-surfaceCard sticky bottom-0">
           <Btn
             type="button"
