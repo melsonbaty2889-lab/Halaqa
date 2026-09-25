@@ -20,8 +20,6 @@ export default function EditProfileModal({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
-
-  // تحديد الكود الافتراضي للدولة من أول عنصر في مصفوفة الدول المعتمدة
   const defaultDialCode = COUNTRIES_LIST[0]?.dialCode || '+966';
 
   const [formData, setFormData] = useState({
@@ -41,7 +39,6 @@ export default function EditProfileModal({
   useEffect(() => {
     if (isOpen) {
       const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
-
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
@@ -61,9 +58,7 @@ export default function EditProfileModal({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
     if (submitError) setSubmitError('');
   };
 
@@ -78,12 +73,8 @@ export default function EditProfileModal({
     const emailTrimmed = formData.email.trim().toLowerCase();
     const currentEmailTrimmed = (currentUser?.email || '').trim().toLowerCase();
 
-    if (!nameTrimmed) {
-      newErrors.name = t('profile.errors.nameRequired', 'الاسم مطلوب');
-    }
-    if (!emailTrimmed) {
-      newErrors.email = t('profile.errors.emailRequired', 'البريد الإلكتروني مطلوب');
-    }
+    if (!nameTrimmed) newErrors.name = t('profile.errors.nameRequired', 'الاسم مطلوب');
+    if (!emailTrimmed) newErrors.email = t('profile.errors.emailRequired', 'البريد الإلكتروني مطلوب');
 
     const isEmailChanged = emailTrimmed !== currentEmailTrimmed;
     const isPasswordChanging = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
@@ -154,120 +145,123 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {submitError && (
-          <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
-            {submitError}
-          </div>
-        )}
-
-        {/* الاسم الكامل */}
-        <Input
-          label={t('profile.nameLabel', 'الاسم الكامل')}
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          error={errors.name}
-          icon={<User size={16} />}
-          placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
-          activeRtl={activeRtl}
-        />
-
-        {/* البريد الإلكتروني */}
-        <Input
-          label={t('profile.emailLabel', 'البريد الإلكتروني')}
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          icon={<Mail size={16} />}
-          placeholder="example@mail.com"
-          dir="ltr"
-          activeRtl={activeRtl}
-        />
-
-        {/* رقم الهاتف والرمز الدولي */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-semantic-textSecondary">
-            {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
-          </label>
-          
-          <div className="flex items-start gap-2" dir="ltr">
-            <div className="w-32 shrink-0">
-              <Select
-                options={countryOptions}
-                value={formData.countryDialCode}
-                onChange={handleCountryChange}
-                dir="ltr"
-              />
+      <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[70vh]">
+        {/* منطقة الحقول القابلة للتمرير */}
+        <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4 custom-scrollbar">
+          {submitError && (
+            <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
+              {submitError}
             </div>
+          )}
 
-            <div className="flex-1">
-              <Input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                icon={<Phone size={16} />}
-                placeholder="50 000 0000"
-                dir="ltr"
-                activeRtl={activeRtl}
-              />
+          {/* الاسم الكامل */}
+          <Input
+            label={t('profile.nameLabel', 'الاسم الكامل')}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+            icon={<User size={16} />}
+            placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
+            activeRtl={activeRtl}
+          />
+
+          {/* البريد الإلكتروني */}
+          <Input
+            label={t('profile.emailLabel', 'البريد الإلكتروني')}
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+            icon={<Mail size={16} />}
+            placeholder="example@mail.com"
+            dir="ltr"
+            activeRtl={activeRtl}
+          />
+
+          {/* رقم الهاتف والرمز الدولي */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-semantic-textSecondary">
+              {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+            </label>
+            
+            <div className="flex items-start gap-2">
+              <div className="w-32 shrink-0">
+                <Select
+                  options={countryOptions}
+                  value={formData.countryDialCode}
+                  onChange={handleCountryChange}
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="flex-1">
+                <Input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={errors.phone}
+                  icon={<Phone size={16} />}
+                  placeholder="50 000 0000"
+                  dir="ltr"
+                  activeRtl={activeRtl}
+                />
+              </div>
             </div>
           </div>
+
+          {/* كلمة المرور الحالية */}
+          <Input
+            label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
+            type="password"
+            name="currentPassword"
+            value={formData.currentPassword}
+            onChange={handleChange}
+            error={errors.currentPassword}
+            icon={<ShieldCheck size={16} />}
+            placeholder="••••••••"
+            activeRtl={activeRtl}
+          />
+
+          {/* فاصل قسم تغيير كلمة المرور */}
+          <div className="pt-2 mt-1 border-t border-semantic-borderCard">
+            <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-2">
+              <KeyRound size={14} />
+              {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
+            </span>
+          </div>
+
+          {/* كلمة المرور الجديدة */}
+          <Input
+            label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
+            type="password"
+            name="newPassword"
+            value={formData.newPassword}
+            onChange={handleChange}
+            error={errors.newPassword}
+            icon={<Lock size={16} />}
+            placeholder="••••••••"
+            activeRtl={activeRtl}
+          />
+
+          {/* تأكيد كلمة المرور الجديدة */}
+          <Input
+            label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            error={errors.confirmPassword}
+            icon={<Lock size={16} />}
+            placeholder="••••••••"
+            activeRtl={activeRtl}
+          />
         </div>
 
-        {/* كلمة المرور الحالية */}
-        <Input
-          label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
-          type="password"
-          name="currentPassword"
-          value={formData.currentPassword}
-          onChange={handleChange}
-          error={errors.currentPassword}
-          icon={<ShieldCheck size={16} />}
-          placeholder="••••••••"
-          activeRtl={activeRtl}
-        />
-
-        {/* فاصل قسم تغيير كلمة المرور */}
-        <div className="pt-2 mt-1 border-t border-semantic-borderCard">
-          <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-2">
-            <KeyRound size={14} />
-            {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
-          </span>
-        </div>
-
-        {/* كلمة المرور الجديدة */}
-        <Input
-          label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
-          type="password"
-          name="newPassword"
-          value={formData.newPassword}
-          onChange={handleChange}
-          error={errors.newPassword}
-          icon={<Lock size={16} />}
-          placeholder="••••••••"
-          activeRtl={activeRtl}
-        />
-
-        {/* تأكيد كلمة المرور الجديدة */}
-        <Input
-          label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
-          type="password"
-          name="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          error={errors.confirmPassword}
-          icon={<Lock size={16} />}
-          placeholder="••••••••"
-          activeRtl={activeRtl}
-        />
-
-        {/* أزرار العمليات الموحدة */}
-        <div className="pt-4 mt-2 border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0">
+        {/* أزرار العمليات الموحدة المثبتة في الأسفل */}
+        <div className="pt-4 mt-auto border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0 bg-semantic-surfaceCard">
           <Btn
             type="button"
             variant="secondary"
