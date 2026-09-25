@@ -209,7 +209,7 @@ export default function EditProfileModal({
             </label>
             
             <div className="flex items-start gap-2">
-              <div className="w-[45%] sm:w-48 shrink-0">
+              <div className="w-28 sm:w-32 shrink-0">
                 <CountrySelect
                   value={formData.countryCode}
                   onChange={handleCountryChange}
