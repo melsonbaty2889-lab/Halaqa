@@ -11,6 +11,22 @@ import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
+// دالة مساعدة لتحديد كود الدولة التلقائي حسب المنطقة الزمنية للعميل
+const detectUserDefaultDialCode = () => {
+  try {
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (userTimeZone) {
+      const matchedCountry = COUNTRIES_LIST.find((c) =>
+        c.timezones && c.timezones.includes(userTimeZone)
+      );
+      if (matchedCountry) return matchedCountry.dialCode;
+    }
+  } catch (e) {
+    console.warn('Could not detect user timezone:', e);
+  }
+  return COUNTRIES_LIST[0]?.dialCode || '+966';
+};
+
 export default function EditProfileModal({
   isOpen = false,
   onClose = () => {},
@@ -20,12 +36,11 @@ export default function EditProfileModal({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
-  const defaultDialCode = COUNTRIES_LIST[0]?.dialCode || '+966';
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryDialCode: defaultDialCode,
+    countryDialCode: '',
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -38,12 +53,17 @@ export default function EditProfileModal({
 
   useEffect(() => {
     if (isOpen) {
+      // 1. محاولة تفكيك رقم المستخدم المسجل
       const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
+      
+      // 2. إذا لم يوجد كود مسجل، يتم اكتشاف دولة المستخدم تلقائياً حسب مكانه/منطقته
+      const initialDialCode = dialCode || detectUserDefaultDialCode();
+
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        countryDialCode: dialCode || defaultDialCode,
-        phone: phone || '',
+        countryDialCode: initialDialCode,
+        phone: phone || '', // إزالة أي قيمة افتراضية صريحة للرقم
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -51,7 +71,7 @@ export default function EditProfileModal({
       setErrors({});
       setSubmitError('');
     }
-  }, [isOpen, currentUser, defaultDialCode]);
+  }, [isOpen, currentUser]);
 
   if (!isOpen) return null;
 
@@ -145,9 +165,12 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[70vh]">
-        {/* منطقة الحقول القابلة للتمرير */}
-        <div className="flex-1 overflow-y-auto px-1 space-y-4 pb-4 custom-scrollbar">
+      <form onSubmit={handleSubmit} className="flex flex-col max-h-[75vh]">
+        {/* منطقة التمرير المنضبطة بحسب اتجاه اللغة (RTL / LTR) */}
+        <div 
+          className="flex-1 overflow-y-auto px-1 space-y-4 pb-4 custom-scrollbar"
+          dir={activeRtl ? 'rtl' : 'ltr'}
+        >
           {submitError && (
             <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
               {submitError}
@@ -187,7 +210,8 @@ export default function EditProfileModal({
             </label>
             
             <div className="flex items-start gap-2">
-              <div className="w-32 shrink-0">
+              {/* حقل اختيار كود الدولة */}
+              <div className="w-36 shrink-0">
                 <Select
                   options={countryOptions}
                   value={formData.countryDialCode}
@@ -196,6 +220,7 @@ export default function EditProfileModal({
                 />
               </div>
 
+              {/* حقل إدخال رقم الهاتف بدون قيم افتراضية حقيقية */}
               <div className="flex-1">
                 <Input
                   type="tel"
@@ -204,7 +229,7 @@ export default function EditProfileModal({
                   onChange={handleChange}
                   error={errors.phone}
                   icon={<Phone size={16} />}
-                  placeholder="50 000 0000"
+                  placeholder={t('profile.phonePlaceholder', '500000000')}
                   dir="ltr"
                   activeRtl={activeRtl}
                 />
@@ -260,7 +285,7 @@ export default function EditProfileModal({
           />
         </div>
 
-        {/* أزرار العمليات الموحدة المثبتة في الأسفل */}
+        {/* أزرار التحكم الثابتة في الأسفل */}
         <div className="pt-4 mt-auto border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0 bg-semantic-surfaceCard">
           <Btn
             type="button"
