@@ -30,14 +30,12 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // استخراج رمز الدولة والهاتف عند فتح المودال
   useEffect(() => {
     if (isOpen) {
       let rawPhone = currentUser?.phone || '';
       let matchedDialCode = '+966';
       let mainPhone = rawPhone;
 
-      // مطابقة الهاتف المسجل بقائمة الدول الموجودة
       const foundCountry = COUNTRIES_LIST.find((c) => rawPhone.startsWith(c.dialCode));
       if (foundCountry) {
         matchedDialCode = foundCountry.dialCode;
@@ -146,7 +144,7 @@ export default function EditProfileModal({
             gap: 16 
           }}
         >
-          {/* الاسم الكامل */}
+          {/* Name */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
             name="name"
@@ -158,7 +156,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* البريد الإلكتروني */}
+          {/* Email */}
           <Input
             label={t('profile.emailLabel', 'البريد الإلكتروني')}
             type="email"
@@ -172,7 +170,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف + القائمة المنسدلة المربوطة بـ COUNTRIES_LIST */}
+          {/* Phone & Country Code */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
@@ -191,7 +189,8 @@ export default function EditProfileModal({
                   fontSize: 13,
                   cursor: 'pointer',
                   outline: 'none',
-                  direction: 'ltr'
+                  direction: 'ltr',
+                  maxWidth: '140px'
                 }}
               >
                 {COUNTRIES_LIST.map((item) => {
@@ -220,7 +219,7 @@ export default function EditProfileModal({
             </div>
           </div>
 
-          {/* كلمة المرور الحالية */}
+          {/* Current Password */}
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
             type="password"
@@ -233,7 +232,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* فاصل قسم تغيير كلمة المرور */}
+          {/* Divider */}
           <div style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid var(--color-border-input, rgba(255,255,255,0.1))' }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-action-primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <KeyRound size={14} />
@@ -241,7 +240,7 @@ export default function EditProfileModal({
             </span>
           </div>
 
-          {/* كلمة المرور الجديدة */}
+          {/* New Password */}
           <Input
             label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
             type="password"
@@ -254,7 +253,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* تأكيد كلمة المرور الجديدة */}
+          {/* Confirm New Password */}
           <Input
             label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
             type="password"
@@ -268,7 +267,7 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* الشريط السفلي الثابت للأزرار */}
+        {/* Action Buttons */}
         <div 
           style={{ 
             paddingTop: 16, 
