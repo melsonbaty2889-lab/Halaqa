@@ -140,7 +140,7 @@ export const Modal = ({
         alignItems: "center", 
         justifyContent: "center", 
         zIndex: 9999, 
-        padding: 16,
+        padding: "16px 12px",
         touchAction: "none"
       }} 
       onClick={handleBackdropClick}
@@ -153,9 +153,9 @@ export const Modal = ({
           background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
           borderRadius: 20, 
-          padding: 24, 
+          padding: "20px 16px", 
           width: "min(92vw, 500px)", 
-          maxHeight: "85vh", 
+          maxHeight: "90vh", 
           display: "flex",
           flexDirection: "column",
           overflow: "hidden", 
@@ -168,7 +168,8 @@ export const Modal = ({
           ...style 
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexShrink: 0 }}>
+        {/* الهيدر ثابت في الأعلى */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexShrink: 0 }}>
           {title && <h3 id={titleId} style={{ fontWeight: 800, color: getPrimary(), fontSize: "1.05rem", margin: 0 }}>{title}</h3>}
           <button 
             type="button"
@@ -192,7 +193,18 @@ export const Modal = ({
             ×
           </button>
         </div>
-        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+
+        {/* جسم المودال قابل للتمرير التلقائي والسلس عند زيادة الارتفاع فقط */}
+        <div 
+          style={{ 
+            flex: 1, 
+            minHeight: 0, 
+            display: "flex", 
+            flexDirection: "column", 
+            overflowY: "auto",
+            overscrollBehavior: "contain"
+          }}
+        >
           {children}
         </div>
       </div>
