@@ -1,8 +1,33 @@
+// src/components/UI/CountrySelect.jsx
 import React, { useState, useEffect } from 'react';
 import ReactDom from 'react-dom';
 import { useFloating, autoUpdate, offset, shift } from '@floating-ui/react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
 import { COUNTRIES_LIST } from '@/constants/countries';
+
+// دالة ذكية لاكتشاف أي دولة في العالم تلقائياً بناءً على المنطقة الزمنية للجهاز
+const detectUserCountryCode = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz) return '';
+
+    // 1. مطابقة مباشرة ودقيقة مع أي دولة مسجلة في ملف القائمة بناءً على الـ timezone الخاص بها
+    const matched = COUNTRIES_LIST.find((c) => c.timezone === tz);
+    if (matched) return matched.code;
+
+    // 2. مطابقة عامة مرنة في حال وجود توافق جزئي مع المدينة أو القارة
+    const tzCity = tz.split('/')[1];
+    if (tzCity) {
+      const partialMatch = COUNTRIES_LIST.find(
+        (c) => c.timezone && c.timezone.includes(tzCity)
+      );
+      if (partialMatch) return partialMatch.code;
+    }
+  } catch {
+    // تجاهل الأخطاء العائدة من بيئات التشغيل القديمة
+  }
+  return '';
+};
 
 export default function CountrySelect({
   value,
@@ -25,6 +50,16 @@ export default function CountrySelect({
   const titleColor = 'var(--color-text-primary)';
   const subColor = 'var(--color-text-secondary)';
   const primaryColor = 'var(--color-action-primary)';
+
+  // التحديد التلقائي للدولة عند التحميل إذا لم تكن القيمة محددة مسبقاً
+  useEffect(() => {
+    if (!value && typeof onChange === 'function') {
+      const detectedCode = detectUserCountryCode();
+      if (detectedCode) {
+        onChange(detectedCode);
+      }
+    }
+  }, [value, onChange]);
 
   const { x, y, strategy, refs, elements, isPositioned } = useFloating({
     open: isOpen,
@@ -60,7 +95,7 @@ export default function CountrySelect({
     };
   }, [isOpen, elements]);
 
-  const selectedCountry = COUNTRIES_LIST.find((c) => c.code === value);
+  const selectedCountry = COUNTRIES_LIST.find((c) => c.code === (value || detectUserCountryCode()));
 
   const filteredCountries = COUNTRIES_LIST.filter((c) => {
     const search = searchTerm.toLowerCase().trim();
@@ -189,7 +224,7 @@ export default function CountrySelect({
             >
               {filteredCountries.length > 0 ? (
                 filteredCountries.map((c) => {
-                  const isSelected = value === c.code;
+                  const isSelected = (value || detectUserCountryCode()) === c.code;
                   return (
                     <button
                       key={c.code}
