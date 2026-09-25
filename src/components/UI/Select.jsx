@@ -26,6 +26,7 @@ export const Select = forwardRef(({
   style = {}, 
   id: customId,
   title,
+  dir = 'rtl',
   t = (key, fallback) => fallback,
   ...props 
 }, ref) => {
@@ -43,7 +44,7 @@ export const Select = forwardRef(({
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
 
-  // التحقق من حجم الشاشة
+  // تحديث حالة الشاشة لحساب وضع الجوال
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -53,21 +54,52 @@ export const Select = forwardRef(({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // قفل تمرير الصفحة الخلفية عند فتح القائمة المنبثقة
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      const originalTouchAction = document.body.style.touchAction;
+  // حساب موضع القائمة المنبثقة لسطح المكتب مع مراعاة الحدود
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const minWidth = 220;
+      const computedWidth = Math.max(rect.width, minWidth);
+      
+      let leftPos = rect.left;
+      // ضبط الموضع لتجنب خروج القائمة خارج حدود الشاشة من اليمين
+      if (leftPos + computedWidth > window.innerWidth) {
+        leftPos = window.innerWidth - computedWidth - 12;
+      }
+      if (leftPos < 12) leftPos = 12;
 
+      setCoords({
+        top: rect.bottom + 4,
+        left: leftPos,
+        width: computedWidth
+      });
+    }
+  }, []);
+
+  // تحديث الموضع عند التمرير أو إعادة التشكيل
+  useEffect(() => {
+    if (isOpen && !isMobile) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [isOpen, isMobile, updatePosition]);
+
+  // قفل تمرير الصفحة فقط أثناء فتح نافذة الجوال
+  useEffect(() => {
+    if (isOpen && isMobile) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
 
       return () => {
         document.body.style.overflow = originalOverflow;
-        document.body.style.touchAction = originalTouchAction;
       };
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return options;
@@ -82,18 +114,13 @@ export const Select = forwardRef(({
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
-    if (!isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: Math.max(rect.width, 220)
-      });
+    if (!isOpen) {
+      updatePosition();
     }
     setSearchTerm('');
     setActiveIndex(-1);
     setIsOpen(prev => !prev);
-  }, [isOpen, disabled]);
+  }, [isOpen, disabled, updatePosition]);
 
   const handleOptionSelect = (optionValue) => {
     if (typeof onChange === 'function') {
@@ -138,13 +165,8 @@ export const Select = forwardRef(({
     }
   };
 
-  // إيقاف تسرب التمرير أثناء استخدام اللمس للجوال
-  const handleOverlayTouchMove = (e) => {
-    e.stopPropagation();
-  };
-
   return (
-    <div style={{ marginBottom: 16, width: "100%", boxSizing: "border-box", position: "relative" }}>
+    <div style={{ width: "100%", boxSizing: "border-box", position: "relative" }} dir={dir}>
       {label && (
         <label 
           htmlFor={selectId}
@@ -170,11 +192,11 @@ export const Select = forwardRef(({
         className={`ui-select ${className}`}
         style={{
           width: "100%",
-          minHeight: "44px",
+          minHeight: "42px",
           background: getSurface(),
           border: displayError ? `1px solid ${getDanger()}` : (isOpen ? `1px solid ${getPrimary()}` : `1px solid ${getBorder()}`),
           borderRadius: 10,
-          padding: "10px 14px",
+          padding: "8px 12px",
           color: selectedOption ? getTextTitle() : getTextSub(),
           fontFamily: "inherit",
           fontSize: "0.875rem",
@@ -199,8 +221,9 @@ export const Select = forwardRef(({
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", 
             transition: "transform 0.2s", 
             color: isOpen ? getPrimary() : getTextSub(),
-            shrink: 0,
-            marginStart: 8
+            flexShrink: 0,
+            marginRight: dir === 'rtl' ? 0 : 8,
+            marginLeft: dir === 'rtl' ? 8 : 0
           }} 
         />
       </button>
@@ -215,9 +238,9 @@ export const Select = forwardRef(({
         isMobile ? (
           /* وضع الهواتف المحمولة (Select Modal) */
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
-            onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
-            onTouchMove={handleOverlayTouchMove}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+            dir={dir}
           >
             <div 
               className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary"
@@ -250,10 +273,11 @@ export const Select = forwardRef(({
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full py-2 px-9 border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary rounded-xl text-xs outline-none transition focus:border-semantic-actionPrimary"
+                      autoFocus
                     />
                     <Search 
                       size={14} 
-                      className="absolute top-3 start-3 text-semantic-textSecondary" 
+                      className={`absolute top-3 ${dir === 'rtl' ? 'right-3' : 'left-3'} text-semantic-textSecondary`} 
                     />
                   </div>
                 </div>
@@ -263,7 +287,6 @@ export const Select = forwardRef(({
               <div 
                 className="overflow-y-auto p-2 space-y-1 max-h-[50vh] overscroll-contain"
                 style={{ overscrollBehavior: 'contain' }}
-                onTouchMove={(e) => e.stopPropagation()}
               >
                 {filteredOptions.length === 0 ? (
                   <div className="p-6 text-center text-xs text-semantic-textSecondary">
@@ -313,6 +336,7 @@ export const Select = forwardRef(({
               onClick={() => setIsOpen(false)} 
             />
             <div
+              dir={dir}
               style={{
                 position: "fixed",
                 top: coords.top,
@@ -338,6 +362,7 @@ export const Select = forwardRef(({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={handleKeyDown}
+                    autoFocus
                     style={{
                       width: "100%",
                       padding: "6px 10px",
