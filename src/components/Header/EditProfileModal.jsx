@@ -3,15 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
 
-// استيراد مكونات الواجهة الموحدة من مجلد UI المعتمد
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
 import Select from '@/components/UI/Select';
 
-// استيراد القواعد والأكواد من المرجع الموحد
 import { COUNTRIES_LIST } from '@/constants/countries';
-import UI from '@/theme/styles';
+// استدعى الدالة من ملف formatters.js الموجود بالفعل
+import { parsePhoneNumber } from '@/utils/formatters';
 
 export default function EditProfileModal({
   isOpen = false,
@@ -36,24 +35,15 @@ export default function EditProfileModal({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // استخراج كود الدولة ورقم الهاتف الأساسي عند فتح النافذة
   useEffect(() => {
     if (isOpen) {
-      let rawPhone = currentUser?.phone || '';
-      let matchedDialCode = '+966';
-      let mainPhone = rawPhone;
-
-      const foundCountry = COUNTRIES_LIST.find((c) => rawPhone.startsWith(c.dialCode));
-      if (foundCountry) {
-        matchedDialCode = foundCountry.dialCode;
-        mainPhone = rawPhone.replace(foundCountry.dialCode, '').trim();
-      }
+      const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
 
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        countryDialCode: matchedDialCode,
-        phone: mainPhone,
+        countryDialCode: dialCode,
+        phone: phone,
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -111,7 +101,6 @@ export default function EditProfileModal({
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-
     if (!validate()) return;
 
     setLoading(true);
@@ -135,7 +124,6 @@ export default function EditProfileModal({
     }
   };
 
-  // تجهيز خيارات قائمة المفاتيح الدولية المنسدلة للـ Select الموحد
   const countryOptions = COUNTRIES_LIST.map((c) => {
     const cName = currentLang.startsWith('ar') ? c.nameAr : c.nameEn;
     return {
@@ -153,13 +141,12 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
-        {/* أضيف الكلاس no-scrollbar [&::-webkit-scrollbar]:hidden لتنظيف التمرير بصرياً */}
+      <div className="flex flex-col h-full max-h-[75vh] overflow-hidden">
         <form 
           onSubmit={handleSubmit} 
           className="flex-1 overflow-y-auto px-1 flex flex-col gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-          {/* حقل الاسم الكامل */}
+          {/* الاسم الكامل */}
           <Input
             label={t('profile.nameLabel', 'الاسم الكامل')}
             name="name"
@@ -171,7 +158,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* حقل البريد الإلكتروني */}
+          {/* البريد الإلكتروني */}
           <Input
             label={t('profile.emailLabel', 'البريد الإلكتروني')}
             type="email"
@@ -185,14 +172,13 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* قسم رقم الهاتف بالدمج الصحيح للاتجاهات LTR/RTL */}
+          {/* رقم الهاتف والرمز الدولي */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             </label>
             
             <div className="flex items-start gap-2 dir-ltr">
-              {/* اختيار رمز الدولة */}
               <div className="w-32 shrink-0">
                 <Select
                   options={countryOptions}
@@ -202,7 +188,6 @@ export default function EditProfileModal({
                 />
               </div>
 
-              {/* حقل إدخال الرقم */}
               <div className="flex-1">
                 <Input
                   type="tel"
@@ -219,7 +204,7 @@ export default function EditProfileModal({
             </div>
           </div>
 
-          {/* حقل كلمة المرور الحالية */}
+          {/* كلمة المرور الحالية */}
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
             type="password"
@@ -232,7 +217,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* فاصل قسم تغيير كلمة المرور باستخدام Semantic Tokens */}
+          {/* فاصل قسم تغيير كلمة المرور */}
           <div className="pt-3 mt-1 border-t border-semantic-borderCard">
             <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-3">
               <KeyRound size={14} />
@@ -267,7 +252,7 @@ export default function EditProfileModal({
           />
         </form>
 
-        {/* أزرار العمليات الموحدة عبر Btn */}
+        {/* أزرار العمليات */}
         <div className="pt-4 mt-3 border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0">
           <Btn
             type="button"
