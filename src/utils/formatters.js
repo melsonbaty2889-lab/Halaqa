@@ -59,8 +59,30 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
 };
 
 // ==========================================
-// 3. تنسيق وتوحيد الهواتف (للعرض وللتخزين)
+// 3. تنسيق وتوحيد الهواتف (للعرض وللتخزين وللاستمارات)
 // ==========================================
+
+/**
+ * دالة تفكيك رقم الهاتف الكامل إلى كود الدولة والرقم المحلي (تستخدم داخل المودالات واستمارات الإدخال)
+ */
+export const parsePhoneNumber = (rawPhone = '') => {
+  if (!rawPhone) return { dialCode: '+966', phone: '' };
+
+  let matchedDialCode = '+966';
+  let mainPhone = rawPhone;
+
+  // البحث في خريطة الدول المعرفة في الثوابت
+  const foundCountry = Object.values(COUNTRIES_MAP || {}).find((c) => rawPhone.startsWith(c.dialCode));
+  if (foundCountry) {
+    matchedDialCode = foundCountry.dialCode;
+    mainPhone = rawPhone.replace(foundCountry.dialCode, '').trim();
+  }
+
+  return {
+    dialCode: matchedDialCode,
+    phone: mainPhone,
+  };
+};
 
 /**
  * دالة لتنسيق الرقم شكلياً للعرض في الواجهات (تضيف + قبل الرقم)
