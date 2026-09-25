@@ -40,9 +40,10 @@ export default function Header({
   // حالة التنبيه المخصص (Toast)
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // state لحفظ اسم وبريد المستخدم المسجل حالياً
+  // state لحفظ بيانات المستخدم
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
+  const [currentUserPhone, setCurrentUserPhone] = useState('');
 
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
@@ -58,7 +59,6 @@ export default function Header({
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  // دالة إظهار التنبيه المخصص
   const showToastMessage = useCallback((message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -66,7 +66,6 @@ export default function Header({
     }, 4000);
   }, []);
 
-  // دالة تسجيل الخروج الشاملة
   const handleLogout = async () => {
     try {
       if (typeof onLogout === 'function') {
@@ -103,6 +102,9 @@ export default function Header({
           if (user.email) {
             setCurrentUserEmail(user.email);
           }
+          // قراءة رقم الهاتف من metadata
+          const userPhone = user.user_metadata?.phone || '';
+          setCurrentUserPhone(userPhone);
         }
       } catch (err) {
         console.error('Error fetching current user:', err);
@@ -112,14 +114,13 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التعامل مع المصادقة بكلمة المرور الحالية
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
     const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
     if ((isEmailChanged || isPasswordChanged) && currentPassword) {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: currentUserEmail,
@@ -140,7 +141,8 @@ export default function Header({
       updatePayload.data.name = name;
     }
 
-    if (phone) {
+    // حفظ رقم الهاتف بداخل metadata
+    if (phone !== undefined) {
       updatePayload.data.phone = phone;
     }
 
@@ -166,13 +168,14 @@ export default function Header({
 
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
+    if (phone !== undefined) setCurrentUserPhone(phone);
 
     showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
   };
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOffline(false);
+    const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -417,13 +420,14 @@ export default function Header({
         onClose={() => setShowEditProfileModal(false)}
         currentUser={{
           name: currentUserName || activeAcademy?.owner_name || activeAcademy?.name || '',
-          email: currentUserEmail || ''
+          email: currentUserEmail || '',
+          phone: currentUserPhone || ''
         }}
         onSave={handleSaveProfile}
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص في منتصف الشاشة مع الحفاظ على التجاوب وأولوية العرض فوق المودال */}
+      {/* تنبيه مخصص في منتصف الشاشة */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 max-w-[90vw] rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
