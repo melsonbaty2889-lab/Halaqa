@@ -21,10 +21,13 @@ export default function EditProfileModal({
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || 'ar';
 
+  // تحديد الكود الافتراضي للدولة من أول عنصر في مصفوفة الدول المعتمدة
+  const defaultDialCode = COUNTRIES_LIST[0]?.dialCode || '+966';
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    countryDialCode: '+966',
+    countryDialCode: defaultDialCode,
     phone: '',
     currentPassword: '',
     newPassword: '',
@@ -33,6 +36,7 @@ export default function EditProfileModal({
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -41,15 +45,16 @@ export default function EditProfileModal({
       setFormData({
         name: currentUser?.name || '',
         email: currentUser?.email || '',
-        countryDialCode: dialCode,
-        phone: phone,
+        countryDialCode: dialCode || defaultDialCode,
+        phone: phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
       setErrors({});
+      setSubmitError('');
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, defaultDialCode]);
 
   if (!isOpen) return null;
 
@@ -59,10 +64,12 @@ export default function EditProfileModal({
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+    if (submitError) setSubmitError('');
   };
 
   const handleCountryChange = (selectedDialCode) => {
     setFormData((prev) => ({ ...prev, countryDialCode: selectedDialCode }));
+    if (submitError) setSubmitError('');
   };
 
   const validate = () => {
@@ -100,6 +107,9 @@ export default function EditProfileModal({
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (loading) return;
+    
+    setSubmitError('');
     if (!validate()) return;
 
     setLoading(true);
@@ -115,9 +125,13 @@ export default function EditProfileModal({
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
+      
       onClose();
     } catch (err) {
       console.error('Save profile error:', err);
+      setSubmitError(
+        err?.message || t('profile.errors.generalSaveError', 'حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة لاحقاً')
+      );
     } finally {
       setLoading(false);
     }
@@ -140,120 +154,120 @@ export default function EditProfileModal({
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
-      <div className="flex flex-col h-full max-h-[75vh]">
-        {/* إزالة overflow-hidden والسماح بظهور القوائم المنسدلة بدون انقاطاع */}
-        <form 
-          onSubmit={handleSubmit} 
-          className="flex-1 overflow-y-visible px-1 flex flex-col gap-4 pb-4"
-        >
-          {/* الاسم الكامل */}
-          <Input
-            label={t('profile.nameLabel', 'الاسم الكامل')}
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            error={errors.name}
-            icon={<User size={16} />}
-            placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
-            activeRtl={activeRtl}
-          />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {submitError && (
+          <div className="p-3 rounded-lg text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20">
+            {submitError}
+          </div>
+        )}
 
-          {/* البريد الإلكتروني */}
-          <Input
-            label={t('profile.emailLabel', 'البريد الإلكتروني')}
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            icon={<Mail size={16} />}
-            placeholder="example@mail.com"
-            dir="ltr"
-            activeRtl={activeRtl}
-          />
+        {/* الاسم الكامل */}
+        <Input
+          label={t('profile.nameLabel', 'الاسم الكامل')}
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          error={errors.name}
+          icon={<User size={16} />}
+          placeholder={t('profile.namePlaceholder', 'أدخل اسمك')}
+          activeRtl={activeRtl}
+        />
 
-          {/* رقم الهاتف والرمز الدولي - مع إعطاء القائمة z-index مرتفع */}
-          <div className="flex flex-col gap-1.5 relative z-20">
-            <label className="text-xs font-semibold text-semantic-textSecondary">
-              {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
-            </label>
-            
-            <div className="flex items-start gap-2 dir-ltr">
-              <div className="w-32 shrink-0 relative z-30">
-                <Select
-                  options={countryOptions}
-                  value={formData.countryDialCode}
-                  onChange={handleCountryChange}
-                  dir="ltr"
-                />
-              </div>
+        {/* البريد الإلكتروني */}
+        <Input
+          label={t('profile.emailLabel', 'البريد الإلكتروني')}
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+          icon={<Mail size={16} />}
+          placeholder="example@mail.com"
+          dir="ltr"
+          activeRtl={activeRtl}
+        />
 
-              <div className="flex-1">
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  icon={<Phone size={16} />}
-                  placeholder="50 000 0000"
-                  dir="ltr"
-                  activeRtl={activeRtl}
-                />
-              </div>
+        {/* رقم الهاتف والرمز الدولي */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-semantic-textSecondary">
+            {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+          </label>
+          
+          <div className="flex items-start gap-2" dir="ltr">
+            <div className="w-32 shrink-0">
+              <Select
+                options={countryOptions}
+                value={formData.countryDialCode}
+                onChange={handleCountryChange}
+                dir="ltr"
+              />
+            </div>
+
+            <div className="flex-1">
+              <Input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errors.phone}
+                icon={<Phone size={16} />}
+                placeholder="50 000 0000"
+                dir="ltr"
+                activeRtl={activeRtl}
+              />
             </div>
           </div>
+        </div>
 
-          {/* كلمة المرور الحالية */}
-          <Input
-            label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
-            type="password"
-            name="currentPassword"
-            value={formData.currentPassword}
-            onChange={handleChange}
-            error={errors.currentPassword}
-            icon={<ShieldCheck size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
+        {/* كلمة المرور الحالية */}
+        <Input
+          label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
+          type="password"
+          name="currentPassword"
+          value={formData.currentPassword}
+          onChange={handleChange}
+          error={errors.currentPassword}
+          icon={<ShieldCheck size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
 
-          {/* فاصل قسم تغيير كلمة المرور */}
-          <div className="pt-3 mt-1 border-t border-semantic-borderCard">
-            <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-3">
-              <KeyRound size={14} />
-              {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
-            </span>
-          </div>
+        {/* فاصل قسم تغيير كلمة المرور */}
+        <div className="pt-2 mt-1 border-t border-semantic-borderCard">
+          <span className="text-xs font-bold text-semantic-actionPrimary flex items-center gap-1.5 mb-2">
+            <KeyRound size={14} />
+            {t('profile.changePasswordSection', 'تغيير كلمة المرور (اختياري)')}
+          </span>
+        </div>
 
-          {/* كلمة المرور الجديدة */}
-          <Input
-            label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
-            type="password"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            error={errors.newPassword}
-            icon={<Lock size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
+        {/* كلمة المرور الجديدة */}
+        <Input
+          label={t('profile.newPasswordLabel', 'كلمة المرور الجديدة')}
+          type="password"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleChange}
+          error={errors.newPassword}
+          icon={<Lock size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
 
-          {/* تأكيد كلمة المرور الجديدة */}
-          <Input
-            label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-            icon={<Lock size={16} />}
-            placeholder="••••••••"
-            activeRtl={activeRtl}
-          />
-        </form>
+        {/* تأكيد كلمة المرور الجديدة */}
+        <Input
+          label={t('profile.confirmPasswordLabel', 'تأكيد كلمة المرور الجديدة')}
+          type="password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+          icon={<Lock size={16} />}
+          placeholder="••••••••"
+          activeRtl={activeRtl}
+        />
 
         {/* أزرار العمليات الموحدة */}
-        <div className="pt-4 mt-auto border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0 z-10">
+        <div className="pt-4 mt-2 border-t border-semantic-borderCard flex items-center justify-end gap-2 shrink-0">
           <Btn
             type="button"
             variant="secondary"
@@ -263,8 +277,7 @@ export default function EditProfileModal({
             {t('common.cancel', 'إلغاء')}
           </Btn>
           <Btn
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
             variant="primary"
             loading={loading}
             className="min-w-[120px]"
@@ -272,7 +285,7 @@ export default function EditProfileModal({
             {t('common.saveChanges', 'حفظ التغييرات')}
           </Btn>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }
