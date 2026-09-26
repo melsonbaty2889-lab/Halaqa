@@ -164,7 +164,7 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative z-10">
+              <div className="relative z-30">
                 <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.country', 'دولة الإقامة')}
                 </label>
@@ -175,7 +175,7 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <div className="relative z-10">
+              <div className="relative z-20">
                 <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.nationality', 'الجنسية')}
                 </label>
@@ -197,7 +197,7 @@ const AddStudentModal = ({
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative z-10">
+              <div className="relative z-20">
                 <Select
                   label={t('students.select_halaqa', 'تسكين الحلقة')}
                   placeholder={t('students.ph_select_halaqa', 'اختر الحلقة...')}
@@ -309,20 +309,22 @@ const AddStudentModal = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* هاتف ولي الأمر */}
-                  <PhoneInput
-                    label={t('students.parent_phone', 'هاتف ولي الأمر')}
-                    countryCode={formData.parent_phone_country}
-                    phone={formData.parent_phone}
-                    onCountryChange={handlePhoneCountryChange}
-                    onPhoneChange={handlePhoneChange}
-                    error={errors.parent_phone}
-                    lang={currentLang}
-                    activeRtl={isRtl}
-                    t={t}
-                  />
+                  <div className="relative z-20">
+                    <PhoneInput
+                      label={t('students.parent_phone', 'هاتف ولي الأمر')}
+                      countryCode={formData.parent_phone_country}
+                      phone={formData.parent_phone}
+                      onCountryChange={handlePhoneCountryChange}
+                      onPhoneChange={handlePhoneChange}
+                      error={errors.parent_phone}
+                      lang={currentLang}
+                      activeRtl={isRtl}
+                      t={t}
+                    />
+                  </div>
 
                   {/* واتساب ولي الأمر */}
-                  <div>
+                  <div className="relative z-10">
                     <div className="flex items-center justify-between mb-1">
                       {formData.parent_phone && (
                         <button
