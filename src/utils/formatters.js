@@ -1,4 +1,3 @@
-// src/utils/formatters.js
 import { RIWAYAT_MAP } from '@/constants/riwayat';
 import { COUNTRIES_MAP, COUNTRIES_LIST } from '@/constants/countries';
 
@@ -15,11 +14,9 @@ export const formatName = (name, lang = 'ar', fallback = 'غير محدد') => {
     resultName = name[lang] || name['ar'] || name['en'] || Object.values(name)[0] || fallback;
   }
 
-  // تنظيف المسافات الزائدة
   return resultName.trim().replace(/\s+/g, ' ');
 };
 
-// اقتطاع الاسم الأول والأخير فقط للبطاقات المصغرة
 export const formatShortName = (name, lang = 'ar') => {
   const fullName = formatName(name, lang);
   const parts = fullName.split(' ');
@@ -46,7 +43,6 @@ export const formatCurrency = (amount, currency = 'EGP', locale = 'ar-EG') => {
 
 export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
   if (value === null || value === undefined || isNaN(value)) value = 0;
-  // تحويل القيمة إذا كانت مدخلة بنسبة 100 بدلاً من 1.0
   const normalizedValue = value > 1 ? value / 100 : value;
   return new Intl.NumberFormat(locale, {
     style: 'percent',
@@ -59,47 +55,64 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
 // ==========================================
 
 /**
- * دالة الكشف الذكي والحيادي عن كود دولة المستخدم اعتماداً على المنطقة الزمنية ولغة المتصفح
+ * الكشف الذكي والحيادي عن كود دولة المستخدم
+ * 1. Timezone دقيق من COUNTRIES_LIST
+ * 2. navigator.language
+ * 3. navigator.languages
+ * 4. Fallback النهائي: EG
  */
 export const detectUserCountryCode = () => {
   try {
+    // 1. مطابقة دقيقة للـ Timezone
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz) {
-      const exactMatch = (COUNTRIES_LIST || []).find((c) => c.timezone === tz);
-      if (exactMatch) return exactMatch.code;
-
-      const tzCity = tz.split('/')[1];
-      if (tzCity) {
-        const partialMatch = (COUNTRIES_LIST || []).find(
-          (c) => c.timezone && c.timezone.split('/')[1] === tzCity
-        );
-        if (partialMatch) return partialMatch.code;
-      }
+    if (tz && Array.isArray(COUNTRIES_LIST)) {
+      const exactTzMatch = COUNTRIES_LIST.find((c) => c.timezone === tz);
+      if (exactTzMatch) return exactTzMatch.code;
     }
 
-    const lang = navigator.language || (navigator.languages && navigator.languages[0]);
-    if (lang && lang.includes('-')) {
-      const countryCodeFromLang = lang.split('-')[1].toUpperCase();
-      const langMatch = (COUNTRIES_LIST || []).find((c) => c.code === countryCodeFromLang);
+    // 2. مطابقة بواسطة navigator.language
+    const primaryLang = typeof navigator !== 'undefined' ? navigator.language : null;
+    if (primaryLang && primaryLang.includes('-')) {
+      const codeFromLang = primaryLang.split('-')[1].toUpperCase();
+      const langMatch = (COUNTRIES_LIST || []).find((c) => c.code === codeFromLang);
       if (langMatch) return langMatch.code;
     }
+
+    // 3. مطابقة بواسطة navigator.languages
+    const langList = typeof navigator !== 'undefined' && Array.isArray(navigator.languages) ? navigator.languages : [];
+    for (const langItem of langList) {
+      if (langItem && langItem.includes('-')) {
+        const codeFromItem = langItem.split('-')[1].toUpperCase();
+        const listMatch = (COUNTRIES_LIST || []).find((c) => c.code === codeFromItem);
+        if (listMatch) return listMatch.code;
+      }
+    }
   } catch {
-    // تجاهل الأخطاء
+    // تجاهل أخطاء الوصول لخاصيات المتصفح
   }
 
-  return '';
+  // 4. Fallback النهائي الصريح
+  return 'EG';
 };
 
 /**
- * دالة تفكيك رقم الهاتف الكامل إلى كود الدولة والرقم المحلي (تستخدم داخل المودالات واستمارات الإدخال)
+ * دالة تفكيك رقم الهاتف الكامل مع الأخذ بالاعتبار أطول dialCode مطابقة
  */
 export const parsePhoneNumber = (rawPhone = '') => {
   if (!rawPhone) return { dialCode: '', phone: '' };
 
   const clean = rawPhone.trim();
-  const countriesList = COUNTRIES_LIST || Object.values(COUNTRIES_MAP || {});
+  const list = COUNTRIES_LIST || Object.values(COUNTRIES_MAP || {});
 
-  const foundCountry = countriesList.find((c) => clean.startsWith(c.dialCode));
+  // ترتيب القائمة حسب طول dialCode تنازلياً لمنع مطابقة +1 قبل +1242
+  const sortedCountries = [...list].sort(
+    (a, b) => (b.dialCode || '').length - (a.dialCode || '').length
+  );
+
+  const foundCountry = sortedCountries.find(
+    (c) => c.dialCode && clean.startsWith(c.dialCode)
+  );
+
   if (foundCountry) {
     return {
       dialCode: foundCountry.dialCode,
@@ -119,7 +132,6 @@ export const formatPhoneNumber = (phone, countryCode = 'EG') => {
   
   if (cleaned.startsWith('+')) return cleaned;
 
-  // جلب كود الاتصال من ملف الدول
   const country = COUNTRIES_MAP[countryCode?.toUpperCase()];
   const dialCode = country ? country.dialCode : '+20';
   
@@ -136,7 +148,6 @@ export const formatPhoneNumber = (phone, countryCode = 'EG') => {
 export const normalizePhone = (phone, countryCode = 'EG') => {
   if (!phone) return null;
 
-  // تنظيف الرقم من كافة الرموز (حتى علامة +)
   let cleaned = phone.replace(/[^0-9]/g, '');
   if (!cleaned) return null;
 
@@ -155,7 +166,7 @@ export const normalizePhone = (phone, countryCode = 'EG') => {
 };
 
 // ==========================================
-// 4. تنسيق الآيات والسور والأجزاء القرآنية
+// 4. باقي أدوات التنسيق (بدون أي تعديل)
 // ==========================================
 export const formatAyahRange = (surahName, startAyah, endAyah, lang = 'ar') => {
   if (!surahName) return '';
@@ -170,9 +181,6 @@ export const formatAyahRange = (surahName, startAyah, endAyah, lang = 'ar') => {
     : `${surah}: Ayah ${startAyah}-${endAyah}`;
 };
 
-// ==========================================
-// 5. اقتطاع النصوص وحجم الملفات
-// ==========================================
 export const truncateText = (text, maxLength = 50, fallback = '') => {
   if (!text) return fallback;
   if (text.length <= maxLength) return text;
@@ -190,9 +198,6 @@ export const formatFileSize = (bytes, lang = 'ar') => {
   return `${formatNumber(size, lang === 'ar' ? 'ar-EG' : 'en-US')} ${sizes[i]}`;
 };
 
-// ==========================================
-// 6. تنسيق الروايات القرآنية
-// ==========================================
 export const formatRiwayah = (riwayahKey, lang = 'ar', fallback = 'غير محددة') => {
   if (!riwayahKey) return fallback;
   if (lang === 'ar') {
@@ -201,9 +206,6 @@ export const formatRiwayah = (riwayahKey, lang = 'ar', fallback = 'غير محد
   return riwayahKey;
 };
 
-// ==========================================
-// 7. تنسيق أسماء الدول والجنسيات من القائمة الثابتة
-// ==========================================
 export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير محددة') => {
   if (!countryCode) return fallback;
   const country = COUNTRIES_MAP[countryCode.toUpperCase()];
