@@ -109,9 +109,7 @@ export default function LoginPage({
     handleEmailLogin(e);
   };
 
-  // التعديل هنا: تحويل متغير activeError إلى let واعتراض الكلمات غير المفهومة
-  let activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
-  
+  let activeError = localError || (status?.type === 'error' ? status?.msg : null) || fieldErrors?.email || fieldErrors?.password;
   if (activeError === 'login' || activeError === 'error') {
     activeError = t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
   }
