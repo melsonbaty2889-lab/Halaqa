@@ -10,17 +10,15 @@ import CountrySelect from '@/components/UI/CountrySelect';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { parsePhoneNumber } from '@/utils/formatters';
 
-// دالة الكشف الحيادي والذكي عن دولة المستخدم
+const DRAFT_STORAGE_KEY = 'edit_profile_draft_data';
+
 const detectUserCountryCode = () => {
   try {
-    // 1. فحص المنطقة الزمنية للمستخدم
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // مثال: "Africa/Cairo"
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (tz) {
-      // البحث عن تطابق تام أولاً لمنع التخمين الخاطئ
       const exactMatch = COUNTRIES_LIST.find((c) => c.timezone === tz);
       if (exactMatch) return exactMatch.code;
 
-      // فحص المدينة/المنطقة بدقة
       const tzCity = tz.split('/')[1];
       if (tzCity) {
         const partialMatch = COUNTRIES_LIST.find(
@@ -30,7 +28,6 @@ const detectUserCountryCode = () => {
       }
     }
 
-    // 2. فحص لغة المتصفح (مثال: "ar-EG" أو "en-US")
     const lang = navigator.language || (navigator.languages && navigator.languages[0]);
     if (lang && lang.includes('-')) {
       const countryCodeFromLang = lang.split('-')[1].toUpperCase();
@@ -41,7 +38,6 @@ const detectUserCountryCode = () => {
     // تجاهل الأخطاء
   }
 
-  // عدم فرض أي دولة تلقائياً عند الفشل لضمان الحيادية
   return '';
 };
 
@@ -69,46 +65,81 @@ export default function EditProfileModal({
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  // 1. استرجاع المسودة عند فتح المودال أو إعادة تحميل الصفحة
   useEffect(() => {
     if (isOpen) {
-      const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
+      const savedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
       
-      let matchedCode = '';
-      if (dialCode) {
-        const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
-        if (found) matchedCode = found.code;
+      if (savedDraft) {
+        try {
+          const parsedDraft = JSON.parse(savedDraft);
+          setFormData(parsedDraft);
+        } catch {
+          initializeData();
+        }
+      } else {
+        initializeData();
       }
 
-      if (!matchedCode) {
-        matchedCode = detectUserCountryCode();
-      }
-
-      setFormData({
-        name: currentUser?.name || '',
-        email: currentUser?.email || '',
-        countryCode: matchedCode,
-        phone: phone || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
       setErrors({});
       setSubmitError('');
     }
   }, [isOpen, currentUser]);
 
+  const initializeData = () => {
+    const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
+    
+    let matchedCode = '';
+    if (dialCode) {
+      const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
+      if (found) matchedCode = found.code;
+    }
+
+    if (!matchedCode) {
+      matchedCode = detectUserCountryCode();
+    }
+
+    const initial = {
+      name: currentUser?.name || '',
+      email: currentUser?.email || '',
+      countryCode: matchedCode,
+      phone: phone || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+
+    setFormData(initial);
+  };
+
   if (!isOpen) return null;
 
+  // 2. تحديث التغييرات وحفظ المسودة لحظياً
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
     if (submitError) setSubmitError('');
   };
 
   const handleCountryChange = (selectedCode) => {
-    setFormData((prev) => ({ ...prev, countryCode: selectedCode }));
+    setFormData((prev) => {
+      const updated = { ...prev, countryCode: selectedCode };
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
     if (submitError) setSubmitError('');
+  };
+
+  // 3. مسح المسودة عند الإلغاء الصريح فقط
+  const handleClose = () => {
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    onClose();
   };
 
   const validate = () => {
@@ -147,7 +178,6 @@ export default function EditProfileModal({
     setSubmitError('');
     if (!validate()) return;
 
-    // 1. التحقق مما إذا كانت البيانات قد تغيرت بالفعل أم لا
     const originalEmail = (currentUser?.email || '').trim().toLowerCase();
     const originalName = (currentUser?.name || '').trim();
     const originalPhone = currentUser?.phone || '';
@@ -163,8 +193,8 @@ export default function EditProfileModal({
     const isPhoneChanged = fullPhone !== originalPhone;
     const isPasswordChanged = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
 
-    // إذا لم يتم أي تعديل، نغلق النافذة فوراً دون إجراء استدعاء الحفظ أو إظهار رسالة
     if (!isNameChanged && !isEmailChanged && !isPhoneChanged && !isPasswordChanged) {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
       onClose();
       return;
     }
@@ -179,6 +209,8 @@ export default function EditProfileModal({
         newPassword: formData.newPassword
       });
       
+      // مسح المسودة عند نجاح الحفظ
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
       onClose();
     } catch (err) {
       console.error('Save profile error:', err);
@@ -193,7 +225,7 @@ export default function EditProfileModal({
   return (
     <Modal
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={t('profile.title', 'تعديل الملف الشخصي')}
       closeOnBackdropClick={false}
     >
@@ -231,7 +263,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف واختيار الدولة الموحد */}
+          {/* رقم الهاتف واختيار الدولة */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-semantic-textSecondary">
               {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
@@ -274,7 +306,9 @@ export default function EditProfileModal({
             error={errors.currentPassword}
             icon={<ShieldCheck size={16} />}
             placeholder="••••••••"
+            dir="ltr"
             activeRtl={activeRtl}
+            className="text-left"
           />
 
           {/* فاصل قسم تغيير كلمة المرور */}
@@ -295,7 +329,9 @@ export default function EditProfileModal({
             error={errors.newPassword}
             icon={<Lock size={16} />}
             placeholder="••••••••"
+            dir="ltr"
             activeRtl={activeRtl}
+            className="text-left"
           />
 
           {/* تأكيد كلمة المرور الجديدة */}
@@ -308,16 +344,18 @@ export default function EditProfileModal({
             error={errors.confirmPassword}
             icon={<Lock size={16} />}
             placeholder="••••••••"
+            dir="ltr"
             activeRtl={activeRtl}
+            className="text-left"
           />
         </div>
 
-        {/* أزرار الحفظ والإلغاء */}
+        {/* الأزرار */}
         <div className="pt-3 border-t border-semantic-borderCard grid grid-cols-2 gap-2.5 shrink-0 bg-semantic-surfaceCard sticky bottom-0">
           <Btn
             type="button"
             variant="secondary"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
             className="w-full justify-center"
           >
