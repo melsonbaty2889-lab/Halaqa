@@ -125,9 +125,13 @@ export default function Header({
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات'));
       }
 
+      // التعديل هنا: جلب البريد الفعلي من الجلسة لتجنب فقدان الـ State، واستخدام trim() لكلمة المرور
+      const { data: { user } } = await supabase.auth.getUser();
+      const actualEmail = user?.email || currentUserEmail;
+
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: currentUserEmail,
-        password: currentPassword
+        email: actualEmail,
+        password: currentPassword.trim() 
       });
 
       if (signInError) {
