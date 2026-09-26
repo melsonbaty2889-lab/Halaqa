@@ -229,7 +229,7 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* استخدام المكون الموحد لمفتاح الدولة ورقم الهاتف */}
+          {/* المكون الموحد لمفتاح الدولة ورقم الهاتف */}
           <PhoneInput
             label={t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
             countryCode={formData.countryCode}
