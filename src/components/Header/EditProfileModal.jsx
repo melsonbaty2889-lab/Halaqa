@@ -1,45 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound, ShieldCheck, Phone } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
 
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
-import CountrySelect from '@/components/UI/CountrySelect';
+import PhoneInput from '@/components/UI/PhoneInput';
 
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
-import { parsePhoneNumber } from '@/utils/formatters';
+import { parsePhoneNumber, detectUserCountryCode } from '@/utils/formatters';
 
 const DRAFT_STORAGE_KEY = 'edit_profile_draft_data';
-
-const detectUserCountryCode = () => {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz) {
-      const exactMatch = COUNTRIES_LIST.find((c) => c.timezone === tz);
-      if (exactMatch) return exactMatch.code;
-
-      const tzCity = tz.split('/')[1];
-      if (tzCity) {
-        const partialMatch = COUNTRIES_LIST.find(
-          (c) => c.timezone && c.timezone.split('/')[1] === tzCity
-        );
-        if (partialMatch) return partialMatch.code;
-      }
-    }
-
-    const lang = navigator.language || (navigator.languages && navigator.languages[0]);
-    if (lang && lang.includes('-')) {
-      const countryCodeFromLang = lang.split('-')[1].toUpperCase();
-      const langMatch = COUNTRIES_LIST.find((c) => c.code === countryCodeFromLang);
-      if (langMatch) return langMatch.code;
-    }
-  } catch {
-    // تجاهل الأخطاء
-  }
-
-  return '';
-};
 
 export default function EditProfileModal({
   isOpen = false,
@@ -86,9 +57,11 @@ export default function EditProfileModal({
   }, [isOpen, currentUser]);
 
   const initializeData = () => {
-    const { dialCode, phone } = parsePhoneNumber(currentUser?.phone || '');
+    const rawPhone = currentUser?.phone || '';
+    const { dialCode, phone } = parsePhoneNumber(rawPhone);
     
     let matchedCode = '';
+    
     if (dialCode) {
       const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
       if (found) matchedCode = found.code;
@@ -102,7 +75,7 @@ export default function EditProfileModal({
       name: currentUser?.name || '',
       email: currentUser?.email || '',
       countryCode: matchedCode,
-      phone: phone || '',
+      phone: phone || rawPhone,
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
@@ -179,9 +152,9 @@ export default function EditProfileModal({
 
     const selectedCountry = COUNTRIES_MAP[formData.countryCode] || COUNTRIES_LIST.find((c) => c.code === formData.countryCode);
     const dialCode = selectedCountry ? selectedCountry.dialCode : '';
-    const fullPhone = formData.phone.trim() 
-      ? `${dialCode}${formData.phone.trim().replace(/^0+/, '')}`
-      : '';
+    
+    const cleanPhone = formData.phone.trim().replace(/^0+/, '');
+    const fullPhone = cleanPhone ? `${dialCode}${cleanPhone}` : '';
 
     const isNameChanged = formData.name.trim() !== originalName;
     const isEmailChanged = formData.email.trim().toLowerCase() !== originalEmail;
@@ -256,37 +229,18 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
           />
 
-          {/* رقم الهاتف واختيار الدولة */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-semantic-textSecondary">
-              {t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
-            </label>
-            
-            <div className="flex items-start gap-2">
-              <div className="w-28 sm:w-32 shrink-0">
-                <CountrySelect
-                  value={formData.countryCode}
-                  onChange={handleCountryChange}
-                  lang={currentLang}
-                  isArabic={activeRtl}
-                  t={t}
-                />
-              </div>
-
-              <div className="flex-1">
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={errors.phone}
-                  icon={<Phone size={16} />}
-                  placeholder=""
-                  activeRtl={activeRtl}
-                />
-              </div>
-            </div>
-          </div>
+          {/* استخدام المكون الموحد لمفتاح الدولة ورقم الهاتف */}
+          <PhoneInput
+            label={t('profile.phoneLabel', 'رقم الهاتف / الواتساب')}
+            countryCode={formData.countryCode}
+            phone={formData.phone}
+            onCountryChange={handleCountryChange}
+            onPhoneChange={handleChange}
+            error={errors.phone}
+            lang={currentLang}
+            activeRtl={activeRtl}
+            t={t}
+          />
 
           {/* كلمة المرور الحالية */}
           <Input
