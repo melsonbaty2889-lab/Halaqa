@@ -189,9 +189,9 @@ export default function Header({
     };
     
     if (name) {
-      // حفظ الاسم باللغة الحالية أو ككائن JSON متوافق مع هيكل الجدول
+      // إرسال النص مباشرة كقيمة نصية داخل الـ JSONB ليتطابق مع هيكل اللغات
       profileUpdateData.full_name = { [currentLanguage]: name };
-    }
+  }
     if (phone !== undefined) profileUpdateData.phone = phone;
     if (email) profileUpdateData.email = email;
 
