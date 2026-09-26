@@ -154,8 +154,8 @@ export default function EditProfileModal({
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: fullPhone,
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword
+        currentPassword: formData.currentPassword.trim(), // التعديل هنا
+        newPassword: formData.newPassword.trim() // التعديل هنا
       });
       
       onClose();
