@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, Coins, Maximize, Minimize } from 'lucide-react';
+import { Menu, Coins, Maximize, Minimize, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
@@ -186,7 +186,7 @@ export default function Header({
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOffline(false);
+    const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -441,15 +441,19 @@ export default function Header({
       {/* تنبيه مخصص بارز في أعلى منتصف الشاشة مع رفع أولوية الظهور فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
-          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-6 py-3.5 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-5 py-3 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
             toast.type === 'error'
-              ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--error)]'
-              : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--emerald-text)]'
+              ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--text-main)]'
+              : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--text-main)]'
           }`}
           style={{ direction: activeRtl ? 'rtl' : 'ltr' }}
         >
-          <span className={`w-3 h-3 rounded-full shrink-0 ${toast.type === 'error' ? 'bg-[var(--error)]' : 'bg-[var(--emerald-text)]'} animate-pulse`} />
-          <span className="text-sm font-bold text-center leading-relaxed break-words">{toast.message}</span>
+          {toast.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 text-[var(--error)] shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-[var(--emerald-text)] shrink-0" />
+          )}
+          <span className="text-xs sm:text-sm font-semibold text-right leading-snug break-words flex-1">{toast.message}</span>
         </div>,
         document.body
       )}
