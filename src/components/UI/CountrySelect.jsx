@@ -47,18 +47,24 @@ export default function CountrySelect({
 
   const selectedName = lang === 'ar' ? selectedCountry?.nameAr : selectedCountry?.nameEn;
 
+  // التعديل الوحيد: ضمان الفتح باتجاه يسار الحقل لمنع خروج القائمة من الشاشة
+  const dropdownPositionClass = showDialCode
+    ? 'left-0'
+    : (effectiveIsRtl ? 'right-0' : 'left-0');
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
+        dir={showDialCode ? 'ltr' : undefined}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary hover:bg-semantic-surfaceCard/80 transition-colors disabled:opacity-50 h-10"
       >
-        <span className="flex items-center gap-2 truncate">
+        <span className="flex items-center gap-2 truncate" dir="ltr">
           <span>{selectedCountry?.flag}</span>
           {showDialCode ? (
-            <span dir="ltr" className="text-semantic-textSecondary font-mono">
+            <span className="text-semantic-textSecondary font-mono">
               ({selectedCountry?.dialCode})
             </span>
           ) : (
@@ -70,9 +76,7 @@ export default function CountrySelect({
 
       {isOpen && (
         <div
-          className={`absolute z-[60] mt-1 w-full max-w-sm min-w-[240px] max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
-            effectiveIsRtl ? 'right-0' : 'left-0'
-          }`}
+          className={`absolute z-[60] mt-1 w-64 sm:w-72 max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${dropdownPositionClass}`}
         >
           <div className="p-2 border-b border-semantic-borderCard sticky top-0 bg-semantic-surfaceCard z-10">
             <div className="relative flex items-center">
@@ -110,8 +114,8 @@ export default function CountrySelect({
                       <span className="shrink-0">{country.flag}</span>
                       <span className="text-right leading-tight whitespace-normal">{countryName}</span>
                     </span>
-                    <span className="flex items-center gap-1 shrink-0 text-semantic-textSecondary">
-                      {showDialCode && <span dir="ltr" className="font-mono">({country.dialCode})</span>}
+                    <span dir="ltr" className="flex items-center gap-1 shrink-0 text-semantic-textSecondary">
+                      {showDialCode && <span className="font-mono">({country.dialCode})</span>}
                       {isSelected && <Check size={14} className="text-semantic-actionPrimary shrink-0" />}
                     </span>
                   </button>
