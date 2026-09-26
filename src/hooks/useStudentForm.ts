@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef, ChangeEvent, FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateAge } from '@/utils/dateUtils';
+import { parsePhoneNumber, detectUserCountryCode, normalizePhone } from '@/utils/formatters';
+import { COUNTRIES_LIST } from '@/constants/countries';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
@@ -15,7 +17,9 @@ export interface StudentFormData {
   current_juz: number | null | string;
   memorization_system: string;
   parent_name: string;
+  parent_phone_country: string;
   parent_phone: string;
+  parent_whatsapp_country: string;
   parent_whatsapp: string;
   notes_text: string;
 }
@@ -65,7 +69,9 @@ const initialFormState: StudentFormData = {
   current_juz: null,
   memorization_system: '',
   parent_name: '',
+  parent_phone_country: '',
   parent_phone: '',
+  parent_whatsapp_country: '',
   parent_whatsapp: '',
   notes_text: '',
 };
@@ -102,6 +108,17 @@ export const useStudentForm = ({
     [t]
   );
 
+  const getCountryCodeFromDial = (rawPhone: string) => {
+    const { dialCode, phone } = parsePhoneNumber(rawPhone);
+    let code = '';
+    if (dialCode) {
+      const found = COUNTRIES_LIST.find((c) => c.dialCode === dialCode);
+      if (found) code = found.code;
+    }
+    if (!code) code = detectUserCountryCode();
+    return { code, phone: phone || rawPhone };
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -121,8 +138,11 @@ export const useStudentForm = ({
           ? studentToEdit.notes
           : { text: typeof studentToEdit.notes === 'string' ? studentToEdit.notes : '' };
 
-      const phone = studentToEdit.parent_phone || '';
-      const whatsapp = studentToEdit.parent_whatsapp || '';
+      const rawPhone = studentToEdit.parent_phone || '';
+      const rawWhatsapp = studentToEdit.parent_whatsapp || '';
+
+      const phoneParsed = getCountryCodeFromDial(rawPhone);
+      const whatsappParsed = getCountryCodeFromDial(rawWhatsapp);
 
       if (isMounted.current) {
         setFormData({
@@ -136,12 +156,14 @@ export const useStudentForm = ({
           current_juz: studentToEdit.current_juz ?? null,
           memorization_system: studentToEdit.memorization_system || '',
           parent_name: studentToEdit.parent_name || '',
-          parent_phone: phone,
-          parent_whatsapp: whatsapp,
+          parent_phone_country: phoneParsed.code,
+          parent_phone: phoneParsed.phone,
+          parent_whatsapp_country: whatsappParsed.code,
+          parent_whatsapp: whatsappParsed.phone,
           notes_text: notesObj.text || '',
         });
 
-        setIsWhatsappManuallyEdited(Boolean(whatsapp && whatsapp !== phone));
+        setIsWhatsappManuallyEdited(Boolean(rawWhatsapp && rawWhatsapp !== rawPhone));
         setShowParentFields(
           studentToEdit.birth_date
             ? (calculateAge(studentToEdit.birth_date) ?? 0) < 18
@@ -150,7 +172,12 @@ export const useStudentForm = ({
       }
     } else {
       if (isMounted.current) {
-        setFormData(initialFormState);
+        const defaultCountry = detectUserCountryCode();
+        setFormData({
+          ...initialFormState,
+          parent_phone_country: defaultCountry,
+          parent_whatsapp_country: defaultCountry,
+        });
         setShowParentFields(true);
         setIsWhatsappManuallyEdited(false);
       }
@@ -185,6 +212,14 @@ export const useStudentForm = ({
     setShowParentFields(bDate ? (calculateAge(bDate) ?? 0) < 18 : true);
   };
 
+  const handlePhoneCountryChange = (code: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      parent_phone_country: code,
+      ...(!isWhatsappManuallyEdited ? { parent_whatsapp_country: code } : {}),
+    }));
+  };
+
   const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setFormData((prev) => ({
@@ -194,6 +229,11 @@ export const useStudentForm = ({
     }));
   };
 
+  const handleWhatsappCountryChange = (code: string) => {
+    setIsWhatsappManuallyEdited(true);
+    setFormData((prev) => ({ ...prev, parent_whatsapp_country: code }));
+  };
+
   const handleWhatsappChange = (e: ChangeEvent<HTMLInputElement>) => {
     setIsWhatsappManuallyEdited(true);
     setFormData((prev) => ({ ...prev, parent_whatsapp: e.target.value }));
@@ -201,7 +241,11 @@ export const useStudentForm = ({
 
   const handleCopyPhoneToWhatsapp = () => {
     setIsWhatsappManuallyEdited(false);
-    setFormData((prev) => ({ ...prev, parent_whatsapp: prev.parent_phone }));
+    setFormData((prev) => ({
+      ...prev,
+      parent_whatsapp_country: prev.parent_phone_country,
+      parent_whatsapp: prev.parent_phone,
+    }));
   };
 
   const validate = (): boolean => {
@@ -254,6 +298,12 @@ export const useStudentForm = ({
         }
       });
 
+      const normPhone = normalizePhone(formData.parent_phone, formData.parent_phone_country);
+      const fullPhone = normPhone ? `+${normPhone}` : null;
+
+      const normWhatsapp = normalizePhone(formData.parent_whatsapp, formData.parent_whatsapp_country);
+      const fullWhatsapp = normWhatsapp ? `+${normWhatsapp}` : null;
+
       const payload = {
         academy_id: rawAcademyId!,
         name: cleanedName,
@@ -269,14 +319,8 @@ export const useStudentForm = ({
           showParentFields && formData.parent_name.trim()
             ? formData.parent_name.trim()
             : null,
-        parent_phone:
-          showParentFields && formData.parent_phone.trim()
-            ? formData.parent_phone.trim()
-            : null,
-        parent_whatsapp:
-          showParentFields && formData.parent_whatsapp.trim()
-            ? formData.parent_whatsapp.trim()
-            : null,
+        parent_phone: showParentFields ? fullPhone : null,
+        parent_whatsapp: showParentFields ? fullWhatsapp : null,
         notes: formData.notes_text.trim()
           ? { text: formData.notes_text.trim() }
           : null,
@@ -338,7 +382,9 @@ export const useStudentForm = ({
     setShowParentFields,
     handleNameChange,
     handleDateChange,
+    handlePhoneCountryChange,
     handlePhoneChange,
+    handleWhatsappCountryChange,
     handleWhatsappChange,
     handleCopyPhoneToWhatsapp,
     handleSubmit,
