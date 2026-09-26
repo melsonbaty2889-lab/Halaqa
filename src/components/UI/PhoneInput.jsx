@@ -35,12 +35,13 @@ export default function PhoneInput({
         </label>
       )}
       
-      <div className="flex items-start gap-2">
+      {/* ضمان اتجاه LTR للحاوية لمنع انعكاس الترتيب في اللغات RTL */}
+      <div className="flex items-start gap-2" dir="ltr">
         <div className="w-28 sm:w-32 shrink-0">
           <CountrySelect
             value={countryCode}
             onChange={onCountryChange}
-            showDialCode={true} // إظهار كود الاتصال الهاتفى هنا فقط
+            showDialCode={true}
             lang={lang}
             isRtl={effectiveRtl}
             isArabic={effectiveRtl}
