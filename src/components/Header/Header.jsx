@@ -188,9 +188,9 @@ export default function Header({
       updated_at: new Date().toISOString()
     };
     
-    if (name) {
-      // إرسال النص مباشرة كقيمة نصية داخل الـ JSONB ليتطابق مع هيكل اللغات
-      profileUpdateData.full_name = { [currentLanguage]: name };
+        if (name) {
+      profileUpdateData.full_name = JSON.parse(JSON.stringify({ [currentLanguage]: name.trim() }));
+    }
   }
     if (phone !== undefined) profileUpdateData.phone = phone;
     if (email) profileUpdateData.email = email;
