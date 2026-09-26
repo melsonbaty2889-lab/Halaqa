@@ -1,4 +1,3 @@
-// src/components/UI/PhoneInput.jsx
 import React, { useEffect } from 'react';
 import Input from '@/components/UI/Input';
 import CountrySelect from '@/components/UI/CountrySelect';
@@ -12,10 +11,14 @@ export default function PhoneInput({
   error = '',
   label = '',
   lang = 'ar',
-  activeRtl = true,
+  activeRtl,
+  isArabic,
+  isRtl,
   t = (k, d) => d
 }) {
-  // التحديد التلقائي لكود الدولة (مع مصر EG كبديل موثوق)
+  // التوافق مع كافة المسميات السابقة لـ RTL
+  const effectiveRtl = isRtl !== undefined ? isRtl : (activeRtl !== undefined ? activeRtl : (isArabic !== undefined ? isArabic : lang === 'ar' || lang === 'ur'));
+
   useEffect(() => {
     if (!countryCode) {
       const defaultCode = detectUserCountryCode();
@@ -26,7 +29,7 @@ export default function PhoneInput({
   }, [countryCode, onCountryChange]);
 
   return (
-    <div className="flex flex-col gap-1 relative z-20">
+    <div className="flex flex-col gap-1 relative">
       {label && (
         <label className="text-xs font-semibold text-semantic-textSecondary">
           {label}
@@ -34,17 +37,18 @@ export default function PhoneInput({
       )}
       
       <div className="flex items-start gap-2">
-        <div className="w-28 sm:w-32 shrink-0 relative z-30">
+        <div className="w-28 sm:w-32 shrink-0">
           <CountrySelect
             value={countryCode}
             onChange={onCountryChange}
             lang={lang}
-            isArabic={activeRtl}
+            isRtl={effectiveRtl}
+            isArabic={effectiveRtl}
             t={t}
           />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1" dir="ltr">
           <Input
             type="tel"
             name="phone"
@@ -52,7 +56,9 @@ export default function PhoneInput({
             onChange={onPhoneChange}
             error={error}
             placeholder="1000000000"
-            activeRtl={activeRtl}
+            activeRtl={false}
+            className="text-left font-mono"
+            dir="ltr"
           />
         </div>
       </div>
