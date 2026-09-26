@@ -70,7 +70,7 @@ export default function CountrySelect({
 
       {isOpen && (
         <div
-          className={`absolute z-[60] mt-1 w-64 sm:w-72 max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
+          className={`absolute z-[60] mt-1 w-full max-w-sm min-w-[240px] max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
             effectiveIsRtl ? 'right-0' : 'left-0'
           }`}
         >
