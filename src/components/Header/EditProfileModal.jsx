@@ -7,8 +7,8 @@ import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
 import PhoneInput from '@/components/UI/PhoneInput';
 
-import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
-import { parsePhoneNumber, detectUserCountryCode } from '@/utils/formatters';
+import { COUNTRIES_LIST } from '@/constants/countries';
+import { parsePhoneNumber, detectUserCountryCode, normalizePhone } from '@/utils/formatters';
 
 const DRAFT_STORAGE_KEY = 'edit_profile_draft_data';
 
@@ -150,11 +150,9 @@ export default function EditProfileModal({
     const originalName = (currentUser?.name || '').trim();
     const originalPhone = currentUser?.phone || '';
 
-    const selectedCountry = COUNTRIES_MAP[formData.countryCode] || COUNTRIES_LIST.find((c) => c.code === formData.countryCode);
-    const dialCode = selectedCountry ? selectedCountry.dialCode : '';
-    
-    const cleanPhone = formData.phone.trim().replace(/^0+/, '');
-    const fullPhone = cleanPhone ? `${dialCode}${cleanPhone}` : '';
+    // توحيد معالجة الرقم باستخدام دالة normalizePhone الموحدة
+    const normalizedPhoneVal = normalizePhone(formData.phone, formData.countryCode);
+    const fullPhone = normalizedPhoneVal ? `+${normalizedPhoneVal}` : '';
 
     const isNameChanged = formData.name.trim() !== originalName;
     const isEmailChanged = formData.email.trim().toLowerCase() !== originalEmail;
