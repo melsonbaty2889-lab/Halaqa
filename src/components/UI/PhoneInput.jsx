@@ -16,7 +16,6 @@ export default function PhoneInput({
   isRtl,
   t = (k, d) => d
 }) {
-  // التوافق مع كافة المسميات السابقة لـ RTL
   const effectiveRtl = isRtl !== undefined ? isRtl : (activeRtl !== undefined ? activeRtl : (isArabic !== undefined ? isArabic : lang === 'ar' || lang === 'ur'));
 
   useEffect(() => {
@@ -41,6 +40,7 @@ export default function PhoneInput({
           <CountrySelect
             value={countryCode}
             onChange={onCountryChange}
+            showDialCode={true} // إظهار كود الاتصال الهاتفى هنا فقط
             lang={lang}
             isRtl={effectiveRtl}
             isArabic={effectiveRtl}
