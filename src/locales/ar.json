@@ -766,6 +766,7 @@
     "emailLabel": "البريد الإلكتروني",
     "errors": {
       "currentPasswordRequired": "كلمة المرور الحالية مطلوبة لتأكيد التغييرات",
+      "emailAlreadyExists": "هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر",
       "emailRequired": "البريد الإلكتروني مطلوب",
       "generalSaveError": "حدث خطأ أثناء حفظ التغييرات، يرجى المحاولة لاحقاً",
       "invalidCurrentPassword": "كلمة المرور الحالية غير صحيحة",
