@@ -1,3 +1,4 @@
+// src/components/Auth/LoginPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -108,7 +109,12 @@ export default function LoginPage({
     handleEmailLogin(e);
   };
 
-  const activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
+  // التعديل هنا: تحويل متغير activeError إلى let واعتراض الكلمات غير المفهومة
+  let activeError = localError || status?.msg || fieldErrors?.email || fieldErrors?.password;
+  
+  if (activeError === 'login' || activeError === 'error') {
+    activeError = t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+  }
 
   // توحيد استخدام متغيرات ألوان نظام التصميم مع الدعم المتبادل لضمان الاتساق الكامل
   const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
