@@ -15,7 +15,7 @@ export default function PhoneInput({
   activeRtl = true,
   t = (k, d) => d
 }) {
-  // التحديد التلقائي لكود الدولة عند التشغيل في حال عدم تحديده
+  // التحديد التلقائي لكود الدولة (مع مصر EG كبديل موثوق)
   useEffect(() => {
     if (!countryCode) {
       const defaultCode = detectUserCountryCode();
@@ -26,7 +26,7 @@ export default function PhoneInput({
   }, [countryCode, onCountryChange]);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 relative z-20">
       {label && (
         <label className="text-xs font-semibold text-semantic-textSecondary">
           {label}
@@ -34,7 +34,7 @@ export default function PhoneInput({
       )}
       
       <div className="flex items-start gap-2">
-        <div className="w-28 sm:w-32 shrink-0">
+        <div className="w-28 sm:w-32 shrink-0 relative z-30">
           <CountrySelect
             value={countryCode}
             onChange={onCountryChange}
