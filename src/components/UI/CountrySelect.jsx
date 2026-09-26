@@ -70,7 +70,7 @@ export default function CountrySelect({
 
       {isOpen && (
         <div
-          className={`absolute z-[60] mt-1 min-w-[14rem] w-full max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
+          className={`absolute z-[60] mt-1 w-64 sm:w-72 max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
             effectiveIsRtl ? 'right-0' : 'left-0'
           }`}
         >
@@ -100,19 +100,19 @@ export default function CountrySelect({
                     key={country.code}
                     type="button"
                     onClick={() => handleSelect(country.code)}
-                    className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded transition-colors ${
+                    className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded transition-colors gap-2 ${
                       isSelected
                         ? 'bg-semantic-actionPrimary/10 text-semantic-actionPrimary font-bold'
                         : 'text-semantic-textPrimary hover:bg-semantic-surfaceBackground'
                     }`}
                   >
-                    <span className="flex items-center gap-2 truncate">
-                      <span>{country.flag}</span>
-                      <span className="truncate">{countryName}</span>
+                    <span className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="shrink-0">{country.flag}</span>
+                      <span className="text-right leading-tight whitespace-normal">{countryName}</span>
                     </span>
                     <span className="flex items-center gap-1 shrink-0 text-semantic-textSecondary">
                       {showDialCode && <span dir="ltr" className="font-mono">({country.dialCode})</span>}
-                      {isSelected && <Check size={14} className="text-semantic-actionPrimary" />}
+                      {isSelected && <Check size={14} className="text-semantic-actionPrimary shrink-0" />}
                     </span>
                   </button>
                 );
