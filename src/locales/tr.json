@@ -875,7 +875,8 @@
       "noAuth": "غير مصرح",
       "passwordLength": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
       "passwordMismatch": "كلمات المرور غير متطابقة",
-      "updateFailed": ""
+      "updateFailed": "",
+      "userNotFound": "المستخدم غير موجود"
     },
     "nameLabel": "الاسم الكامل",
     "namePlaceholder": "أدخل اسمك",
