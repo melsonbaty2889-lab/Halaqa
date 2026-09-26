@@ -1,10 +1,6 @@
-/**
- * مكتبة التنسيق الموحدة والمستقبلية لتطبيق سمارت حلقة (Smart Halaqa)
- * تدعم المعايير الدولية (Intl) والتعدد اللغوي الكامل.
- */
-
+// src/utils/formatters.js
 import { RIWAYAT_MAP } from '@/constants/riwayat';
-import { COUNTRIES_MAP } from '@/constants/countries';
+import { COUNTRIES_MAP, COUNTRIES_LIST } from '@/constants/countries';
 
 // ==========================================
 // 1. تنسيق الأسماء وتعدد اللغات
@@ -63,25 +59,55 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
 // ==========================================
 
 /**
+ * دالة الكشف الذكي والحيادي عن كود دولة المستخدم اعتماداً على المنطقة الزمنية ولغة المتصفح
+ */
+export const detectUserCountryCode = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      const exactMatch = (COUNTRIES_LIST || []).find((c) => c.timezone === tz);
+      if (exactMatch) return exactMatch.code;
+
+      const tzCity = tz.split('/')[1];
+      if (tzCity) {
+        const partialMatch = (COUNTRIES_LIST || []).find(
+          (c) => c.timezone && c.timezone.split('/')[1] === tzCity
+        );
+        if (partialMatch) return partialMatch.code;
+      }
+    }
+
+    const lang = navigator.language || (navigator.languages && navigator.languages[0]);
+    if (lang && lang.includes('-')) {
+      const countryCodeFromLang = lang.split('-')[1].toUpperCase();
+      const langMatch = (COUNTRIES_LIST || []).find((c) => c.code === countryCodeFromLang);
+      if (langMatch) return langMatch.code;
+    }
+  } catch {
+    // تجاهل الأخطاء
+  }
+
+  return '';
+};
+
+/**
  * دالة تفكيك رقم الهاتف الكامل إلى كود الدولة والرقم المحلي (تستخدم داخل المودالات واستمارات الإدخال)
  */
 export const parsePhoneNumber = (rawPhone = '') => {
-  if (!rawPhone) return { dialCode: '+966', phone: '' };
+  if (!rawPhone) return { dialCode: '', phone: '' };
 
-  let matchedDialCode = '+966';
-  let mainPhone = rawPhone;
+  const clean = rawPhone.trim();
+  const countriesList = COUNTRIES_LIST || Object.values(COUNTRIES_MAP || {});
 
-  // البحث في خريطة الدول المعرفة في الثوابت
-  const foundCountry = Object.values(COUNTRIES_MAP || {}).find((c) => rawPhone.startsWith(c.dialCode));
+  const foundCountry = countriesList.find((c) => clean.startsWith(c.dialCode));
   if (foundCountry) {
-    matchedDialCode = foundCountry.dialCode;
-    mainPhone = rawPhone.replace(foundCountry.dialCode, '').trim();
+    return {
+      dialCode: foundCountry.dialCode,
+      phone: clean.replace(foundCountry.dialCode, '').trim()
+    };
   }
 
-  return {
-    dialCode: matchedDialCode,
-    phone: mainPhone,
-  };
+  return { dialCode: '', phone: clean };
 };
 
 /**
