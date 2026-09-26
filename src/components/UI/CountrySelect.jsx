@@ -6,6 +6,7 @@ export default function CountrySelect({
   value = 'EG',
   onChange = () => {},
   disabled = false,
+  showDialCode = false, // خاصية جديدة: false لعرض العلم والاسم فقط، true لإظهار كود الاتصال
   lang = 'ar',
   isArabic,
   isRtl,
@@ -15,7 +16,6 @@ export default function CountrySelect({
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
-  // تحديد الاتجاه RTL مع الحفاظ الكامل على دعم isArabic القديم
   const effectiveIsRtl = isRtl !== undefined ? isRtl : (isArabic !== undefined ? isArabic : lang === 'ar' || lang === 'ur');
 
   const selectedCountry = COUNTRIES_MAP[value?.toUpperCase()] || COUNTRIES_LIST.find((c) => c.code === value) || COUNTRIES_LIST[0];
@@ -45,6 +45,8 @@ export default function CountrySelect({
     setSearchQuery('');
   };
 
+  const selectedName = lang === 'ar' ? selectedCountry?.nameAr : selectedCountry?.nameEn;
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
@@ -53,11 +55,15 @@ export default function CountrySelect({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary hover:bg-semantic-surfaceCard/80 transition-colors disabled:opacity-50 h-10"
       >
-        <span className="flex items-center gap-1.5 truncate">
+        <span className="flex items-center gap-2 truncate">
           <span>{selectedCountry?.flag}</span>
-          <span dir="ltr" className="text-semantic-textSecondary">
-            ({selectedCountry?.dialCode})
-          </span>
+          {showDialCode ? (
+            <span dir="ltr" className="text-semantic-textSecondary font-mono">
+              ({selectedCountry?.dialCode})
+            </span>
+          ) : (
+            <span className="truncate text-semantic-textPrimary">{selectedName}</span>
+          )}
         </span>
         <ChevronDown size={14} className={`shrink-0 transition-transform text-semantic-textSecondary ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -105,7 +111,7 @@ export default function CountrySelect({
                       <span className="truncate">{countryName}</span>
                     </span>
                     <span className="flex items-center gap-1 shrink-0 text-semantic-textSecondary">
-                      <span dir="ltr">({country.dialCode})</span>
+                      {showDialCode && <span dir="ltr" className="font-mono">({country.dialCode})</span>}
                       {isSelected && <Check size={14} className="text-semantic-actionPrimary" />}
                     </span>
                   </button>
