@@ -140,7 +140,7 @@ const AddStudentModal = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-40">
               <Select
                 label={t('students.gender', 'الجنس')}
                 value={formData.gender}
@@ -163,8 +163,8 @@ const AddStudentModal = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative z-30">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-30">
+              <div>
                 <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.country', 'دولة الإقامة')}
                 </label>
@@ -175,7 +175,7 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <div className="relative z-20">
+              <div>
                 <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.nationality', 'الجنسية')}
                 </label>
@@ -190,14 +190,14 @@ const AddStudentModal = ({
           </div>
 
           {/* 2. الحلقة والتلاوة والمستوى */}
-          <div className="space-y-4 pt-4 border-t border-semantic-borderCard">
+          <div className="space-y-4 pt-4 border-t border-semantic-borderCard relative z-20">
             <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" />
               <span>{t('students.halaqa_and_recitation', 'الحلقة والتلاوة والمستوى')}</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative z-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-30">
+              <div>
                 <Select
                   label={t('students.select_halaqa', 'تسكين الحلقة')}
                   placeholder={t('students.ph_select_halaqa', 'اختر الحلقة...')}
@@ -213,7 +213,7 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <div className="relative z-10">
+              <div>
                 <Select
                   label={t('students.preferred_riwayah', 'الرواية المفضلة')}
                   placeholder={t('students.ph_select_riwayah', 'اختر الرواية...')}
@@ -227,7 +227,7 @@ const AddStudentModal = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-20">
               <div>
                 <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                   {t('students.current_juz', 'الجزء الحالي (1 - 30)')}
@@ -243,7 +243,7 @@ const AddStudentModal = ({
                 />
               </div>
 
-              <div className="relative z-10">
+              <div>
                 <Select
                   label={t('students.memorization_system', 'نظام المراجعة/الحفظ')}
                   placeholder={t('students.ph_memorization_system', 'اختر النظام...')}
@@ -260,7 +260,7 @@ const AddStudentModal = ({
           </div>
 
           {/* 3. بيانات ولي الأمر */}
-          <div className="space-y-4 pt-4 border-t border-semantic-borderCard">
+          <div className="space-y-4 pt-4 border-t border-semantic-borderCard relative z-10">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
                 <Shield className="w-4 h-4" />
@@ -309,7 +309,7 @@ const AddStudentModal = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* هاتف ولي الأمر */}
-                  <div className="relative z-20">
+                  <div>
                     <PhoneInput
                       label={t('students.parent_phone', 'هاتف ولي الأمر')}
                       countryCode={formData.parent_phone_country}
@@ -324,7 +324,7 @@ const AddStudentModal = ({
                   </div>
 
                   {/* واتساب ولي الأمر */}
-                  <div className="relative z-10">
+                  <div>
                     <div className="flex items-center justify-between mb-1">
                       {formData.parent_phone && (
                         <button
