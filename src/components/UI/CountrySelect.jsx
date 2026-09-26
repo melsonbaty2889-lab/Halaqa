@@ -1,23 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Check } from 'lucide-react';
+import { ChevronDown, Check, Search } from 'lucide-react';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 
 export default function CountrySelect({
-  value = '',
+  value = 'EG',
   onChange = () => {},
+  disabled = false,
   lang = 'ar',
-  isArabic = true,
-  t = (key, fallback) => fallback
+  isArabic,
+  isRtl,
+  t = (k, d) => d
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
-  const selectedCountry = COUNTRIES_MAP[value] || COUNTRIES_LIST.find((c) => c.code === value) || COUNTRIES_LIST[0];
+  // تحديد الاتجاه RTL مع الحفاظ الكامل على دعم isArabic القديم
+  const effectiveIsRtl = isRtl !== undefined ? isRtl : (isArabic !== undefined ? isArabic : lang === 'ar' || lang === 'ur');
+
+  const selectedCountry = COUNTRIES_MAP[value?.toUpperCase()] || COUNTRIES_LIST.find((c) => c.code === value) || COUNTRIES_LIST[0];
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -26,103 +31,88 @@ export default function CountrySelect({
   }, []);
 
   const filteredCountries = COUNTRIES_LIST.filter((country) => {
-    const term = searchTerm.toLowerCase().trim();
-    if (!term) return true;
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
     const nameAr = (country.nameAr || '').toLowerCase();
     const nameEn = (country.nameEn || '').toLowerCase();
-    const code = (country.code || '').toLowerCase();
     const dialCode = (country.dialCode || '').toLowerCase();
-    return (
-      nameAr.includes(term) ||
-      nameEn.includes(term) ||
-      code.includes(term) ||
-      dialCode.includes(term)
-    );
+    return nameAr.includes(query) || nameEn.includes(query) || dialCode.includes(query);
   });
 
   const handleSelect = (code) => {
     onChange(code);
     setIsOpen(false);
-    setSearchTerm('');
+    setSearchQuery('');
   };
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      {/* زر فتح القائمة: يعرض العلم وكود الاتصال فقط بدون اسم الدولة لمنع التمدد أو القطع */}
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[42px] px-2.5 py-2 bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-lg text-semantic-textPrimary flex items-center justify-between gap-1 hover:border-semantic-actionPrimary/50 transition-colors focus:outline-none focus:ring-1 focus:ring-semantic-actionPrimary"
+        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary hover:bg-semantic-surfaceCard/80 transition-colors disabled:opacity-50 h-10"
       >
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-base shrink-0">{selectedCountry?.flag}</span>
-          <span className="text-xs text-semantic-textPrimary font-mono dir-ltr shrink-0">
+        <span className="flex items-center gap-1.5 truncate">
+          <span>{selectedCountry?.flag}</span>
+          <span dir="ltr" className="text-semantic-textSecondary">
             ({selectedCountry?.dialCode})
           </span>
-        </div>
-        <ChevronDown
-          size={14}
-          className={`shrink-0 text-semantic-textSecondary transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
-        />
+        </span>
+        <ChevronDown size={14} className={`shrink-0 transition-transform text-semantic-textSecondary ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* القائمة المنسدلة: بعرض محدد ومنتظم يطابق الحقل */}
       {isOpen && (
-        <div className="absolute top-full mt-1 z-50 w-56 bg-semantic-surfaceCard border border-semantic-borderCard rounded-lg shadow-xl overflow-hidden start-0">
-          {/* حقل البحث */}
-          <div className="p-2 border-b border-semantic-borderCard bg-semantic-surfaceBorder/10">
+        <div
+          className={`absolute z-50 mt-1 w-64 max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-lg flex flex-col ${
+            effectiveIsRtl ? 'right-0' : 'left-0'
+          }`}
+        >
+          <div className="p-2 border-b border-semantic-borderCard sticky top-0 bg-semantic-surfaceCard z-10">
             <div className="relative flex items-center">
-              <Search
-                size={14}
-                className="absolute start-2.5 text-semantic-textSecondary pointer-events-none"
-              />
+              <Search size={14} className={`absolute ${effectiveIsRtl ? 'right-2.5' : 'left-2.5'} text-semantic-textSecondary`} />
               <input
                 type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('common.searchCountry', 'ابحث باسم الدولة أو الكود...')}
-                className="w-full h-8 ps-8 pe-2.5 text-xs bg-semantic-surfaceBorder/20 border border-semantic-borderCard rounded-md text-semantic-textPrimary placeholder:text-semantic-textSecondary/60 focus:outline-none focus:border-semantic-actionPrimary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('common.searchCountry', 'بحث عن دولة...')}
+                className={`w-full text-xs py-1.5 bg-semantic-surfaceBackground text-semantic-textPrimary rounded border border-semantic-borderCard focus:outline-none focus:border-semantic-actionPrimary ${
+                  effectiveIsRtl ? 'pr-8 pl-2' : 'pl-8 pr-2'
+                }`}
                 autoFocus
               />
             </div>
           </div>
 
-          {/* قائمة الدول مع عرض الأسماء كاملة داخل القائمة */}
-          <div className="max-h-48 overflow-y-auto divide-y divide-semantic-borderCard/30">
+          <div className="overflow-y-auto flex-1 p-1 space-y-0.5">
             {filteredCountries.length > 0 ? (
               filteredCountries.map((country) => {
                 const isSelected = country.code === selectedCountry?.code;
-                const countryName = isArabic ? country.nameAr : country.nameEn;
-
+                const countryName = lang === 'ar' ? country.nameAr : country.nameEn;
                 return (
                   <button
                     key={country.code}
                     type="button"
                     onClick={() => handleSelect(country.code)}
-                    className={`w-full px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors hover:bg-semantic-actionPrimary/10 ${
+                    className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded transition-colors ${
                       isSelected
-                        ? 'bg-semantic-actionPrimary/15 font-bold text-semantic-actionPrimary'
-                        : 'text-semantic-textPrimary'
+                        ? 'bg-semantic-actionPrimary/10 text-semantic-actionPrimary font-bold'
+                        : 'text-semantic-textPrimary hover:bg-semantic-surfaceBackground'
                     }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="text-base shrink-0">{country.flag}</span>
+                    <span className="flex items-center gap-2 truncate">
+                      <span>{country.flag}</span>
                       <span className="truncate">{countryName}</span>
-                      <span className="text-[11px] text-semantic-textSecondary dir-ltr shrink-0 font-mono">
-                        ({country.dialCode})
-                      </span>
-                    </div>
-
-                    {isSelected && (
-                      <Check size={14} className="shrink-0 text-semantic-actionPrimary" />
-                    )}
+                    </span>
+                    <span className="flex items-center gap-1 shrink-0 text-semantic-textSecondary">
+                      <span dir="ltr">({country.dialCode})</span>
+                      {isSelected && <Check size={14} className="text-semantic-actionPrimary" />}
+                    </span>
                   </button>
                 );
               })
             ) : (
-              <div className="p-3 text-xs text-center text-semantic-textSecondary">
+              <div className="py-4 text-center text-xs text-semantic-textSecondary">
                 {t('common.noResults', 'لا توجد نتائج')}
               </div>
             )}
