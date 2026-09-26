@@ -441,7 +441,7 @@ export default function Header({
       {/* تنبيه مخصص بارز في أعلى منتصف الشاشة مع رفع أولوية الظهور فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
-          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-5 py-3 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
+          className={`fixed top-16 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-5 py-3 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
             toast.type === 'error'
               ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--text-main)]'
               : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--text-main)]'
