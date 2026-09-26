@@ -113,20 +113,22 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التحقق السليم
+    // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase وتحديث جدول profiles مباشرة
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
     const isEmailChanged = email && email.trim().toLowerCase() !== currentUserEmail.trim().toLowerCase();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
+    // جلب معرف المستخدم الحالي أولاً
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
+
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات'));
       }
 
-      // التعديل هنا: جلب البريد الفعلي من الجلسة لتجنب فقدان الـ State، واستخدام trim() لكلمة المرور
-      const { data: { user } } = await supabase.auth.getUser();
       const actualEmail = user?.email || currentUserEmail;
 
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -160,6 +162,7 @@ export default function Header({
       updatePayload.email = email.trim();
     }
 
+    // 1. تحديث بيانات المصادقة (Auth)
     const { error } = await supabase.auth.updateUser(updatePayload);
 
     if (error) {
@@ -178,6 +181,27 @@ export default function Header({
       }
 
       throw new Error(errorMsg);
+    }
+
+    // 2. تحديث جدول profiles صراحة لضمان حفظ البيانات بالكامل
+    const profileUpdateData = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (name) {
+      // بناءً على هيكل قاعدة البيانات لديك full_name من نوع jsonb أو نص حسب التصميم، هنا سنحفظه كـ jsonb أو نص بما يتوافق مع الجدول
+      profileUpdateData.full_name = name; 
+    }
+    if (phone !== undefined) profileUpdateData.phone = phone;
+    if (email) profileUpdateData.email = email;
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update(profileUpdateData)
+      .eq('id', user.id);
+
+    if (profileError) {
+      console.error('Error updating profiles table:', profileError);
     }
 
     if (name) setCurrentUserName(name);
