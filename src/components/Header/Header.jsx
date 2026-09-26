@@ -118,11 +118,15 @@ export default function Header({
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
-    const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
+    const isEmailChanged = email && email.trim().toLowerCase() !== currentUserEmail.trim().toLowerCase();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
-    if ((isEmailChanged || isPasswordChanged) && currentPassword) {
+    // إلزامية التوثيق بكلمة المرور الحالية عند تغيير البريد أو كلمة المرور
+    if (isEmailChanged || isPasswordChanged) {
+      if (!currentPassword) {
+        throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات'));
+      }
+
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: currentUserEmail,
         password: currentPassword
@@ -168,7 +172,7 @@ export default function Header({
       ) {
         errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
       } else if (error.message.includes('Current password required')) {
-        errorMsg = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
+        errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
       } else if (error.message.includes('Password should be')) {
         errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       }
@@ -438,7 +442,7 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص بارز في أعلى منتصف الشاشة مع رفع أولوية الظهور فوق المودال */}
+      {/* تنبيه مخصص بارز تحت الهيدر مباشرة مع رفع أولوية الظهور فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
           className={`fixed top-16 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-5 py-3 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
