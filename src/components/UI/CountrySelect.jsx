@@ -6,7 +6,7 @@ export default function CountrySelect({
   value = 'EG',
   onChange = () => {},
   disabled = false,
-  showDialCode = false, // خاصية جديدة: false لعرض العلم والاسم فقط، true لإظهار كود الاتصال
+  showDialCode = false,
   lang = 'ar',
   isArabic,
   isRtl,
@@ -70,7 +70,7 @@ export default function CountrySelect({
 
       {isOpen && (
         <div
-          className={`absolute z-50 mt-1 w-64 max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-lg flex flex-col ${
+          className={`absolute z-[60] mt-1 min-w-[14rem] w-full max-h-60 rounded-lg border border-semantic-borderCard bg-semantic-surfaceCard shadow-2xl flex flex-col ${
             effectiveIsRtl ? 'right-0' : 'left-0'
           }`}
         >
@@ -90,7 +90,7 @@ export default function CountrySelect({
             </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 p-1 space-y-0.5">
+          <div className="overflow-y-auto flex-1 p-1 space-y-0.5 custom-scrollbar">
             {filteredCountries.length > 0 ? (
               filteredCountries.map((country) => {
                 const isSelected = country.code === selectedCountry?.code;
