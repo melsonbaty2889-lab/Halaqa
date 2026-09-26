@@ -14,6 +14,7 @@ export { default as LanguageSwitcher } from './LanguageSwitcher';
 export { default as LoadingButton } from './LoadingButton';
 export { default as Modal } from './Modal';
 export { default as PageHeader } from './PageHeader';
+export { default as PhoneInput } from './PhoneInput';
 export { default as Select } from './Select';
 export { default as Skeleton } from './Skeleton';
 export { default as SmartHalaqaProLogo } from './SmartHalaqaProLogo';
