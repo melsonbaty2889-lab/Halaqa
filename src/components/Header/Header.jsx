@@ -102,7 +102,6 @@ export default function Header({
           if (user.email) {
             setCurrentUserEmail(user.email);
           }
-          // قراءة رقم الهاتف من metadata
           const userPhone = user.user_metadata?.phone || '';
           setCurrentUserPhone(userPhone);
         }
@@ -114,14 +113,13 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع التحقق السليم
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
     const isEmailChanged = email && email.trim().toLowerCase() !== currentUserEmail.trim().toLowerCase();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    // إلزامية التوثيق بكلمة المرور الحالية عند تغيير البريد أو كلمة المرور
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات'));
@@ -146,7 +144,6 @@ export default function Header({
       updatePayload.data.name = name;
     }
 
-    // حفظ رقم الهاتف بداخل metadata
     if (phone !== undefined) {
       updatePayload.data.phone = phone;
     }
@@ -164,7 +161,6 @@ export default function Header({
     if (error) {
       let errorMsg = error.message;
 
-      // معالجة كافة أنواع الأخطاء الشائعة
       if (
         error.message.includes('already registered') || 
         error.message.includes('already exists') ||
@@ -180,7 +176,6 @@ export default function Header({
       throw new Error(errorMsg);
     }
 
-    // تحديث الحالة المحلية
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
     if (phone !== undefined) setCurrentUserPhone(phone);
@@ -373,7 +368,6 @@ export default function Header({
 
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
-        {/* زر الشاشة الكاملة */}
         <button
           type="button"
           onClick={toggleFullscreen}
@@ -429,7 +423,6 @@ export default function Header({
 
       </div>
 
-      {/* مودال تعديل الملف الشخصي */}
       <EditProfileModal
         isOpen={showEditProfileModal}
         onClose={() => setShowEditProfileModal(false)}
@@ -442,7 +435,6 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص بارز تحت الهيدر مباشرة مع رفع أولوية الظهور فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
           className={`fixed top-16 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-5 py-3 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
