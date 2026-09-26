@@ -183,14 +183,14 @@ export default function Header({
       throw new Error(errorMsg);
     }
 
-    // 2. تحديث جدول profiles صراحة لضمان حفظ البيانات بالكامل
+        // 2. تحديث جدول profiles صراحة مع مراعاة أن full_name من نوع jsonb
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
     
     if (name) {
-      // بناءً على هيكل قاعدة البيانات لديك full_name من نوع jsonb أو نص حسب التصميم، هنا سنحفظه كـ jsonb أو نص بما يتوافق مع الجدول
-      profileUpdateData.full_name = name; 
+      // حفظ الاسم باللغة الحالية أو ككائن JSON متوافق مع هيكل الجدول
+      profileUpdateData.full_name = { [currentLanguage]: name };
     }
     if (phone !== undefined) profileUpdateData.phone = phone;
     if (email) profileUpdateData.email = email;
@@ -202,6 +202,7 @@ export default function Header({
 
     if (profileError) {
       console.error('Error updating profiles table:', profileError);
+      throw new Error(t('profile.errors.generalSaveError', 'حدث خطأ أثناء حفظ التغييرات في قاعدة البيانات'));
     }
 
     if (name) setCurrentUserName(name);
