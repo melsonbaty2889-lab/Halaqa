@@ -65,7 +65,6 @@ export default function EditProfileModal({
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // 1. استرجاع المسودة عند فتح المودال أو إعادة تحميل الصفحة
   useEffect(() => {
     if (isOpen) {
       const savedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
@@ -99,7 +98,7 @@ export default function EditProfileModal({
       matchedCode = detectUserCountryCode();
     }
 
-    const initial = {
+    setFormData({
       name: currentUser?.name || '',
       email: currentUser?.email || '',
       countryCode: matchedCode,
@@ -107,14 +106,11 @@ export default function EditProfileModal({
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
-    };
-
-    setFormData(initial);
+    });
   };
 
   if (!isOpen) return null;
 
-  // 2. تحديث التغييرات وحفظ المسودة لحظياً
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -136,7 +132,6 @@ export default function EditProfileModal({
     if (submitError) setSubmitError('');
   };
 
-  // 3. مسح المسودة عند الإلغاء الصريح فقط
   const handleClose = () => {
     sessionStorage.removeItem(DRAFT_STORAGE_KEY);
     onClose();
@@ -209,7 +204,6 @@ export default function EditProfileModal({
         newPassword: formData.newPassword
       });
       
-      // مسح المسودة عند نجاح الحفظ
       sessionStorage.removeItem(DRAFT_STORAGE_KEY);
       onClose();
     } catch (err) {
@@ -259,7 +253,6 @@ export default function EditProfileModal({
             error={errors.email}
             icon={<Mail size={16} />}
             placeholder="example@mail.com"
-            dir="ltr"
             activeRtl={activeRtl}
           />
 
@@ -289,7 +282,6 @@ export default function EditProfileModal({
                   error={errors.phone}
                   icon={<Phone size={16} />}
                   placeholder=""
-                  dir="ltr"
                   activeRtl={activeRtl}
                 />
               </div>
@@ -306,9 +298,7 @@ export default function EditProfileModal({
             error={errors.currentPassword}
             icon={<ShieldCheck size={16} />}
             placeholder="••••••••"
-            dir="ltr"
             activeRtl={activeRtl}
-            className="text-left"
           />
 
           {/* فاصل قسم تغيير كلمة المرور */}
@@ -329,9 +319,7 @@ export default function EditProfileModal({
             error={errors.newPassword}
             icon={<Lock size={16} />}
             placeholder="••••••••"
-            dir="ltr"
             activeRtl={activeRtl}
-            className="text-left"
           />
 
           {/* تأكيد كلمة المرور الجديدة */}
@@ -344,9 +332,7 @@ export default function EditProfileModal({
             error={errors.confirmPassword}
             icon={<Lock size={16} />}
             placeholder="••••••••"
-            dir="ltr"
             activeRtl={activeRtl}
-            className="text-left"
           />
         </div>
 
