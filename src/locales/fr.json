@@ -130,6 +130,7 @@
     "hidePassword": "Masquer le mot de passe",
     "iAgreeTo": "J'accepte les",
     "invalid_email": "Veuillez entrer une adresse e-mail valide.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "invalidEmail": "E-mail invalide",
     "joinSmartHalaqa": "Rejoignez Smart Halaqa",
     "login": "Connexion",

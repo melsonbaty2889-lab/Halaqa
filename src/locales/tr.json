@@ -130,6 +130,7 @@
     "hidePassword": "Şifreyi gizle",
     "iAgreeTo": "Kabul ediyorum:",
     "invalid_email": "Lütfen geçerli bir e-posta adresi girin.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "invalidEmail": "Geçersiz e-posta adresi",
     "joinSmartHalaqa": "Akıllı Halaka'ya Katılın",
     "login": "Giriş Yap",

@@ -130,6 +130,7 @@
     "hidePassword": "Sembunyikan kata sandi",
     "iAgreeTo": "Saya menyetujui",
     "invalid_email": "Harap masukkan alamat email yang valid.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "invalidEmail": "Email tidak valid",
     "joinSmartHalaqa": "Bergabunglah dengan Halaqah Pintar",
     "login": "Masuk",
