@@ -22,27 +22,27 @@ export default function Toast({
   const config = {
     success: {
       icon: CheckCircle2,
-      style: 'bg-semantic-success/15 border-semantic-success/40 text-semantic-success',
-      iconColor: 'text-semantic-success'
+      style: 'bg-semantic-surfaceCard border-semantic-actionPrimary/30 text-semantic-textPrimary',
+      iconColor: 'text-semantic-actionPrimary'
     },
     error: {
       icon: AlertCircle,
-      style: 'bg-semantic-error/15 border-semantic-error/40 text-semantic-error',
+      style: 'bg-semantic-surfaceCard border-semantic-error/30 text-semantic-textPrimary',
       iconColor: 'text-semantic-error'
     },
     warning: {
       icon: AlertTriangle,
-      style: 'bg-semantic-warning/15 border-semantic-warning/40 text-semantic-warning',
-      iconColor: 'text-semantic-error'
+      style: 'bg-semantic-surfaceCard border-semantic-warning/30 text-semantic-textPrimary',
+      iconColor: 'text-semantic-warning'
     },
     info: {
       icon: Info,
-      style: 'bg-semantic-surfaceInput border-semantic-borderInput text-semantic-textPrimary',
+      style: 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-textPrimary',
       iconColor: 'text-semantic-actionPrimary'
     }
   }[type] || {
     icon: Info,
-    style: 'bg-semantic-surfaceInput border-semantic-borderInput text-semantic-textPrimary',
+    style: 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-textPrimary',
     iconColor: 'text-semantic-actionPrimary'
   };
 
@@ -52,23 +52,24 @@ export default function Toast({
     <div 
       role="status" 
       aria-live="polite" 
-      className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-4 duration-200"
+      className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-[90%] sm:w-auto animate-in fade-in slide-in-from-top-4 duration-300"
     >
-      <div className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border backdrop-blur-md shadow-lg ${config.style}`}>
-        <div className="flex items-center gap-2.5 min-w-0">
-          <IconComponent size={20} className={`shrink-0 ${config.iconColor}`} />
-          <p className="text-xs font-semibold leading-relaxed break-words">
-            {message}
-          </p>
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-md transition-all ${config.style}`}>
+        <div className="shrink-0 flex items-center justify-center">
+          <IconComponent className={`w-5 h-5 shrink-0 ${config.iconColor}`} />
         </div>
+
+        <p className="text-xs sm:text-sm font-semibold leading-snug flex-1 text-right">
+          {message}
+        </p>
 
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-lg opacity-70 hover:opacity-100 transition-opacity shrink-0 cursor-pointer"
+          className="p-1 rounded-lg text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput transition-colors shrink-0 cursor-pointer"
           aria-label="إغلاق"
         >
-          <X size={16} />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>
