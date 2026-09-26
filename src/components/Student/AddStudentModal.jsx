@@ -1,4 +1,3 @@
-// src/components/Student/AddStudentModal.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, UserPlus, Edit3, Shield, BookOpen, User, AlertCircle } from 'lucide-react';
@@ -6,6 +5,7 @@ import { RIWAYAT_LIST } from '@/constants/riwayat';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
 import Select from '@/components/UI/Select';
+import PhoneInput from '@/components/UI/PhoneInput';
 import { useStudentForm } from '@/hooks/useStudentForm';
 
 const parseLocalDate = (dateStr) => {
@@ -23,21 +23,26 @@ const AddStudentModal = ({
   onSuccess,
 }) => {
   const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
 
   const {
     formData,
     setFormData,
     errors,
+    submitError,
     isSubmitting,
     showParentFields,
     setShowParentFields,
+    handleNameChange,
     handleDateChange,
+    handlePhoneCountryChange,
     handlePhoneChange,
+    handleWhatsappCountryChange,
     handleWhatsappChange,
     handleCopyPhoneToWhatsapp,
     handleSubmit,
-  } = useStudentForm({ isOpen, studentToEdit, academyId, onSuccess, onClose, t });
+  } = useStudentForm({ isOpen, studentToEdit, academyId, onSuccess, onClose, t, currentLang });
 
   if (!isOpen) return null;
 
@@ -85,6 +90,13 @@ const AddStudentModal = ({
           onSubmit={handleSubmit} 
           className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar min-h-0"
         >
+          {submitError && (
+            <div className="p-3 rounded-xl text-xs bg-semantic-danger/10 text-semantic-danger border border-semantic-danger/20 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          )}
+
           {/* 1. البيانات الأساسية */}
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-semantic-actionPrimary uppercase tracking-wider flex items-center gap-1.5">
@@ -99,17 +111,17 @@ const AddStudentModal = ({
                 </label>
                 <input
                   type="text"
-                  value={formData.name_ar}
-                  onChange={(e) => setFormData({ ...formData, name_ar: e.target.value })}
+                  value={formData.name.ar || ''}
+                  onChange={(e) => handleNameChange('ar', e.target.value)}
                   placeholder={t('students.ph_name_ar', 'ادخل الاسم بالعربية')}
                   className={`w-full px-3 py-2.5 bg-semantic-surfaceInput border ${
-                    errors.name_ar ? 'border-semantic-error' : 'border-semantic-borderInput'
+                    errors.name ? 'border-semantic-error' : 'border-semantic-borderInput'
                   } rounded-xl text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors`}
                 />
-                {errors.name_ar && (
+                {errors.name && (
                   <p className="text-semantic-error text-xs mt-1 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    <span>{errors.name_ar}</span>
+                    <span>{errors.name}</span>
                   </p>
                 )}
               </div>
@@ -120,8 +132,8 @@ const AddStudentModal = ({
                 </label>
                 <input
                   type="text"
-                  value={formData.name_en}
-                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  value={formData.name.en || ''}
+                  onChange={(e) => handleNameChange('en', e.target.value)}
                   placeholder={t('students.ph_name_en', 'Enter name in English')}
                   className="w-full px-3 py-2.5 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors"
                 />
@@ -281,7 +293,7 @@ const AddStudentModal = ({
             </div>
 
             {showParentFields && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-semantic-surfaceInput/40 p-4 rounded-xl border border-semantic-borderCard animate-in fade-in duration-150">
+              <div className="space-y-4 bg-semantic-surfaceInput/40 p-4 rounded-xl border border-semantic-borderCard animate-in fade-in duration-150">
                 <div>
                   <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
                     {t('students.parent_name', 'اسم ولي الأمر')}
@@ -295,43 +307,45 @@ const AddStudentModal = ({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-semantic-textSecondary mb-1.5">
-                    {t('students.parent_phone', 'هاتف ولي الأمر')}
-                  </label>
-                  <input
-                    type="tel"
-                    dir="ltr"
-                    value={formData.parent_phone}
-                    onChange={handlePhoneChange}
-                    placeholder={t('students.ph_phone', 'رقم الهاتف مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors text-start"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* هاتف ولي الأمر */}
+                  <PhoneInput
+                    label={t('students.parent_phone', 'هاتف ولي الأمر')}
+                    countryCode={formData.parent_phone_country}
+                    phone={formData.parent_phone}
+                    onCountryChange={handlePhoneCountryChange}
+                    onPhoneChange={handlePhoneChange}
+                    error={errors.parent_phone}
+                    lang={currentLang}
+                    activeRtl={isRtl}
+                    t={t}
                   />
-                </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-medium text-semantic-textSecondary">
-                      {t('students.parent_whatsapp', 'واتساب ولي الأمر')}
-                    </label>
-                    {formData.parent_phone && (
-                      <button
-                        type="button"
-                        onClick={handleCopyPhoneToWhatsapp}
-                        className="text-[11px] text-semantic-actionPrimary hover:underline transition-all cursor-pointer"
-                      >
-                        {t('common.same_as_phone', 'نفس الهاتف')}
-                      </button>
-                    )}
+                  {/* واتساب ولي الأمر */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      {formData.parent_phone && (
+                        <button
+                          type="button"
+                          onClick={handleCopyPhoneToWhatsapp}
+                          className="text-[11px] text-semantic-actionPrimary hover:underline transition-all cursor-pointer mr-auto"
+                        >
+                          {t('common.same_as_phone', 'نفس الهاتف')}
+                        </button>
+                      )}
+                    </div>
+                    <PhoneInput
+                      label={t('students.parent_whatsapp', 'واتساب ولي الأمر')}
+                      countryCode={formData.parent_whatsapp_country}
+                      phone={formData.parent_whatsapp}
+                      onCountryChange={handleWhatsappCountryChange}
+                      onPhoneChange={handleWhatsappChange}
+                      error={errors.parent_whatsapp}
+                      lang={currentLang}
+                      activeRtl={isRtl}
+                      t={t}
+                    />
                   </div>
-                  <input
-                    type="tel"
-                    dir="ltr"
-                    value={formData.parent_whatsapp}
-                    onChange={handleWhatsappChange}
-                    placeholder={t('students.ph_whatsapp', 'رقم الواتساب مع رمز الدولة')}
-                    className="w-full px-3 py-2 bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg text-semantic-textPrimary text-sm placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-colors text-start"
-                  />
                 </div>
               </div>
             )}
