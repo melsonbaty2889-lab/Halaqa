@@ -121,6 +121,7 @@ export default function Header({
     const isEmailChanged = email && email.trim() !== currentUserEmail.trim();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
+    // إعادة التوثيق بكلمة المرور الحالية إذا تطلب الأمر
     if ((isEmailChanged || isPasswordChanged) && currentPassword) {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: currentUserEmail,
@@ -158,14 +159,24 @@ export default function Header({
 
     if (error) {
       let errorMsg = error.message;
-      if (error.message.includes('Current password required')) {
+
+      // معالجة كافة أنواع الأخطاء الشائعة
+      if (
+        error.message.includes('already registered') || 
+        error.message.includes('already exists') ||
+        error.message.includes('User already registered')
+      ) {
+        errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
+      } else if (error.message.includes('Current password required')) {
         errorMsg = t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات');
       } else if (error.message.includes('Password should be')) {
         errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       }
+
       throw new Error(errorMsg);
     }
 
+    // تحديث الحالة المحلية
     if (name) setCurrentUserName(name);
     if (email) setCurrentUserEmail(email);
     if (phone !== undefined) setCurrentUserPhone(phone);
@@ -175,7 +186,7 @@ export default function Header({
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => setIsOffline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -427,18 +438,18 @@ export default function Header({
         activeRtl={activeRtl}
       />
 
-      {/* تنبيه مخصص في منتصف الشاشة */}
+      {/* تنبيه مخصص بارز في أعلى منتصف الشاشة مع رفع أولوية الظهور فوق المودال */}
       {toast.show && typeof window !== 'undefined' && createPortal(
         <div 
-          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10005] flex items-center gap-3 px-5 py-3 max-w-[90vw] rounded-2xl shadow-2xl border backdrop-blur-md transition-all duration-300 animate-bounce ${
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-[99999] flex items-center gap-3 px-6 py-3.5 max-w-[92vw] sm:max-w-md rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border backdrop-blur-xl transition-all duration-300 ${
             toast.type === 'error'
               ? 'bg-[var(--surface-card)] border-[var(--error)] text-[var(--error)]'
               : 'bg-[var(--surface-card)] border-[var(--emerald-text)] text-[var(--emerald-text)]'
           }`}
           style={{ direction: activeRtl ? 'rtl' : 'ltr' }}
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping shrink-0" />
-          <span className="text-xs font-extrabold text-center leading-relaxed break-words">{toast.message}</span>
+          <span className={`w-3 h-3 rounded-full shrink-0 ${toast.type === 'error' ? 'bg-[var(--error)]' : 'bg-[var(--emerald-text)]'} animate-pulse`} />
+          <span className="text-sm font-bold text-center leading-relaxed break-words">{toast.message}</span>
         </div>,
         document.body
       )}
