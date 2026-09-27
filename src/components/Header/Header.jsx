@@ -1,7 +1,7 @@
 // src/components/Header/Header.jsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, Coins, Maximize, Minimize, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -24,6 +24,7 @@ export default function Header({
   onLogout
 }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const currentLanguage = i18n.language || 'ar';
   const isAr = currentLanguage.startsWith('ar');
   const activeRtl = isRtl !== undefined ? isRtl : isAr;
@@ -87,7 +88,7 @@ export default function Header({
     }
   };
 
-  // جلب معلومات الشخص المسجل حالياً من Supabase Auth مع استخراج الاسم من JSON إذا وجد
+  // جلب معلومات الشخص المسجل حالياً من Supabase Auth
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
@@ -139,8 +140,8 @@ export default function Header({
 
     fetchCurrentUser();
   }, [currentLanguage]);
- 
-  // دالة تحديث بيانات البروفايل وكلمة المرور بالطريقة الرسمية المعتمدة لـ Supabase Auth
+
+  // تحديث البروفايل
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone, gender }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -151,14 +152,12 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. التحقق من إدخال كلمة المرور الحالية عند تغيير كلمة المرور أو البريد
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغيير'));
       }
     }
 
-    // 2. تحديث كلمة المرور بالطريقة الرسمية (current_password داخل الكائن الأول)
     if (isPasswordChanged) {
       const { error: pwdError } = await supabase.auth.updateUser({
         password: newPassword.trim(),
@@ -180,7 +179,6 @@ export default function Header({
       }
     }
 
-    // 3. تحديث البريد الإلكتروني إذا تغير
     if (isEmailChanged) {
       const { error: emailError } = await supabase.auth.updateUser({
         email: email.trim()
@@ -195,7 +193,6 @@ export default function Header({
       }
     }
 
-    // 4. تحديث User Metadata (الاسم ورقم الهاتف والجنس)
     if (name || phone !== undefined || gender !== undefined) {
       const { error: metaError } = await supabase.auth.updateUser({
         data: {
@@ -209,7 +206,6 @@ export default function Header({
       }
     }
 
-    // 5. تحديث جدول profiles في قاعدة البيانات مع الحفاظ على بنية JSON متعددة اللغات
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
@@ -380,6 +376,7 @@ export default function Header({
     return notifications.filter(n => !n.is_read).length;
   }, [notifications]);
 
+  // التفاعل السريع عند النقر على تنبيه
   const handleNotificationClick = async (notif) => {
     if (!notif.is_read) {
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
@@ -388,6 +385,8 @@ export default function Header({
     
     if (notif.tab_target && setActiveTab) {
       setActiveTab(notif.tab_target);
+    } else if (notif.action_url) {
+      navigate(notif.action_url);
     }
     setShowNotifMenu(false);
   };
