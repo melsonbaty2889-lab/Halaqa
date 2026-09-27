@@ -136,7 +136,7 @@ export default function Header({
     fetchCurrentUser();
   }, [currentLanguage]);
 
-    // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -147,18 +147,18 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. التحقق الفعلي من كلمة المرور الحالية باستخدام إعادة التوثيق (Re-authentication)
+    // 1. إعادة التوثيق والتأكد من صحة كلمة المرور الحالية وتحديث الجلسة
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
       }
 
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
         email: actualEmail,
         password: currentPassword.trim()
       });
 
-      if (verifyError) {
+      if (reauthError) {
         throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
       }
     }
@@ -181,7 +181,7 @@ export default function Header({
       };
     }
 
-    // 3. تحديث Auth في Supabase
+    // 3. تحديث Auth في Supabase بعد توثيق الجلسة
     if (Object.keys(updateAttributes).length > 0) {
       const { error: updateError } = await supabase.auth.updateUser(updateAttributes);
 
