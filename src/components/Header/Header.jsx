@@ -113,7 +113,7 @@ export default function Header({
     fetchCurrentUser();
   }, []);
 
-    // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase وتحديث جدول profiles مباشرة
+      // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase وتحديث جدول profiles مباشرة
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -183,17 +183,17 @@ export default function Header({
       throw new Error(errorMsg);
     }
 
-        // 2. تحديث جدول profiles صراحة مع مراعاة أن full_name من نوع jsonb
+    // 2. تحديث جدول profiles ككائن JSON نظيف ومتوافق مع اللغات
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
     
-        if (name) {
-      profileUpdateData.full_name = JSON.parse(JSON.stringify({ [currentLanguage]: name.trim() }));
+    if (name) {
+      const langKey = currentLanguage.startsWith('ar') ? 'ar' : currentLanguage;
+      profileUpdateData.full_name = { [langKey]: name.trim() };
     }
-  }
     if (phone !== undefined) profileUpdateData.phone = phone;
-    if (email) profileUpdateData.email = email;
+    if (email) profileUpdateData.email = email.trim();
 
     const { error: profileError } = await supabase
       .from('profiles')
