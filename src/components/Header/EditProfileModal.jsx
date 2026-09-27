@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
+import { User, Mail, Lock, KeyRound, ShieldCheck, ChevronDown } from 'lucide-react';
 
-import Select from '@/components/UI/Select';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
@@ -225,26 +224,32 @@ export default function EditProfileModal({
             t={t}
           />
 
-          {/* اختيار الجنس باستخدام Custom UI Select */}
-<Select
-  label={t('profile.genderLabel', 'الجنس')}
-  value={formData.gender || ''}
-  onChange={(val) => {
-    setHasEdited(true);
-    setFormData((prev) => ({ ...prev, gender: val }));
-    if (submitError) setSubmitError('');
-  }}
-  options={[
-    { value: '', label: t('profile.selectGender', 'اختر الجنس (اختياري)') },
-    { value: 'male', label: t('profile.genderMale', 'ذكر') },
-    { value: 'female', label: t('profile.genderFemale', 'أنثى') }
-  ]}
-  placeholder={t('profile.selectGender', 'اختر الجنس (اختياري)')}
-  title={t('profile.genderLabel', 'الجنس')}
-  searchable={false}
-  dir={activeRtl ? 'rtl' : 'ltr'}
-  t={t}
-/>
+          {/* اختيار الجنس كـ Inline Dropdown داخل نفس الحقل */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[var(--text-main)]">
+              {t('profile.genderLabel', 'الجنس')}
+            </label>
+            <div className="relative flex items-center">
+              <select
+                name="gender"
+                value={formData.gender || ''}
+                onChange={handleChange}
+                className={`w-full py-2.5 px-3 rounded-xl border text-xs outline-none appearance-none transition-all cursor-pointer min-h-[44px] bg-[var(--surface-input)] text-[var(--text-main)] border-[var(--border-input)] focus:border-[var(--primary)] ${
+                  activeRtl ? 'pl-9 pr-3 text-right' : 'pr-9 pl-3 text-left'
+                }`}
+              >
+                <option value="">{t('profile.selectGender', 'اختر الجنس (اختياري)')}</option>
+                <option value="male">{t('profile.genderMale', 'ذكر')}</option>
+                <option value="female">{t('profile.genderFemale', 'أنثى')}</option>
+              </select>
+              <ChevronDown
+                size={16}
+                className={`absolute pointer-events-none text-[var(--text-muted)] ${
+                  activeRtl ? 'left-3' : 'right-3'
+                }`}
+              />
+            </div>
+          </div>
 
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
