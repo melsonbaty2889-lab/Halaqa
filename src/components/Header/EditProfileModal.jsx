@@ -72,7 +72,7 @@ export default function EditProfileModal({
     if (!isOpen) {
       setHasEdited(false);
     }
-  }, [isOpen, currentUser?.name, currentUser?.email, currentUser?.phone]);
+  }, [isOpen, currentUser?.name, currentUser?.email, currentUser?.phone, hasEdited]);
 
   if (!isOpen) return null;
 
@@ -154,8 +154,8 @@ export default function EditProfileModal({
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: fullPhone,
-        currentPassword: formData.currentPassword.trim(), // التعديل هنا
-        newPassword: formData.newPassword.trim() // التعديل هنا
+        currentPassword: (formData.currentPassword || '').trim(),
+        newPassword: (formData.newPassword || '').trim()
       });
       
       onClose();
