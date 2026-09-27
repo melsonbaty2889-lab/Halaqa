@@ -117,79 +117,6 @@ export default function Header({
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
-    const isEmailChanged = email && email.trim().toLowerCase() !== currentUserEmail.trim().toLowerCase();
-    const isPasswordChanged = newPassword && newPassword.trim() !== '';
-
-    // جلب معرف المستخدم الحالي أولاً
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
-
-    if (isEmailChanged || isPasswordChanged) {
-      if (!currentPassword) {
-        throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد التغييرات'));
-      }
-
-      const actualEmail = user?.email || currentUserEmail;
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: actualEmail,
-        password: currentPassword.trim() 
-      });
-
-      if (signInError) {
-        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
-      }
-    }
-
-    const updatePayload = {
-      data: {}
-    };
-
-    if (name) {
-      updatePayload.data.full_name = name;
-      updatePayload.data.name = name;
-    }
-
-    if (phone !== undefined) {
-      updatePayload.data.phone = phone;
-    }
-
-    if (isPasswordChanged) {
-      updatePayload.password = newPassword.trim();
-    }
-
-    if (isEmailChanged) {
-      updatePayload.email = email.trim();
-    }
-
-    // 1. تحديث بيانات المصادقة (Auth)
-    const { error } = await supabase.auth.updateUser(updatePayload);
-
-    if (error) {
-      let errorMsg = error.message;
-
-      if (
-        error.message.includes('already registered') || 
-        error.message.includes('already exists') ||
-        error.message.includes('User already registered')
-      ) {
-        errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-      } else if (error.message.includes('Current password required')) {
-        errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
-      } else if (error.message.includes('Password should be')) {
-        errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-      }
-
-      throw new Error(errorMsg);
-    }
-
-    // 2. تحديث جدول profiles ككائن JSON نظيف ومتوافق مع اللغات
-    const profileUpdateData = {
-      updated_at: new Date().toISOString()
-    };
-  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
-    if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
-
     // جلب معرف المستخدم الحالي وبياناته
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
@@ -274,6 +201,7 @@ export default function Header({
 
     showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
   };
+
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
