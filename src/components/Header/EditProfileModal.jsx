@@ -6,7 +6,7 @@ import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
 import PhoneInput from '@/components/UI/PhoneInput';
-import Select from '@/components/UI/Select';
+import GenderSelect from '@/components/UI/GenderSelect';
 
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { parsePhoneNumber, detectUserCountryCode, normalizePhone } from '@/utils/formatters';
@@ -182,11 +182,6 @@ export default function EditProfileModal({
     }
   };
 
-  const genderOptions = [
-    { value: 'male', label: t('profile.genderMale', 'ذكر') },
-    { value: 'female', label: t('profile.genderFemale', 'أنثى') }
-  ];
-
   return (
     <Modal
       open={isOpen}
@@ -237,17 +232,12 @@ export default function EditProfileModal({
             t={t}
           />
 
-          {/* استخدام مكون Select المخصص لمنع اختيار المتصفح الافتراضي */}
-          <Select
-            label={t('profile.genderLabel', 'الجنس')}
+          {/* استخدام مكون GenderSelect الموحد */}
+          <GenderSelect
             value={formData.gender}
             onChange={handleGenderChange}
-            options={genderOptions}
-            placeholder={t('profile.selectGender', 'اختر الجنس (اختياري)')}
             error={errors.gender}
-            searchable={false}
-            dir={activeRtl ? 'rtl' : 'ltr'}
-            t={t}
+            activeRtl={activeRtl}
           />
 
           <Input
