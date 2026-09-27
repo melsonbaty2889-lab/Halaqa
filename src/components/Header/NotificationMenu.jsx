@@ -1,7 +1,17 @@
 // src/components/Header/NotificationMenu.jsx
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, CheckCheck, Trash2 } from 'lucide-react';
+import { 
+  Bell, 
+  CheckCheck, 
+  Trash2, 
+  Video, 
+  BookOpen, 
+  UserCheck, 
+  Info, 
+  ArrowLeft,
+  ArrowRight
+} from 'lucide-react';
 
 export default function NotificationMenu({
   notifications = [],
@@ -25,8 +35,41 @@ export default function NotificationMenu({
     return notifications;
   }, [notifications, notifFilter]);
 
+  // دالة اختيار الأيقونة واللون حسب نوع التنبيه
+  const getNotifStyle = (category) => {
+    switch (category) {
+      case 'live_session':
+      case 'session':
+        return {
+          icon: <Video size={13} className="text-[var(--primary)]" />,
+          bg: 'bg-[var(--primary)]/10',
+          border: 'border-[var(--primary)]/30'
+        };
+      case 'recitation':
+      case 'quran':
+        return {
+          icon: <BookOpen size={13} className="text-[var(--emerald-text)]" />,
+          bg: 'bg-[var(--emerald-bg)]',
+          border: 'border-[var(--emerald-border)]'
+        };
+      case 'attendance':
+        return {
+          icon: <UserCheck size={13} className="text-sky-400" />,
+          bg: 'bg-sky-500/10',
+          border: 'border-sky-500/20'
+        };
+      default:
+        return {
+          icon: <Info size={13} className="text-[var(--text-sub)]" />,
+          bg: 'bg-[var(--surface-input)]',
+          border: 'border-[var(--border-input)]'
+        };
+    }
+  };
+
   return (
     <div className="relative inline-block">
+      {/* زر الجرس الرئيسي */}
       <button 
         type="button"
         onClick={onToggle}
@@ -41,19 +84,20 @@ export default function NotificationMenu({
         )}
       </button>
 
+      {/* القائمة المنسدلة */}
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-64 border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-dropdown)] ${
+          className={`absolute top-full mt-2 w-72 border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-dropdown)] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ maxWidth: 'calc(100vw - 24px)' }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
-          {/* الرأس: العنوان المصلح والأزرار */}
+          {/* الرأس */}
           <div className="flex justify-between items-center pb-2 mb-2 border-b border-[var(--border-card)] w-full">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-extrabold text-[var(--text-main)] text-[12px] truncate">
-                {t('notifications.title', { defaultValue: 'التنبيهات القرآنيّة' })}
+                {t('notifications.title', { defaultValue: 'التنبيهات' })}
               </span>
               {unreadCount > 0 && (
                 <span className="bg-[var(--emerald-bg)] text-[var(--emerald-text)] border border-[var(--emerald-border)] text-[9px] px-1.5 py-0.5 rounded-full font-extrabold shrink-0">
@@ -110,46 +154,68 @@ export default function NotificationMenu({
             </button>
           </div>
 
-          {/* المحتوى والقائمة */}
+          {/* القائمة والمحتوى */}
           {loadingNotifs ? (
-            <div className="py-4 text-[var(--text-sub)] text-center font-medium text-[11px]">
+            <div className="py-6 text-[var(--text-sub)] text-center font-medium text-[11px]">
               {t('common.loading', { defaultValue: 'جاري التحميل...' })}
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="py-4 text-[var(--text-sub)] text-center font-medium text-[11px]">
+            <div className="py-6 text-[var(--text-sub)] text-center font-medium text-[11px]">
               {t('notifications.empty', { defaultValue: 'لا توجد إشعارات جديدة' })}
             </div>
           ) : (
-            <div className="max-h-60 overflow-y-auto space-y-1.5 custom-scrollbar">
-              {filteredNotifications.map((item) => (
-                <div 
-                  key={item.id} 
-                  onClick={() => onNotificationClick(item)}
-                  className={`p-2 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-2 ${
-                    !item.is_read 
-                      ? 'bg-[var(--surface-input)] border-[var(--primary)]/40 text-[var(--text-main)] shadow-sm' 
-                      : 'bg-[var(--surface-input)]/50 border-[var(--border-input)] text-[var(--text-sub)] hover:bg-[var(--surface-input)] hover:text-[var(--text-main)]'
-                  }`}
-                >
-                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <span className={`text-[10.5px] leading-snug ${!item.is_read ? 'font-bold text-[var(--text-main)]' : 'font-medium'}`}>
-                      {item.title}
-                    </span>
-                    {item.message && (
-                      <span className="text-[9.5px] text-[var(--text-sub)] line-clamp-2 leading-relaxed">
-                        {item.message}
+            <div className="max-h-64 overflow-y-auto space-y-1.5 custom-scrollbar">
+              {filteredNotifications.map((item) => {
+                const style = getNotifStyle(item.category || item.type);
+                return (
+                  <div 
+                    key={item.id} 
+                    onClick={() => onNotificationClick(item)}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer flex items-start gap-2 group ${
+                      !item.is_read 
+                        ? 'bg-[var(--surface-input)] border-[var(--primary)]/40 text-[var(--text-main)] shadow-sm' 
+                        : 'bg-[var(--surface-input)]/50 border-[var(--border-input)] text-[var(--text-sub)] hover:bg-[var(--surface-input)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    {/* أيقونة الفئة */}
+                    <div className={`p-1.5 rounded-lg border shrink-0 mt-0.5 ${style.bg} ${style.border}`}>
+                      {style.icon}
+                    </div>
+
+                    {/* نص التنبيه والإجراء */}
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className={`text-[10.5px] leading-snug truncate ${!item.is_read ? 'font-bold text-[var(--text-main)]' : 'font-medium'}`}>
+                          {item.title}
+                        </span>
+                        {!item.is_read && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0 shadow-[0_0_6px_var(--primary-glow)]" />
+                        )}
+                      </div>
+
+                      {item.message && (
+                        <span className="text-[9.5px] text-[var(--text-sub)] line-clamp-2 leading-relaxed">
+                          {item.message}
+                        </span>
+                      )}
+
+                      {/* زر الإجراء السريع الذكي */}
+                      {item.action_text && (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1 text-[8.5px] font-extrabold text-[var(--primary)] group-hover:underline">
+                            {item.action_text}
+                            {activeRtl ? <ArrowLeft size={10} /> : <ArrowRight size={10} />}
+                          </span>
+                        </div>
+                      )}
+
+                      <span className="text-[8.5px] text-[var(--text-sub)] opacity-75 font-mono mt-0.5">
+                        {formatTime(item.created_at)}
                       </span>
-                    )}
-                    <span className="text-[8.5px] text-[var(--text-sub)] opacity-75 font-mono mt-0.5">
-                      {formatTime(item.created_at)}
-                    </span>
+                    </div>
                   </div>
-                  
-                  {!item.is_read && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0 mt-1 shadow-[0_0_6px_var(--primary-glow)]" />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
