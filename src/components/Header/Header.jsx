@@ -98,7 +98,7 @@ export default function Header({
     }
   };
 
-  // جلب معلومات الشخص المسجل حالياً من Supabase Auth
+  // جلب معلومات المستخدم المسجل حالياً من Supabase Auth
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
@@ -329,10 +329,9 @@ export default function Header({
         return foundItem.label;
       }
     }
-    return t(`nav.${activeKey}`, t('nav.dashboard', 'الحلقة الذكية'));
+    return t(`nav.${activeKey}`, activeKey);
   }, [menuSections, activeKey, t]);
 
-  // تحويل شكل الإشعارات المجلوبة لتتوافق مع مكون الواجهة NotificationMenu
   const formattedNotifications = useMemo(() => {
     return rawNotifications.map((item) => ({
       ...item,
@@ -342,7 +341,6 @@ export default function Header({
     }));
   }, [rawNotifications, formatText]);
 
-  // التفاعل السريع عند النقر على تنبيه
   const handleNotificationClick = async (notif) => {
     if (!notif.is_read) {
       await markAsRead(notif.id);
@@ -355,12 +353,8 @@ export default function Header({
   };
 
   const handleClearAll = async () => {
-    try {
-      if (!currentUserId) return;
-      await supabase.from('notifications').delete().eq('user_id', currentUserId);
-    } catch (err) {
-      console.error('Error clearing notifications:', err);
-    }
+    await markAllAsRead();
+    setShowNotifMenu(false);
   };
 
   const formatTime = useCallback((dateString) => {
@@ -372,6 +366,14 @@ export default function Header({
     });
   }, [currentLanguage]);
 
+  const handleToggleSidebar = () => {
+    setShowNotifMenu(false);
+    setShowProfileMenu(false);
+    if (setSidebarOpen) {
+      setSidebarOpen(!sidebarOpen);
+    }
+  };
+
   return (
     <header 
       className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-3 shadow-xl w-full transition-all" 
@@ -380,7 +382,7 @@ export default function Header({
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <button
           type="button"
-          onClick={() => setSidebarOpen && setSidebarOpen(!sidebarOpen)}
+          onClick={handleToggleSidebar}
           className="p-2 rounded-xl bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] text-[var(--emerald-text)] transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer"
           title={t('header.toggleSidebar', 'القائمة الجانبية')}
         >
