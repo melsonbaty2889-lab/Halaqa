@@ -135,8 +135,8 @@ export default function Header({
 
     fetchCurrentUser();
   }, [currentLanguage]);
-
-      // دالة تحديث بيانات البروفايل وكلمة المرور النهائية
+ 
+    // دالة تحديث بيانات البروفايل وكلمة المرور بفاصل صارم بين Auth Security و Metadata
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -147,53 +147,74 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. تأكيد كلمة المرور الحالية أولاً قبل أي إجراء أمني
+    // 1. التحقق المسبق من وجود كلمة المرور الحالية عند تغيير كلمة المرور أو البريد
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
       }
-
-      // التحقق الصارم من كلمة المرور الحالية
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: actualEmail,
-        password: currentPassword.trim()
-      });
-
-      if (authError) {
-        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
-      }
     }
 
-    // 2. تحديث كلمة المرور بشكل منفصل مباشرة بعد نجاح التوثيق
+    // 2. تحديث كلمة المرور في طلب معزول ومخصص فقط للأمان
     if (isPasswordChanged) {
-      const { error: pwdError } = await supabase.auth.updateUser({
-        password: newPassword.trim()
-      });
+      const { error: pwdError } = await supabase.auth.updateUser(
+        { 
+          password: newPassword.trim() 
+        },
+        { 
+          options: { 
+            current_password: currentPassword.trim() 
+          } 
+        }
+      );
 
       if (pwdError) {
-        throw new Error(pwdError.message);
+        let errorMsg = pwdError.message;
+        if (pwdError.message.includes('Password should be')) {
+          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        } else if (
+          pwdError.message.includes('Current password') ||
+          pwdError.message.includes('invalid') ||
+          pwdError.message.includes('incorrect')
+        ) {
+          errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
+        }
+        throw new Error(errorMsg);
       }
     }
 
-    // 3. تحديث البريد الإلكتروني بشكل منفصل إذا تغير
+    // 3. تحديث البريد الإلكتروني في طلب معزول إذا تغير
     if (isEmailChanged) {
-      const { error: emailError } = await supabase.auth.updateUser({
-        email: email.trim()
-      });
+      const { error: emailError } = await supabase.auth.updateUser(
+        { 
+          email: email.trim() 
+        },
+        { 
+          options: { 
+            current_password: currentPassword.trim() 
+          } 
+        }
+      );
 
       if (emailError) {
-        throw new Error(emailError.message);
+        let errorMsg = emailError.message;
+        if (emailError.message.includes('already registered') || emailError.message.includes('already exists')) {
+          errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
+        }
+        throw new Error(errorMsg);
       }
     }
 
-    // 4. تحديث الاسم ورقم الهاتف في Auth Metadata
+    // 4. تحديث User Metadata (الاسم ورقم الهاتف) بمعزل عن طلبات الأمان
     if (name || phone !== undefined) {
-      await supabase.auth.updateUser({
+      const { error: metaError } = await supabase.auth.updateUser({
         data: {
           ...(name && { full_name: name, name: name }),
           ...(phone !== undefined && { phone: phone })
         }
       });
+      if (metaError) {
+        console.error('Meta update error:', metaError);
+      }
     }
 
     // 5. تحديث جدول profiles في قاعدة البيانات
