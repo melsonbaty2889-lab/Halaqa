@@ -376,10 +376,11 @@ export default function Header({
 
   return (
     <header 
-      className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-3 shadow-xl w-full transition-all" 
+      className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-2.5 shadow-xl w-full transition-all" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+      {/* القسم الأيمن: زر القائمة وعنوان الصفحة */}
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <button
           type="button"
           onClick={handleToggleSidebar}
@@ -389,7 +390,7 @@ export default function Header({
           <Menu size={18} />
         </button>
 
-        <div className="flex flex-col min-w-0">
+        <div className="flex flex-col min-w-0 flex-1">
           <h1 className="m-0 text-sm sm:text-base font-extrabold text-[var(--text-main)] truncate leading-tight select-none">
             {pageTitle}
           </h1>
@@ -400,8 +401,10 @@ export default function Header({
         </div>
       </div>
 
+      {/* القسم الأيسر: أزرار التحكم والقوائم المنسدلة */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
+        {/* زر ملء الشاشة (للشاشات المتوسطة والكبيرة) */}
         <button
           type="button"
           onClick={toggleFullscreen}
@@ -411,16 +414,21 @@ export default function Header({
           {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
         </button>
 
+        {/* محول العملة (يظهر فقط من الشاشات الصغيرة فما فوق sm:flex) */}
         <div 
           title={t('header.currency', 'العملة المعتمدة')}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl text-[11px] font-bold select-none text-[var(--text-main)]"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl text-[11px] font-bold select-none text-[var(--text-main)]"
         >
           <Coins size={14} className="text-[var(--primary)] shrink-0" />
           <span>{selectedCurrency}</span>
         </div>
 
-        <LanguageSwitcher i18n={i18n} />
+        {/* محول اللغة (يظهر فقط من الشاشات الصغيرة فما فوق sm:flex) */}
+        <div className="hidden sm:block">
+          <LanguageSwitcher i18n={i18n} />
+        </div>
 
+        {/* زر قائمة الإشعارات */}
         <div ref={notifRef}>
           <NotificationMenu
             notifications={formattedNotifications}
@@ -439,6 +447,7 @@ export default function Header({
           />
         </div>
 
+        {/* زر قائمة البروفايل */}
         <div ref={profileRef}>
           <ProfileMenu
             showMenu={showProfileMenu}
