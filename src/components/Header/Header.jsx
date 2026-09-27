@@ -136,7 +136,7 @@ export default function Header({
     fetchCurrentUser();
   }, [currentLanguage]);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع مراعاة متطلبات الأمان
+    // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -145,28 +145,26 @@ export default function Header({
 
     const actualEmail = user.email || currentUserEmail;
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
-    const isPasswordChanged = newPassword && newPassword.trim() !== '';
+    const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. التحقق من إدخال كلمة المرور الحالية عند تعديل البريد أو كلمة المرور
+    // 1. التحقق الفعلي من كلمة المرور الحالية باستخدام إعادة التوثيق (Re-authentication)
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
       }
+
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: actualEmail,
+        password: currentPassword.trim()
+      });
+
+      if (verifyError) {
+        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
+      }
     }
 
-    // 2. تجهيز البيانات الأساسية لطلب التحديث
-    const updateAttributes = {
-      data: {}
-    };
-
-    if (name) {
-      updateAttributes.data.full_name = name;
-      updateAttributes.data.name = name;
-    }
-
-    if (phone !== undefined) {
-      updateAttributes.data.phone = phone;
-    }
+    // 2. تجهيز البيانات المراد تحديثها في Auth
+    const updateAttributes = {};
 
     if (isPasswordChanged) {
       updateAttributes.password = newPassword.trim();
@@ -176,38 +174,29 @@ export default function Header({
       updateAttributes.email = email.trim();
     }
 
-    // 3. تجهيز الخيارات الإضافية وتمرير currentPassword كمعامل ثانٍ لتطبيق خيار الأمان في Supabase
-    const updateOptions = {};
-    if (currentPassword && currentPassword.trim()) {
-      updateOptions.currentPassword = currentPassword.trim();
+    if (name || phone !== undefined) {
+      updateAttributes.data = {
+        ...(name && { full_name: name, name: name }),
+        ...(phone !== undefined && { phone: phone })
+      };
     }
 
-    // 4. تحديث بيانات Auth في Supabase
-    const { error } = await supabase.auth.updateUser(updateAttributes, updateOptions);
+    // 3. تحديث Auth في Supabase
+    if (Object.keys(updateAttributes).length > 0) {
+      const { error: updateError } = await supabase.auth.updateUser(updateAttributes);
 
-    if (error) {
-      let errorMsg = error.message;
-      if (
-        error.message.includes('already registered') || 
-        error.message.includes('already exists') ||
-        error.message.includes('User already registered')
-      ) {
-        errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-      } else if (
-        error.message.includes('Password should be')
-      ) {
-        errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-      } else if (
-        error.message.includes('Current password') ||
-        error.message.includes('invalid') ||
-        error.message.includes('Password is incorrect')
-      ) {
-        errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
+      if (updateError) {
+        let errorMsg = updateError.message;
+        if (updateError.message.includes('already registered')) {
+          errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
+        } else if (updateError.message.includes('Password should be')) {
+          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        }
+        throw new Error(errorMsg);
       }
-      throw new Error(errorMsg);
     }
 
-    // 5. تحديث جدول profiles صراحة ككائن JSON متوافق مع قاعدة البيانات
+    // 4. تحديث جدول profiles في قاعدة البيانات
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
@@ -256,7 +245,7 @@ export default function Header({
 
     showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
   };
-
+  
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
