@@ -136,90 +136,6 @@ export default function Header({
     fetchCurrentUser();
   }, [currentLanguage]);
  
-      // دالة تحديث بيانات البروفايل وكلمة المرور الحاسم والمعزول لـ Supabase Auth
-  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
-    if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
-
-    const actualEmail = user.email || currentUserEmail;
-    const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
-    const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
-
-    // 1. التحقق من إدخال كلمة المرور الحالية
-    if (isEmailChanged || isPasswordChanged) {
-      if (!currentPassword || !currentPassword.trim()) {
-        throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
-      }
-    }
-
-    // 2. تحديث كلمة المرور في طلب مخصص ومستقل تماماً لطلب الأمان
-    if (isPasswordChanged) {
-      const { error: pwdError } = await supabase.auth.updateUser(
-        { 
-          password: newPassword.trim() 
-        },
-        { 
-          options: { 
-            current_password: currentPassword.trim() 
-          } 
-        }
-      );
-
-      if (pwdError) {
-        let errorMsg = pwdError.message;
-        if (pwdError.message.includes('Password should be')) {
-          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        } else if (
-          pwdError.message.includes('Current password') ||
-          pwdError.message.includes('invalid') ||
-          pwdError.message.includes('incorrect')
-        ) {
-          errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
-        }
-        throw new Error(errorMsg);
-      }
-    }
-
-    // 3. تحديث البريد الإلكتروني في طلب مستقل إذا تغير
-    if (isEmailChanged) {
-      const { error: emailError } = await supabase.auth.updateUser(
-        { 
-          email: email.trim() 
-        },
-        { 
-          options: { 
-            current_password: currentPassword.trim() 
-          } 
-        }
-      );
-
-      if (emailError) {
-        let errorMsg = emailError.message;
-        if (emailError.message.includes('already registered') || emailError.message.includes('already exists')) {
-          errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-        }
-        throw new Error(errorMsg);
-      }
-    }
-
-    // 4. تحديث Metadata (الاسم ورقم الهاتف) بمعزل عن الحقول الأمنية
-    if (name || phone !== undefined) {
-      const { error: metaError } = await supabase.auth.updateUser({
-        data: {
-          ...(name && { full_name: name, name: name }),
-          ...(phone !== undefined && { phone: phone })
-        }
-      });
-      if (metaError) {
-        console.error('Meta update error:', metaError);
-      }
-    }
-
-    // 5. تحديث جدول profiles في قاعدة البيانات
-    const profileUpdateData = {
-      updated_at: new Date().toISOString()
   // دالة تحديث بيانات البروفايل وكلمة المرور بالطريقة الرسمية المعتمدة لـ Supabase Auth
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
@@ -335,7 +251,6 @@ export default function Header({
     if (isEmailChanged) setCurrentUserEmail(email);
     if (phone !== undefined) setCurrentUserPhone(phone);
 
-    // رسالة نجاح مع مراعاة حالة البريد الإلكتروني إذا تطلب تأكيداً
     const successMsg = isEmailChanged
       ? t('profile.successEmailPending', 'تم تحديث البيانات، وتم إرسال رابط تأكيد للبريد الجديد')
       : t('profile.successUpdate', 'تم تحديث البيانات بنجاح');
