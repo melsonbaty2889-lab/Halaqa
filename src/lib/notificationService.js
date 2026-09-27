@@ -1,49 +1,34 @@
 // src/lib/notificationService.js
-import { supabase } from '@/lib/supabase';
+import { supabase } from './supabase';
+import { NOTIFICATION_TYPES } from '../constants/notificationConstants.js';
 
 /**
- * دالة موحدة لإرسال/إنشاء إشعار جديد في قاعدة البيانات
- * @param {Object} params
- * @param {string} params.userId - معرف المستخدم المستهدف
- * @param {string} [params.academyId] - معرف الأكاديمية (اختياري)
- * @param {Object|string} params.title - العنوان (يمكن أن يكون كائن لغات أو نص مباشر)
- * @param {Object|string} params.message - الرسالة (يمكن أن تكون كائن لغات أو نص مباشر)
- * @param {string} [params.notificationType='info'] - نوع التنبيه (live_session, recitation, attendance, payment, badge, exam, alert, info)
- * @param {string} [params.actionUrl] - رابط الإجراء عند الضغط
- * @param {string} [params.entityType] - نوع الكائن المرتبط (مثل session, student)
- * @param {string} [params.entityId] - معرف الكائن المرتبط
+ * دالة موحدة لإرسال إشعار فردي يطابق بنية جدول notifications
  */
 export async function sendNotification({
   userId,
   academyId = null,
-  title,
-  message,
-  notificationType = 'info',
+  notificationType = NOTIFICATION_TYPES.GENERAL,
+  titleKey,
+  messageKey,
+  metadata = {},
   actionUrl = null,
   entityType = null,
-  entityId = null
+  entityId = null,
 }) {
-  if (!userId) {
-    console.error('Notification error: userId is required');
-    return { success: false, error: 'userId is required' };
+  if (!userId || !titleKey) {
+    console.error('🚨 Notification Error: Missing required fields');
+    return { success: false, error: 'Missing required parameters' };
   }
 
   try {
-    // تجهيز الهيكل متعدد اللغات للعنوان والرسالة إن لم تكن مجهزة
-    const formattedTitle = typeof title === 'string' 
-      ? { ar: title, en: title, fr: title, tr: title, ur: title, id: title } 
-      : title;
-
-    const formattedMessage = typeof message === 'string' 
-      ? { ar: message, en: message, fr: message, tr: message, ur: message, id: message } 
-      : message;
-
-    const notificationData = {
+    const payload = {
       user_id: userId,
       academy_id: academyId,
-      title: formattedTitle,
-      message: formattedMessage,
       notification_type: notificationType,
+      title: { key: titleKey },
+      message: messageKey ? { key: messageKey } : null,
+      metadata: metadata,
       action_url: actionUrl,
       entity_type: entityType,
       entity_id: entityId,
@@ -53,7 +38,7 @@ export async function sendNotification({
 
     const { data, error } = await supabase
       .from('notifications')
-      .insert([notificationData])
+      .insert([payload])
       .select()
       .single();
 
@@ -61,7 +46,47 @@ export async function sendNotification({
 
     return { success: true, data };
   } catch (err) {
-    console.error('Error sending notification:', err);
+    console.error('🚨 Error sending notification:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * دالة إرسال تنبيهات جماعية
+ */
+export async function sendBulkNotification({
+  userIds = [],
+  academyId = null,
+  notificationType = NOTIFICATION_TYPES.ANNOUNCEMENT,
+  titleKey,
+  messageKey,
+  metadata = {},
+  actionUrl = null,
+}) {
+  if (!userIds.length || !titleKey) return { success: false };
+
+  try {
+    const now = new Date().toISOString();
+    const records = userIds.map((id) => ({
+      user_id: id,
+      academy_id: academyId,
+      notification_type: notificationType,
+      title: { key: titleKey },
+      message: messageKey ? { key: messageKey } : null,
+      metadata,
+      action_url: actionUrl,
+      is_read: false,
+      created_at: now
+    }));
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert(records);
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('🚨 Error sending bulk notifications:', err.message);
     return { success: false, error: err.message };
   }
 }
