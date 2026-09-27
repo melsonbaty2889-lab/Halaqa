@@ -136,7 +136,7 @@ export default function Header({
     fetchCurrentUser();
   }, [currentLanguage]);
  
-    // دالة تحديث بيانات البروفايل وكلمة المرور بفاصل صارم بين Auth Security و Metadata
+      // دالة تحديث بيانات البروفايل وكلمة المرور الحاسم والمعزول لـ Supabase Auth
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -147,14 +147,14 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. التحقق المسبق من وجود كلمة المرور الحالية عند تغيير كلمة المرور أو البريد
+    // 1. التحقق من إدخال كلمة المرور الحالية
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
       }
     }
 
-    // 2. تحديث كلمة المرور في طلب معزول ومخصص فقط للأمان
+    // 2. تحديث كلمة المرور في طلب مخصص ومستقل تماماً لطلب الأمان
     if (isPasswordChanged) {
       const { error: pwdError } = await supabase.auth.updateUser(
         { 
@@ -182,7 +182,7 @@ export default function Header({
       }
     }
 
-    // 3. تحديث البريد الإلكتروني في طلب معزول إذا تغير
+    // 3. تحديث البريد الإلكتروني في طلب مستقل إذا تغير
     if (isEmailChanged) {
       const { error: emailError } = await supabase.auth.updateUser(
         { 
@@ -204,7 +204,7 @@ export default function Header({
       }
     }
 
-    // 4. تحديث User Metadata (الاسم ورقم الهاتف) بمعزل عن طلبات الأمان
+    // 4. تحديث Metadata (الاسم ورقم الهاتف) بمعزل عن الحقول الأمنية
     if (name || phone !== undefined) {
       const { error: metaError } = await supabase.auth.updateUser({
         data: {
