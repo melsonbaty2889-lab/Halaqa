@@ -1,3 +1,4 @@
+// src/components/Header/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
@@ -40,7 +41,6 @@ export default function EditProfileModal({
   const [hasEdited, setHasEdited] = useState(false);
 
   useEffect(() => {
-    // تعبئة البيانات فقط إذا كانت النافذة مفتوحة والمستخدم لم يقم بالتعديل اليدوي بعد
     if (isOpen && !hasEdited) {
       const rawPhone = currentUser?.phone || '';
       const { dialCode, phone } = parsePhoneNumber(rawPhone);
@@ -71,9 +71,16 @@ export default function EditProfileModal({
       setSubmitError('');
     }
 
-    // تصفير حالة التعديل عند الإغلاق لضمان تحميل البيانات الجديدة في المرة القادمة
     if (!isOpen) {
       setHasEdited(false);
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      setErrors({});
+      setSubmitError('');
     }
   }, [isOpen, currentUser?.name, currentUser?.email, currentUser?.phone, currentUser?.gender, hasEdited]);
 
@@ -81,7 +88,9 @@ export default function EditProfileModal({
 
   const handleChange = (e) => {
     setHasEdited(true);
-    const { name, value } = e.target;
+    const name = e?.target ? e.target.name : 'phone';
+    const value = e?.target ? e.target.value : e;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
@@ -102,6 +111,7 @@ export default function EditProfileModal({
   };
 
   const handleClose = () => {
+    if (loading) return;
     onClose();
   };
 
@@ -232,7 +242,6 @@ export default function EditProfileModal({
             t={t}
           />
 
-          {/* استخدام مكون GenderSelect الموحد */}
           <GenderSelect
             value={formData.gender}
             onChange={handleGenderChange}
