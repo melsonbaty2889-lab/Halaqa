@@ -13,7 +13,7 @@ import { parsePhoneNumber, detectUserCountryCode, normalizePhone } from '@/utils
 export default function EditProfileModal({
   isOpen = false,
   onClose = () => {},
-  currentUser = { name: '', email: '', phone: '' },
+  currentUser = { name: '', email: '', phone: '', gender: '' },
   onSave = () => {},
   activeRtl = true
 }) {
@@ -25,6 +25,7 @@ export default function EditProfileModal({
     email: '',
     countryCode: '',
     phone: '',
+    gender: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -59,6 +60,7 @@ export default function EditProfileModal({
         email: currentUser?.email || '',
         countryCode: matchedCode,
         phone: phone || rawPhone,
+        gender: currentUser?.gender || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -72,7 +74,7 @@ export default function EditProfileModal({
     if (!isOpen) {
       setHasEdited(false);
     }
-  }, [isOpen, currentUser?.name, currentUser?.email, currentUser?.phone, hasEdited]);
+  }, [isOpen, currentUser?.name, currentUser?.email, currentUser?.phone, currentUser?.gender, hasEdited]);
 
   if (!isOpen) return null;
 
@@ -134,6 +136,7 @@ export default function EditProfileModal({
     const originalEmail = (currentUser?.email || '').trim().toLowerCase();
     const originalName = (currentUser?.name || '').trim();
     const originalPhone = currentUser?.phone || '';
+    const originalGender = currentUser?.gender || '';
 
     const normalizedPhoneVal = normalizePhone(formData.phone, formData.countryCode);
     const fullPhone = normalizedPhoneVal ? `+${normalizedPhoneVal}` : '';
@@ -141,9 +144,10 @@ export default function EditProfileModal({
     const isNameChanged = formData.name.trim() !== originalName;
     const isEmailChanged = formData.email.trim().toLowerCase() !== originalEmail;
     const isPhoneChanged = fullPhone !== originalPhone;
+    const isGenderChanged = formData.gender !== originalGender;
     const isPasswordChanged = Boolean(formData.newPassword && formData.newPassword.trim() !== '');
 
-    if (!isNameChanged && !isEmailChanged && !isPhoneChanged && !isPasswordChanged) {
+    if (!isNameChanged && !isEmailChanged && !isPhoneChanged && !isGenderChanged && !isPasswordChanged) {
       onClose();
       return;
     }
@@ -154,6 +158,7 @@ export default function EditProfileModal({
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: fullPhone,
+        gender: formData.gender,
         currentPassword: (formData.currentPassword || '').trim(),
         newPassword: (formData.newPassword || '').trim()
       });
@@ -218,6 +223,23 @@ export default function EditProfileModal({
             activeRtl={activeRtl}
             t={t}
           />
+
+          {/* اختيار الجنس */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[var(--text-main)]">
+              {t('profile.genderLabel', 'الجنس')}
+            </label>
+            <select
+              name="gender"
+              value={formData.gender || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--surface-input)] border border-[var(--border-input)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] transition-all cursor-pointer"
+            >
+              <option value="">{t('profile.selectGender', 'اختر الجنس (اختياري)')}</option>
+              <option value="male">{t('profile.genderMale', 'ذكر')}</option>
+              <option value="female">{t('profile.genderFemale', 'أنثى')}</option>
+            </select>
+          </div>
 
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
