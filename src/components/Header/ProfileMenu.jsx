@@ -58,18 +58,29 @@ export default function ProfileMenu({
     ? userName.trim()
     : t('header.defaultUser', 'الحساب الشخصي');
 
-    const handleEditProfileClick = (e) => {
+  const handleEditProfileClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // استدعاء دالة فتح المودال مباشرة
+    if (typeof onToggle === 'function') {
+      onToggle();
+    }
+    
     if (typeof onEditProfile === 'function') {
       onEditProfile();
     }
-    
-    // إغلاق القائمة المنبثقة
+  };
+
+  const handleLogoutClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (typeof onToggle === 'function') {
       onToggle();
+    }
+
+    if (typeof onLogout === 'function') {
+      onLogout();
     }
   };
 
@@ -92,7 +103,7 @@ export default function ProfileMenu({
             activeRtl ? 'left-0' : 'right-0'
           }`}
           style={{ 
-            maxWidth: 'calc(100vw - 16px)'
+            maxWidth: 'calc(100vw - 32px)'
           }}
           dir={activeRtl ? 'rtl' : 'ltr'}
         >
@@ -131,10 +142,7 @@ export default function ProfileMenu({
 
             <button
               type="button"
-              onClick={() => {
-                onToggle();
-                if (typeof onLogout === 'function') onLogout();
-              }}
+              onClick={handleLogoutClick}
               className="w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[var(--error)] hover:bg-[var(--error)]/10 transition-all font-semibold cursor-pointer text-[11.5px] text-start"
             >
               <LogOut size={13} className="shrink-0" />
