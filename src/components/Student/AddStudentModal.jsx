@@ -5,6 +5,7 @@ import { RIWAYAT_LIST } from '@/constants/riwayat';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 import CountrySelect from '@/components/UI/CountrySelect';
 import Select from '@/components/UI/Select';
+import GenderSelect from '@/components/UI/GenderSelect';
 import PhoneInput from '@/components/UI/PhoneInput';
 import { useStudentForm } from '@/hooks/useStudentForm';
 
@@ -45,11 +46,6 @@ const AddStudentModal = ({
   } = useStudentForm({ isOpen, studentToEdit, academyId, onSuccess, onClose, t, currentLang });
 
   if (!isOpen) return null;
-
-  const genderOptions = [
-    { label: t('common.male', 'ذكر'), value: 'male' },
-    { label: t('common.female', 'أنثى'), value: 'female' },
-  ];
 
   return (
     <div 
@@ -141,11 +137,12 @@ const AddStudentModal = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-40">
-              <Select
-                label={t('students.gender', 'الجنس')}
+              {/* استخدام مكون GenderSelect الموحد */}
+              <GenderSelect
                 value={formData.gender}
                 onChange={(val) => setFormData({ ...formData, gender: val })}
-                options={genderOptions}
+                error={errors.gender}
+                activeRtl={isRtl}
               />
 
               <div className="sm:col-span-2">
