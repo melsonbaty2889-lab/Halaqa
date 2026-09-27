@@ -44,6 +44,7 @@ export default function Header({
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [currentUserPhone, setCurrentUserPhone] = useState('');
+  const [currentUserGender, setCurrentUserGender] = useState('');
 
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
@@ -95,7 +96,7 @@ export default function Header({
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, phone')
+            .select('full_name, phone, gender')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -127,6 +128,9 @@ export default function Header({
           }
           const userPhone = profile?.phone || user.user_metadata?.phone || '';
           setCurrentUserPhone(userPhone);
+
+          const userGender = profile?.gender || user.user_metadata?.gender || '';
+          setCurrentUserGender(userGender);
         }
       } catch (err) {
         console.error('Error fetching current user:', err);
@@ -137,7 +141,7 @@ export default function Header({
   }, [currentLanguage]);
  
   // دالة تحديث بيانات البروفايل وكلمة المرور بالطريقة الرسمية المعتمدة لـ Supabase Auth
-  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
+  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone, gender }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -191,12 +195,13 @@ export default function Header({
       }
     }
 
-    // 4. تحديث User Metadata (الاسم ورقم الهاتف)
-    if (name || phone !== undefined) {
+    // 4. تحديث User Metadata (الاسم ورقم الهاتف والجنس)
+    if (name || phone !== undefined || gender !== undefined) {
       const { error: metaError } = await supabase.auth.updateUser({
         data: {
           ...(name && { full_name: name, name: name }),
-          ...(phone !== undefined && { phone: phone })
+          ...(phone !== undefined && { phone: phone }),
+          ...(gender !== undefined && { gender: gender })
         }
       });
       if (metaError) {
@@ -235,6 +240,7 @@ export default function Header({
     }
 
     if (phone !== undefined) profileUpdateData.phone = phone;
+    if (gender !== undefined) profileUpdateData.gender = gender;
     if (isEmailChanged) profileUpdateData.email = email.trim();
 
     const { error: profileError } = await supabase
@@ -250,6 +256,7 @@ export default function Header({
     if (name) setCurrentUserName(name);
     if (isEmailChanged) setCurrentUserEmail(email);
     if (phone !== undefined) setCurrentUserPhone(phone);
+    if (gender !== undefined) setCurrentUserGender(gender);
 
     const successMsg = isEmailChanged
       ? t('profile.successEmailPending', 'تم تحديث البيانات، وتم إرسال رابط تأكيد للبريد الجديد')
@@ -504,7 +511,8 @@ export default function Header({
         currentUser={{
           name: currentUserName || activeAcademy?.owner_name || activeAcademy?.name || '',
           email: currentUserEmail || '',
-          phone: currentUserPhone || ''
+          phone: currentUserPhone || '',
+          gender: currentUserGender || ''
         }}
         onSave={handleSaveProfile}
         activeRtl={activeRtl}
