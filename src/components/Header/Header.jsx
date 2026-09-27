@@ -86,23 +86,46 @@ export default function Header({
     }
   };
 
-  // جلب معلومات الشخص المسجل حالياً من Supabase Auth
+  // جلب معلومات الشخص المسجل حالياً من Supabase Auth مع استخراج الاسم من JSON إذا وجد
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const fullName = user.user_metadata?.full_name || 
-                           user.user_metadata?.name || 
-                           user.email?.split('@')[0];
-          if (fullName) {
-            setCurrentUserName(fullName);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          let extractedName = '';
+          if (profile?.full_name) {
+            if (typeof profile.full_name === 'object') {
+              extractedName = profile.full_name[currentLanguage] || profile.full_name.ar || profile.full_name.en || '';
+            } else if (typeof profile.full_name === 'string') {
+              try {
+                const parsed = JSON.parse(profile.full_name);
+                extractedName = parsed[currentLanguage] || parsed.ar || parsed.en || profile.full_name;
+              } catch (e) {
+                extractedName = profile.full_name;
+              }
+            }
+          }
+
+          if (!extractedName) {
+            extractedName = user.user_metadata?.full_name || 
+                            user.user_metadata?.name || 
+                            user.email?.split('@')[0];
+          }
+
+          if (extractedName) {
+            setCurrentUserName(extractedName);
           }
           if (user.email) {
             setCurrentUserEmail(user.email);
           }
-          const userPhone = user.user_metadata?.phone || '';
+          const userPhone = profile?.phone || user.user_metadata?.phone || '';
           setCurrentUserPhone(userPhone);
         }
       } catch (err) {
@@ -111,13 +134,12 @@ export default function Header({
     };
 
     fetchCurrentUser();
-  }, []);
+  }, [currentLanguage]);
 
-  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase وتحديث جدول profiles مباشرة
+  // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase مع مراعاة متطلبات الأمان
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
-    // جلب معرف المستخدم الحالي وبياناته
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
 
@@ -125,63 +147,96 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = newPassword && newPassword.trim() !== '';
 
-    // التحقق من كلمة المرور الحالية فقط إذا تغير البريد الإلكتروني أو تم إدخال كلمة مرور جديدة
+    // 1. التحقق من إدخال كلمة المرور الحالية عند تعديل البريد أو كلمة المرور
     if (isEmailChanged || isPasswordChanged) {
-      if (!currentPassword) {
+      if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
-      }
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: actualEmail,
-        password: currentPassword.trim()
-      });
-
-      if (signInError) {
-        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
       }
     }
 
-    const updatePayload = { data: {} };
+    // 2. تجهيز البيانات الأساسية لطلب التحديث
+    const updateAttributes = {
+      data: {}
+    };
 
     if (name) {
-      updatePayload.data.full_name = name;
-      updatePayload.data.name = name;
+      updateAttributes.data.full_name = name;
+      updateAttributes.data.name = name;
     }
 
     if (phone !== undefined) {
-      updatePayload.data.phone = phone;
+      updateAttributes.data.phone = phone;
     }
 
     if (isPasswordChanged) {
-      updatePayload.password = newPassword.trim();
+      updateAttributes.password = newPassword.trim();
     }
 
     if (isEmailChanged) {
-      updatePayload.email = email.trim();
+      updateAttributes.email = email.trim();
     }
 
-    // 1. تحديث بيانات Auth
-    const { error } = await supabase.auth.updateUser(updatePayload);
+    // 3. تجهيز الخيارات الإضافية وتمرير currentPassword كمعامل ثانٍ لتطبيق خيار الأمان في Supabase
+    const updateOptions = {};
+    if (currentPassword && currentPassword.trim()) {
+      updateOptions.currentPassword = currentPassword.trim();
+    }
+
+    // 4. تحديث بيانات Auth في Supabase
+    const { error } = await supabase.auth.updateUser(updateAttributes, updateOptions);
 
     if (error) {
       let errorMsg = error.message;
-      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+      if (
+        error.message.includes('already registered') || 
+        error.message.includes('already exists') ||
+        error.message.includes('User already registered')
+      ) {
         errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-      } else if (error.message.includes('Password should be')) {
+      } else if (
+        error.message.includes('Password should be')
+      ) {
         errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      } else if (
+        error.message.includes('Current password') ||
+        error.message.includes('invalid') ||
+        error.message.includes('Password is incorrect')
+      ) {
+        errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
       }
       throw new Error(errorMsg);
     }
 
-    // 2. تحديث جدول profiles ككائن JSON متوافق
+    // 5. تحديث جدول profiles صراحة ككائن JSON متوافق مع قاعدة البيانات
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
     
     if (name) {
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      let currentFullNameObj = {};
+      if (existingProfile?.full_name) {
+        if (typeof existingProfile.full_name === 'object') {
+          currentFullNameObj = { ...existingProfile.full_name };
+        } else if (typeof existingProfile.full_name === 'string') {
+          try {
+            currentFullNameObj = JSON.parse(existingProfile.full_name);
+          } catch (e) {
+            currentFullNameObj = { ar: existingProfile.full_name };
+          }
+        }
+      }
+
       const langKey = currentLanguage.startsWith('ar') ? 'ar' : currentLanguage;
-      profileUpdateData.full_name = { [langKey]: name.trim() };
+      currentFullNameObj[langKey] = name.trim();
+      profileUpdateData.full_name = currentFullNameObj;
     }
+
     if (phone !== undefined) profileUpdateData.phone = phone;
     if (isEmailChanged) profileUpdateData.email = email.trim();
 
