@@ -1,5 +1,7 @@
 // src/lib/sessionService.js
 import { supabase } from './supabase';
+import { sendNotification } from './notificationService';
+import { NOTIFICATION_TYPES } from '@/constants/notificationConstants';
 
 /**
  * دالة مساعدة للحصول على تاريخ اليوم بالتوقيت المحلي بصيغة YYYY-MM-DD
@@ -57,14 +59,13 @@ export const saveDailySession = async ({
   academyId,
   halaqaId,
   teacherId,
-  attendanceStatus = 'present', // 'present', 'absent', 'late', 'excused'
+  attendanceStatus,
   attendanceNotes,
   hifzData,        
 }) => {
   try {
     const today = getTodayDateString();
 
-    // حفظ أو تحديث حالة الحضور والغياب لليوم
     const { error: attendanceError } = await supabase
       .from('attendance')
       .upsert(
@@ -81,7 +82,6 @@ export const saveDailySession = async ({
 
     if (attendanceError) throw attendanceError;
 
-    // إذا كان الطالب حاضراً أو متأخراً، نسجل له ورد التسميع اليومي
     if ((attendanceStatus === 'present' || attendanceStatus === 'late') && hifzData) {
       const { error: progressError } = await supabase
         .from('daily_progress')
@@ -98,8 +98,8 @@ export const saveDailySession = async ({
             review_surah_id: hifzData.reviewSurahId || null,
             review_from_ayah: hifzData.reviewFromAyah || null,
             review_to_ayah: hifzData.reviewToAyah || null,
-            grade: hifzData.grade || 'ممتاز',
-            mistakes_count: Number(hifzData.mistakes) || 0,
+            grade: hifzData.grade || null,
+            mistakes_count: hifzData.mistakes !== undefined ? Number(hifzData.mistakes) : null,
             notes: hifzData.notes || null,
           },
         ]);
@@ -115,6 +115,34 @@ export const saveDailySession = async ({
           })
           .eq('id', studentId);
       }
+
+      // إرسال إشعار التسميع باستخدام نظام التنبيهات الاحترافي
+      await sendNotification({
+        userId: studentId,
+        academyId,
+        notificationType: NOTIFICATION_TYPES.RECITATION,
+        titleKey: 'notifications.recitation.title',
+        messageKey: 'notifications.recitation.message',
+        metadata: {
+          grade: hifzData.grade || null,
+        },
+        entityType: 'daily_progress',
+        actionUrl: '/dashboard'
+      });
+    } else if (attendanceStatus) {
+      // إرسال إشعار الحضور والغياب
+      await sendNotification({
+        userId: studentId,
+        academyId,
+        notificationType: NOTIFICATION_TYPES.ATTENDANCE,
+        titleKey: 'notifications.attendance.title',
+        messageKey: 'notifications.attendance.message',
+        metadata: {
+          status: attendanceStatus
+        },
+        entityType: 'attendance',
+        actionUrl: '/dashboard'
+      });
     }
 
     return { success: true, error: null };
@@ -154,15 +182,15 @@ export const saveStudentExam = async ({
           academy_id: academyId,
           teacher_id: teacherId || null,
           halaqa_id: halaqaId || null,
-          exam_type: examType,
+          exam_type: examType || null,
           from_surah_id: fromSurahId || null,
           to_surah_id: toSurahId || null,
           from_ayah: fromAyah || null,
           to_ayah: toAyah || null,
-          mistakes: Number(mistakes) || 0,
-          prompts: Number(prompts) || 0,
+          mistakes: mistakes !== undefined ? Number(mistakes) : null,
+          prompts: prompts !== undefined ? Number(prompts) : null,
           tajweed_grade: tajweedGrade || null,
-          final_score: Number(finalScore) || 0,
+          final_score: finalScore !== undefined ? Number(finalScore) : null,
           notes: notes || null,
           date: today,
         },
@@ -171,13 +199,31 @@ export const saveStudentExam = async ({
 
     if (error) throw error;
 
-    await supabase
-      .from('students')
-      .update({
-        last_test_score: Number(finalScore) || 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', studentId);
+    if (finalScore !== undefined && finalScore !== null) {
+      await supabase
+        .from('students')
+        .update({
+          last_test_score: Number(finalScore),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', studentId);
+    }
+
+    // إرسال إشعار نتيجة الاختبار
+    await sendNotification({
+      userId: studentId,
+      academyId,
+      notificationType: NOTIFICATION_TYPES.EXAM,
+      titleKey: 'notifications.exam.title',
+      messageKey: 'notifications.exam.message',
+      metadata: {
+        score: finalScore !== undefined && finalScore !== null ? finalScore : null,
+        examType: examType || null
+      },
+      entityType: 'exam',
+      entityId: data?.[0]?.id || null,
+      actionUrl: '/dashboard'
+    });
 
     return { success: true, data };
   } catch (error) {
