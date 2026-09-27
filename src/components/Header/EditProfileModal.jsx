@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, KeyRound, ShieldCheck } from 'lucide-react';
 
+import Select from '@/components/UI/Select';
 import Modal from '@/components/UI/Modal';
 import Input from '@/components/UI/Input';
 import Btn from '@/components/UI/Btn';
@@ -224,22 +225,26 @@ export default function EditProfileModal({
             t={t}
           />
 
-          {/* اختيار الجنس */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-[var(--text-main)]">
-              {t('profile.genderLabel', 'الجنس')}
-            </label>
-            <select
-              name="gender"
-              value={formData.gender || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--surface-input)] border border-[var(--border-input)] text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] transition-all cursor-pointer"
-            >
-              <option value="">{t('profile.selectGender', 'اختر الجنس (اختياري)')}</option>
-              <option value="male">{t('profile.genderMale', 'ذكر')}</option>
-              <option value="female">{t('profile.genderFemale', 'أنثى')}</option>
-            </select>
-          </div>
+          {/* اختيار الجنس باستخدام Custom UI Select */}
+<Select
+  label={t('profile.genderLabel', 'الجنس')}
+  value={formData.gender || ''}
+  onChange={(val) => {
+    setHasEdited(true);
+    setFormData((prev) => ({ ...prev, gender: val }));
+    if (submitError) setSubmitError('');
+  }}
+  options={[
+    { value: '', label: t('profile.selectGender', 'اختر الجنس (اختياري)') },
+    { value: 'male', label: t('profile.genderMale', 'ذكر') },
+    { value: 'female', label: t('profile.genderFemale', 'أنثى') }
+  ]}
+  placeholder={t('profile.selectGender', 'اختر الجنس (اختياري)')}
+  title={t('profile.genderLabel', 'الجنس')}
+  searchable={false}
+  dir={activeRtl ? 'rtl' : 'ltr'}
+  t={t}
+/>
 
           <Input
             label={t('profile.currentPasswordLabel', 'كلمة المرور الحالية (لتأكيد التعديل)')}
