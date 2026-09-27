@@ -41,7 +41,8 @@ export default function NotificationMenu({
 
   // دالة اختيار الأيقونة واللون حسب نوع التنبيه الشامل للمشروع
   const getNotifStyle = (category) => {
-    switch (category) {
+    const key = (category || '').toLowerCase();
+    switch (key) {
       case 'live_session':
       case 'session':
         return {
@@ -105,7 +106,7 @@ export default function NotificationMenu({
         type="button"
         onClick={onToggle}
         className="p-1.5 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all relative flex items-center justify-center active:scale-95 shadow-sm cursor-pointer"
-        title={t('notifications.title', { defaultValue: 'مركز التنبيهات' })}
+        title={t('notifications.title', 'مركز التنبيهات')}
       >
         <Bell size={16} className="text-[var(--primary)]" />
         {unreadCount > 0 && (
@@ -128,11 +129,11 @@ export default function NotificationMenu({
           <div className="flex justify-between items-center pb-2 mb-2 border-b border-[var(--border-card)] w-full">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-extrabold text-[var(--text-main)] text-[12px] truncate">
-                {t('notifications.title', { defaultValue: 'التنبيهات' })}
+                {t('notifications.title', 'التنبيهات')}
               </span>
               {unreadCount > 0 && (
                 <span className="bg-[var(--emerald-bg)] text-[var(--emerald-text)] border border-[var(--emerald-border)] text-[9px] px-1.5 py-0.5 rounded-full font-extrabold shrink-0">
-                  {unreadCount} {t('notifications.new', { defaultValue: 'جديد' })}
+                  {unreadCount} {t('notifications.new', 'جديد')}
                 </span>
               )}
             </div>
@@ -142,7 +143,7 @@ export default function NotificationMenu({
                 <button 
                   type="button"
                   onClick={onMarkAllAsRead} 
-                  title={t('notifications.markAllRead', { defaultValue: 'تحديد الكل كمقروء' })}
+                  title={t('notifications.markAllRead', 'تحديد الكل كمقروء')}
                   className="text-[var(--emerald-text)] hover:opacity-80 transition-opacity p-1 rounded-lg bg-[var(--emerald-bg)] border border-[var(--emerald-border)] cursor-pointer"
                 >
                   <CheckCheck size={12} />
@@ -150,7 +151,7 @@ export default function NotificationMenu({
                 <button 
                   type="button"
                   onClick={onClearAll} 
-                  title={t('notifications.clearAll', { defaultValue: 'حذف الكل' })}
+                  title={t('notifications.clearAll', 'حذف الكل')}
                   className="text-[var(--error)] hover:opacity-80 transition-opacity p-1 rounded-lg bg-[var(--error)]/10 border border-[var(--error)]/20 cursor-pointer"
                 >
                   <Trash2 size={12} />
@@ -170,7 +171,7 @@ export default function NotificationMenu({
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
-              {t('notifications.all', { defaultValue: 'الكل' })} ({notifications.length})
+              {t('notifications.all', 'الكل')} ({notifications.length})
             </button>
             <button
               type="button"
@@ -181,18 +182,18 @@ export default function NotificationMenu({
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
-              {t('notifications.unread', { defaultValue: 'غير مقروء' })} ({unreadCount})
+              {t('notifications.unread', 'غير مقروء')} ({unreadCount})
             </button>
           </div>
 
           {/* القائمة والمحتوى */}
           {loadingNotifs ? (
             <div className="py-6 text-[var(--text-sub)] text-center font-medium text-[11px]">
-              {t('common.loading', { defaultValue: 'جاري التحميل...' })}
+              {t('common.loading', 'جاري التحميل...')}
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="py-6 text-[var(--text-sub)] text-center font-medium text-[11px]">
-              {t('notifications.empty', { defaultValue: 'لا توجد إشعارات جديدة' })}
+              {t('notifications.empty', 'لا توجد إشعارات جديدة')}
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto space-y-1.5 custom-scrollbar">
