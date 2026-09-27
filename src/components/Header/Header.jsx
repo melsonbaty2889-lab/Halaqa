@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { getMenuSections } from '@/constants/sidebarMenu';
+import { useNotifications } from '@/hooks/useNotifications';
 
 import NotificationMenu from './NotificationMenu';
 import ProfileMenu from './ProfileMenu';
@@ -31,6 +32,7 @@ export default function Header({
 
   const { academy, currentAcademy } = useAcademy();
   const activeAcademy = academy || currentAcademy;
+  const academyId = activeAcademy?.id || null;
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -41,11 +43,22 @@ export default function Header({
   // حالة التنبيه المخصص (Toast)
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // state لحفظ بيانات المستخدم
+  // بيانات المستخدم المسجل
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [currentUserPhone, setCurrentUserPhone] = useState('');
   const [currentUserGender, setCurrentUserGender] = useState('');
+
+  // استدعاء هوك الإشعارات الموحد
+  const { 
+    notifications: rawNotifications, 
+    unreadCount, 
+    loading: loadingNotifs, 
+    markAsRead, 
+    markAllAsRead, 
+    formatText 
+  } = useNotifications(currentUserId, academyId);
 
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return (
@@ -54,9 +67,6 @@ export default function Header({
       'EGP'
     );
   });
-
-  const [notifications, setNotifications] = useState([]);
-  const [loadingNotifs, setLoadingNotifs] = useState(true);
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
@@ -95,6 +105,7 @@ export default function Header({
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          setCurrentUserId(user.id);
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name, phone, gender')
@@ -289,57 +300,6 @@ export default function Header({
     }
   }, [activeAcademy?.currency]);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!supabase) return;
-    setLoadingNotifs(true);
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    } finally {
-      setLoadingNotifs(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchNotifications();
-    let channel = null;
-
-    try {
-      if (typeof supabase?.channel === 'function') {
-        channel = supabase.channel('header_realtime_notifications');
-        if (channel && typeof channel.on === 'function') {
-          channel
-            .on(
-              'postgres_changes',
-              { event: 'INSERT', schema: 'public', table: 'notifications' },
-              (payload) => {
-                if (payload?.new) {
-                  setNotifications((prev) => [payload.new, ...prev]);
-                }
-              }
-            )
-            .subscribe();
-        }
-      }
-    } catch (err) {
-      console.error('Error setting up notifications realtime channel:', err);
-    }
-
-    return () => {
-      if (channel && supabase && typeof supabase.removeChannel === 'function') {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [fetchNotifications]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
@@ -372,41 +332,32 @@ export default function Header({
     return t(`nav.${activeKey}`, t('nav.dashboard', 'الحلقة الذكية'));
   }, [menuSections, activeKey, t]);
 
-  const unreadCount = useMemo(() => {
-    return notifications.filter(n => !n.is_read).length;
-  }, [notifications]);
+  // تحويل شكل الإشعارات المجلوبة لتتوافق مع مكون الواجهة NotificationMenu
+  const formattedNotifications = useMemo(() => {
+    return rawNotifications.map((item) => ({
+      ...item,
+      title: formatText(item.title),
+      message: formatText(item.message),
+      category: item.notification_type || 'info'
+    }));
+  }, [rawNotifications, formatText]);
 
   // التفاعل السريع عند النقر على تنبيه
   const handleNotificationClick = async (notif) => {
     if (!notif.is_read) {
-      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
-      await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id);
+      await markAsRead(notif.id);
     }
     
-    if (notif.tab_target && setActiveTab) {
-      setActiveTab(notif.tab_target);
-    } else if (notif.action_url) {
+    if (notif.action_url) {
       navigate(notif.action_url);
     }
     setShowNotifMenu(false);
   };
 
-  const markAllAsRead = async () => {
-    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+  const handleClearAll = async () => {
     try {
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('is_read', false);
-    } catch (err) {
-      console.error('Error marking notifications as read:', err);
-    }
-  };
-
-  const clearAll = async () => {
-    setNotifications([]);
-    try {
-      await supabase.from('notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (!currentUserId) return;
+      await supabase.from('notifications').delete().eq('user_id', currentUserId);
     } catch (err) {
       console.error('Error clearing notifications:', err);
     }
@@ -470,7 +421,7 @@ export default function Header({
 
         <div ref={notifRef}>
           <NotificationMenu
-            notifications={notifications}
+            notifications={formattedNotifications}
             loadingNotifs={loadingNotifs}
             unreadCount={unreadCount}
             showMenu={showNotifMenu}
@@ -480,7 +431,7 @@ export default function Header({
             }}
             onNotificationClick={handleNotificationClick}
             onMarkAllAsRead={markAllAsRead}
-            onClearAll={clearAll}
+            onClearAll={handleClearAll}
             formatTime={formatTime}
             activeRtl={activeRtl}
           />
