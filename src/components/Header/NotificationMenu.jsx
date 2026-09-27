@@ -10,7 +10,11 @@ import {
   UserCheck, 
   Info, 
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  CreditCard,
+  Award,
+  AlertTriangle,
+  FileCheck
 } from 'lucide-react';
 
 export default function NotificationMenu({
@@ -35,7 +39,7 @@ export default function NotificationMenu({
     return notifications;
   }, [notifications, notifFilter]);
 
-  // دالة اختيار الأيقونة واللون حسب نوع التنبيه
+  // دالة اختيار الأيقونة واللون حسب نوع التنبيه الشامل للمشروع
   const getNotifStyle = (category) => {
     switch (category) {
       case 'live_session':
@@ -57,6 +61,33 @@ export default function NotificationMenu({
           icon: <UserCheck size={13} className="text-sky-400" />,
           bg: 'bg-sky-500/10',
           border: 'border-sky-500/20'
+        };
+      case 'payment':
+      case 'subscription':
+        return {
+          icon: <CreditCard size={13} className="text-amber-400" />,
+          bg: 'bg-amber-500/10',
+          border: 'border-amber-500/20'
+        };
+      case 'badge':
+      case 'certificate':
+        return {
+          icon: <Award size={13} className="text-purple-400" />,
+          bg: 'bg-purple-500/10',
+          border: 'border-purple-500/20'
+        };
+      case 'exam':
+        return {
+          icon: <FileCheck size={13} className="text-indigo-400" />,
+          bg: 'bg-indigo-500/10',
+          border: 'border-indigo-500/20'
+        };
+      case 'alert':
+      case 'warning':
+        return {
+          icon: <AlertTriangle size={13} className="text-[var(--error)]" />,
+          bg: 'bg-[var(--error)]/10',
+          border: 'border-[var(--error)]/20'
         };
       default:
         return {
@@ -87,7 +118,7 @@ export default function NotificationMenu({
       {/* القائمة المنسدلة */}
       {showMenu && (
         <div 
-          className={`absolute top-full mt-2 w-72 border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-dropdown)] ${
+          className={`absolute top-full mt-2 w-72 sm:w-80 border border-[var(--border-card)] rounded-2xl shadow-2xl z-50 p-2.5 text-xs bg-[var(--surface-dropdown)] ${
             activeRtl ? 'left-0 text-right' : 'right-0 text-left'
           }`}
           style={{ maxWidth: 'calc(100vw - 24px)' }}
@@ -166,7 +197,7 @@ export default function NotificationMenu({
           ) : (
             <div className="max-h-64 overflow-y-auto space-y-1.5 custom-scrollbar">
               {filteredNotifications.map((item) => {
-                const style = getNotifStyle(item.category || item.type);
+                const style = getNotifStyle(item.category || item.notification_type);
                 return (
                   <div 
                     key={item.id} 
