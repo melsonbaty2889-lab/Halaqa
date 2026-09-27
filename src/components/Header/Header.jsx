@@ -136,7 +136,7 @@ export default function Header({
     fetchCurrentUser();
   }, [currentLanguage]);
 
-    // دالة تحديث بيانات البروفايل وكلمة المرور بحسب معايير Supabase Auth
+      // دالة تحديث بيانات البروفايل وكلمة المرور النهائية
   const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
     if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
 
@@ -147,65 +147,56 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. إذا كان التعديل يتضمن تغيير كلمة المرور أو البريد، نتحقق من وجود كلمة المرور الحالية
+    // 1. تأكيد كلمة المرور الحالية أولاً قبل أي إجراء أمني
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
         throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
       }
+
+      // التحقق الصارم من كلمة المرور الحالية
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: actualEmail,
+        password: currentPassword.trim()
+      });
+
+      if (authError) {
+        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
+      }
     }
 
-    // 2. تحديث كلمة المرور بشكل مستقل ومستهدف لتلبية شروط الأمان في Supabase
+    // 2. تحديث كلمة المرور بشكل منفصل مباشرة بعد نجاح التوثيق
     if (isPasswordChanged) {
-      const { error: pwdError } = await supabase.auth.updateUser(
-        { password: newPassword.trim() },
-        { currentPassword: currentPassword.trim() }
-      );
+      const { error: pwdError } = await supabase.auth.updateUser({
+        password: newPassword.trim()
+      });
 
       if (pwdError) {
-        let errorMsg = pwdError.message;
-        if (pwdError.message.includes('Password should be')) {
-          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        } else if (
-          pwdError.message.includes('Current password') ||
-          pwdError.message.includes('invalid') ||
-          pwdError.message.includes('Password is incorrect')
-        ) {
-          errorMsg = t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة');
-        }
-        throw new Error(errorMsg);
+        throw new Error(pwdError.message);
       }
     }
 
-    // 3. تحديث البريد الإلكتروني بشكل مستقل إذا تغير
+    // 3. تحديث البريد الإلكتروني بشكل منفصل إذا تغير
     if (isEmailChanged) {
-      const { error: emailError } = await supabase.auth.updateUser(
-        { email: email.trim() },
-        { currentPassword: currentPassword.trim() }
-      );
+      const { error: emailError } = await supabase.auth.updateUser({
+        email: email.trim()
+      });
 
       if (emailError) {
-        let errorMsg = emailError.message;
-        if (emailError.message.includes('already registered') || emailError.message.includes('already exists')) {
-          errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-        }
-        throw new Error(errorMsg);
+        throw new Error(emailError.message);
       }
     }
 
-    // 4. تحديث User Metadata (الاسم والهاتف)
+    // 4. تحديث الاسم ورقم الهاتف في Auth Metadata
     if (name || phone !== undefined) {
-      const { error: metaError } = await supabase.auth.updateUser({
+      await supabase.auth.updateUser({
         data: {
           ...(name && { full_name: name, name: name }),
           ...(phone !== undefined && { phone: phone })
         }
       });
-      if (metaError) {
-        console.error('Meta update error:', metaError);
-      }
     }
 
-    // 5. تحديث جدول profiles في قاعدة البيانات مع دعم اللغات المزدوجة
+    // 5. تحديث جدول profiles في قاعدة البيانات
     const profileUpdateData = {
       updated_at: new Date().toISOString()
     };
@@ -254,7 +245,7 @@ export default function Header({
 
     showToastMessage(t('profile.successUpdate', 'تم تحديث البيانات بنجاح'), 'success');
   };
-            
+  
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
