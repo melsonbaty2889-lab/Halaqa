@@ -147,91 +147,6 @@ export default function Header({
     const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
     const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
 
-    // 1. إعادة التوثيق والتأكد من صحة كلمة المرور الحالية وتحديث الجلسة
-    if (isEmailChanged || isPasswordChanged) {
-      if (!currentPassword || !currentPassword.trim()) {
-        throw new Error(t('profile.errors.currentPasswordRequired', 'كلمة المرور الحالية مطلوبة لتأكيد تغيير البريد أو كلمة المرور'));
-      }
-
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: actualEmail,
-        password: currentPassword.trim()
-      });
-
-      if (reauthError) {
-        throw new Error(t('profile.errors.invalidCurrentPassword', 'كلمة المرور الحالية غير صحيحة'));
-      }
-    }
-
-    // 2. تجهيز البيانات المراد تحديثها في Auth
-    const updateAttributes = {};
-
-    if (isPasswordChanged) {
-      updateAttributes.password = newPassword.trim();
-    }
-
-    if (isEmailChanged) {
-      updateAttributes.email = email.trim();
-    }
-
-    if (name || phone !== undefined) {
-      updateAttributes.data = {
-        ...(name && { full_name: name, name: name }),
-        ...(phone !== undefined && { phone: phone })
-      };
-    }
-
-    // 3. تحديث Auth في Supabase بعد توثيق الجلسة
-    if (Object.keys(updateAttributes).length > 0) {
-      const { error: updateError } = await supabase.auth.updateUser(updateAttributes);
-
-      if (updateError) {
-        let errorMsg = updateError.message;
-        if (updateError.message.includes('already registered')) {
-          errorMsg = t('profile.errors.emailAlreadyExists', 'هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر');
-        } else if (updateError.message.includes('Password should be')) {
-          errorMsg = t('profile.errors.passwordLength', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        }
-        throw new Error(errorMsg);
-      }
-    }
-
-    // 4. تحديث جدول profiles في قاعدة البيانات
-    const profileUpdateData = {
-      updated_at: new Date().toISOString()
-    };
-    
-    if (name) {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      let currentFullNameObj = {};
-      if (existingProfile?.full_name) {
-        if (typeof existingProfile.full_name === 'object') {
-          currentFullNameObj = { ...existingProfile.full_name };
-        } else if (typeof existingProfile.full_name === 'string') {
-          try {
-            currentFullNameObj = JSON.parse(existingProfile.full_name);
-          } catch (e) {
-            currentFullNameObj = { ar: existingProfile.full_name };
-          }
-        }
-      }
-
-        // دالة تحديث بيانات البروفايل وكلمة المرور في Supabase
-  const handleSaveProfile = async ({ name, email, currentPassword, newPassword, phone }) => {
-    if (!supabase?.auth) throw new Error(t('profile.errors.noAuth', 'غير مصرح'));
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error(t('profile.errors.userNotFound', 'المستخدم غير موجود'));
-
-    const actualEmail = user.email || currentUserEmail;
-    const isEmailChanged = email && email.trim().toLowerCase() !== actualEmail.trim().toLowerCase();
-    const isPasswordChanged = Boolean(newPassword && newPassword.trim() !== '');
-
     // 1. التأكد من إدخال كلمة المرور الحالية إذا كان هناك تغيير للكلمة أو البريد
     if (isEmailChanged || isPasswordChanged) {
       if (!currentPassword || !currentPassword.trim()) {
@@ -261,7 +176,6 @@ export default function Header({
       updateAttributes.email = email.trim();
     }
 
-    // تمرير كلمة المرور الحالية كخيار معتمد في Supabase لمنع خطأ Current password required
     if (currentPassword && currentPassword.trim()) {
       updateOptions.current_password = currentPassword.trim();
     }
