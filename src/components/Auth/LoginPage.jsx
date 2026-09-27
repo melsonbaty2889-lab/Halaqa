@@ -21,7 +21,7 @@ export default function LoginPage({
 }) {
   const location = useLocation();
   const { t, i18n } = useTranslation();
-  const { toastState, showToast, hideToast } = useToast();
+  const { toastState, hideToast } = useToast();
 
   const {
     isRtl,
@@ -56,14 +56,6 @@ export default function LoginPage({
     document.title = `${t('auth.login', 'تسجيل الدخول')} | ${appSubtitle}`;
   }, [i18n.language, t, appSubtitle]);
 
-  // إظهار تنبيهات Toast فور وجود أخطاء قادمة من النظام أو النموذج
-  useEffect(() => {
-    const errorMsg = status?.msg || fieldErrors?.email || fieldErrors?.password;
-    if (errorMsg) {
-      showToast(errorMsg, 'error');
-    }
-  }, [status, fieldErrors, showToast]);
-
   const handleGoToSignUp = (e) => {
     if (e) {
       e.preventDefault();
@@ -95,14 +87,12 @@ export default function LoginPage({
     if (!email.trim()) {
       const msg = t('auth.emailRequired', 'يرجى إدخال البريد الإلكتروني');
       setLocalError(msg);
-      showToast(msg, 'warning');
       return;
     }
 
     if (!password.trim()) {
       const msg = t('auth.passwordRequired', 'يرجى إدخال كلمة المرور');
       setLocalError(msg);
-      showToast(msg, 'warning');
       return;
     }
 
