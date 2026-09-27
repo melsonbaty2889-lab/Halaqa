@@ -1,11 +1,8 @@
 // src/lib/sessionService.js
 import { supabase } from './supabase';
-import { sendNotification } from './notificationService';
-import { NOTIFICATION_TYPES } from '@/constants/notificationConstants';
+import { sendNotification } from './notificationService.js';
+import { NOTIFICATION_TYPES } from '../constants/notificationConstants.js';
 
-/**
- * دالة مساعدة للحصول على تاريخ اليوم بالتوقيت المحلي بصيغة YYYY-MM-DD
- */
 const getTodayDateString = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -14,9 +11,6 @@ const getTodayDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
-/**
- * 1️⃣ جلب الحضور والتسميع اليومي للأكاديمية بناءً على التاريخ
- */
 export const fetchAttendance = async (academyId, date) => {
   if (!academyId || !date) return [];
 
@@ -33,9 +27,6 @@ export const fetchAttendance = async (academyId, date) => {
   return data || [];
 };
 
-/**
- * 2️⃣ الحفظ المجمع والتحديث التلقائي (Upsert) للحضور والتسميع
- */
 export const upsertAttendance = async (records) => {
   if (!records || !Array.isArray(records) || records.length === 0) return true;
 
@@ -51,9 +42,6 @@ export const upsertAttendance = async (records) => {
   return data || true;
 };
 
-/**
- * 3️⃣ تسجيل الحصة اليومية للطالب (حضور + تسميع وحفظ جديد)
- */
 export const saveDailySession = async ({
   studentId,
   academyId,
@@ -116,7 +104,6 @@ export const saveDailySession = async ({
           .eq('id', studentId);
       }
 
-      // إرسال إشعار التسميع باستخدام نظام التنبيهات الاحترافي
       await sendNotification({
         userId: studentId,
         academyId,
@@ -130,7 +117,6 @@ export const saveDailySession = async ({
         actionUrl: '/dashboard'
       });
     } else if (attendanceStatus) {
-      // إرسال إشعار الحضور والغياب
       await sendNotification({
         userId: studentId,
         academyId,
@@ -152,9 +138,6 @@ export const saveDailySession = async ({
   }
 };
 
-/**
- * 4️⃣ تسجيل اختبار رسمي ومرحلي منفصل للطالب
- */
 export const saveStudentExam = async ({
   studentId,
   academyId,
@@ -209,7 +192,6 @@ export const saveStudentExam = async ({
         .eq('id', studentId);
     }
 
-    // إرسال إشعار نتيجة الاختبار
     await sendNotification({
       userId: studentId,
       academyId,
