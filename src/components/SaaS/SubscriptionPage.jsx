@@ -115,52 +115,87 @@ export default function SubscriptionPage({ onBack }) {
     setPromoError('');
   }, []);
 
-  const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
-    setLoading(true);
-    try {
-      let receiptUrl = null;
+const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
+  setLoading(true);
+  try {
+    // 1. جلب بيانات المستخدم والأكاديمية الحالية
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('المستخدم غير مسجل الدخول');
 
-      if (receiptFile && supabase?.storage) {
-        const fileExt = receiptFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('saas-receipts')
-          .upload(fileName, receiptFile);
+    // جلب academy_id الخاص بالمستخدم
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('academy_id')
+      .eq('id', user.id)
+      .single();
 
-        if (!uploadError) {
-          const { data } = supabase.storage.from('saas-receipts').getPublicUrl(fileName);
-          receiptUrl = data?.publicUrl;
-        }
-      }
-
-      if (supabase?.from) {
-        const { error: insertError } = await supabase.from('saas_subscriptions').insert([
-          {
-            plan_duration: selectedPlan,
-            payment_gateway: methodId,
-            status: 'pending_verification',
-            metadata: {
-              region: region,
-              transaction_ref: txId,
-              receipt_url: receiptUrl,
-              discount_applied: appliedDiscount,
-              final_price_paid: finalPrice,
-              currency: currencyLabel
-            },
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-        if (insertError) throw insertError;
-      }
-
-      setIsSubmitted(true);
-    } catch (err) {
-      console.error('🚨 الخطأ عند معالجة طلب الاشتراك:', err);
-    } finally {
-      setLoading(false);
+    if (profileError || !profileData?.academy_id) {
+      throw new Error('لم يتم العثور على الأكاديمية المرتبطة بالحساب');
     }
-  }, [selectedPlan, region, txId, appliedDiscount, finalPrice, currencyLabel]);
+
+    const academyId = profileData.academy_id;
+
+    // 2. رفع صورة الإشعار إن وجدت
+    let receiptUrl = null;
+    if (receiptFile && supabase?.storage) {
+      const fileExt = receiptFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('saas-receipts')
+        .upload(fileName, receiptFile);
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('saas-receipts').getPublicUrl(fileName);
+        receiptUrl = data?.publicUrl;
+      }
+    }
+
+    // 3. حساب تاريخ الانتهاء (شهر أو سنة من الآن)
+    const now = new Date();
+    const expiresAt = new Date(now);
+    if (selectedPlan === 'yearly') {
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    } else {
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+    }
+
+    // 4. إدراج أو تحديث اشتراك الأكاديمية (Upsert)
+    const { error: insertError } = await supabase
+      .from('saas_subscriptions')
+      .upsert([
+        {
+          academy_id: academyId,
+          payer_id: user.id,
+          plan_tier: 'pro',
+          plan_duration: selectedPlan,
+          status: 'pending_verification',
+          payment_gateway: methodId || 'manual',
+          price: finalPrice,
+          currency: currentRegionData.defaultCurrency || 'EGP',
+          starts_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+          metadata: {
+            region: region,
+            transaction_ref: txId,
+            receipt_url: receiptUrl,
+            discount_applied: appliedDiscount,
+            promo_code_used: promoCode,
+            base_price: basePrice
+          },
+          updated_at: now.toISOString()
+        }
+      ], { onConflict: 'academy_id' });
+
+    if (insertError) throw insertError;
+
+    setIsSubmitted(true);
+  } catch (err) {
+    console.error('🚨 الخطأ عند معالجة طلب الاشتراك:', err);
+    alert(err.message || 'حدث خطأ أثناء حفظ الاشتراك');
+  } finally {
+    setLoading(false);
+  }
+}, [selectedPlan, region, txId, appliedDiscount, finalPrice, basePrice, promoCode, currentRegionData]);
 
   return (
     <div 
