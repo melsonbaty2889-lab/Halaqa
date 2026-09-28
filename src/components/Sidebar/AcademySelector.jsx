@@ -1,8 +1,8 @@
+// src/components/Sidebar/AcademySelector.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Building2, Plus, Sparkles, Clock, AlertTriangle, X } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
-import { colors as C } from '@/theme/colors';
 
 export default function AcademySelector({
   academiesList = [],
@@ -17,7 +17,8 @@ export default function AcademySelector({
   onSwitchAcademy,
   onOpenCreateAcademy,
   onClose, // دالة إغلاق القائمة الجانبية للموبايل
-  getText
+  getText,
+  dropDirection = 'down' // إمكانية التوجيه للأسفل افتراضياً أو للأعلى حسب مكان المكون
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
@@ -40,7 +41,6 @@ export default function AcademySelector({
   };
 
   const hasMultipleAcademies = academiesList.length > 1;
-  // إمكانية فتح القائمة المنسدلة تتفاعل عند وجود أكثر من أكاديمية أو عند إمكانية إنشاء أكاديمية جديدة
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
   // حساب حالة الاشتراك تلقائياً
@@ -70,14 +70,7 @@ export default function AcademySelector({
   const renderSubscriptionBadge = () => {
     if (subStatus.type === 'lifetime') {
       return (
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
-          style={{
-            backgroundColor: C.badge?.activeBg,
-            color: C.emerald?.light,
-            border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
-          }}
-        >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-successBg text-semantic-success border border-semantic-successBorder/60">
           <Sparkles size={10} className="shrink-0" />
           <span>{t('sidebar.badgeLifetime', 'خطة مدى الحياة ∞')}</span>
         </span>
@@ -86,14 +79,7 @@ export default function AcademySelector({
 
     if (subStatus.type === 'expiring_soon') {
       return (
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
-          style={{
-            backgroundColor: C.warning?.bg,
-            color: C.warning?.text || C.amber?.light,
-            border: `1px solid ${C.warning?.border || C.amber?.light}`
-          }}
-        >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/30">
           <AlertTriangle size={10} className="shrink-0" />
           <span>
             {t('sidebar.badgeExpiringSoon', 'ينتهي خلال {{days}} أيام', { days: subStatus.daysLeft })}
@@ -104,28 +90,14 @@ export default function AcademySelector({
 
     if (subStatus.type === 'expired') {
       return (
-        <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
-          style={{
-            backgroundColor: C.error?.bg,
-            color: C.error?.text || C.rose?.light,
-            border: `1px solid ${C.error?.border || C.rose?.light}`
-          }}
-        >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30">
           <span>{t('sidebar.badgeExpired', 'باقة منتهية')}</span>
         </span>
       );
     }
 
     return (
-      <span
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide"
-        style={{
-          backgroundColor: C.badge?.activeBg,
-          color: C.emerald?.light,
-          border: `1px solid ${C.brandEmerald?.border || C.emerald?.light}`
-        }}
-      >
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide bg-semantic-successBg text-semantic-success border border-semantic-successBorder/60">
         <Clock size={10} className="shrink-0" />
         <span>
           {t('sidebar.badgeActiveUntil', 'تجربة • تنتهي {{date}}', { date: subStatus.expiryDate })}
@@ -134,35 +106,26 @@ export default function AcademySelector({
     );
   };
 
+  // اتجاه الفتح المنسدل
+  const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
+
   return (
     <div ref={dropdownRef} className="relative w-full flex items-center gap-2" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* زر محدد الأكاديمية */}
       <button
         type="button"
         disabled={!canOpenDropdown}
         onClick={() => canOpenDropdown && setDropdownOpen(!dropdownOpen)}
         aria-label={activeName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
-        className={`w-full flex items-center justify-between p-3 min-h-[62px] rounded-2xl backdrop-blur-md transition-all duration-200 select-none group focus:outline-none ${
-          canOpenDropdown ? 'cursor-pointer' : 'cursor-default'
-        }`}
-        style={{
-          backgroundColor: C.dark?.card,
-          borderColor: dropdownOpen ? C.emerald?.light : C.dark?.cardBorder,
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          boxShadow: dropdownOpen ? C.shadows?.emeraldGlow : 'none'
-        }}
+        className={`w-full flex items-center justify-between p-3 min-h-[62px] rounded-2xl bg-semantic-surfaceCard border transition-all duration-200 select-none group focus:outline-none ${
+          dropdownOpen 
+            ? 'border-semantic-success ring-1 ring-semantic-success/20 shadow-[0_0_15px_var(--emerald-radial-glow)]' 
+            : 'border-semantic-borderCard hover:border-semantic-borderHover'
+        } ${canOpenDropdown ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* إطار الشعار */}
-          <div 
-            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-0.5 transition-all duration-200 group-hover:scale-105"
-            style={{
-              backgroundColor: C.dark?.surface,
-              borderColor: C.dark?.cardBorder,
-              borderWidth: '1px',
-              borderStyle: 'solid'
-            }}
-          >
+          <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-0.5 bg-semantic-surfaceInput border border-semantic-borderCard transition-transform duration-200 group-hover:scale-105">
             {activeLogo ? (
               <img
                 src={activeLogo}
@@ -181,10 +144,7 @@ export default function AcademySelector({
 
           {/* تفاصيل الاسم والحالة الديناميكية */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
-            <h2 
-              className="text-sm font-bold truncate leading-tight transition-colors"
-              style={{ color: C.text?.title }}
-            >
+            <h2 className="text-sm font-bold truncate leading-tight text-semantic-textPrimary transition-colors">
               {activeName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
             </h2>
 
@@ -197,8 +157,9 @@ export default function AcademySelector({
         {canOpenDropdown && (
           <ChevronDown
             size={18}
-            className={`shrink-0 ms-2 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-            style={{ color: dropdownOpen ? C.emerald?.light : C.text?.muted }}
+            className={`shrink-0 ms-2 transition-transform duration-200 ${
+              dropdownOpen ? 'rotate-180 text-semantic-success' : 'text-semantic-textMuted'
+            }`}
           />
         )}
       </button>
@@ -209,12 +170,7 @@ export default function AcademySelector({
           type="button"
           onClick={onClose}
           aria-label={t('common.close', 'إغلاق')}
-          className="md:hidden flex items-center justify-center w-11 h-11 min-h-[44px] rounded-2xl border shrink-0 transition-colors"
-          style={{
-            backgroundColor: C.dark?.card,
-            borderColor: C.dark?.cardBorder,
-            color: C.text?.muted
-          }}
+          className="md:hidden flex items-center justify-center w-11 h-11 min-h-[44px] rounded-2xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textSecondary hover:text-semantic-textPrimary shrink-0 transition-colors cursor-pointer"
         >
           <X size={20} />
         </button>
@@ -222,16 +178,7 @@ export default function AcademySelector({
 
       {/* القائمة المنسدلة */}
       {dropdownOpen && canOpenDropdown && (
-        <div 
-          className="absolute top-full inset-x-0 mt-2 p-1.5 rounded-xl backdrop-blur-2xl z-50 overflow-hidden"
-          style={{
-            backgroundColor: C.dark?.surface,
-            borderColor: C.dark?.cardBorder,
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            boxShadow: C.shadows?.dropdown
-          }}
-        >
+        <div className={`absolute ${dropdownPositionClasses} inset-x-0 p-1.5 rounded-xl bg-semantic-surfaceCard border border-semantic-borderCard shadow-main backdrop-blur-2xl z-50 overflow-hidden`}>
           {hasMultipleAcademies && (
             <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
               {academiesList.map((acc) => {
@@ -247,26 +194,18 @@ export default function AcademySelector({
                       if (onSwitchAcademy) onSwitchAcademy(acc.id);
                       setDropdownOpen(false);
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group"
-                    style={{
-                      backgroundColor: isSelected ? C.badge?.activeBg : 'transparent',
-                      color: isSelected ? C.emerald?.light : C.text?.body
-                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group ${
+                      isSelected
+                        ? 'bg-semantic-successBg text-semantic-success font-bold'
+                        : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div 
-                        className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5"
-                        style={{
-                          backgroundColor: C.dark?.bg,
-                          borderColor: C.dark?.cardBorder,
-                          borderWidth: '1px',
-                          borderStyle: 'solid'
-                        }}
-                      >
+                      <div className="w-7 h-7 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5 bg-semantic-surfaceInput border border-semantic-borderCard">
                         {accLogo ? (
                           <img src={accLogo} alt={accName} className="w-full h-full object-contain rounded" />
                         ) : (
-                          <Building2 size={14} style={{ color: C.emerald?.light }} />
+                          <Building2 size={14} className="text-semantic-success" />
                         )}
                       </div>
 
@@ -276,7 +215,7 @@ export default function AcademySelector({
                     </div>
 
                     {isSelected && (
-                      <Check size={14} className="shrink-0 ms-1" style={{ color: C.emerald?.light }} />
+                      <Check size={14} className="shrink-0 ms-1 text-semantic-success" />
                     )}
                   </button>
                 );
@@ -285,15 +224,14 @@ export default function AcademySelector({
           )}
 
           {onOpenCreateAcademy && (
-            <div className={hasMultipleAcademies ? 'pt-1 mt-1 border-t' : ''} style={{ borderColor: C.dark?.cardBorder }}>
+            <div className={`${hasMultipleAcademies ? 'pt-1 mt-1 border-t border-semantic-borderCard' : ''}`}>
               <button
                 type="button"
                 onClick={() => {
                   setDropdownOpen(false);
                   onOpenCreateAcademy();
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-2 min-h-[44px] rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                style={{ color: C.emerald?.light }}
+                className="w-full flex items-center gap-2 px-2.5 py-2 min-h-[44px] rounded-lg text-xs font-medium text-semantic-success hover:bg-semantic-successBg/50 transition-colors cursor-pointer"
               >
                 <Plus size={14} />
                 <span>{t('sidebar.createNewAcademy', 'إنشاء أكاديمية جديدة')}</span>
