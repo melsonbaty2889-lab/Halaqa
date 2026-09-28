@@ -46,7 +46,7 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
 
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* زر محول اللغات المعتمد على مفاهيم التصميم الموحدة */}
+      {/* زر محول اللغات */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -66,10 +66,10 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
         />
       </button>
 
-      {/* القائمة المنسدلة الداكنة غير الشفافة والمعالجة للتمركز */}
+      {/* القائمة المنسدلة: تم تغيير التموضع إلى end-0 لفتحها إلى الداخل دائماً ومنع قطعها */}
       {isOpen && (
         <div 
-          className={`absolute ${dropdownPositionClasses} start-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-main py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+          className={`absolute ${dropdownPositionClasses} end-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-main py-1.5 z-50 overflow-hidden backdrop-blur-md`}
         >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
