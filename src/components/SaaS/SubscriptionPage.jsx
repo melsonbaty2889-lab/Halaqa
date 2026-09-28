@@ -5,7 +5,7 @@ import PromoCodeInput from './components/PromoCodeInput';
 import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
-import { colors } from '@/theme/colors';
+import { UI } from '@/theme/styles';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
@@ -29,17 +29,6 @@ export default function SubscriptionPage({ onBack }) {
   const [txId, setTxId] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  // جلب ألوان النظام الموحدة
-  const theme = useMemo(() => ({
-    bg: colors?.dark?.bg,
-    cardBg: colors?.dark?.card,
-    borderColor: colors?.dark?.cardBorder,
-    accent: colors?.emerald?.light,
-    textPrimary: colors?.dark?.text,
-    textMuted: colors?.dark?.textMuted,
-    textSubtle: colors?.dark?.textSubtle,
-  }), []);
 
   // جلب الأسعار والعملة ديناميكياً من ملف الثوابت الموحد
   const currentRegionData = useMemo(() => {
@@ -83,7 +72,7 @@ export default function SubscriptionPage({ onBack }) {
         id: 'yearly',
         title: t('subscription.plans.yearlyTitle', 'الاستقرار الأكاديمي (اشتراك سنوي)'),
         badge: getBadgeText(),
-        badgeBg: theme.accent,
+        badgeBg: 'bg-semantic-success',
         description: t('subscription.plans.yearlyDesc', 'خيار مستدام للمؤسسات والمجمعات التعليمية المتكاملة'),
         periodText: t('subscription.periods.yearly', 'سنوياً'),
         basePrice: yearlyPrice,
@@ -94,7 +83,7 @@ export default function SubscriptionPage({ onBack }) {
         ]
       }
     ];
-  }, [currentRegionData, i18n.language, t, theme.accent]);
+  }, [currentRegionData, i18n.language, t]);
 
   // معالجة وتطبيق كود الخصم
   const handleApplyPromo = useCallback(() => {
@@ -118,7 +107,7 @@ export default function SubscriptionPage({ onBack }) {
       // رفع إشعار التحويل المالي إن وجد
       if (receiptFile && supabase?.storage) {
         const fileExt = receiptFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('saas-receipts')
           .upload(fileName, receiptFile);
@@ -159,31 +148,17 @@ export default function SubscriptionPage({ onBack }) {
 
   return (
     <div 
-      style={{
-        minHeight: '100vh',
-        backgroundColor: theme.bg,
-        color: theme.textPrimary,
-        fontFamily: "'Cairo', sans-serif"
-      }}
-      className="py-10 px-4 transition-colors duration-200"
+      className="min-h-screen bg-semantic-bgMain text-semantic-textPrimary py-10 px-4 transition-colors duration-200 font-cairo"
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* زر العودة العلوي فقط */}
-        <div 
-          className="flex items-center justify-start pb-4 border-b"
-          style={{ borderColor: theme.borderColor }}
-        >
+        <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
           <button 
             onClick={onBack} 
             aria-label={t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
-            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90"
-            style={{ 
-              backgroundColor: theme.cardBg, 
-              borderColor: theme.borderColor,
-              color: theme.textMuted 
-            }}
+            className={`${UI.card} flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90 text-semantic-textSecondary`}
           >
             <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
             <span>{t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}</span>
@@ -192,34 +167,27 @@ export default function SubscriptionPage({ onBack }) {
 
         {/* العنوان الرئيسي والتعريفي */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <h1 
-            className="text-2xl sm:text-4xl font-extrabold leading-tight"
-            style={{ color: theme.accent }}
-          >
+          <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight text-semantic-actionPrimary">
             {t('subscription.headerTitle', 'خطط اشتراك منصة الحلقة الذكية')}
           </h1>
-          <p className="text-xs sm:text-sm max-w-xl leading-relaxed" style={{ color: theme.textMuted }}>
+          <p className={`${UI.subtitle} text-xs sm:text-sm max-w-xl leading-relaxed`}>
             {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لمؤسستك، وانضم إلى كبرى المراكز والجهات التعليمية حول العالم.')}
           </p>
         </div>
 
         {/* شاشة إتمام الطلب بنجاح */}
         {isSubmitted ? (
-          <div 
-            className="p-8 rounded-2xl border text-center space-y-4 max-w-lg mx-auto"
-            style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
-          >
-            <CheckCircle2 size={48} className="mx-auto" style={{ color: theme.accent }} />
-            <h2 className="text-xl font-extrabold" style={{ color: theme.textPrimary }}>
+          <div className={`${UI.card} p-8 rounded-2xl text-center space-y-4 max-w-lg mx-auto`}>
+            <CheckCircle2 size={48} className="mx-auto text-semantic-actionPrimary" />
+            <h2 className="text-xl font-extrabold text-semantic-textPrimary">
               {t('subscription.successTitle', 'تم استلام طلب الاشتراك بنجاح')}
             </h2>
-            <p className="text-xs leading-relaxed" style={{ color: theme.textMuted }}>
+            <p className={`${UI.subtitle} text-xs leading-relaxed`}>
               {t('subscription.successDesc', 'جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.')}
             </p>
             <button
               onClick={onBack}
-              className="mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all cursor-pointer"
-              style={{ backgroundColor: theme.accent, color: theme.bg }}
+              className={`${UI.btnEmerald} mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all cursor-pointer`}
             >
               {t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
             </button>
