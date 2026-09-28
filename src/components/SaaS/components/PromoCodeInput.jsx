@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
-import { C } from '@/theme/colors';
+import { UI } from '@/theme/styles';
 
 // Helper آمن لجلب النصوص ومنع الـ Hardcoded Strings
 const getText = (t, key, fallback) => {
@@ -39,20 +39,11 @@ export default function PromoCodeInput({
   }, [setPromoCode, onApply]);
 
   return (
-    <div 
-      style={{
-        backgroundColor: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
-        borderColor: C.amber?.DEFAULT || '#D97706',
-      }}
-      className="border border-dashed rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all"
-    >
+    <div className={`${UI.card} border-dashed border-semantic-borderCard rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
       {/* عنوان القسم */}
       <div className="flex items-center justify-center gap-2 mb-3">
-        <Tag size={16} style={{ color: C.amber?.DEFAULT || '#D97706' }} />
-        <span 
-          style={{ color: C.text?.body || '#E2E8F0' }} 
-          className="font-bold text-xs"
-        >
+        <Tag size={16} className="text-semantic-actionPrimary" />
+        <span className="font-bold text-xs text-semantic-textPrimary">
           {getText(t, 'subscription.promo.haveCode', 'هل لديك كود خصم مخصص؟')}
         </span>
       </div>
@@ -67,12 +58,7 @@ export default function PromoCodeInput({
             onKeyDown={handleKeyDown}
             placeholder={getText(t, 'subscription.promo.placeholder', 'أدخل الكود (مثال: S20)')}
             aria-label={getText(t, 'subscription.promo.label', 'كود الخصم')}
-            style={{
-              backgroundColor: C.inputs?.bg || 'rgba(10, 15, 28, 0.8)',
-              borderColor: C.inputs?.border || 'rgba(255, 255, 255, 0.12)',
-              color: C.text?.title || '#FFFFFF'
-            }}
-            className="w-full h-[44px] min-h-[44px] px-3 pe-8 rounded-xl border font-mono text-xs tracking-wider uppercase focus:outline-none transition-colors"
+            className={`${UI.input} w-full h-[44px] min-h-[44px] px-3 pe-8 font-mono text-xs tracking-wider uppercase`}
           />
 
           {promoCode && (
@@ -81,8 +67,7 @@ export default function PromoCodeInput({
               onClick={handleClear}
               aria-label={getText(t, 'common.clear', 'مسح')}
               title={getText(t, 'common.clear', 'مسح')}
-              style={{ color: C.text?.muted || '#94A3B8' }}
-              className="absolute inset-y-0 pe-2.5 flex items-center hover:opacity-80 transition-opacity"
+              className="absolute inset-y-0 inline-end-2.5 flex items-center text-semantic-textMuted hover:text-semantic-textPrimary transition-colors"
             >
               <X size={14} />
             </button>
@@ -94,12 +79,7 @@ export default function PromoCodeInput({
           onClick={onApply}
           disabled={!promoCode.trim()}
           aria-label={getText(t, 'subscription.promo.apply', 'تطبيق')}
-          style={{
-            background: C.gradients?.primaryBtn || 'linear-gradient(180deg, #E67E00 0%, #D97706 100%)',
-            color: C.text?.title || '#FFFFFF',
-            boxShadow: `0 4px 12px ${C.amber?.buttonGlow || 'rgba(217, 119, 6, 0.3)'}`
-          }}
-          className="shrink-0 h-[44px] min-h-[44px] px-6 text-xs font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-all cursor-pointer"
+          className={`${UI.btnEmerald} shrink-0 h-[44px] min-h-[44px] px-6 text-xs font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all cursor-pointer`}
         >
           {getText(t, 'subscription.promo.apply', 'تطبيق')}
         </button>
@@ -107,14 +87,7 @@ export default function PromoCodeInput({
 
       {/* حالة الخصم المطبق بنجاح */}
       {appliedDiscount > 0 && (
-        <div 
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderColor: C.emerald?.DEFAULT || '#10B981',
-            color: C.emerald?.DEFAULT || '#10B981'
-          }}
-          className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border text-xs font-semibold"
-        >
+        <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 size={14} className="shrink-0" />
             <span>
@@ -130,8 +103,7 @@ export default function PromoCodeInput({
             type="button"
             onClick={handleClear}
             aria-label={getText(t, 'subscription.promo.remove', 'إلغاء الخصم')}
-            style={{ color: C.emerald?.DEFAULT || '#10B981' }}
-            className="text-[10px] underline hover:opacity-80 transition-opacity cursor-pointer"
+            className="text-[10px] underline hover:opacity-80 transition-opacity cursor-pointer text-semantic-success"
           >
             {getText(t, 'subscription.promo.remove', 'إلغاء الخصم')}
           </button>
@@ -140,14 +112,7 @@ export default function PromoCodeInput({
 
       {/* رسالة الخطأ */}
       {error && (
-        <div 
-          style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            borderColor: C.error?.DEFAULT || '#EF4444',
-            color: C.error?.DEFAULT || '#EF4444'
-          }}
-          className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border text-xs font-semibold"
-        >
+        <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
           <span>{error}</span>
         </div>
