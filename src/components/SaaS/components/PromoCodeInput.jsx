@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// helper آمن لجلب النصوص ومنع الـ Hardcoded Strings مع دعم المتغيرات
 const getText = (t, key, fallback, options = {}) => {
   const translated = t(key, options);
   return translated && translated !== key ? translated : fallback;
@@ -18,19 +17,17 @@ export default function PromoCodeInput({
 }) {
   const { t } = useTranslation();
 
-  // تأمين قيمة promoCode كنص وتنظيف المسافات
   const safeCode = typeof promoCode === 'string' ? promoCode : '';
   const cleanCode = safeCode.trim();
   const isApplyDisabled = !cleanCode;
 
-  // تنفيذ دالة التطبيق الموحدة
+  // تطبيق الكود عبر الزر أو Enter
   const handleApply = useCallback(() => {
     if (cleanCode && typeof onApply === 'function') {
       onApply(cleanCode);
     }
   }, [cleanCode, onApply]);
 
-  // معالجة الضغط على مفتاح Enter
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -38,26 +35,26 @@ export default function PromoCodeInput({
     }
   }, [handleApply]);
 
-  // مسح نص الحقل فقط مع الإبقاء على الخصم المطبق (إن وجد)
+  // مسح نص حقل الإدخال فقط (زر X) - لا يلغي الخصم المطبق تلقائياً
   const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
   }, [setPromoCode]);
 
-  // إلغاء الخصم المطبق وتصفيره وإعادة السعر النهائي لأصله في المكوّن الأب
+  // إلغاء الخصم المطبق (زر إلغاء الخصم)
   const handleRemoveDiscount = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
+    // يستدعي onApply مع معامل خاص لتخطي طلب الفحص وتصفير الخصم في الأب
     if (typeof onApply === 'function') {
-      onApply('');
+      onApply(null);
     }
   }, [setPromoCode, onApply]);
 
   return (
     <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
-      {/* عنوان القسم */}
       <div className="flex items-center justify-center gap-2 mb-3">
         <Tag size={16} className="text-semantic-actionPrimary" />
         <span className="font-bold text-xs text-semantic-textPrimary">
@@ -65,7 +62,6 @@ export default function PromoCodeInput({
         </span>
       </div>
 
-      {/* حقل الإدخال والأزرار */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <input 
@@ -91,7 +87,6 @@ export default function PromoCodeInput({
           )}
         </div>
 
-        {/* زر التطبيق الموحد باللون البرتقالي الأساسي للمشروع */}
         <button
           type="button"
           onClick={handleApply}
@@ -103,7 +98,6 @@ export default function PromoCodeInput({
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح - باللون الزمردي */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
@@ -129,7 +123,6 @@ export default function PromoCodeInput({
         </div>
       )}
 
-      {/* رسالة الخطأ - باللون الأحمر الموحد */}
       {error && (
         <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
