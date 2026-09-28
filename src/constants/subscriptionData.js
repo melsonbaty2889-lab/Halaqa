@@ -81,21 +81,18 @@ export const COUPON_CODES = {
 
 /**
  * 3. دالة كشف النطاق المالي والعملة الافتراضية المبدئية
- * توفر اقتراحاً مبدئياً فقط، مع إمكانية تغيير العميل للعملة إلى USD في أي وقت من الواجهة.
  */
 export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
   try {
     const locUpper = String(userLoc || '').toUpperCase();
     const gccCountryCodes = ['SA', 'KW', 'AE', 'QA', 'BH', 'OM'];
 
-    // 1. فحص دولة العميل المسجلة صراحة عبر كود الدولة ISO
     if (locUpper) {
       if (locUpper.includes('EG')) return 'EGP';
       if (gccCountryCodes.some(code => locUpper.includes(code))) return 'SAR';
       if (locUpper !== 'GLOBAL') return 'USD';
     }
 
-    // 2. فحص إقليم المتصفح (Browser Locale)
     if (typeof navigator !== 'undefined') {
       const userLocale = (navigator.language || navigator.userLanguage || '').toLowerCase();
       if (userLocale.includes('-eg')) return 'EGP';
@@ -108,7 +105,6 @@ export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
       }
     }
 
-    // 3. فحص المنطقة الزمنية للمتصفح (Timezone) لكافة عواصم ومناطق الخليج ومصر
     if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
       if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
@@ -123,7 +119,6 @@ export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
       }
     }
 
-    // 4. الخيار العالمي الافتراضي لجميع أنحاء العالم
     return 'USD';
   } catch (err) {
     console.error('🚨 Error detecting user currency region:', err);
@@ -131,11 +126,10 @@ export const detectUserCurrencyRegion = (userLoc = '', currentLang = 'ar') => {
   }
 };
 
-// توافق خلفي مع اسم الدالة القديم
 export const detectUserRegion = detectUserCurrencyRegion;
 
 /**
- * 4. دالة جلب كائن الأسعار المتوافق مع مكونات الواجهة (مؤمنة 100%)
+ * 4. دالة جلب كائن الأسعار المتوافق مع مكونات الواجهة
  */
 export const getPrices = (t = (key) => key) => {
   const result = {};
@@ -150,7 +144,6 @@ export const getPrices = (t = (key) => key) => {
     };
   });
 
-  // إضافة التوافق للرموز القديمة في الكائن الناتج
   result.egypt = result.EGP;
   result.gcc = result.SAR;
   result.global = result.USD;
