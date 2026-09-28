@@ -12,7 +12,7 @@ export const LANGUAGES = [
   { code: 'id', name: 'Bahasa Indonesia', dir: 'ltr' },
 ];
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ dropDirection = 'down' }) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -39,9 +39,15 @@ export default function LanguageSwitcher() {
     setIsOpen(false);
   };
 
+  // تحديد اتجاه القائمة بناةً على الخاصية dropDirection
+  const dropdownPositionClasses = 
+    dropDirection === 'up' 
+      ? 'bottom-full mb-2' 
+      : 'top-full mt-2';
+
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* زر محول اللغات بارتفاع موحد h-10 واعتماد كامل على Semantic Tokens */}
+      {/* زر محول اللغات */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -60,9 +66,9 @@ export default function LanguageSwitcher() {
         />
       </button>
 
-      {/* القائمة المنسدلة تفتح لأعلى وتعتمد على surfaceCard و borderCard */}
+      {/* القائمة المنسدلة تتكيف حسب اتجاه dropDirection */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 start-0 w-36 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard shadow-main py-1 z-50 overflow-hidden backdrop-blur-xl">
+        <div className={`absolute ${dropdownPositionClasses} start-0 w-36 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard shadow-main py-1 z-50 overflow-hidden backdrop-blur-xl`}>
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
             return (
