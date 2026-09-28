@@ -282,14 +282,17 @@ export default function SubscriptionPage({ onBack }) {
 
             {/* 5. قسم وسيلة الدفع */}
             <PaymentSection 
-              region={region}
-              txId={txId}
-              setTxId={setTxId}
-              isSubmitted={isSubmitted}
-              loading={loading}
-              onSubmit={handleSubmitSubscription}
-              isRTL={isRTL}
-            />
+  region={region}
+  txId={txId}
+  setTxId={setTxId}
+  isSubmitted={isSubmitted}
+  loading={loading}
+  onSubmit={handleSubmitSubscription}
+  isRTL={isRTL}
+  finalPrice={finalPrice}
+  currency={currencyLabel}
+  appliedDiscount={appliedDiscount}
+/>
           </>
         )}
 
