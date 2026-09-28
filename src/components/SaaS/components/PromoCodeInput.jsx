@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// دالة مساعدة جالبة للنصوص تضمن استخدام i18next والتوافق مع النصوص الاحتياطية
+// helper آمن لجلب النصوص ومنع الـ Hardcoded Strings مع دعم المتغيرات
 const getText = (t, key, fallback, options = {}) => {
   const translated = t(key, options);
   return translated && translated !== key ? translated : fallback;
@@ -18,7 +18,7 @@ export default function PromoCodeInput({
 }) {
   const { t } = useTranslation();
 
-  // تأمين قيمة promoCode كنص
+  // تأمين قيمة promoCode كنص وتنظيف المسافات
   const safeCode = typeof promoCode === 'string' ? promoCode : '';
   const cleanCode = safeCode.trim();
   const isApplyDisabled = !cleanCode;
@@ -38,19 +38,18 @@ export default function PromoCodeInput({
     }
   }, [handleApply]);
 
-  // مسح نص الحقل فقط دون مسح الخصم المطبق
+  // مسح نص الحقل فقط مع الإبقاء على الخصم المطبق (إن وجد)
   const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
   }, [setPromoCode]);
 
-  // إلغاء الخصم المطبق وإشعار المكون الأب
+  // إلغاء الخصم المطبق وتصفيره وإعادة السعر النهائي لأصله في المكوّن الأب
   const handleRemoveDiscount = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
-    // تمرير نص فارغ كإشارة إلغاء للمكون الأب ليعيد تصفير appliedDiscount والسعر
     if (typeof onApply === 'function') {
       onApply('');
     }
@@ -92,7 +91,7 @@ export default function PromoCodeInput({
           )}
         </div>
 
-        {/* زر التطبيق الموحد باللون البرتقالي البراند */}
+        {/* زر التطبيق الموحد باللون البرتقالي الأساسي للمشروع */}
         <button
           type="button"
           onClick={handleApply}
@@ -104,7 +103,7 @@ export default function PromoCodeInput({
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح - باللون الزمردي الموحد */}
+      {/* حالة الخصم المطبق بنجاح - باللون الزمردي */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
