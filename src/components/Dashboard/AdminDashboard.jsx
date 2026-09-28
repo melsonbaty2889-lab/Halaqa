@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Building2, LogOut, Search, Filter, RefreshCw, 
-  CheckCircle, ShieldAlert, AlertTriangle, Layers, Calendar,
-  CreditCard, FileText, ExternalLink, CheckCircle2, XCircle
+  Building2, LogOut, Search, RefreshCw, 
+  CheckCircle, CreditCard, FileText, ExternalLink, CheckCircle2, XCircle
 } from 'lucide-react';
 
 import { 
@@ -15,6 +14,7 @@ import {
 } from '@/lib/adminDashboardService';
 
 import { supabase } from '@/lib/supabase';
+import { UI } from '@/theme/styles';
 
 import AdminStatsCards from './AdminStatsCards';
 import AcademyCard from './AcademyCard';
@@ -236,33 +236,35 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 font-sans dir-rtl">
+    <div className="min-h-screen bg-semantic-bgPage text-semantic-textPrimary p-4 md:p-6 font-cairo">
       
+      {/* Toast Message */}
       {toastMessage && (
         <div className={`fixed bottom-5 left-5 z-[5000] px-4 py-3 rounded-xl shadow-2xl text-xs font-bold border transition-all ${
-          toastMessage.type === 'error' ? 'bg-rose-900 border-rose-700 text-white' : 'bg-emerald-900 border-emerald-700 text-white'
+          toastMessage.type === 'error' ? 'bg-semantic-dangerBg border-semantic-danger text-semantic-danger' : 'bg-semantic-successBg border-semantic-successBorder text-semantic-success'
         }`}>
           {toastMessage.text}
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
+      {/* Header Bar */}
+      <div className="flex justify-between items-center mb-6 card-surface p-4 rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
             <Building2 size={22} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white m-0">{isRtl ? 'لوحة تحكم المدير العام' : 'Super Admin Dashboard'}</h1>
-            <p className="text-xs text-slate-400 m-0">{isRtl ? 'إدارة أكاديميات منصة مقراة والاشتراكات' : 'Manage all academies and subscriptions'}</p>
+            <h1 className="text-lg font-bold text-semantic-textPrimary m-0">{isRtl ? 'لوحة تحكم المدير العام' : 'Super Admin Dashboard'}</h1>
+            <p className="text-xs text-semantic-textSecondary m-0">{isRtl ? 'إدارة أكاديميات منصة مقراة والاشتراكات' : 'Manage all academies and subscriptions'}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={loadData} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 transition-colors border border-slate-700" title={isRtl ? 'تحديث البيانات' : 'Refresh'}>
+          <button onClick={loadData} className="p-2 card-surface hover:border-semantic-borderHover rounded-lg text-semantic-textSecondary transition-colors" title={isRtl ? 'تحديث البيانات' : 'Refresh'}>
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           {onLogout && (
-            <button onClick={onLogout} className="flex items-center gap-1.5 bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 border border-rose-800/40 px-3 py-2 rounded-lg text-xs font-bold transition-colors">
+            <button onClick={onLogout} className="flex items-center gap-1.5 bg-semantic-dangerBg hover:opacity-90 text-semantic-danger border border-semantic-danger/30 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer">
               <LogOut size={15} /> {isRtl ? 'خروج' : 'Logout'}
             </button>
           )}
@@ -271,31 +273,32 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
 
       <AdminStatsCards stats={stats} isRtl={isRtl} />
 
-      <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center bg-slate-900/40 p-3 rounded-xl border border-slate-800/80">
+      {/* Controls Bar */}
+      <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center card-surface p-3 rounded-xl">
         
         <div className="relative flex-1">
-          <Search size={16} className="absolute right-3 top-3 text-slate-400" />
+          <Search size={16} className="absolute right-3 top-3 text-semantic-textMuted" />
           <input
             type="text"
             placeholder={isRtl ? 'بحث باسم الأكاديمية أو المالك أو البريد...' : 'Search academy, owner, or email...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pr-9 pl-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-sky-500 transition-colors"
+            className={`${UI.input} pr-9`}
           />
         </div>
 
         <div className="flex gap-2 items-center flex-wrap">
-          <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-            <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+          <div className="flex bg-semantic-surfaceInput p-1 rounded-lg border border-semantic-borderInput text-xs">
+            <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'all' ? 'bg-semantic-surfaceCard text-semantic-textPrimary' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               {isRtl ? 'الكل' : 'All'}
             </button>
-            <button onClick={() => setActiveTab('active')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'active' ? 'bg-emerald-950 text-emerald-400' : 'text-slate-400 hover:text-white'}`}>
+            <button onClick={() => setActiveTab('active')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'active' ? 'bg-semantic-successBg text-semantic-success' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               {isRtl ? 'النشطة' : 'Active'}
             </button>
-            <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'blocked' ? 'bg-rose-950 text-rose-400' : 'text-slate-400 hover:text-white'}`}>
+            <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'blocked' ? 'bg-semantic-dangerBg text-semantic-danger' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               {isRtl ? 'المحظورة' : 'Blocked'}
             </button>
-            <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-950 text-amber-400' : 'text-slate-400 hover:text-white'}`}>
+            <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-950/60 text-amber-400' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               <CreditCard size={14} />
               {isRtl ? 'طلبات معلقة' : 'Pending Subscriptions'}
               {pendingSubscriptions.length > 0 && (
@@ -309,7 +312,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-300 outline-none cursor-pointer"
+            className="bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg px-2.5 py-2 text-xs text-semantic-textSecondary outline-none cursor-pointer focus:border-semantic-actionPrimary"
           >
             <option value="created_at_desc">{isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
             <option value="created_at_asc">{isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
@@ -318,32 +321,34 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       </div>
 
+      {/* Bulk Action Controls */}
       {selectedAcademyIds.length > 0 && activeTab !== 'pending_subscriptions' && (
-        <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fadeIn">
+        <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fade-in">
           <span className="text-xs text-sky-300 font-bold">
             {isRtl ? `تم تحديد ${selectedAcademyIds.length} أكاديمية` : `Selected ${selectedAcademyIds.length} academies`}
           </span>
           <div className="flex gap-2">
-            <button onClick={() => handleBulkStatus(true)} disabled={processingId === 'bulk'} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+            <button onClick={() => handleBulkStatus(true)} disabled={processingId === 'bulk'} className="bg-semantic-success hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all">
               {isRtl ? 'تفعيل الكل' : 'Activate All'}
             </button>
-            <button onClick={() => handleBulkStatus(false)} disabled={processingId === 'bulk'} className="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+            <button onClick={() => handleBulkStatus(false)} disabled={processingId === 'bulk'} className="bg-semantic-danger hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all">
               {isRtl ? 'حظر الكل' : 'Block All'}
             </button>
           </div>
         </div>
       )}
 
+      {/* Main Content */}
       {loading ? (
-        <div className="text-center py-20 text-slate-500 text-xs">
-          <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-sky-500" />
+        <div className="text-center py-20 text-semantic-textMuted text-xs">
+          <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-semantic-actionPrimary" />
           {isRtl ? 'جاري جلب البيانات...' : 'Loading Data...'}
         </div>
       ) : activeTab === 'pending_subscriptions' ? (
         pendingSubscriptions.length === 0 ? (
-          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs space-y-2">
-            <CheckCircle size={36} className="mx-auto text-emerald-500/40" />
-            <div className="text-sm font-bold text-slate-300">لا توجد طلبات اشتراك معلقة حالياً</div>
+          <div className="card-surface p-12 text-center text-semantic-textMuted text-xs space-y-2">
+            <CheckCircle size={36} className="mx-auto text-semantic-success/40" />
+            <div className="text-sm font-bold text-semantic-textPrimary">لا توجد طلبات اشتراك معلقة حالياً</div>
             <p>تم تفعيل أو مراجعة كافة الطلبات بنجاح.</p>
           </div>
         ) : (
@@ -358,7 +363,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
               const refText = getSafeText(sub.metadata?.transaction_ref);
 
               return (
-                <div key={sub.id} className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-700 transition-all">
+                <div key={sub.id} className="card-surface p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-semantic-borderHover transition-all">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-sm text-sky-400">
@@ -369,36 +374,36 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-                      <div>الخطة: <strong className="text-white">{planDuration}</strong></div>
-                      <div>المبلغ: <strong className="text-white">{priceText} {currencyText}</strong></div>
-                      <div>بوابة الدفع: <strong className="text-white">{gatewayText}</strong></div>
+                    <div className="flex flex-wrap gap-4 text-xs text-semantic-textSecondary">
+                      <div>الخطة: <strong className="text-semantic-textPrimary">{planDuration}</strong></div>
+                      <div>المبلغ: <strong className="text-semantic-textPrimary">{priceText} {currencyText}</strong></div>
+                      <div>بوابة الدفع: <strong className="text-semantic-textPrimary">{gatewayText}</strong></div>
                       {refText && (
-                        <div>المرجع: <strong className="text-white font-mono">{refText}</strong></div>
+                        <div>المرجع: <strong className="text-semantic-textPrimary font-mono">{refText}</strong></div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
+                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-semantic-borderCard">
                     {receiptUrl ? (
                       <a
                         href={receiptUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-sky-400 border border-semantic-borderInput transition-all"
                       >
                         <FileText size={15} />
                         معاينة الإشعار
                         <ExternalLink size={12} />
                       </a>
                     ) : (
-                      <span className="text-[11px] text-slate-500 italic">بدون إشعار</span>
+                      <span className="text-[11px] text-semantic-textMuted italic">بدون إشعار</span>
                     )}
 
                     <button
                       onClick={() => handleRejectSubscription(sub)}
                       disabled={processingId === sub.id}
-                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/30 border border-rose-800/40 hover:bg-rose-900/50 transition-all"
+                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-semantic-danger bg-semantic-dangerBg border border-semantic-danger/30 hover:opacity-90 transition-all cursor-pointer"
                     >
                       <XCircle size={15} />
                       رفض
@@ -407,7 +412,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
                     <button
                       onClick={() => handleApproveSubscription(sub)}
                       disabled={processingId === sub.id}
-                      className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg transition-all"
+                      className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-semantic-success hover:bg-emerald-500 shadow-lg transition-all cursor-pointer"
                     >
                       {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
                       تفعيل الرخصة
@@ -419,7 +424,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
           </div>
         )
       ) : filteredAcademies.length === 0 ? (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
+        <div className="card-surface p-12 text-center text-semantic-textMuted text-xs">
           <Building2 size={36} className="mx-auto mb-2 opacity-30" />
           {isRtl ? 'لا يوجد أكاديميات تقتفي هذا البحث أو التصفية.' : 'No academies match your filter.'}
         </div>
@@ -456,6 +461,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       )}
 
+      {/* Modals & Drawers */}
       <AcademyDrawerDetails
         selectedAcademyDetails={selectedAcademyDetails}
         onClose={() => setSelectedAcademyDetails(null)}
