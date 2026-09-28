@@ -17,6 +17,7 @@ const RoleSelectionPage = lazy(() => import('@/components/Auth/RoleSelectionPage
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
 const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
+const SubscriptionPlansPage = lazy(() => import('@/components/Subscription/SubscriptionPlansPage'));
 
 const getText = (tFunc, key, fallback) => {
   if (typeof tFunc === 'function') {
@@ -256,6 +257,14 @@ export default function MainContent() {
               ) : (
                 <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
               )
+            } 
+          />
+          <Route 
+            path="/subscription" 
+            element={
+              <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
+                <SubscriptionPlansPage />
+              </ProtectedRoute>
             } 
           />
           <Route 
