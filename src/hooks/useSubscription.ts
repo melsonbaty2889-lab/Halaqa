@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
-export type SubscriptionStatus = 'trial' | 'active' | 'unpaid' | 'canceled' | 'past_due' | string;
-export type PlanTier = 'free' | 'basic' | 'pro' | 'enterprise' | string;
+export type SubscriptionStatus = 'trial' | 'active' | 'pending_verification' | 'unpaid' | 'canceled' | 'past_due' | string;
+export type PlanTier = 'free' | 'basic' | 'pro' | 'premium' | string;
 export type PlanDuration = 'monthly' | 'yearly' | string;
 
 export interface SaasSubscription {
@@ -45,12 +45,42 @@ export interface UseSubscriptionReturn {
 
 // ── Main Hook ───────────────────────────────────────────────────
 
-export function useSubscription(academyId?: string | null): UseSubscriptionReturn {
+export function useSubscription(explicitAcademyId?: string | null): UseSubscriptionReturn {
   const { t } = useTranslation();
   const [subscription, setSubscription] = useState<SaasSubscription | null>(null);
+  const [academyId, setAcademyId] = useState<string | null>(explicitAcademyId || null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef<boolean>(true);
+
+  // 🔄 جلب academy_id تلقائياً إذا لم يتم يدوياً
+  useEffect(() => {
+    if (explicitAcademyId) {
+      setAcademyId(explicitAcademyId);
+      return;
+    }
+
+    async function resolveAcademyId() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('academy_id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile?.academy_id && isMountedRef.current) {
+          setAcademyId(profile.academy_id);
+        }
+      } catch (err) {
+        console.error('🚨 Error resolving academy_id:', err);
+      }
+    }
+
+    resolveAcademyId();
+  }, [explicitAcademyId]);
 
   const fetchSubscription = useCallback(async () => {
     if (!academyId) {
@@ -145,7 +175,11 @@ export function useSubscription(academyId?: string | null): UseSubscriptionRetur
       (subscription?.status === 'active' || subscription?.status === 'trial') && !isExpired
     );
 
-    const isPending = subscription?.status === 'unpaid' || subscription?.status === 'past_due';
+    const isPending = Boolean(
+      subscription?.status === 'pending_verification' || 
+      subscription?.status === 'unpaid' || 
+      subscription?.status === 'past_due'
+    );
 
     const daysRemaining = targetExpiryDate
       ? Math.max(0, Math.ceil((targetExpiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
