@@ -39,7 +39,6 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
     setIsOpen(false);
   };
 
-  // تحديد اتجاه القائمة بناةً على الخاصية dropDirection
   const dropdownPositionClasses = 
     dropDirection === 'up' 
       ? 'bottom-full mb-2' 
@@ -47,12 +46,13 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
 
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* زر محول اللغات */}
+      {/* زر محول اللغات المعتمد على مفاهيم التصميم الموحدة */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-10 flex items-center justify-center gap-1.5 px-3 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all duration-200 focus:outline-none cursor-pointer active:scale-95"
+        aria-label="Select Language"
         aria-expanded={isOpen}
+        className="h-10 flex items-center justify-center gap-1.5 px-3 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all duration-200 focus:outline-none cursor-pointer active:scale-95 shadow-sm"
       >
         <Globe size={15} className="shrink-0 text-semantic-textSecondary" />
         <span className="uppercase font-mono font-bold text-semantic-textPrimary">
@@ -66,9 +66,11 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
         />
       </button>
 
-      {/* القائمة المنسدلة تتكيف حسب اتجاه dropDirection */}
+      {/* القائمة المنسدلة الداكنة غير الشفافة والمعالجة للتمركز */}
       {isOpen && (
-        <div className={`absolute ${dropdownPositionClasses} start-0 w-36 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard shadow-main py-1 z-50 overflow-hidden backdrop-blur-xl`}>
+        <div 
+          className={`absolute ${dropdownPositionClasses} start-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-main py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+        >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
             return (
@@ -77,15 +79,15 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
                 type="button"
                 onClick={() => handleLanguageChange(lang)}
                 dir={lang.dir}
-                className={`w-full px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer select-none ${
+                className={`w-full px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors cursor-pointer select-none font-medium ${
                   isSelected
                     ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
-                    : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
+                    : 'text-semantic-textPrimary hover:bg-semantic-surfaceSecondary hover:text-semantic-actionPrimary'
                 }`}
               >
                 <span className="truncate">{lang.name}</span>
                 {isSelected && (
-                  <Check size={14} className="shrink-0 text-semantic-actionPrimary" />
+                  <Check size={14} className="shrink-0 ms-2 text-semantic-actionPrimary" />
                 )}
               </button>
             );
