@@ -3,11 +3,10 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, Coins, Maximize, Minimize, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Menu, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
-import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -37,7 +36,6 @@ export default function Header({
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   // حالة التنبيه المخصص (Toast)
@@ -59,14 +57,6 @@ export default function Header({
     markAllAsRead, 
     formatText 
   } = useNotifications(currentUserId, academyId);
-
-  const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return (
-      activeAcademy?.currency || 
-      localStorage.getItem('app_currency') || 
-      'EGP'
-    );
-  });
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
@@ -283,23 +273,6 @@ export default function Header({
     };
   }, []);
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (activeAcademy?.currency) {
-      setSelectedCurrency(activeAcademy.currency);
-      localStorage.setItem('app_currency', activeAcademy.currency);
-    }
-  }, [activeAcademy?.currency]);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setShowNotifMenu(false);
@@ -401,33 +374,9 @@ export default function Header({
         </div>
       </div>
 
-      {/* القسم الأيسر: أزرار التحكم والقوائم المنسدلة */}
+      {/* القسم الأيسر: الإشعارات والبروفايل فقط */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
-        {/* زر ملء الشاشة (للشاشات المتوسطة والكبيرة) */}
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          className="p-2 bg-[var(--surface-input)] hover:bg-[var(--border-hover)] border border-[var(--border-input)] rounded-xl text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all shrink-0 hidden md:flex items-center justify-center active:scale-95 cursor-pointer"
-          title={t('header.fullscreen', 'وضع الشاشة الكاملة')}
-        >
-          {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
-        </button>
-
-        {/* محول العملة (يظهر فقط من الشاشات الصغيرة فما فوق sm:flex) */}
-        <div 
-          title={t('header.currency', 'العملة المعتمدة')}
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--surface-input)] border border-[var(--border-input)] rounded-xl text-[11px] font-bold select-none text-[var(--text-main)]"
-        >
-          <Coins size={14} className="text-[var(--primary)] shrink-0" />
-          <span>{selectedCurrency}</span>
-        </div>
-
-        {/* محول اللغة (يظهر فقط من الشاشات الصغيرة فما فوق sm:flex) */}
-        <div className="hidden sm:block">
-          <LanguageSwitcher i18n={i18n} />
-        </div>
-
         {/* زر قائمة الإشعارات */}
         <div ref={notifRef}>
           <NotificationMenu
