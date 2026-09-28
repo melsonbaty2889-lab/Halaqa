@@ -1149,6 +1149,7 @@
       "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Lisensi Aktif Anda Saat Ini",
+    "discountNotice": "متضمن الخصم",
     "errors": {
       "clientNotInitialized": "Koneksi cloud tidak diinisialisasi dengan benar",
       "fetchFailed": "Gagal mengambil data langganan",
@@ -1181,6 +1182,7 @@
       "gcc": "Negara-negara Teluk (GCC)",
       "global": "Internasional / Seluruh Dunia"
     },
+    "requiredAmount": "المبلغ المطلوب تحويله:",
     "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",

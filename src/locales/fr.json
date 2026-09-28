@@ -1149,6 +1149,7 @@
       "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Votre licence actuellement active",
+    "discountNotice": "متضمن الخصم",
     "errors": {
       "clientNotInitialized": "Connexion cloud non initialisée",
       "fetchFailed": "Échec de récupération des données d'abonnement",
@@ -1181,6 +1182,7 @@
       "gcc": "Pays du Golfe (CCG)",
       "global": "International / Reste du monde"
     },
+    "requiredAmount": "المبلغ المطلوب تحويله:",
     "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",

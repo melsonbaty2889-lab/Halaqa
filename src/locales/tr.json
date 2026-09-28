@@ -1149,6 +1149,7 @@
       "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Şu An Aktif Lisansınız",
+    "discountNotice": "متضمن الخصم",
     "errors": {
       "clientNotInitialized": "Bulut bağlantısı doğru şekilde başlatılmadı",
       "fetchFailed": "Abonelik verileri alınamadı",
@@ -1181,6 +1182,7 @@
       "gcc": "Körfez İşbirliği Konseyi Ülkeleri",
       "global": "Uluslararası / Dünyanın Geri Kalanı"
     },
+    "requiredAmount": "المبلغ المطلوب تحويله:",
     "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",

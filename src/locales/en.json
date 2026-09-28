@@ -1149,6 +1149,7 @@
       "usdLabel": "الدولار الأمريكي"
     },
     "currentPlan": "Your Currently Active License",
+    "discountNotice": "متضمن الخصم",
     "errors": {
       "clientNotInitialized": "Cloud connection not properly initialized",
       "fetchFailed": "Failed to fetch subscription data",
@@ -1181,6 +1182,7 @@
       "gcc": "GCC Countries",
       "global": "International / Rest of World"
     },
+    "requiredAmount": "المبلغ المطلوب تحويله:",
     "secureNotice": "دفع آمن وفوري - يتم تفعيل الترخيص تلقائياً.",
     "selectCurrencyNotice": "يمكنك الدفع ببطاقتك المحلية أو بالدولار الأمريكي من أي مكان في العالم",
     "selectCurrencyTitle": "اختر عملة ونطاق التسعير المناسب لك",
