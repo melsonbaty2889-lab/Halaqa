@@ -1,7 +1,14 @@
 import React from 'react';
 import { Building2, Clock, CheckCircle, ShieldAlert, DollarSign } from 'lucide-react';
 
-export default function AdminStatsCards({ stats, isRtl }) {
+export default function AdminStatsCards({ stats = {}, isRtl = true }) {
+  const safeStats = {
+    totalAcademiesCount: Number(stats?.totalAcademiesCount) || 0,
+    pendingCount: Number(stats?.pendingCount) || 0,
+    activeCount: Number(stats?.activeCount) || 0,
+    totalRevenue: Number(stats?.totalRevenue) || 0
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl">
@@ -9,7 +16,7 @@ export default function AdminStatsCards({ stats, isRtl }) {
           <Building2 size={16} className="text-sky-400" />
           <span>{isRtl ? 'إجمالي الأكاديميات' : 'Total Academies'}</span>
         </div>
-        <h3 className="text-xl font-bold text-white m-0">{stats.totalAcademiesCount}</h3>
+        <h3 className="text-xl font-bold text-white m-0">{safeStats.totalAcademiesCount}</h3>
       </div>
 
       <div className="bg-slate-900/80 border border-amber-500/30 p-4 rounded-xl">
@@ -17,7 +24,7 @@ export default function AdminStatsCards({ stats, isRtl }) {
           <Clock size={16} />
           <span>{isRtl ? 'معلقة المراجعة' : 'Pending Verification'}</span>
         </div>
-        <h3 className="text-xl font-bold text-amber-300 m-0">{stats.pendingCount}</h3>
+        <h3 className="text-xl font-bold text-amber-300 m-0">{safeStats.pendingCount}</h3>
       </div>
 
       <div className="bg-slate-900/80 border border-emerald-500/30 p-4 rounded-xl">
@@ -25,7 +32,7 @@ export default function AdminStatsCards({ stats, isRtl }) {
           <CheckCircle size={16} />
           <span>{isRtl ? 'نشطة' : 'Active'}</span>
         </div>
-        <h3 className="text-xl font-bold text-emerald-300 m-0">{stats.activeCount}</h3>
+        <h3 className="text-xl font-bold text-emerald-300 m-0">{safeStats.activeCount}</h3>
       </div>
 
       <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl">
@@ -34,7 +41,7 @@ export default function AdminStatsCards({ stats, isRtl }) {
           <span>{isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'}</span>
         </div>
         <h3 className="text-xl font-bold text-white m-0">
-          {stats.totalRevenue.toLocaleString()} <span className="text-xs font-normal text-slate-400">{isRtl ? 'ج.م' : 'EGP'}</span>
+          {safeStats.totalRevenue.toLocaleString()} <span className="text-xs font-normal text-slate-400">{isRtl ? 'ج.م' : 'EGP'}</span>
         </h3>
       </div>
     </div>
