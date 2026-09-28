@@ -1,7 +1,8 @@
 import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
-import { Loader2, Lock } from 'lucide-react';
+import { useParams, Navigate, useLocation } from 'react-router-dom';
+import { Loader2, Lock, CreditCard } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const getText = (tFunc, key, fallback) => {
   if (typeof tFunc === 'function') {
@@ -14,9 +15,13 @@ const getText = (tFunc, key, fallback) => {
 export default function ProtectedRoute({ allowedRoles = [], children }) {
   const { profile, appState, academy, userRole, logout, t } = useAcademy();
   const { slug } = useParams();
+  const location = useLocation();
 
-  // حالة التحميل أثناء فحص الجلسة
-  if (appState === 'LOADING') {
+  // 1. جلب حالة الاشتراك للأكاديمية الحالية
+  const { isActive, isPending, loading: subLoading } = useSubscription(academy?.id);
+
+  // حالة التحميل أثناء فحص الجلسة أو الاشتراك
+  if (appState === 'LOADING' || (subLoading && academy?.id)) {
     return (
       <div className="bg-semantic-bgPage min-h-screen flex justify-center items-center text-semantic-actionPrimary">
         <Loader2 className="animate-spin" size={28} />
@@ -24,10 +29,10 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     );
   }
 
-  // 1. استخراج دور المستخدم
+  // 2. استخراج دور المستخدم
   const rawRole = userRole || profile?.role;
   
-  // 2. إذا لم يكن هناك دور محدد للمستخدم المسجل -> تحويله لصفحة تحديد الدور
+  // إذا لم يكن هناك دور محدد للمستخدم المسجل -> تحويله لصفحة تحديد الدور
   if (profile && !rawRole) {
     return <Navigate to="/select-role" replace />;
   }
@@ -82,6 +87,36 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     );
   }
 
-  // السماح بالمرور إذا اجتاز الفحوصات
+  // 5. 🛡️ فحص صلاحية الاشتراك (Subscription Check)
+  // ينطبق الفحص فقط على مسارات لوحة التحكم الإدارية للأكاديمية وتستثنى صفحة الاشتراك والـ Super Admin
+  const isSubscriptionPage = location.pathname.includes('/subscription') || location.pathname.includes('/billing');
+  const isSuperAdmin = currentRole === 'super_admin';
+
+  if (!isSuperAdmin && !isSubscriptionPage && academy?.id && academy?.id !== 'default') {
+    // إذا كان الاشتراك غير نشط وليس في انتظار المراجعة
+    if (!isActive && !isPending) {
+      return (
+        <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
+          <div className="bg-amber-500/10 p-5 rounded-full mb-4 text-amber-500">
+            <CreditCard size={40} />
+          </div>
+          <h2 className="text-xl font-bold mb-2 text-semantic-textPrimary">
+            {getText(t, 'subscription.expired_title', 'اشتراك المنظومة غير مفعّل أو منتهي')}
+          </h2>
+          <p className="text-semantic-textSecondary text-sm max-w-md mb-6 leading-relaxed">
+            {getText(t, 'subscription.expired_desc', 'لتتمكن من الاستمرار في استخدام لوحة التحكم وخدمات المنظومة، يرجى اختيار خطة الاشتراك وتفعيل الترخيص.')}
+          </p>
+          <a
+            href="/subscription"
+            className="px-6 py-3 min-h-[44px] bg-semantic-actionPrimary text-white rounded-xl font-bold transition-all hover:opacity-90 shadow-lg"
+          >
+            {getText(t, 'subscription.renew_now', 'ترقية / تجديد الاشتراك الآن')}
+          </a>
+        </div>
+      );
+    }
+  }
+
+  // السماح بالمرور إذا اجتاز جميع الفحوصات
   return children;
 }
