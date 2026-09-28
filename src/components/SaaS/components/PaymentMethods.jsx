@@ -1,44 +1,13 @@
+// src/components/SaaS/PaymentMethods.jsx
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ShieldCheck, Copy, Check, ArrowRight } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
-import rawColors from '@/theme/colors.js';
+import { C } from '@/theme/colors';
 import { getText } from '@/utils/textUtils';
 
-// 🎨 كائن الألوان الموحد v2.5
-const C = {
-  ...rawColors,
-  dark: {
-    main: rawColors?.dark?.bg,
-    card: rawColors?.dark?.card,
-    border: rawColors?.dark?.cardBorder,
-    surface: rawColors?.dark?.surface,
-  },
-  amber: {
-    DEFAULT: rawColors?.amber?.DEFAULT,
-    buttonStart: rawColors?.amber?.buttonStart,
-    buttonEnd: rawColors?.amber?.buttonEnd,
-    glow: rawColors?.amber?.buttonGlow,
-    selectedBg: rawColors?.amber?.glowFocus,
-  },
-  emerald: {
-    DEFAULT: rawColors?.emerald?.DEFAULT,
-    glow: rawColors?.emerald?.logoGlow,
-  },
-  text: {
-    title: rawColors?.text?.title,
-    subtitle: rawColors?.text?.subtitle,
-    body: rawColors?.text?.body,
-    muted: rawColors?.text?.muted,
-  },
-  inputs: {
-    bg: rawColors?.inputs?.bg,
-    border: rawColors?.inputs?.border,
-  }
-};
-
-// 💳 مصادر وسائل الدفع مقسمة حسب الإقليم الجغرافي
-const REGIONAL_PAYMENT_GATEWAYS = {
-  egypt: [
+// 💳 مصادر وسائل الدفع مرتبطة بالعملة مباشرة
+const CURRENCY_PAYMENT_GATEWAYS = {
+  EGP: [
     {
       id: 'instapay',
       nameKey: 'payment.instapay',
@@ -76,7 +45,7 @@ const REGIONAL_PAYMENT_GATEWAYS = {
       type: 'card'
     }
   ],
-  gcc: [
+  SAR: [
     {
       id: 'apple_pay',
       nameKey: 'payment.apple_pay',
@@ -110,7 +79,7 @@ const REGIONAL_PAYMENT_GATEWAYS = {
       accountName: 'الحلقة الذكية الخليج'
     }
   ],
-  global: [
+  USD: [
     {
       id: 'card_global',
       nameKey: 'payment.card_global',
@@ -137,65 +106,58 @@ const REGIONAL_PAYMENT_GATEWAYS = {
   ]
 };
 
-// 🌐 دالة الاكتشاف التلقائي للإقليم الجغرافي للعميل
-const detectDefaultRegion = () => {
-  try {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    if (timeZone.includes('Cairo') || timeZone.includes('Africa/Cairo')) {
-      return 'egypt';
-    }
-    if (
-      timeZone.includes('Riyadh') || timeZone.includes('Dubai') ||
-      timeZone.includes('Kuwait') || timeZone.includes('Qatar') ||
-      timeZone.includes('Bahrain') || timeZone.includes('Muscat')
-    ) {
-      return 'gcc';
-    }
-    return 'global';
-  } catch (e) {
-    return 'global';
-  }
-};
-
-export default function PaymentMethods({ region: externalRegion, onSelectPayment }) {
+export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
   const { t } = useAcademy();
 
-  // 1. تحديد الإقليم (الأولوية للممرر من الأب، وفي حال عدم وجوده يتم الاكتشاف تلقائياً)
-  const activeRegion = useMemo(() => {
-    return externalRegion || detectDefaultRegion();
-  }, [externalRegion]);
+  // 1. معالجة وتوحيد رمز العملة
+  const normalizedCurrency = useMemo(() => {
+    const curr = String(currency || '').toUpperCase();
+    if (curr === 'EGYPT' || curr === 'EGP') return 'EGP';
+    if (curr === 'GCC' || curr === 'SAR') return 'SAR';
+    return 'USD';
+  }, [currency]);
 
-  // 2. جلب طرق الدفع المناسبة للإقليم المباشر
+  // 2. تصفية وسائل الدفع بحسب العملة
   const availableGateways = useMemo(() => {
-    return REGIONAL_PAYMENT_GATEWAYS[activeRegion] || REGIONAL_PAYMENT_GATEWAYS.global;
-  }, [activeRegion]);
+    return CURRENCY_PAYMENT_GATEWAYS[normalizedCurrency] || CURRENCY_PAYMENT_GATEWAYS.USD;
+  }, [normalizedCurrency]);
 
-  const [selectedGatewayId, setSelectedGatewayId] = useState(availableGateways[0]?.id);
+  const [selectedGatewayId, setSelectedGatewayId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
 
-  // 3. تحديث الخيار المحدد تلقائياً عند تغير الإقليم
+  // 3. تحديث وسيلة الدفع عند تغيير العملة مع حماية من الأخطاء
   useEffect(() => {
     if (availableGateways.length > 0) {
       const defaultGateway = availableGateways[0];
       setSelectedGatewayId(defaultGateway.id);
-      onSelectPayment?.(defaultGateway);
+      if (typeof onSelectPayment === 'function') {
+        onSelectPayment(defaultGateway);
+      }
     }
-  }, [activeRegion, availableGateways, onSelectPayment]);
+  }, [normalizedCurrency, availableGateways]);
 
   const activeGateway = useMemo(() => {
     return availableGateways.find(g => g.id === selectedGatewayId) || availableGateways[0];
   }, [availableGateways, selectedGatewayId]);
 
-  const handleSelectGateway = (gateway) => {
+  const handleSelectGateway = useCallback((gateway) => {
     setSelectedGatewayId(gateway.id);
-    onSelectPayment?.(gateway);
-  };
+    if (typeof onSelectPayment === 'function') {
+      onSelectPayment(gateway);
+    }
+  }, [onSelectPayment]);
 
-  const handleCopy = useCallback((text, id) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+  // 4. دالة نسخ آمنة ومحمية
+  const handleCopy = useCallback(async (text, id) => {
+    if (!text) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   }, []);
 
@@ -205,13 +167,12 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
       maxWidth: '680px',
       marginInline: 'auto',
       background: C.dark?.card,
-      border: `1px solid ${C.dark?.border}`,
+      border: `1px solid ${C.dark?.cardBorder}`,
       borderRadius: '20px',
       padding: '28px',
       boxShadow: `0 20px 40px ${C.dark?.surface}`,
       fontFamily: "'Cairo', system-ui, sans-serif"
     }}>
-      {/* 🟢 العنوان الرئيسي */}
       <div style={{ textAlign: 'center', marginBlockEnd: '24px' }}>
         <h3 style={{ color: C.text?.title, fontSize: '1.25rem', fontWeight: 'bold', marginBlockEnd: '6px' }}>
           {getText(t, 'payment.title', 'اختر طريقة الدفع المناسبة')}
@@ -221,7 +182,7 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
         </p>
       </div>
 
-      {/* 💳 شبكة وسائل الدفع الخاصة بالإقليم */}
+      {/* شبكة بوابات الدفع */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -229,17 +190,19 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
         marginBlockEnd: '24px'
       }}>
         {availableGateways.map((gateway) => {
-          const isSelected = selectedGatewayId === gateway.id;
+          const isSelected = activeGateway?.id === gateway.id;
           const gatewayTitle = getText(t, gateway.nameKey, gateway.defaultName);
 
           return (
             <button
               key={gateway.id}
+              type="button"
               onClick={() => handleSelectGateway(gateway)}
+              aria-pressed={isSelected}
               aria-label={gatewayTitle}
               title={gatewayTitle}
               style={{
-                background: isSelected ? C.amber?.selectedBg : C.inputs?.bg,
+                background: isSelected ? C.amber?.glowFocus : C.inputs?.bg,
                 border: `1.5px solid ${isSelected ? C.amber?.DEFAULT : C.inputs?.border}`,
                 borderRadius: '12px',
                 padding: '12px',
@@ -270,11 +233,10 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
                 </span>
               )}
 
-              {/* الشعار */}
               {gateway.logos ? (
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   {gateway.logos.map((logoPath, idx) => (
-                    <img key={idx} src={logoPath} alt="payment gateway" style={{ height: '20px', objectFit: 'contain' }} />
+                    <img key={idx} src={logoPath} alt="gateway logo" style={{ height: '20px', objectFit: 'contain' }} />
                   ))}
                 </div>
               ) : (
@@ -294,11 +256,11 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
         })}
       </div>
 
-      {/* 📝 تفاصيل التحويل في حال كان خياراً يدوياً */}
+      {/* تفاصيل بيانات التحويل */}
       {activeGateway && (
         <div style={{
           background: C.dark?.surface,
-          border: `1px solid ${C.dark?.border}`,
+          border: `1px solid ${C.dark?.cardBorder}`,
           borderRadius: '14px',
           padding: '18px',
           marginBlockEnd: '24px'
@@ -357,7 +319,7 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
         </div>
       )}
 
-      {/* 🚀 زر التأكيد والمتابعة */}
+      {/* زر المتابعة */}
       <button
         type="button"
         onClick={() => onSelectPayment && onSelectPayment(activeGateway)}
@@ -374,7 +336,7 @@ export default function PaymentMethods({ region: externalRegion, onSelectPayment
           fontWeight: 'bold',
           fontSize: '0.95rem',
           cursor: 'pointer',
-          boxShadow: `0 4px 15px ${C.amber?.glow}`,
+          boxShadow: `0 4px 15px ${C.amber?.buttonGlow}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
