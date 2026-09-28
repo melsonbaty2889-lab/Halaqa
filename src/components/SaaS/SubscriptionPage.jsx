@@ -17,12 +17,10 @@ import {
 export default function SubscriptionPage({ onBack }) {
   const { t, i18n } = useTranslation();
   
-  // 🌍 تحديد اتجاه الصفحة ولغة النظام بناءً على المحول العام للموقع
   const isRTL = i18n.dir ? i18n.dir() === 'rtl' : i18n.language === 'ar';
 
-  // 🌍 ضبط العملة والنطاق المالي الافتراضي ديناميكياً بحيادية
   const [region, setRegion] = useState(() => detectUserCurrencyRegion());
-  const [selectedPlan, setSelectedPlan] = useState('yearly'); // الاشتراك السنوي افتراضي
+  const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
@@ -30,7 +28,6 @@ export default function SubscriptionPage({ onBack }) {
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // جلب الأسعار والعملة ديناميكياً من ملف الثوابت الموحد
   const currentRegionData = useMemo(() => {
     return SUBSCRIPTION_PLANS[region] || SUBSCRIPTION_PLANS.USD;
   }, [region]);
@@ -39,7 +36,6 @@ export default function SubscriptionPage({ onBack }) {
     return t(currentRegionData.currencyKey, currentRegionData.defaultCurrency);
   }, [t, currentRegionData]);
 
-  // بناء خطط الاشتراك (الشهري والسنوي) بصياغة محايدة وعالمية
   const plans = useMemo(() => {
     const monthlyPrice = currentRegionData.plans.monthly.price;
     const yearlyPrice = currentRegionData.plans.yearly.price;
@@ -84,11 +80,10 @@ export default function SubscriptionPage({ onBack }) {
     ];
   }, [currentRegionData, i18n.language, t]);
 
-  // معالجة وتطبيق كود الخصم
-  const handleApplyPromo = useCallback((codeToApply) => {
+  const handleApplyPromo = useCallback((code) => {
     setPromoError('');
-    const code = (typeof codeToApply === 'string' ? codeToApply : promoCode).trim();
-    const couponResult = validateCoupon(code);
+    const normalizedCode = typeof code === 'string' ? code.trim() : promoCode.trim();
+    const couponResult = validateCoupon(normalizedCode);
 
     if (couponResult.valid) {
       setAppliedDiscount(couponResult.discountPercent);
@@ -98,14 +93,12 @@ export default function SubscriptionPage({ onBack }) {
     }
   }, [promoCode, t]);
 
-  // دالة الإلغاء الصريحة المضافة في المكوّن الأب
   const handleRemovePromo = useCallback(() => {
-    setAppliedDiscount(0);
     setPromoCode('');
+    setAppliedDiscount(0);
     setPromoError('');
   }, []);
 
-  // إرسال وإدراج الاشتراك في قاعدة البيانات الموحدة
   const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
     setLoading(true);
     try {
@@ -158,7 +151,6 @@ export default function SubscriptionPage({ onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* زر العودة العلوي فقط */}
         <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
           <button 
             onClick={onBack} 
@@ -170,7 +162,6 @@ export default function SubscriptionPage({ onBack }) {
           </button>
         </div>
 
-        {/* العنوان الرئيسي والتعريفي */}
         <div className="flex flex-col items-center text-center space-y-3">
           <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight text-semantic-actionPrimary">
             {t('subscription.headerTitle', 'خطط اشتراك منصة الحلقة الذكية')}
@@ -180,7 +171,6 @@ export default function SubscriptionPage({ onBack }) {
           </p>
         </div>
 
-        {/* شاشة إتمام الطلب بنجاح */}
         {isSubmitted ? (
           <div className={`${UI.card} p-8 rounded-2xl text-center space-y-4 max-w-lg mx-auto`}>
             <CheckCircle2 size={48} className="mx-auto text-semantic-actionPrimary" />
@@ -199,14 +189,12 @@ export default function SubscriptionPage({ onBack }) {
           </div>
         ) : (
           <>
-            {/* محدد العملة والمنطقة */}
             <RegionSelector 
               region={region} 
               setRegion={setRegion} 
               isRTL={isRTL} 
             />
 
-            {/* إدخال كود الخصم مع الربط بـ onRemove الصريحة */}
             <PromoCodeInput 
               promoCode={promoCode}
               setPromoCode={setPromoCode}
@@ -217,7 +205,6 @@ export default function SubscriptionPage({ onBack }) {
               isRTL={isRTL}
             />
 
-            {/* عرض بطاقات الخطط المتاحة (شهري / سنوي) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {plans.map((p) => {
                 const finalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
@@ -235,7 +222,6 @@ export default function SubscriptionPage({ onBack }) {
               })}
             </div>
 
-            {/* قسم وسيلة الدفع والتأكيد */}
             <PaymentSection 
               region={region}
               txId={txId}
