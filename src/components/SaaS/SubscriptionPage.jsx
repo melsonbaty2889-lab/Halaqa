@@ -6,7 +6,7 @@ import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
 import { UI } from '@/theme/styles';
-import { ArrowLeft, CheckCircle2, Receipt, Tag, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Receipt, Tag } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
@@ -20,7 +20,6 @@ export default function SubscriptionPage({ onBack }) {
   const isRTL = i18n.dir ? i18n.dir() === 'rtl' : i18n.language === 'ar';
 
   const [region, setRegion] = useState(() => detectUserCurrencyRegion());
-  // الخطة السنوية مختارة افتراضياً كأفضل ممارسة في أنظمة SaaS
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
@@ -81,7 +80,6 @@ export default function SubscriptionPage({ onBack }) {
     ];
   }, [currentRegionData, i18n.language, t]);
 
-  // حساب الحسابات المالية الحالية لملخص الطلب
   const activePlanObj = useMemo(() => {
     return plans.find(p => p.id === selectedPlan) || plans[0];
   }, [plans, selectedPlan]);
@@ -115,92 +113,86 @@ export default function SubscriptionPage({ onBack }) {
     setPromoError('');
   }, []);
 
-
   const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
-  setLoading(true);
-  try {
-    // 1. جلب بيانات المستخدم الحالية
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error('المستخدم غير مسجل الدخول');
+    setLoading(true);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('المستخدم غير مسجل الدخول');
 
-    // 2. جلب academy_id الخاص بالمستخدم من جدول profiles
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('academy_id')
-      .eq('id', user.id)
-      .single();
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('academy_id')
+        .eq('id', user.id)
+        .single();
 
-    if (profileError || !profileData?.academy_id) {
-      throw new Error('لم يتم العثور على الأكاديمية المرتبطة بالحساب');
-    }
-
-    const academyId = profileData.academy_id;
-
-    // 3. رفع صورة الإشعار إلى المجلد المطابق: subscription-receipts
-    let receiptUrl = null;
-    if (receiptFile && supabase?.storage) {
-      const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('subscription-receipts')
-        .upload(fileName, receiptFile);
-
-      if (!uploadError) {
-        const { data } = supabase.storage.from('subscription-receipts').getPublicUrl(fileName);
-        receiptUrl = data?.publicUrl;
-      } else {
-        console.error('خطأ أثناء رفع الإشعار:', uploadError);
+      if (profileError || !profileData?.academy_id) {
+        throw new Error('لم يتم العثور على الأكاديمية المرتبطة بالحساب');
       }
-    }
 
-    // 4. حساب تاريخ انتهاء الاشتراك (شهر أو سنة)
-    const now = new Date();
-    const expiresAt = new Date(now);
-    if (selectedPlan === 'yearly') {
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-    } else {
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-    }
+      const academyId = profileData.academy_id;
 
-    // 5. حفظ البيانات في جدول saas_subscriptions
-    const { error: insertError } = await supabase
-      .from('saas_subscriptions')
-      .upsert([
-        {
-          academy_id: academyId,
-          payer_id: user.id,
-          plan_tier: 'pro',
-          plan_duration: selectedPlan,
-          status: 'pending_verification',
-          payment_gateway: methodId || 'manual',
-          price: finalPrice,
-          currency: currentRegionData.defaultCurrency || 'EGP',
-          starts_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          metadata: {
-            region: region,
-            transaction_ref: txId,
-            receipt_url: receiptUrl,
-            discount_applied: appliedDiscount,
-            promo_code_used: promoCode,
-            base_price: basePrice
-          },
-          updated_at: now.toISOString()
+      let receiptUrl = null;
+      if (receiptFile && supabase?.storage) {
+        const fileExt = receiptFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('subscription-receipts')
+          .upload(fileName, receiptFile);
+
+        if (!uploadError) {
+          const { data } = supabase.storage.from('subscription-receipts').getPublicUrl(fileName);
+          receiptUrl = data?.publicUrl;
+        } else {
+          console.error('خطأ أثناء رفع الإشعار:', uploadError);
         }
-      ], { onConflict: 'academy_id' });
+      }
 
-    if (insertError) throw insertError;
+      const now = new Date();
+      const expiresAt = new Date(now);
+      if (selectedPlan === 'yearly') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
 
-    setIsSubmitted(true);
-  } catch (err) {
-    console.error('🚨 الخطأ عند معالجة طلب الاشتراك:', err);
-    alert(err.message || 'حدث خطأ أثناء حفظ الاشتراك');
-  } finally {
-    setLoading(false);
-  }
-}, [selectedPlan, region, txId, appliedDiscount, finalPrice, basePrice, promoCode, currentRegionData]);
-  
+      const { error: insertError } = await supabase
+        .from('saas_subscriptions')
+        .upsert([
+          {
+            academy_id: academyId,
+            payer_id: user.id,
+            plan_tier: 'pro',
+            plan_duration: selectedPlan,
+            status: 'pending_verification',
+            payment_gateway: methodId || 'manual',
+            price: finalPrice,
+            currency: currentRegionData.defaultCurrency || 'EGP',
+            starts_at: now.toISOString(),
+            expires_at: expiresAt.toISOString(),
+            metadata: {
+              region: region,
+              transaction_ref: txId,
+              receipt_url: receiptUrl,
+              discount_applied: appliedDiscount,
+              promo_code_used: promoCode,
+              base_price: basePrice
+            },
+            updated_at: now.toISOString()
+          }
+        ], { onConflict: 'academy_id' });
+
+      if (insertError) throw insertError;
+
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('🚨 الخطأ عند معالجة طلب الاشتراك:', err);
+      alert(err.message || 'حدث خطأ أثناء حفظ الاشتراك');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedPlan, region, txId, appliedDiscount, finalPrice, basePrice, promoCode, currentRegionData]);
+
   return (
     <div 
       className="min-h-screen bg-semantic-bgMain text-semantic-textPrimary py-10 px-4 transition-colors duration-200 font-cairo"
@@ -208,54 +200,55 @@ export default function SubscriptionPage({ onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* زر العودة */}
-        <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
-          <button 
-            onClick={onBack} 
-            aria-label={t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
-            className={`${UI.card} flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90 text-semantic-textSecondary`}
-          >
-            <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
-            <span>{t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}</span>
-          </button>
-        </div>
+        {/* إخفاء زر العودة العلوي والهيدر عند نجاح إرسال الطلب لمنع التكرار */}
+        {!isSubmitted && (
+          <>
+            <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
+              <button 
+                onClick={onBack} 
+                aria-label={t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
+                className={`${UI.card} flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer border hover:opacity-90 text-semantic-textSecondary`}
+              >
+                <ArrowLeft size={16} className={isRTL ? 'rotate-180' : ''} />
+                <span>{t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}</span>
+              </button>
+            </div>
 
-        {/* الهيدر والعنوان */}
-        <div className="flex flex-col items-center text-center space-y-3">
-          <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight text-semantic-actionPrimary">
-            {t('subscription.headerTitle', 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية')}
-          </h1>
-          <p className={`${UI.subtitle} text-xs sm:text-sm max-w-xl leading-relaxed`}>
-            {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لمؤسستك، وانضم إلى كبرى المراكز والجهات التعليمية حول العالم.')}
-          </p>
-        </div>
+            <div className="flex flex-col items-center text-center space-y-3">
+              <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight text-semantic-actionPrimary">
+                {t('subscription.headerTitle', 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية')}
+              </h1>
+              <p className={`${UI.subtitle} text-xs sm:text-sm max-w-xl leading-relaxed`}>
+                {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لمؤسستك، وانضم إلى كبرى المراكز والجهات التعليمية حول العالم.')}
+              </p>
+            </div>
+          </>
+        )}
 
         {isSubmitted ? (
-          <div className={`${UI.card} p-8 rounded-2xl text-center space-y-4 max-w-lg mx-auto`}>
-            <CheckCircle2 size={48} className="mx-auto text-semantic-actionPrimary" />
-            <h2 className="text-xl font-extrabold text-semantic-textPrimary">
+          <div className={`${UI.card} p-8 rounded-2xl text-center space-y-4 max-w-lg mx-auto my-12 shadow-2xl border border-semantic-borderCard`}>
+            <CheckCircle2 size={56} className="mx-auto text-semantic-actionPrimary" />
+            <h2 className="text-xl sm:text-2xl font-extrabold text-semantic-textPrimary">
               {t('subscription.successTitle', 'تم استلام طلب الاشتراك بنجاح')}
             </h2>
-            <p className={`${UI.subtitle} text-xs leading-relaxed`}>
+            <p className={`${UI.subtitle} text-xs sm:text-sm leading-relaxed text-semantic-textSecondary`}>
               {t('subscription.successDesc', 'جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.')}
             </p>
             <button
               onClick={onBack}
-              className={`${UI.btnEmerald} mt-4 px-6 py-3 rounded-xl text-xs font-bold w-full transition-all cursor-pointer`}
+              className={`${UI.btnEmerald} mt-6 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold w-full transition-all cursor-pointer shadow-lg`}
             >
-              {t('subscription.backToDashboard', 'العودة إلى لوحة التحكم')}
+              {t('subscription.backToDashboard', 'العودة إلى مركز التحكم والتحليلات')}
             </button>
           </div>
         ) : (
           <>
-            {/* 1. اختيار العملة والمنطقة */}
             <RegionSelector 
               region={region} 
               setRegion={setRegion} 
               isRTL={isRTL} 
             />
 
-            {/* 2. بطاقات خطط الأسعار */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {plans.map((p) => {
                 const itemFinalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
@@ -273,7 +266,6 @@ export default function SubscriptionPage({ onBack }) {
               })}
             </div>
 
-            {/* 3. كود الخصم (مدمج قبل الفاتورة والدفع) */}
             <PromoCodeInput 
               promoCode={promoCode}
               setPromoCode={setPromoCode}
@@ -284,7 +276,6 @@ export default function SubscriptionPage({ onBack }) {
               isRTL={isRTL}
             />
 
-            {/* 4. ملخص الطلب الشفاف (Order Summary) */}
             <div className={`${UI.card} max-w-xl mx-auto p-5 rounded-2xl space-y-3 border border-semantic-borderCard shadow-lg`}>
               <div className="flex items-center gap-2 pb-3 border-b border-semantic-borderCard text-semantic-textPrimary font-bold text-sm">
                 <Receipt size={18} className="text-semantic-actionPrimary" />
@@ -319,19 +310,18 @@ export default function SubscriptionPage({ onBack }) {
               </div>
             </div>
 
-            {/* 5. قسم وسيلة الدفع */}
             <PaymentSection 
-  region={region}
-  txId={txId}
-  setTxId={setTxId}
-  isSubmitted={isSubmitted}
-  loading={loading}
-  onSubmit={handleSubmitSubscription}
-  isRTL={isRTL}
-  finalPrice={finalPrice}
-  currency={currencyLabel}
-  appliedDiscount={appliedDiscount}
-/>
+              region={region}
+              txId={txId}
+              setTxId={setTxId}
+              isSubmitted={isSubmitted}
+              loading={loading}
+              onSubmit={handleSubmitSubscription}
+              isRTL={isRTL}
+              finalPrice={finalPrice}
+              currency={currencyLabel}
+              appliedDiscount={appliedDiscount}
+            />
           </>
         )}
 
