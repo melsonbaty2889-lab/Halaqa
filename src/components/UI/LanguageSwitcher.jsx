@@ -66,10 +66,10 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
         />
       </button>
 
-      {/* القائمة المنسدلة: تم تغيير التموضع إلى end-0 لفتحها إلى الداخل دائماً ومنع قطعها */}
+      {/* القائمة المنسدلة: تم ضبط التموضع بـ end-0 لتفتح باتجاه الداخل ولعدم الخروج عن إطار الشاشة */}
       {isOpen && (
         <div 
-          className={`absolute ${dropdownPositionClasses} end-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-main py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+          className={`absolute ${dropdownPositionClasses} end-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
         >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
