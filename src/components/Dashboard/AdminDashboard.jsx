@@ -410,13 +410,13 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
                     </button>
 
                     <button
-                      onClick={() => handleApproveSubscription(sub)}
-                      disabled={processingId === sub.id}
-                      className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-semantic-success hover:bg-emerald-500 shadow-lg transition-all cursor-pointer"
-                    >
-                      {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
-                      تفعيل الرخصة
-                    </button>
+                  onClick={() => handleApproveSubscription(sub)}
+                 disabled={processingId === sub.id}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-all cursor-pointer shadow-md"
+             >
+             {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
+              تفعيل الرخصة
+               </button>
                   </div>
                 </div>
               );
