@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
-import { colors } from '@/theme/colors';
+import { UI } from '@/theme/styles';
 
 export default function PlanCard({ 
   plan, 
@@ -13,70 +13,76 @@ export default function PlanCard({
 }) {
   const { t } = useTranslation();
 
-  // الاعتماد المباشر على شجرة ألوان النظام الموحد
-  const cardBg = colors?.dark?.card;
-  const borderColor = colors?.dark?.cardBorder;
-  const primaryAccent = colors?.emerald?.light;
-  const textPrimary = colors?.dark?.text;
-  const textMuted = colors?.dark?.textMuted;
-  const textSubtle = colors?.dark?.textSubtle;
-
   return (
     <div 
       onClick={onSelect}
-      style={{
-        backgroundColor: isSelected ? cardBg : `${cardBg}B3`,
-        borderColor: isSelected ? primaryAccent : borderColor,
-        boxShadow: isSelected ? `0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px ${primaryAccent}26` : 'none',
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect && onSelect();
+        }
       }}
       className={`relative flex flex-col justify-between p-6 rounded-2xl cursor-pointer transition-all duration-200 border ${
-        isSelected ? 'ring-2 scale-[1.01]' : 'hover:border-slate-700'
+        isSelected 
+          ? 'bg-semantic-bgCard border-semantic-actionPrimary shadow-xl ring-2 ring-semantic-actionPrimary scale-[1.01]' 
+          : 'bg-semantic-bgCard/70 border-semantic-borderCard hover:border-semantic-actionPrimary/50'
       }`}
     >
+      {/* شارة التمييز (مثل الخصم السنوي) */}
       {plan.badge && (
         <span 
-          style={{ backgroundColor: plan.badgeBg || primaryAccent, color: colors?.dark?.bg }}
-          className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-extrabold shadow-lg"
+          className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-extrabold shadow-lg bg-semantic-actionPrimary text-semantic-textOnAction"
         >
           {plan.badge}
         </span>
       )}
 
       <div>
-        <h3 style={{ color: textPrimary }} className="text-xl font-black text-center mb-1">
+        <h3 className="text-xl font-black text-center mb-1 text-semantic-textPrimary">
           {plan.title}
         </h3>
+        
         {plan.description && (
-          <p style={{ color: textMuted }} className="text-xs text-center mb-4">
+          <p className={`${UI.subtitle} text-xs text-center mb-4`}>
             {plan.description}
           </p>
         )}
 
-        <div style={{ color: primaryAccent }} className="text-3xl font-black my-4 text-center flex items-baseline justify-center gap-2">
+        {/* السعر والعملة */}
+        <div className="text-3xl font-black my-4 text-center flex items-baseline justify-center gap-2 text-semantic-actionPrimary">
           <span>{Number(finalPrice).toLocaleString()}</span>
-          <span style={{ color: textMuted }} className="text-xs font-bold">{currency}</span>
-          <span style={{ color: textSubtle }} className="text-xs font-normal">
+          <span className="text-xs font-bold text-semantic-textSecondary">{currency}</span>
+          <span className="text-xs font-normal text-semantic-textMuted">
             / {plan.periodText}
           </span>
         </div>
 
-        <ul style={{ borderColor: borderColor }} className="space-y-3 my-6 border-t pt-4 list-none p-0">
+        {/* مميزات الخطة */}
+        <ul className="space-y-3 my-6 border-t border-semantic-borderCard pt-4 list-none p-0">
           {plan.features?.map((feat, idx) => (
-            <li key={idx} style={{ color: textMuted }} className="text-xs flex items-center gap-2">
-              <Check style={{ color: primaryAccent }} className="shrink-0 font-bold" size={16} />
+            <li key={idx} className="text-xs flex items-center gap-2 text-semantic-textSecondary">
+              <Check className="shrink-0 font-bold text-semantic-actionPrimary" size={16} />
               <span>{feat}</span>
             </li>
           ))}
         </ul>
       </div>
 
+      {/* زر التحديد */}
       <button 
         type="button"
-        style={{
-          backgroundColor: isSelected ? primaryAccent : borderColor,
-          color: isSelected ? colors?.dark?.bg : textMuted
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect && onSelect();
         }}
-        className="w-full py-3 min-h-[44px] rounded-xl font-bold text-xs transition-all mt-2 hover:opacity-90"
+        className={`w-full py-3 min-h-[44px] rounded-xl font-bold text-xs transition-all mt-2 cursor-pointer ${
+          isSelected 
+            ? UI.btnEmerald
+            : 'bg-semantic-bgMuted text-semantic-textSecondary hover:bg-semantic-borderCard'
+        }`}
       >
         {isSelected 
           ? t('subscription.currentPlan', 'خطتك المحددة حالياً') 
