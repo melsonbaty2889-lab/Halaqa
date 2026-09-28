@@ -1,8 +1,7 @@
-// src/components/SaaS/PaymentMethods.jsx
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ShieldCheck, Copy, Check, ArrowRight } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
-import { C } from '@/theme/colors';
+import { UI } from '@/theme/styles';
 import { getText } from '@/utils/textUtils';
 
 // 💳 مصادر وسائل الدفع مرتبطة بالعملة مباشرة
@@ -162,33 +161,18 @@ export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
   }, []);
 
   return (
-    <div style={{
-      width: '100%',
-      maxWidth: '680px',
-      marginInline: 'auto',
-      background: C.dark?.card,
-      border: `1px solid ${C.dark?.cardBorder}`,
-      borderRadius: '20px',
-      padding: '28px',
-      boxShadow: `0 20px 40px ${C.dark?.surface}`,
-      fontFamily: "'Cairo', system-ui, sans-serif"
-    }}>
-      <div style={{ textAlign: 'center', marginBlockEnd: '24px' }}>
-        <h3 style={{ color: C.text?.title, fontSize: '1.25rem', fontWeight: 'bold', marginBlockEnd: '6px' }}>
+    <div className={`${UI.card} w-full max-w-[680px] mx-auto p-7 shadow-2xl space-y-6 font-cairo`}>
+      <div className="text-center space-y-1">
+        <h3 className={`${UI.title} text-xl font-bold m-0`}>
           {getText(t, 'payment.title', 'اختر طريقة الدفع المناسبة')}
         </h3>
-        <p style={{ color: C.text?.muted, fontSize: '0.875rem', margin: 0 }}>
+        <p className={`${UI.subtitle} text-sm m-0`}>
           {getText(t, 'payment.subtitle', 'معاملات فورية ومشفرة بأعلى معايير الأمان')}
         </p>
       </div>
 
       {/* شبكة بوابات الدفع */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-        gap: '12px',
-        marginBlockEnd: '24px'
-      }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {availableGateways.map((gateway) => {
           const isSelected = activeGateway?.id === gateway.id;
           const gatewayTitle = getText(t, gateway.nameKey, gateway.defaultName);
@@ -201,54 +185,33 @@ export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
               aria-pressed={isSelected}
               aria-label={gatewayTitle}
               title={gatewayTitle}
-              style={{
-                background: isSelected ? C.amber?.glowFocus : C.inputs?.bg,
-                border: `1.5px solid ${isSelected ? C.amber?.DEFAULT : C.inputs?.border}`,
-                borderRadius: '12px',
-                padding: '12px',
-                minHeight: '80px',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-                position: 'relative'
-              }}
+              className={`relative flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] rounded-xl cursor-pointer transition-all duration-200 border ${
+                isSelected 
+                  ? 'bg-semantic-bgMain border-semantic-actionPrimary shadow-lg shadow-emerald-500/10 ring-1 ring-semantic-actionPrimary' 
+                  : 'bg-semantic-bgCard/40 border-semantic-borderCard hover:border-semantic-borderInput opacity-80 hover:opacity-100'
+              }`}
             >
               {gateway.badgeKey && (
-                <span style={{
-                  position: 'absolute',
-                  insetBlockStart: '-8px',
-                  fontSize: '0.65rem',
-                  background: C.amber?.DEFAULT,
-                  color: C.text?.title,
-                  paddingBlock: '2px',
-                  paddingInline: '6px',
-                  borderRadius: '10px',
-                  fontWeight: 'bold'
-                }}>
+                <span className="absolute -top-2 px-2 py-0.5 text-[10px] font-bold rounded-full bg-semantic-actionPrimary text-semantic-bgMain shadow-sm">
                   {getText(t, gateway.badgeKey, gateway.defaultBadge)}
                 </span>
               )}
 
               {gateway.logos ? (
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div className="flex items-center gap-1">
                   {gateway.logos.map((logoPath, idx) => (
-                    <img key={idx} src={logoPath} alt="gateway logo" style={{ height: '20px', objectFit: 'contain' }} />
+                    <img key={idx} src={logoPath} alt="gateway logo" className="h-5 object-contain" />
                   ))}
                 </div>
               ) : (
-                <img src={gateway.logo} alt={gatewayTitle} style={{ height: '28px', maxWidth: '80px', objectFit: 'contain' }} />
+                <img src={gateway.logo} alt={gatewayTitle} className="h-7 max-w-[80px] object-contain" />
               )}
 
-              <span style={{ 
-                fontSize: '0.75rem', 
-                fontWeight: isSelected ? 'bold' : 'normal',
-                color: isSelected ? C.amber?.DEFAULT : C.text?.body,
-                textAlign: 'center'
-              }}>
+              <span className={`text-xs text-center ${
+                isSelected 
+                  ? 'font-bold text-semantic-actionPrimary' 
+                  : 'font-normal text-semantic-textSecondary'
+              }`}>
                 {gatewayTitle}
               </span>
             </button>
@@ -258,33 +221,17 @@ export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
 
       {/* تفاصيل بيانات التحويل */}
       {activeGateway && (
-        <div style={{
-          background: C.dark?.surface,
-          border: `1px solid ${C.dark?.cardBorder}`,
-          borderRadius: '14px',
-          padding: '18px',
-          marginBlockEnd: '24px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlockEnd: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: C.text?.muted }}>
-              {getText(t, 'payment.details_for', 'بيانات التحويل لـ:')} <strong style={{ color: C.text?.title }}>{getText(t, activeGateway.nameKey, activeGateway.defaultName)}</strong>
+        <div className="bg-semantic-bgMain border border-semantic-borderCard rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-semantic-textSecondary">
+              {getText(t, 'payment.details_for', 'بيانات التحويل لـ:')} <strong className="text-semantic-textPrimary">{getText(t, activeGateway.nameKey, activeGateway.defaultName)}</strong>
             </span>
-            <ShieldCheck size={18} style={{ color: C.emerald?.DEFAULT }} />
+            <ShieldCheck size={18} className="text-semantic-success" />
           </div>
 
           {activeGateway.accountNumber && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: C.inputs?.bg,
-              paddingBlock: '10px',
-              paddingInline: '14px',
-              borderRadius: '8px',
-              border: `1px solid ${C.inputs?.border}`,
-              marginBlockEnd: '8px'
-            }}>
-              <span style={{ fontFamily: 'monospace', fontSize: '1rem', color: C.amber?.DEFAULT, fontWeight: 'bold' }}>
+            <div className="flex items-center justify-between bg-semantic-bgCard border border-semantic-borderInput px-3.5 py-2.5 rounded-lg">
+              <span className="font-mono text-base font-bold text-semantic-actionPrimary tracking-wider">
                 {activeGateway.accountNumber}
               </span>
               <button
@@ -292,28 +239,17 @@ export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
                 onClick={() => handleCopy(activeGateway.accountNumber, 'num')}
                 aria-label={getText(t, 'common.copy', 'نسخ')}
                 title={getText(t, 'common.copy', 'نسخ')}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: C.text?.muted,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                  paddingInline: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '0.75rem'
-                }}
+                className="flex items-center gap-1 px-2 min-h-[36px] text-xs text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors bg-transparent border-0 cursor-pointer"
               >
-                {copiedId === 'num' ? <Check size={14} style={{ color: C.emerald?.DEFAULT }} /> : <Copy size={14} />}
-                {copiedId === 'num' ? getText(t, 'common.copied', 'تم النسخ') : getText(t, 'common.copy', 'نسخ')}
+                {copiedId === 'num' ? <Check size={14} className="text-semantic-success" /> : <Copy size={14} />}
+                <span>{copiedId === 'num' ? getText(t, 'common.copied', 'تم النسخ') : getText(t, 'common.copy', 'نسخ')}</span>
               </button>
             </div>
           )}
 
           {activeGateway.accountName && (
-            <div style={{ fontSize: '0.8rem', color: C.text?.muted }}>
-              {getText(t, 'payment.account_name_label', 'اسم الحساب:')} <strong style={{ color: C.text?.body }}>{activeGateway.accountName}</strong>
+            <div className="text-xs text-semantic-textSecondary">
+              {getText(t, 'payment.account_name_label', 'اسم الحساب:')} <strong className="text-semantic-textPrimary">{activeGateway.accountName}</strong>
             </div>
           )}
         </div>
@@ -325,23 +261,7 @@ export default function PaymentMethods({ currency = 'EGP', onSelectPayment }) {
         onClick={() => onSelectPayment && onSelectPayment(activeGateway)}
         aria-label={getText(t, 'payment.confirm_btn', 'متابعة عملية الدفع')}
         title={getText(t, 'payment.confirm_btn', 'متابعة عملية الدفع')}
-        style={{
-          width: '100%',
-          padding: '14px',
-          minHeight: '48px',
-          background: C.gradients?.primaryBtn || `linear-gradient(180deg, ${C.amber?.buttonStart} 0%, ${C.amber?.buttonEnd} 100%)`,
-          color: C.text?.title,
-          border: 'none',
-          borderRadius: '12px',
-          fontWeight: 'bold',
-          fontSize: '0.95rem',
-          cursor: 'pointer',
-          boxShadow: `0 4px 15px ${C.amber?.buttonGlow}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px'
-        }}
+        className={`${UI.btnEmerald} w-full py-3.5 px-4 min-h-[48px] text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/20`}
       >
         <span>{getText(t, 'payment.confirm_btn', 'متابعة عملية الدفع')}</span>
         <ArrowRight size={18} />
