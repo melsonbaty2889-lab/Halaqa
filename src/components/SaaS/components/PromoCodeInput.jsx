@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// دالة مساعدة لجلب النصوص مع نص احتياطي لمنع ظهور المكونات بدون نصوص
-const getText = (t, key, fallback) => {
-  const translated = t(key);
+// Helper آمن لجلب النصوص ومنع الـ Hardcoded Strings مع دعم المتغيرات
+const getText = (t, key, fallback, options = {}) => {
+  const translated = t(key, options);
   return translated && translated !== key ? translated : fallback;
 };
 
@@ -18,25 +18,41 @@ export default function PromoCodeInput({
 }) {
   const { t } = useTranslation();
 
+  // تنفيذ دالة التطبيق بعد التأكد من صحة المدخلات والدالة
+  const handleApply = useCallback(() => {
+    const cleanCode = promoCode.trim();
+    if (cleanCode && typeof onApply === 'function') {
+      onApply(cleanCode);
+    }
+  }, [promoCode, onApply]);
+
   // معالجة الضغط على زر Enter داخل حقل الإدخال
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (promoCode.trim() && typeof onApply === 'function') {
-        onApply();
-      }
+      handleApply();
     }
-  }, [promoCode, onApply]);
+  }, [handleApply]);
 
-  // مسح كود الخصم وإعادة الضبط
-  const handleClear = useCallback(() => {
+  // مسح نص كود الخصم
+  const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
+  }, [setPromoCode]);
+
+  // إلغاء الخصم المطبق وإعادة الضبط بطريقة آمنة
+  const handleRemoveDiscount = useCallback(() => {
+    if (typeof setPromoCode === 'function') {
+      setPromoCode('');
+    }
+    // إذا كان المكوّن الأب يمرر دالة إلغاء مخصصة أو يدعم إرسال نص فارغ
     if (typeof onApply === 'function') {
       onApply('');
     }
   }, [setPromoCode, onApply]);
+
+  const isApplyDisabled = !promoCode.trim();
 
   return (
     <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
@@ -64,10 +80,10 @@ export default function PromoCodeInput({
           {promoCode && (
             <button
               type="button"
-              onClick={handleClear}
+              onClick={handleClearInput}
               aria-label={getText(t, 'common.clear', 'مسح')}
               title={getText(t, 'common.clear', 'مسح')}
-              className="absolute inset-y-0 inline-end-2.5 flex items-center text-semantic-textMuted hover:text-semantic-textPrimary transition-colors"
+              className="absolute inset-y-0 end-2.5 pe-1 flex items-center text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -77,8 +93,8 @@ export default function PromoCodeInput({
         {/* زر التطبيق الموحد باللون البرتقالي الأساسي للمشروع */}
         <button
           type="button"
-          onClick={onApply}
-          disabled={!promoCode.trim()}
+          onClick={handleApply}
+          disabled={isApplyDisabled}
           aria-label={getText(t, 'subscription.promo.apply', 'تطبيق')}
           className={`${UI.btnPrimary} !w-auto shrink-0 h-[44px] min-h-[44px] px-6 text-xs`}
         >
@@ -95,14 +111,15 @@ export default function PromoCodeInput({
               {getText(
                 t, 
                 'subscription.promo.success', 
-                `تم تطبيق خصم بقيمة ${appliedDiscount}% بنجاح!`
-              ).replace('{{discount}}', appliedDiscount)}
+                `تم تطبيق خصم بقيمة ${appliedDiscount}% بنجاح!`,
+                { discount: appliedDiscount }
+              )}
             </span>
           </div>
 
           <button
             type="button"
-            onClick={handleClear}
+            onClick={handleRemoveDiscount}
             aria-label={getText(t, 'subscription.promo.remove', 'إلغاء الخصم')}
             className="text-[10px] underline hover:opacity-80 transition-opacity cursor-pointer text-semantic-success"
           >
