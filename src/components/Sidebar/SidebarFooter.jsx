@@ -2,7 +2,6 @@
 import React, { useState, useCallback } from 'react';
 import { LogOut, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { colors as C } from '@/theme/colors';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 
 export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
@@ -36,40 +35,35 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
 
   return (
     <footer 
-      className="w-full flex items-center gap-2 pt-1" 
+      className="w-full flex items-center gap-2 pt-2 border-t border-semantic-borderCard" 
       dir={isRtl ? 'rtl' : 'ltr'}
-      aria-label={safeT('sidebar.footer', 'حقوق المنظومة محفوظة')}
+      aria-label={safeT('sidebar.footer', 'إعدادات الجلسة واللغات')}
     >
       {/* محول اللغات */}
       <div className="shrink-0">
         <LanguageSwitcher />
       </div>
 
-      {/* زر تسجيل الخروج */}
+      {/* زر تسجيل الخروج بارتفاع h-10 متطابق تماماً وألوان Semantic الخالصة */}
       <button
         type="button"
         onClick={handleLogout}
         disabled={isLoggingOut}
         aria-label={safeT('common.logout', 'تسجيل الخروج')}
-        className={`group flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 border h-10`}
-        style={{
-          backgroundColor: isLoggingOut ? C.error?.light : C.error?.subtle,
-          color: C.error?.DEFAULT,
-          borderColor: C.error?.border
-        }}
+        className="group h-10 flex-1 flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger"
       >
         {isLoggingOut ? (
-          <Loader2 size={15} className="animate-spin shrink-0" style={{ color: C.error?.DEFAULT }} />
+          <Loader2 size={15} className="animate-spin shrink-0 text-semantic-danger" />
         ) : (
           <LogOut 
             size={15} 
-            className={`shrink-0 transition-transform duration-200 ${
+            className={`shrink-0 text-semantic-danger transition-transform duration-200 ${
               isRtl ? 'group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'
             }`} 
           />
         )}
 
-        <span className="leading-relaxed py-0.5 inline-block select-none truncate">
+        <span className="select-none truncate">
           {isLoggingOut 
             ? safeT('common.loggingOut', 'جاري تسجيل الخروج...') 
             : safeT('common.logout', 'تسجيل الخروج')}
