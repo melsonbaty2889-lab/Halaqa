@@ -39,12 +39,12 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
       dir={isRtl ? 'rtl' : 'ltr'}
       aria-label={safeT('sidebar.footer', 'إعدادات الجلسة واللغات')}
     >
-      {/* محول اللغات */}
+      {/* محول اللغات مع تحديد الفتح للأعلى حصراً في الفوتر */}
       <div className="shrink-0">
-        <LanguageSwitcher />
+        <LanguageSwitcher dropDirection="up" />
       </div>
 
-      {/* زر تسجيل الخروج بارتفاع h-10 متطابق تماماً وألوان Semantic الخالصة */}
+      {/* زر تسجيل الخروج */}
       <button
         type="button"
         onClick={handleLogout}
