@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// دالة مساعدة جالبة للنصوص لمنع الـ Hardcoded Strings ولضمان التوافق مع i18next
+// دالة مساعدة جالبة للنصوص تضمن استخدام i18next والتوافق مع النصوص الاحتياطية
 const getText = (t, key, fallback, options = {}) => {
   const translated = t(key, options);
   return translated && translated !== key ? translated : fallback;
@@ -18,15 +18,19 @@ export default function PromoCodeInput({
 }) {
   const { t } = useTranslation();
 
-  // تنفيذ دالة التطبيق الموحدة مع تجريف المسافات
+  // تأمين قيمة promoCode كنص
+  const safeCode = typeof promoCode === 'string' ? promoCode : '';
+  const cleanCode = safeCode.trim();
+  const isApplyDisabled = !cleanCode;
+
+  // تنفيذ دالة التطبيق الموحدة
   const handleApply = useCallback(() => {
-    const cleanCode = typeof promoCode === 'string' ? promoCode.trim() : '';
     if (cleanCode && typeof onApply === 'function') {
       onApply(cleanCode);
     }
-  }, [promoCode, onApply]);
+  }, [cleanCode, onApply]);
 
-  // معالجة الضغط على Enter داخل الحقل
+  // معالجة الضغط على مفتاح Enter
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -34,7 +38,7 @@ export default function PromoCodeInput({
     }
   }, [handleApply]);
 
-  // مسح نص الحقل فقط
+  // مسح نص الحقل فقط دون مسح الخصم المطبق
   const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
@@ -46,13 +50,11 @@ export default function PromoCodeInput({
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
+    // تمرير نص فارغ كإشارة إلغاء للمكون الأب ليعيد تصفير appliedDiscount والسعر
     if (typeof onApply === 'function') {
-      // إرسال معامل فارغ أو استدعاء الدالة لتحديث الحالة في الأب
       onApply('');
     }
   }, [setPromoCode, onApply]);
-
-  const isApplyDisabled = !promoCode || !promoCode.trim();
 
   return (
     <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
@@ -69,7 +71,7 @@ export default function PromoCodeInput({
         <div className="relative flex-1">
           <input 
             type="text"
-            value={promoCode}
+            value={safeCode}
             onChange={(e) => setPromoCode && setPromoCode(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
             placeholder={getText(t, 'subscription.promo.placeholder', 'أدخل الكود (مثال: S20)')}
@@ -77,7 +79,7 @@ export default function PromoCodeInput({
             className={`${UI.input} w-full h-[44px] min-h-[44px] px-3 pe-8 font-mono text-xs tracking-wider uppercase`}
           />
 
-          {promoCode && (
+          {safeCode && (
             <button
               type="button"
               onClick={handleClearInput}
@@ -90,19 +92,19 @@ export default function PromoCodeInput({
           )}
         </div>
 
-        {/* زر التطبيق الموحد */}
+        {/* زر التطبيق الموحد باللون البرتقالي البراند */}
         <button
           type="button"
           onClick={handleApply}
           disabled={isApplyDisabled}
           aria-label={getText(t, 'subscription.promo.apply', 'تطبيق')}
-          className={`${UI.btnPrimary} !w-auto shrink-0 h-[44px] min-h-[44px] px-6 text-xs`}
+          className={`${UI.btnPrimary} !w-auto shrink-0 h-[44px] min-h-[44px] px-6 text-xs disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {getText(t, 'subscription.promo.apply', 'تطبيق')}
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح */}
+      {/* حالة الخصم المطبق بنجاح - باللون الزمردي الموحد */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
@@ -128,7 +130,7 @@ export default function PromoCodeInput({
         </div>
       )}
 
-      {/* رسالة الخطأ */}
+      {/* رسالة الخطأ - باللون الأحمر الموحد */}
       {error && (
         <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
