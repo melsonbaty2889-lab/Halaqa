@@ -1189,6 +1189,11 @@
     "selectRegionNotice": "Tentukan wilayah geografis Anda untuk mengaktifkan opsi pembayaran lokal:",
     "successDesc": "جاري مراجعة إشعار التحويل وتفعيل خطة الاشتراك الخاصة بأكاديميتك في أقرب وقت.",
     "successTitle": "تم استلام طلب الاشتراك بنجاح",
+    "summaryBasePrice": "السعر الأساسي:",
+    "summaryDiscount": "خصم كود التخفيض:",
+    "summaryPlan": "الخطة المختارة:",
+    "summaryTitle": "ملخص الحساب والفاتورة",
+    "summaryTotal": "الإجمالي النهائي للدفع:",
     "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
     "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
