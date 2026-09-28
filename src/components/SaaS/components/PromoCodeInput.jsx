@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// Helper آمن لجلب النصوص ومنع الـ Hardcoded Strings
+// دالة مساعدة لجلب النصوص مع نص احتياطي لمنع ظهور المكونات بدون نصوص
 const getText = (t, key, fallback) => {
   const translated = t(key);
   return translated && translated !== key ? translated : fallback;
