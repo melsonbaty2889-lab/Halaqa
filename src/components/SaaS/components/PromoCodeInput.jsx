@@ -39,7 +39,7 @@ export default function PromoCodeInput({
   }, [setPromoCode, onApply]);
 
   return (
-    <div className={`${UI.card} border-dashed border-semantic-borderCard rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
+    <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
       {/* عنوان القسم */}
       <div className="flex items-center justify-center gap-2 mb-3">
         <Tag size={16} className="text-semantic-actionPrimary" />
@@ -74,18 +74,19 @@ export default function PromoCodeInput({
           )}
         </div>
 
+        {/* زر التطبيق الموحد باللون البرتقالي الأساسي للمشروع */}
         <button
           type="button"
           onClick={onApply}
           disabled={!promoCode.trim()}
           aria-label={getText(t, 'subscription.promo.apply', 'تطبيق')}
-          className={`${UI.btnEmerald} shrink-0 h-[44px] min-h-[44px] px-6 text-xs font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 transition-all cursor-pointer`}
+          className={`${UI.btnPrimary} !w-auto shrink-0 h-[44px] min-h-[44px] px-6 text-xs`}
         >
           {getText(t, 'subscription.promo.apply', 'تطبيق')}
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح */}
+      {/* حالة الخصم المطبق بنجاح - باللون الزمردي */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
@@ -110,9 +111,9 @@ export default function PromoCodeInput({
         </div>
       )}
 
-      {/* رسالة الخطأ */}
+      {/* رسالة الخطأ - بألوان الخطأ الموحدة */}
       {error && (
-        <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold">
+        <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
           <span>{error}</span>
         </div>
