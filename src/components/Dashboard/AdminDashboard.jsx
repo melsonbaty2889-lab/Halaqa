@@ -53,11 +53,11 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     try {
       const data = await fetchAdminDashboardData({ activeTab, sortBy });
       setStats({
-        totalAcademiesCount: data.totalAcademiesCount,
-        pendingCount: data.pendingCount,
-        activeCount: data.activeCount,
-        blockedCount: data.blockedCount,
-        totalRevenue: data.totalRevenue
+        totalAcademiesCount: data.totalAcademiesCount || 0,
+        pendingCount: data.pendingCount || 0,
+        activeCount: data.activeCount || 0,
+        blockedCount: data.blockedCount || 0,
+        totalRevenue: data.totalRevenue || 0
       });
       setPendingSubscriptions(data.pendingSubscriptions || []);
       setAcademies(data.academies || []);
@@ -73,7 +73,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   }, [activeTab, sortBy]);
 
   const showToast = (text, type = 'info') => {
-    setToastMessage({ text, type });
+    setToastMessage({ text: getSafeText(text), type });
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -221,8 +221,8 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
 
   const handleWhatsAppClick = (phone, name) => {
     if (!phone) return;
-    const cleanPhone = phone.replace(/\D/g, '');
-    const msg = encodeURIComponent(`مرحباً أستاذ/ة، بخصوص أكاديمية (${name}) في منصة مقرأة...`);
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const msg = encodeURIComponent(`مرحباً أستاذ/ة، بخصوص أكاديمية (${getSafeText(name)}) في منصة مقرأة...`);
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
   };
 
@@ -340,7 +340,6 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
           {isRtl ? 'جاري جلب البيانات...' : 'Loading Data...'}
         </div>
       ) : activeTab === 'pending_subscriptions' ? (
-        /* 💳 قسم عرض طلبات الاشتراكات المعلقة لمراجعتها ومعاينة الإشعار */
         pendingSubscriptions.length === 0 ? (
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs space-y-2">
             <CheckCircle size={36} className="mx-auto text-emerald-500/40" />
@@ -351,12 +350,19 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
           <div className="grid grid-cols-1 gap-4">
             {pendingSubscriptions.map((sub) => {
               const receiptUrl = sub.metadata?.receipt_url;
+              const academyName = getSafeText(sub.academies?.name) || 'أكاديمية غير محددة';
+              const planDuration = getSafeText(sub.plan_duration) === 'yearly' ? 'سنوي' : 'شهري';
+              const priceText = getSafeText(sub.price);
+              const currencyText = getSafeText(sub.currency);
+              const gatewayText = getSafeText(sub.payment_gateway);
+              const refText = getSafeText(sub.metadata?.transaction_ref);
+
               return (
                 <div key={sub.id} className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-700 transition-all">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-sm text-sky-400">
-                        {sub.academies?.name || 'أكاديمية غير محددة'}
+                        {academyName}
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                         قيد المراجعة
@@ -364,11 +370,11 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-                      <div>الخطة: <strong className="text-white">{sub.plan_duration === 'yearly' ? 'سنوي' : 'شهري'}</strong></div>
-                      <div>المبلغ: <strong className="text-white">{sub.price} {sub.currency}</strong></div>
-                      <div>بوابة الدفع: <strong className="text-white">{sub.payment_gateway}</strong></div>
-                      {sub.metadata?.transaction_ref && (
-                        <div>المرجع: <strong className="text-white font-mono">{sub.metadata.transaction_ref}</strong></div>
+                      <div>الخطة: <strong className="text-white">{planDuration}</strong></div>
+                      <div>المبلغ: <strong className="text-white">{priceText} {currencyText}</strong></div>
+                      <div>بوابة الدفع: <strong className="text-white">{gatewayText}</strong></div>
+                      {refText && (
+                        <div>المرجع: <strong className="text-white font-mono">{refText}</strong></div>
                       )}
                     </div>
                   </div>
