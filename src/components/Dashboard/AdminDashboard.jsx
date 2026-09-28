@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Building2, LogOut, Search, Filter, RefreshCw, 
-  CheckCircle, ShieldAlert, AlertTriangle, Layers, Calendar
+  CheckCircle, ShieldAlert, AlertTriangle, Layers, Calendar,
+  CreditCard, FileText, ExternalLink, CheckCircle2, XCircle
 } from 'lucide-react';
 
 import { 
@@ -12,6 +13,8 @@ import {
   extendAcademySubscription, 
   getSafeText 
 } from '@/lib/adminDashboardService';
+
+import { supabase } from '@/lib/supabase';
 
 import AdminStatsCards from './AdminStatsCards';
 import AcademyCard from './AcademyCard';
@@ -32,7 +35,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'active' | 'blocked' | 'pending_subscriptions'
   const [sortBy, setSortBy] = useState('created_at_desc');
   const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
@@ -56,8 +59,8 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         blockedCount: data.blockedCount,
         totalRevenue: data.totalRevenue
       });
-      setPendingSubscriptions(data.pendingSubscriptions);
-      setAcademies(data.academies);
+      setPendingSubscriptions(data.pendingSubscriptions || []);
+      setAcademies(data.academies || []);
     } catch (err) {
       showToast(err.message || 'خطأ في جلب البيانات', 'error');
     } finally {
@@ -72,6 +75,66 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   const showToast = (text, type = 'info') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // 🎯 تفعيل طلب الاشتراك المعلق
+  const handleApproveSubscription = async (sub) => {
+    setProcessingId(sub.id);
+    try {
+      const now = new Date();
+      const expiresAt = new Date(now);
+      if (sub.plan_duration === 'yearly') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
+
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .update({
+          status: 'active',
+          starts_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('id', sub.id);
+
+      if (error) throw error;
+
+      showToast('تم تفعيل اشتراك الأكاديمية بنجاح!', 'success');
+      loadData();
+    } catch (err) {
+      showToast('خطأ أثناء التفعيل: ' + err.message, 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🎯 رفض طلب الاشتراك
+  const handleRejectSubscription = async (sub) => {
+    const reason = prompt('يرجى كتابة سبب رفض الطلب:');
+    if (!reason) return;
+
+    setProcessingId(sub.id);
+    try {
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .update({
+          status: 'canceled',
+          metadata: { ...(sub.metadata || {}), rejection_reason: reason },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sub.id);
+
+      if (error) throw error;
+
+      showToast('تم رفض طلب الاشتراك', 'info');
+      loadData();
+    } catch (err) {
+      showToast('خطأ أثناء الرفض: ' + err.message, 'error');
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleOpenDrawer = async (academy) => {
@@ -232,6 +295,15 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
             <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'blocked' ? 'bg-rose-950 text-rose-400' : 'text-slate-400 hover:text-white'}`}>
               {isRtl ? 'المحظورة' : 'Blocked'}
             </button>
+            <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-950 text-amber-400' : 'text-slate-400 hover:text-white'}`}>
+              <CreditCard size={14} />
+              {isRtl ? 'طلبات معلقة' : 'Pending Subscriptions'}
+              {pendingSubscriptions.length > 0 && (
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                  {pendingSubscriptions.length}
+                </span>
+              )}
+            </button>
           </div>
 
           <select
@@ -246,7 +318,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         </div>
       </div>
 
-      {selectedAcademyIds.length > 0 && (
+      {selectedAcademyIds.length > 0 && activeTab !== 'pending_subscriptions' && (
         <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fadeIn">
           <span className="text-xs text-sky-300 font-bold">
             {isRtl ? `تم تحديد ${selectedAcademyIds.length} أكاديمية` : `Selected ${selectedAcademyIds.length} academies`}
@@ -265,8 +337,81 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       {loading ? (
         <div className="text-center py-20 text-slate-500 text-xs">
           <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-sky-500" />
-          {isRtl ? 'جاري جلب الأكاديميات...' : 'Loading Academies...'}
+          {isRtl ? 'جاري جلب البيانات...' : 'Loading Data...'}
         </div>
+      ) : activeTab === 'pending_subscriptions' ? (
+        /* 💳 قسم عرض طلبات الاشتراكات المعلقة لمراجعتها ومعاينة الإشعار */
+        pendingSubscriptions.length === 0 ? (
+          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs space-y-2">
+            <CheckCircle size={36} className="mx-auto text-emerald-500/40" />
+            <div className="text-sm font-bold text-slate-300">لا توجد طلبات اشتراك معلقة حالياً</div>
+            <p>تم تفعيل أو مراجعة كافة الطلبات بنجاح.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {pendingSubscriptions.map((sub) => {
+              const receiptUrl = sub.metadata?.receipt_url;
+              return (
+                <div key={sub.id} className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-700 transition-all">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-sky-400">
+                        {sub.academies?.name || 'أكاديمية غير محددة'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        قيد المراجعة
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                      <div>الخطة: <strong className="text-white">{sub.plan_duration === 'yearly' ? 'سنوي' : 'شهري'}</strong></div>
+                      <div>المبلغ: <strong className="text-white">{sub.price} {sub.currency}</strong></div>
+                      <div>بوابة الدفع: <strong className="text-white">{sub.payment_gateway}</strong></div>
+                      {sub.metadata?.transaction_ref && (
+                        <div>المرجع: <strong className="text-white font-mono">{sub.metadata.transaction_ref}</strong></div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
+                    {receiptUrl ? (
+                      <a
+                        href={receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 transition-all"
+                      >
+                        <FileText size={15} />
+                        معاينة الإشعار
+                        <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 italic">بدون إشعار</span>
+                    )}
+
+                    <button
+                      onClick={() => handleRejectSubscription(sub)}
+                      disabled={processingId === sub.id}
+                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/30 border border-rose-800/40 hover:bg-rose-900/50 transition-all"
+                    >
+                      <XCircle size={15} />
+                      رفض
+                    </button>
+
+                    <button
+                      onClick={() => handleApproveSubscription(sub)}
+                      disabled={processingId === sub.id}
+                      className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg transition-all"
+                    >
+                      {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
+                      تفعيل الرخصة
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : filteredAcademies.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
           <Building2 size={36} className="mx-auto mb-2 opacity-30" />
