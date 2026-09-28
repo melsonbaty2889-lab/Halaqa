@@ -1,3 +1,4 @@
+// src/components/UI/LanguageSwitcher.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown, Check } from 'lucide-react';
@@ -40,21 +41,28 @@ export default function LanguageSwitcher() {
 
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
-      {/* زر المحول */}
+      {/* زر محول اللغات بارتفاع موحد h-10 واعتماد كامل على Semantic Tokens */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all shadow-md focus:outline-none cursor-pointer"
+        className="h-10 flex items-center justify-center gap-1.5 px-3 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary text-xs font-semibold hover:border-semantic-borderHover transition-all duration-200 focus:outline-none cursor-pointer active:scale-95"
         aria-expanded={isOpen}
       >
-        <Globe className="w-3.5 h-3.5 text-semantic-actionPrimary shrink-0" />
-        <span className="uppercase font-mono">{currentLang.code}</span>
-        <ChevronDown className={`w-3 h-3 text-semantic-textSecondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <Globe size={15} className="shrink-0 text-semantic-textSecondary" />
+        <span className="uppercase font-mono font-bold text-semantic-textPrimary">
+          {currentLang.code}
+        </span>
+        <ChevronDown 
+          size={14} 
+          className={`shrink-0 text-semantic-textSecondary transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`} 
+        />
       </button>
 
-      {/* القائمة المنسدلة المُحسّنة بحجم ملموم وأنيق */}
+      {/* القائمة المنسدلة تفتح لأعلى وتعتمد على surfaceCard و borderCard */}
       {isOpen && (
-        <div className="absolute top-full mt-1.5 end-0 w-36 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput shadow-xl py-1 z-50 overflow-hidden backdrop-blur-xl">
+        <div className="absolute bottom-full mb-2 start-0 w-36 rounded-xl border border-semantic-borderCard bg-semantic-surfaceCard shadow-main py-1 z-50 overflow-hidden backdrop-blur-xl">
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
             return (
@@ -63,14 +71,16 @@ export default function LanguageSwitcher() {
                 type="button"
                 onClick={() => handleLanguageChange(lang)}
                 dir={lang.dir}
-                className={`w-full px-2.5 py-1.5 text-[11px] flex items-center justify-between transition-colors cursor-pointer ${
+                className={`w-full px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer select-none ${
                   isSelected
                     ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold'
                     : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
                 }`}
               >
                 <span className="truncate">{lang.name}</span>
-                {isSelected && <Check className="w-3 h-3 text-semantic-actionPrimary shrink-0" />}
+                {isSelected && (
+                  <Check size={14} className="shrink-0 text-semantic-actionPrimary" />
+                )}
               </button>
             );
           })}
