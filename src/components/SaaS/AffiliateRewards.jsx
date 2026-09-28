@@ -1,4 +1,3 @@
-// src/components/SaaS/AffiliateRewards.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -15,6 +14,7 @@ import {
   Building2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { UI } from '@/theme/styles';
 
 export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: isRtlProp, currentLang: currentLangProp }) {
   const { t, i18n } = useTranslation();
@@ -118,47 +118,47 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
 
   return (
     <div 
-      className="flex flex-col gap-4 max-w-3xl mx-auto p-2 font-cairo text-appText-main"
+      className="flex flex-col gap-4 max-w-3xl mx-auto p-2 font-cairo text-semantic-textPrimary"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       {/* 🟢 1. HERO SECTION & WALLET BANNER */}
-      <div className="relative overflow-hidden rounded-3xl p-5 shadow-2xl bg-dark-card border border-brandEmerald-border">
+      <div className={`${UI.cardGlass} p-5 relative overflow-hidden border border-semantic-successBorder/40 bg-semantic-successBg/10`}>
         
         {/* Top Tag */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald rounded-xl text-xs font-bold">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-semantic-successBg border border-semantic-successBorder text-semantic-success rounded-xl text-xs font-bold">
             <Tag size={12} />
             <span>{t('affiliate.badge', 'برنامج شركاء النجاح')}</span>
           </div>
-          <div className="text-xs text-appText-sub flex items-center gap-1">
-            <ShieldCheck size={14} className="text-brandEmerald" />
+          <div className="text-xs text-semantic-textSecondary flex items-center gap-1">
+            <ShieldCheck size={14} className="text-semantic-success" />
             <span>{t('affiliate.autoDiscount', 'تطبيق تلقائي للخصم')}</span>
           </div>
         </div>
 
         {/* Heading */}
-        <h2 className="text-xl font-extrabold text-appText-main mb-1.5 leading-snug">
+        <h2 className={`${UI.title} mb-1.5 leading-snug`}>
           {t('affiliate.heroTitle', 'ادعُ المقارئ واخصِم من اشتراكك')}
         </h2>
-        <p className="text-appText-sub text-xs sm:text-sm mb-4 leading-relaxed">
+        <p className={`${UI.subtitle} mb-4 leading-relaxed`}>
           {t('affiliate.heroDesc', 'احصل على خصومات فورية تُطبّق تلقائياً على فاتورة تجديدك القادمة لكل أكاديمية تنضم عن طريقك.')}
         </p>
 
         {/* Link Box Container */}
-        <div className="bg-dark-input border border-appBorder-input rounded-2xl p-3 flex flex-col gap-2.5">
-          <span className="text-xs text-appText-muted font-semibold">
+        <div className="bg-semantic-bgCard border border-semantic-borderInput rounded-2xl p-3 flex flex-col gap-2.5">
+          <span className="text-xs text-semantic-textMuted font-semibold">
             {t('affiliate.directLink', 'رابط الإحالة المباشر')}
           </span>
           
           <div className="flex gap-2 items-center">
-            <div className="flex-1 bg-dark-bg border border-appBorder-input rounded-lg px-3 py-2 text-appText-sub text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis ltr text-left">
+            <div className="flex-1 bg-semantic-bgMain border border-semantic-borderInput rounded-lg px-3 py-2 text-semantic-textSecondary text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis ltr text-left">
               {referralLink}
             </div>
 
             <button
               type="button"
               onClick={() => handleCopy(referralLink)}
-              className="px-3.5 py-2 bg-primary hover:bg-primary-hover text-appText-main border-none rounded-lg font-extrabold text-xs cursor-pointer flex items-center gap-1 shrink-0 transition-all"
+              className={`${UI.btnPrimary} px-3.5 py-2 text-xs shrink-0`}
             >
               {copiedLink ? <Check size={14} /> : <Copy size={14} />}
               <span>{copiedLink ? t('affiliate.copied', 'تم النسخ') : t('affiliate.copyLink', 'نسخ')}</span>
@@ -168,7 +168,7 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           <button
             type="button"
             onClick={handleShareWhatsApp}
-            className="w-full py-2.5 px-3 bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald hover:border-brandEmerald rounded-lg font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 mt-0.5 transition-colors"
+            className={`${UI.btnEmerald} w-full py-2.5 px-3 text-xs mt-0.5`}
           >
             <Share2 size={15} />
             <span>{t('affiliate.whatsapp', 'مشاركة عبر واتساب')}</span>
@@ -183,12 +183,12 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
           { step: '2', title: t('affiliate.step2Title', '2. اشتركوا'), desc: t('affiliate.step2Desc', 'تسجل الأكاديمية بالمنظومة') },
           { step: '3', title: t('affiliate.step3Title', '3. وفّر'), desc: t('affiliate.step3Desc', 'يُخصم التخفيض من فاتورتك') }
         ].map((item, idx) => (
-          <div key={idx} className="bg-dark-card border border-appBorder-card p-2.5 rounded-xl flex flex-col items-center text-center gap-1">
-            <div className="w-6 h-6 rounded-full bg-brandEmerald-bg text-brandEmerald border border-brandEmerald-border flex items-center justify-center font-extrabold text-xs">
+          <div key={idx} className={`${UI.card} p-2.5 flex flex-col items-center text-center gap-1`}>
+            <div className="w-6 h-6 rounded-full bg-semantic-successBg text-semantic-success border border-semantic-successBorder flex items-center justify-center font-extrabold text-xs">
               {item.step}
             </div>
-            <div className="font-bold text-xs text-appText-main">{item.title}</div>
-            <div className="text-[10px] text-appText-muted leading-tight">{item.desc}</div>
+            <div className="font-bold text-xs text-semantic-textPrimary">{item.title}</div>
+            <div className="text-[10px] text-semantic-textMuted leading-tight">{item.desc}</div>
           </div>
         ))}
       </div>
@@ -197,45 +197,45 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
       <div className="grid grid-cols-2 gap-2.5">
         
         {/* إجمالي الإحالات */}
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-3 flex items-center justify-between">
+        <div className={`${UI.card} p-3 flex items-center justify-between`}>
           <div>
-            <div className="text-xs text-appText-sub mb-0.5">{t('affiliate.totalReferrals', 'إجمالي الإحالات')}</div>
-            <div className="text-lg font-extrabold text-appText-main">{stats.totalReferrals}</div>
+            <div className="text-xs text-semantic-textSecondary mb-0.5">{t('affiliate.totalReferrals', 'إجمالي الإحالات')}</div>
+            <div className="text-lg font-extrabold text-semantic-textPrimary">{stats.totalReferrals}</div>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-dark-google border border-appBorder-input text-appText-sub flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-semantic-bgCard border border-semantic-borderInput text-semantic-textSecondary flex items-center justify-center">
             <Users size={18} />
           </div>
         </div>
 
         {/* أكاديميات مشتركة */}
-        <div className="bg-dark-card border border-appBorder-card rounded-2xl p-3 flex items-center justify-between">
+        <div className={`${UI.card} p-3 flex items-center justify-between`}>
           <div>
-            <div className="text-xs text-appText-sub mb-0.5">{t('affiliate.activeAcademies', 'أكاديميات مشتركة')}</div>
-            <div className="text-lg font-extrabold text-appText-main">{stats.activeAcademies}</div>
+            <div className="text-xs text-semantic-textSecondary mb-0.5">{t('affiliate.activeAcademies', 'أكاديميات مشتركة')}</div>
+            <div className="text-lg font-extrabold text-semantic-textPrimary">{stats.activeAcademies}</div>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-semantic-successBg border border-semantic-successBorder text-semantic-success flex items-center justify-center">
             <Award size={18} />
           </div>
         </div>
 
         {/* خصم التجديد القادم */}
-        <div className="bg-dark-card border border-primary/40 rounded-2xl p-3 flex items-center justify-between">
+        <div className={`${UI.card} border-semantic-actionPrimary/40 p-3 flex items-center justify-between`}>
           <div>
-            <div className="text-xs text-primary mb-0.5">{t('affiliate.pendingDiscount', 'خصم التجديد القادم')}</div>
-            <div className="text-base font-extrabold text-primary">{stats.pendingDiscount} {currency}</div>
+            <div className="text-xs text-semantic-actionPrimary mb-0.5">{t('affiliate.pendingDiscount', 'خصم التجديد القادم')}</div>
+            <div className="text-base font-extrabold text-semantic-actionPrimary">{stats.pendingDiscount} {currency}</div>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/30 text-primary flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary flex items-center justify-center">
             <Percent size={18} />
           </div>
         </div>
 
         {/* إجمالي الوفر */}
-        <div className="bg-dark-card border border-brandEmerald-border rounded-2xl p-3 flex items-center justify-between">
+        <div className={`${UI.card} border-semantic-successBorder p-3 flex items-center justify-between`}>
           <div>
-            <div className="text-xs text-brandEmerald mb-0.5">{t('affiliate.totalDiscountEarned', 'إجمالي الوفر')}</div>
-            <div className="text-base font-extrabold text-brandEmerald">{stats.totalDiscountEarned} {currency}</div>
+            <div className="text-xs text-semantic-success mb-0.5">{t('affiliate.totalDiscountEarned', 'إجمالي الوفر')}</div>
+            <div className="text-base font-extrabold text-semantic-success">{stats.totalDiscountEarned} {currency}</div>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-brandEmerald-bg border border-brandEmerald-border text-brandEmerald flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-semantic-successBg border border-semantic-successBorder text-semantic-success flex items-center justify-center">
             <Sparkles size={18} />
           </div>
         </div>
@@ -243,35 +243,35 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
       </div>
 
       {/* 🟢 4. RECORDS SECTION */}
-      <div className="bg-dark-card border border-appBorder-card rounded-2xl p-4 flex flex-col gap-3">
+      <div className={`${UI.card} p-4 flex flex-col gap-3`}>
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-6 text-primary text-xs font-semibold">
+          <div className="flex items-center justify-center gap-2 py-6 text-semantic-actionPrimary text-xs font-semibold">
             <Loader2 size={18} className="animate-spin" />
             <span>{t('affiliate.loading', 'جاري تحميل سجل الإحالات...')}</span>
           </div>
         ) : referralList.length === 0 ? (
           <div className="text-center flex flex-col items-center gap-2 py-4">
-            <div className="w-10 h-10 rounded-full bg-dark-input border border-appBorder-input flex items-center justify-center text-appText-muted">
+            <div className="w-10 h-10 rounded-full bg-semantic-bgMain border border-semantic-borderInput flex items-center justify-center text-semantic-textMuted">
               <Sparkles size={18} />
             </div>
-            <h3 className="text-appText-main text-sm font-bold m-0">
+            <h3 className="text-semantic-textPrimary text-sm font-bold m-0">
               {t('affiliate.emptyTitle', 'لا توجد إحالات بعد')}
             </h3>
-            <p className="text-appText-sub text-xs m-0 max-w-xs leading-relaxed">
+            <p className="text-semantic-textSecondary text-xs m-0 max-w-xs leading-relaxed">
               {t('affiliate.emptyDesc', 'شارك رابطك المباشر مع زملائك لبدء تخفيض قيمة اشتراكك القادم تلقائياً.')}
             </p>
           </div>
         ) : (
           <div>
-            <div className="flex items-center gap-1.5 text-appText-main text-xs font-bold mb-3">
-              <Building2 size={16} className="text-brandEmerald" />
+            <div className="flex items-center gap-1.5 text-semantic-textPrimary text-xs font-bold mb-3">
+              <Building2 size={16} className="text-semantic-success" />
               <span>{t('affiliate.recordsTitle', 'سجل الأكاديميات المُحالة')}</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className={`w-full text-xs border-collapse ${isRtl ? 'text-right' : 'text-left'}`}>
                 <thead>
-                  <tr className="text-appText-sub border-b border-appBorder-card">
+                  <tr className="text-semantic-textSecondary border-b border-semantic-borderCard">
                     <th className="p-2 font-bold">{t('affiliate.table.academy', 'الأكاديمية / المستخدم')}</th>
                     <th className="p-2 font-bold">{t('affiliate.table.status', 'الحالة')}</th>
                     <th className="p-2 font-bold">{t('affiliate.table.reward', 'قيمة الخصم')}</th>
@@ -280,17 +280,17 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
                 </thead>
                 <tbody>
                   {referralList.map((item) => (
-                    <tr key={item.id} className="border-b border-appBorder-card text-appText-main">
+                    <tr key={item.id} className="border-b border-semantic-borderCard text-semantic-textPrimary">
                       <td className="p-2.5 font-semibold">
                         {item.referred_academy_name || item.referred_email || t('affiliate.defaultAcademyName', 'أكاديمية مجاورة')}
                       </td>
                       <td className="p-2.5">
                         <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${
                           item.status === 'rewarded' 
-                            ? 'bg-brandEmerald-bg text-brandEmerald border-brandEmerald-border' 
+                            ? 'bg-semantic-successBg text-semantic-success border-semantic-successBorder' 
                             : item.status === 'subscribed' 
-                              ? 'bg-primary/10 text-primary border-primary/30' 
-                              : 'bg-dark-input text-appText-sub border-appBorder-input'
+                              ? 'bg-semantic-actionPrimary/10 text-semantic-actionPrimary border-semantic-actionPrimary/30' 
+                              : 'bg-semantic-bgMain text-semantic-textSecondary border-semantic-borderInput'
                         }`}>
                           {item.status === 'rewarded' 
                             ? t('affiliate.status.rewarded', 'تم الخصم') 
@@ -299,10 +299,10 @@ export default function AffiliateRewards({ academyId, currency = 'USD', isRtl: i
                               : t('affiliate.status.pending', 'قيد الانتظار')}
                         </span>
                       </td>
-                      <td className="p-2.5 font-bold text-primary">
+                      <td className="p-2.5 font-bold text-semantic-actionPrimary">
                         {Number(item.reward_amount) || 0} {currency}
                       </td>
-                      <td className="p-2.5 text-center text-appText-sub font-mono text-[11px]">
+                      <td className="p-2.5 text-center text-semantic-textSecondary font-mono text-[11px]">
                         {item.created_at ? new Date(item.created_at).toLocaleDateString(currentLang) : '—'}
                       </td>
                     </tr>
