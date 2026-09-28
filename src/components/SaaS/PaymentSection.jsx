@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, ShieldCheck, Check, Copy, X } from 'lucide-react';
+import { Upload, ShieldCheck, Check, Copy, X, Wallet, Tag } from 'lucide-react';
 import { colors } from '@/theme/colors';
 import { UI } from '@/theme/styles';
 import PaymentMethods from './components/PaymentMethods';
@@ -12,7 +12,10 @@ export default function PaymentSection({
   isSubmitted = false, 
   loading = false, 
   onSubmit, 
-  isRTL = false 
+  isRTL = false,
+  finalPrice = 0,
+  currency = '',
+  appliedDiscount = 0
 }) {
   const { t } = useTranslation();
   const [selectedGateway, setSelectedGateway] = useState(null);
@@ -55,7 +58,29 @@ export default function PaymentSection({
 
       {/* 📝 2. تفاصيل الإشعار ورقم المعاملة للدفع اليدوي */}
       {(selectedGateway?.accountNumber || selectedGateway?.isManual) && (
-        <div className="bg-semantic-bgMain border border-semantic-borderCard rounded-xl p-4 space-y-3 transition-all duration-200">
+        <div className="bg-semantic-bgMain border border-semantic-borderCard rounded-xl p-4 space-y-4 transition-all duration-200">
+          
+          {/* إبراز المبلغ المطلوب تحويله بناءً على الخصومات والحسابات النهائية */}
+          <div className="bg-semantic-bgCard border border-semantic-actionPrimary/30 p-3 rounded-lg flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Wallet size={16} className="text-semantic-actionPrimary" />
+              <span className="font-bold text-semantic-textPrimary">
+                {t('subscription.requiredAmount', 'المبلغ المطلوب تحويله:')}
+              </span>
+            </div>
+            <div className="text-end">
+              <span className="font-mono text-sm sm:text-base font-extrabold text-semantic-actionPrimary">
+                {finalPrice.toLocaleString()} {currency}
+              </span>
+              {appliedDiscount > 0 && (
+                <span className="block text-[10px] text-semantic-success flex items-center gap-1 justify-end">
+                  <Tag size={10} />
+                  {t('subscription.discountNotice', 'متضمن الخصم')} ({appliedDiscount}%)
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* مدخل رقم المعاملة */}
           <div className="space-y-1">
             <label className={`${UI.subtitle} block font-bold text-xs`}>
