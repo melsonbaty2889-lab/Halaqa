@@ -22,7 +22,6 @@ export default function PromoCodeInput({
   const cleanCode = safeCode.trim();
   const isApplyDisabled = !cleanCode;
 
-  // 1. تطبيق الكود
   const handleApply = useCallback(() => {
     if (cleanCode && typeof onApply === 'function') {
       onApply(cleanCode);
@@ -36,26 +35,22 @@ export default function PromoCodeInput({
     }
   }, [handleApply]);
 
-  // 2. زر X لمسح نص حقل الإدخال فقط
   const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
   }, [setPromoCode]);
 
-  // 3. زر إلغاء الخصم المطبق (إستدعاء الدالة الصريحة onRemove من الأب)
   const handleRemoveDiscount = useCallback(() => {
     if (typeof onRemove === 'function') {
       onRemove();
     } else if (typeof setPromoCode === 'function') {
-      // Fallback آمن دون إرسال null أو استدعاء onApply('')
       setPromoCode('');
     }
   }, [onRemove, setPromoCode]);
 
   return (
     <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
-      {/* عنوان القسم */}
       <div className="flex items-center justify-center gap-2 mb-3">
         <Tag size={16} className="text-semantic-actionPrimary" />
         <span className="font-bold text-xs text-semantic-textPrimary">
@@ -63,7 +58,6 @@ export default function PromoCodeInput({
         </span>
       </div>
 
-      {/* حقل الإدخال والأزرار */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <input 
@@ -76,7 +70,6 @@ export default function PromoCodeInput({
             className={`${UI.input} w-full h-[44px] min-h-[44px] px-3 pe-8 font-mono text-xs tracking-wider uppercase`}
           />
 
-          {/* زر X لمسح النص في الحقل فقط */}
           {safeCode && (
             <button
               type="button"
@@ -90,7 +83,6 @@ export default function PromoCodeInput({
           )}
         </div>
 
-        {/* زر التطبيق */}
         <button
           type="button"
           onClick={handleApply}
@@ -102,7 +94,6 @@ export default function PromoCodeInput({
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
@@ -117,7 +108,6 @@ export default function PromoCodeInput({
             </span>
           </div>
 
-          {/* زر إلغاء الخصم المطبق وإعادة السعر الأصلي */}
           <button
             type="button"
             onClick={handleRemoveDiscount}
@@ -129,7 +119,6 @@ export default function PromoCodeInput({
         </div>
       )}
 
-      {/* رسالة الخطأ */}
       {error && (
         <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
