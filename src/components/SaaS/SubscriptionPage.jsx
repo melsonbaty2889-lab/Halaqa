@@ -44,7 +44,6 @@ export default function SubscriptionPage({ onBack }) {
     const monthlyPrice = currentRegionData.plans.monthly.price;
     const yearlyPrice = currentRegionData.plans.yearly.price;
 
-    // جلب الشارة المناسبة بناءً على اللغة الحالية
     const getBadgeText = () => {
       const lang = (i18n.language || 'ar').toLowerCase();
       if (lang.startsWith('en')) return currentRegionData.plans.yearly.badgeEn;
@@ -86,9 +85,10 @@ export default function SubscriptionPage({ onBack }) {
   }, [currentRegionData, i18n.language, t]);
 
   // معالجة وتطبيق كود الخصم
-  const handleApplyPromo = useCallback(() => {
+  const handleApplyPromo = useCallback((codeToApply) => {
     setPromoError('');
-    const couponResult = validateCoupon(promoCode);
+    const code = (typeof codeToApply === 'string' ? codeToApply : promoCode).trim();
+    const couponResult = validateCoupon(code);
 
     if (couponResult.valid) {
       setAppliedDiscount(couponResult.discountPercent);
@@ -98,13 +98,19 @@ export default function SubscriptionPage({ onBack }) {
     }
   }, [promoCode, t]);
 
+  // دالة الإلغاء الصريحة المضافة في المكوّن الأب
+  const handleRemovePromo = useCallback(() => {
+    setAppliedDiscount(0);
+    setPromoCode('');
+    setPromoError('');
+  }, []);
+
   // إرسال وإدراج الاشتراك في قاعدة البيانات الموحدة
   const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
     setLoading(true);
     try {
       let receiptUrl = null;
 
-      // رفع إشعار التحويل المالي إن وجد
       if (receiptFile && supabase?.storage) {
         const fileExt = receiptFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
@@ -118,7 +124,6 @@ export default function SubscriptionPage({ onBack }) {
         }
       }
 
-      // الحفظ في جدول saas_subscriptions بالهيكلية الجديدة
       if (supabase?.from) {
         const { error: insertError } = await supabase.from('saas_subscriptions').insert([
           {
@@ -201,11 +206,12 @@ export default function SubscriptionPage({ onBack }) {
               isRTL={isRTL} 
             />
 
-            {/* إدخال كود الخصم */}
+            {/* إدخال كود الخصم مع الربط بـ onRemove الصريحة */}
             <PromoCodeInput 
               promoCode={promoCode}
               setPromoCode={setPromoCode}
               onApply={handleApplyPromo}
+              onRemove={handleRemovePromo}
               appliedDiscount={appliedDiscount}
               error={promoError}
               isRTL={isRTL}
