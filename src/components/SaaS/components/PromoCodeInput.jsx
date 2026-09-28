@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Tag, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-// Helper آمن لجلب النصوص ومنع الـ Hardcoded Strings مع دعم المتغيرات
+// دالة مساعدة جالبة للنصوص لمنع الـ Hardcoded Strings ولضمان التوافق مع i18next
 const getText = (t, key, fallback, options = {}) => {
   const translated = t(key, options);
   return translated && translated !== key ? translated : fallback;
@@ -18,15 +18,15 @@ export default function PromoCodeInput({
 }) {
   const { t } = useTranslation();
 
-  // تنفيذ دالة التطبيق بعد التأكد من صحة المدخلات والدالة
+  // تنفيذ دالة التطبيق الموحدة مع تجريف المسافات
   const handleApply = useCallback(() => {
-    const cleanCode = promoCode.trim();
+    const cleanCode = typeof promoCode === 'string' ? promoCode.trim() : '';
     if (cleanCode && typeof onApply === 'function') {
       onApply(cleanCode);
     }
   }, [promoCode, onApply]);
 
-  // معالجة الضغط على زر Enter داخل حقل الإدخال
+  // معالجة الضغط على Enter داخل الحقل
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -34,25 +34,25 @@ export default function PromoCodeInput({
     }
   }, [handleApply]);
 
-  // مسح نص كود الخصم
+  // مسح نص الحقل فقط
   const handleClearInput = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
   }, [setPromoCode]);
 
-  // إلغاء الخصم المطبق وإعادة الضبط بطريقة آمنة
+  // إلغاء الخصم المطبق وإشعار المكون الأب
   const handleRemoveDiscount = useCallback(() => {
     if (typeof setPromoCode === 'function') {
       setPromoCode('');
     }
-    // إذا كان المكوّن الأب يمرر دالة إلغاء مخصصة أو يدعم إرسال نص فارغ
     if (typeof onApply === 'function') {
+      // إرسال معامل فارغ أو استدعاء الدالة لتحديث الحالة في الأب
       onApply('');
     }
   }, [setPromoCode, onApply]);
 
-  const isApplyDisabled = !promoCode.trim();
+  const isApplyDisabled = !promoCode || !promoCode.trim();
 
   return (
     <div className={`${UI.card} border-dashed border-semantic-actionPrimary/40 rounded-2xl p-4 mb-8 max-w-xl mx-auto shadow-xl transition-all duration-200`}>
@@ -83,14 +83,14 @@ export default function PromoCodeInput({
               onClick={handleClearInput}
               aria-label={getText(t, 'common.clear', 'مسح')}
               title={getText(t, 'common.clear', 'مسح')}
-              className="absolute inset-y-0 end-2.5 pe-1 flex items-center text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer"
+              className="absolute inset-y-0 end-2.5 flex items-center text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* زر التطبيق الموحد باللون البرتقالي الأساسي للمشروع */}
+        {/* زر التطبيق الموحد */}
         <button
           type="button"
           onClick={handleApply}
@@ -102,7 +102,7 @@ export default function PromoCodeInput({
         </button>
       </div>
 
-      {/* حالة الخصم المطبق بنجاح - باللون الزمردي */}
+      {/* حالة الخصم المطبق بنجاح */}
       {appliedDiscount > 0 && (
         <div className="mt-2.5 flex items-center justify-between p-2.5 px-3 rounded-lg border border-semantic-successBorder/30 bg-semantic-successBg/10 text-semantic-success text-xs font-semibold">
           <div className="flex items-center gap-1.5">
@@ -128,7 +128,7 @@ export default function PromoCodeInput({
         </div>
       )}
 
-      {/* رسالة الخطأ - بألوان الخطأ الموحدة */}
+      {/* رسالة الخطأ */}
       {error && (
         <div className="mt-2.5 flex items-center gap-1.5 p-2.5 rounded-lg border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger text-xs font-semibold">
           <AlertCircle size={14} className="shrink-0" />
