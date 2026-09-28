@@ -6,7 +6,7 @@ import PlanCard from './components/PlanCard';
 import PaymentSection from './PaymentSection';
 import { supabase } from '@/lib/supabase';
 import { UI } from '@/theme/styles';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Receipt, Tag, ShieldCheck } from 'lucide-react';
 import { 
   SUBSCRIPTION_PLANS, 
   validateCoupon, 
@@ -20,6 +20,7 @@ export default function SubscriptionPage({ onBack }) {
   const isRTL = i18n.dir ? i18n.dir() === 'rtl' : i18n.language === 'ar';
 
   const [region, setRegion] = useState(() => detectUserCurrencyRegion());
+  // الخطة السنوية مختارة افتراضياً كأفضل ممارسة في أنظمة SaaS
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
@@ -52,18 +53,6 @@ export default function SubscriptionPage({ onBack }) {
 
     return [
       {
-        id: 'monthly',
-        title: t('subscription.plans.monthlyTitle', 'الوصول المرن (اشتراك شهري)'),
-        description: t('subscription.plans.monthlyDesc', 'مناسب للمراكز والمؤسسات الناشئة لمرونة السداد'),
-        periodText: t('subscription.periods.monthly', 'شهرياً'),
-        basePrice: monthlyPrice,
-        features: [
-          t('subscription.features.instantAccess', 'تفعيل فوري ووصول لكافة الخصائص والأدوات'),
-          t('subscription.features.management', 'إدارة الحلقات والطلاب والمعلمين بدون قيود'),
-          t('subscription.features.standardSupport', 'دعم فني وتحديثات نظام دورية مستمرة')
-        ]
-      },
-      {
         id: 'yearly',
         title: t('subscription.plans.yearlyTitle', 'الاستقرار الأكاديمي (اشتراك سنوي)'),
         badge: getBadgeText(),
@@ -76,9 +65,36 @@ export default function SubscriptionPage({ onBack }) {
           t('subscription.features.saveMonths', 'توفير تكلفة شهرين كاملين عند السداد السنوي'),
           t('subscription.features.prioritySupport', 'أولوية في الدعم الفني المباشر والتطوير المخصص')
         ]
+      },
+      {
+        id: 'monthly',
+        title: t('subscription.plans.monthlyTitle', 'الوصول المرن (اشتراك شهري)'),
+        description: t('subscription.plans.monthlyDesc', 'مناسب للمراكز والمؤسسات الناشئة لمرونة السداد'),
+        periodText: t('subscription.periods.monthly', 'شهرياً'),
+        basePrice: monthlyPrice,
+        features: [
+          t('subscription.features.instantAccess', 'تفعيل فوري ووصول لكافة الخصائص والأدوات'),
+          t('subscription.features.management', 'إدارة الحلقات والطلاب والمعلمين بدون قيود'),
+          t('subscription.features.standardSupport', 'دعم فني وتحديثات نظام دورية مستمرة')
+        ]
       }
     ];
   }, [currentRegionData, i18n.language, t]);
+
+  // حساب الحسابات المالية الحالية لملخص الطلب
+  const activePlanObj = useMemo(() => {
+    return plans.find(p => p.id === selectedPlan) || plans[0];
+  }, [plans, selectedPlan]);
+
+  const basePrice = activePlanObj.basePrice;
+  const discountAmount = useMemo(() => {
+    if (!appliedDiscount) return 0;
+    return (basePrice * appliedDiscount) / 100;
+  }, [basePrice, appliedDiscount]);
+
+  const finalPrice = useMemo(() => {
+    return calculateFinalPrice(basePrice, appliedDiscount);
+  }, [basePrice, appliedDiscount]);
 
   const handleApplyPromo = useCallback((code) => {
     setPromoError('');
@@ -127,7 +143,9 @@ export default function SubscriptionPage({ onBack }) {
               region: region,
               transaction_ref: txId,
               receipt_url: receiptUrl,
-              discount_applied: appliedDiscount
+              discount_applied: appliedDiscount,
+              final_price_paid: finalPrice,
+              currency: currencyLabel
             },
             created_at: new Date().toISOString()
           }
@@ -142,7 +160,7 @@ export default function SubscriptionPage({ onBack }) {
     } finally {
       setLoading(false);
     }
-  }, [selectedPlan, region, txId, appliedDiscount]);
+  }, [selectedPlan, region, txId, appliedDiscount, finalPrice, currencyLabel]);
 
   return (
     <div 
@@ -151,6 +169,7 @@ export default function SubscriptionPage({ onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
+        {/* زر العودة */}
         <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
           <button 
             onClick={onBack} 
@@ -162,9 +181,10 @@ export default function SubscriptionPage({ onBack }) {
           </button>
         </div>
 
+        {/* الهيدر والعنوان */}
         <div className="flex flex-col items-center text-center space-y-3">
           <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight text-semantic-actionPrimary">
-            {t('subscription.headerTitle', 'خطط اشتراك منصة الحلقة الذكية')}
+            {t('subscription.headerTitle', 'امتلاك ترخيص المنظومة - منصة الحلقة الذكية')}
           </h1>
           <p className={`${UI.subtitle} text-xs sm:text-sm max-w-xl leading-relaxed`}>
             {t('subscription.headerSubtitle', 'اختر خطة الاستثمار الأكاديمي الأنسب لمؤسستك، وانضم إلى كبرى المراكز والجهات التعليمية حول العالم.')}
@@ -189,12 +209,32 @@ export default function SubscriptionPage({ onBack }) {
           </div>
         ) : (
           <>
+            {/* 1. اختيار العملة والمنطقة */}
             <RegionSelector 
               region={region} 
               setRegion={setRegion} 
               isRTL={isRTL} 
             />
 
+            {/* 2. بطاقات خطط الأسعار */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {plans.map((p) => {
+                const itemFinalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
+                return (
+                  <PlanCard 
+                    key={p.id}
+                    plan={p}
+                    isSelected={selectedPlan === p.id}
+                    onSelect={() => setSelectedPlan(p.id)}
+                    finalPrice={itemFinalPrice}
+                    currency={currencyLabel}
+                    isRTL={isRTL}
+                  />
+                );
+              })}
+            </div>
+
+            {/* 3. كود الخصم (مدمج قبل الفاتورة والدفع) */}
             <PromoCodeInput 
               promoCode={promoCode}
               setPromoCode={setPromoCode}
@@ -205,23 +245,42 @@ export default function SubscriptionPage({ onBack }) {
               isRTL={isRTL}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {plans.map((p) => {
-                const finalPrice = calculateFinalPrice(p.basePrice, appliedDiscount);
-                return (
-                  <PlanCard 
-                    key={p.id}
-                    plan={p}
-                    isSelected={selectedPlan === p.id}
-                    onSelect={() => setSelectedPlan(p.id)}
-                    finalPrice={finalPrice}
-                    currency={currencyLabel}
-                    isRTL={isRTL}
-                  />
-                );
-              })}
+            {/* 4. ملخص الطلب الشفاف (Order Summary) */}
+            <div className={`${UI.card} max-w-xl mx-auto p-5 rounded-2xl space-y-3 border border-semantic-borderCard shadow-lg`}>
+              <div className="flex items-center gap-2 pb-3 border-b border-semantic-borderCard text-semantic-textPrimary font-bold text-sm">
+                <Receipt size={18} className="text-semantic-actionPrimary" />
+                <span>{t('subscription.summaryTitle', 'ملخص الحساب والفاتورة')}</span>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-semantic-textSecondary">
+                  <span>{t('subscription.summaryPlan', 'الخطة المختارة:')}</span>
+                  <span className="font-bold text-semantic-textPrimary">{activePlanObj.title}</span>
+                </div>
+
+                <div className="flex justify-between text-semantic-textSecondary">
+                  <span>{t('subscription.summaryBasePrice', 'السعر الأساسي:')}</span>
+                  <span className="font-mono font-bold text-semantic-textPrimary">{basePrice.toLocaleString()} {currencyLabel}</span>
+                </div>
+
+                {appliedDiscount > 0 && (
+                  <div className="flex justify-between text-semantic-success font-semibold">
+                    <span className="flex items-center gap-1">
+                      <Tag size={13} />
+                      {t('subscription.summaryDiscount', 'خصم كود التخفيض:')} ({appliedDiscount}%)
+                    </span>
+                    <span className="font-mono">- {discountAmount.toLocaleString()} {currencyLabel}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-semantic-borderCard flex justify-between items-center text-sm sm:text-base font-extrabold text-semantic-actionPrimary">
+                  <span>{t('subscription.summaryTotal', 'الإجمالي النهائي للدفع:')}</span>
+                  <span className="font-mono text-lg">{finalPrice.toLocaleString()} {currencyLabel}</span>
+                </div>
+              </div>
             </div>
 
+            {/* 5. قسم وسيلة الدفع */}
             <PaymentSection 
               region={region}
               txId={txId}
