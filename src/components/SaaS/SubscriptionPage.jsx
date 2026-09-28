@@ -115,14 +115,15 @@ export default function SubscriptionPage({ onBack }) {
     setPromoError('');
   }, []);
 
-const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
+
+  const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptFile) => {
   setLoading(true);
   try {
-    // 1. جلب بيانات المستخدم والأكاديمية الحالية
+    // 1. جلب بيانات المستخدم الحالية
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw new Error('المستخدم غير مسجل الدخول');
 
-    // جلب academy_id الخاص بالمستخدم
+    // 2. جلب academy_id الخاص بالمستخدم من جدول profiles
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('academy_id')
@@ -135,22 +136,25 @@ const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptF
 
     const academyId = profileData.academy_id;
 
-    // 2. رفع صورة الإشعار إن وجدت
+    // 3. رفع صورة الإشعار إلى المجلد المطابق: subscription-receipts
     let receiptUrl = null;
     if (receiptFile && supabase?.storage) {
       const fileExt = receiptFile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(7)}.${fileExt}`;
+      
       const { error: uploadError } = await supabase.storage
-        .from('saas-receipts')
+        .from('subscription-receipts')
         .upload(fileName, receiptFile);
 
       if (!uploadError) {
-        const { data } = supabase.storage.from('saas-receipts').getPublicUrl(fileName);
+        const { data } = supabase.storage.from('subscription-receipts').getPublicUrl(fileName);
         receiptUrl = data?.publicUrl;
+      } else {
+        console.error('خطأ أثناء رفع الإشعار:', uploadError);
       }
     }
 
-    // 3. حساب تاريخ الانتهاء (شهر أو سنة من الآن)
+    // 4. حساب تاريخ انتهاء الاشتراك (شهر أو سنة)
     const now = new Date();
     const expiresAt = new Date(now);
     if (selectedPlan === 'yearly') {
@@ -159,7 +163,7 @@ const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptF
       expiresAt.setMonth(expiresAt.getMonth() + 1);
     }
 
-    // 4. إدراج أو تحديث اشتراك الأكاديمية (Upsert)
+    // 5. حفظ البيانات في جدول saas_subscriptions
     const { error: insertError } = await supabase
       .from('saas_subscriptions')
       .upsert([
@@ -196,7 +200,7 @@ const handleSubmitSubscription = useCallback(async (methodId, isManual, receiptF
     setLoading(false);
   }
 }, [selectedPlan, region, txId, appliedDiscount, finalPrice, basePrice, promoCode, currentRegionData]);
-
+  
   return (
     <div 
       className="min-h-screen bg-semantic-bgMain text-semantic-textPrimary py-10 px-4 transition-colors duration-200 font-cairo"
