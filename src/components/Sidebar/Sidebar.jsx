@@ -138,6 +138,7 @@ export default function Sidebar({
   const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
+  // ✅ دالة احتساب الأيام المتبقية بدقة متوافقة مع DB
   const calculateEffectiveDaysLeft = useCallback(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
@@ -151,7 +152,7 @@ export default function Sidebar({
       const diffTime = endDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      return diffDays > 0 ? diffDays : 0;
+      return Math.max(0, diffDays);
     }
 
     return trialDaysLeft ?? 0;
@@ -159,6 +160,7 @@ export default function Sidebar({
 
   const effectiveDaysLeft = calculateEffectiveDaysLeft();
 
+  // ✅ الشارة المطابقة لحالات الاشتراكات المعتمدة في النظام
   const statusBadge = useMemo(() => {
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
