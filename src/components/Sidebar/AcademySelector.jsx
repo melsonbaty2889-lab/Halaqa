@@ -1,7 +1,7 @@
 // src/components/Sidebar/AcademySelector.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Check, Building2, Plus, Clock, AlertTriangle, X } from 'lucide-react';
+import { ChevronDown, Check, Building2, Plus, X } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 
 export default function AcademySelector({
@@ -10,7 +10,6 @@ export default function AcademySelector({
   currentAcademyId,
   currentAcademyName,
   academyLogo,
-  trialEndsAt,
   dropdownOpen,
   setDropdownOpen,
   dropdownRef,
@@ -26,7 +25,6 @@ export default function AcademySelector({
 
   const activeName = currentAcademyName || (currentAcademy?.name ? (typeof currentAcademy.name === 'object' ? currentAcademy.name[i18n.language] || currentAcademy.name.ar : currentAcademy.name) : '');
   const activeLogo = academyLogo || currentAcademy?.logo_url;
-  const activeTrialExpiry = trialEndsAt || currentAcademy?.trial_ends_at || currentAcademy?.saas_subscription?.expires_at;
 
   const resolveText = (textObj) => {
     if (typeof getText === 'function') {
@@ -43,32 +41,8 @@ export default function AcademySelector({
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // ✅ حساب حالة الاشتراك بدقة بدون خطة مدى الحياة
-  const getSubStatus = () => {
-    if (!activeTrialExpiry) return { type: 'expired' };
-
-    const now = new Date();
-    const expiry = new Date(activeTrialExpiry);
-    const diffTime = expiry - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays <= 0) {
-      return { type: 'expired' };
-    } else if (diffDays <= 7) {
-      return { type: 'expiring_soon', daysLeft: diffDays };
-    } else {
-      const formattedDate = expiry.toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
-        day: 'numeric',
-        month: 'short'
-      });
-      return { type: 'active', expiryDate: formattedDate };
-    }
-  };
-
-  const subStatus = getSubStatus();
-
+  // 🟢 عرض شارة الاشتراك الموحدة ممررة مباشرة من Sidebar.jsx لمنع تكرار المنطق
   const renderSubscriptionBadge = () => {
-    // إذا كانت الشارة ممررة كأوبجكت من Sidebar.jsx
     if (statusBadge) {
       return (
         <span 
@@ -80,31 +54,9 @@ export default function AcademySelector({
       );
     }
 
-    if (subStatus.type === 'expiring_soon') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/30">
-          <AlertTriangle size={10} className="shrink-0" />
-          <span>
-            {t('sidebar.badgeExpiringSoon', 'ينتهي خلال {{days}} أيام', { days: subStatus.daysLeft })}
-          </span>
-        </span>
-      );
-    }
-
-    if (subStatus.type === 'expired') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30">
-          <span>{t('sidebar.badgeExpired', 'باقة منتهية')}</span>
-        </span>
-      );
-    }
-
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide bg-semantic-successBg text-semantic-success border border-semantic-successBorder/60">
-        <Clock size={10} className="shrink-0" />
-        <span>
-          {t('sidebar.badgeActiveUntil', 'اشتراك • ينتهي {{date}}', { date: subStatus.expiryDate })}
-        </span>
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide bg-semantic-surfaceSecondary text-semantic-textMuted border border-semantic-borderCard">
+        {t('sidebar.badgeActive', 'اشتراك المنظومة')}
       </span>
     );
   };
