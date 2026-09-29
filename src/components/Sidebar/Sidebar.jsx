@@ -113,27 +113,33 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🟢 ضبط قفل Tmmrir الصفحة على الهاتف دون إغلاق تمرير سطح المكتب
+  // 🟢 ضبط قفل تمرير الصفحة على الهاتف دون التأثير على المودالات الأخرى
   useEffect(() => {
     if (isMobile && sidebarOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const previousOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      
       return () => {
-        document.body.style.overflow = originalStyle === 'hidden' ? '' : originalStyle;
+        document.body.style.overflow = previousOverflow;
       };
     }
   }, [isMobile, sidebarOpen]);
 
-  // 🟢 مزامنة القسم المفتوح التلقائي مع التبويب النشط بدون إعادة ضبط زائدة
+  // 🟢 مزامنة القسم المفتوح التلقائي مع التبويب النشط والحفاظ على اختيار المستخدم
   useEffect(() => {
-    if (!activeTab) return;
-    const activeSection = menuSections.find(sec => sec.items?.some(item => item.id === activeTab));
-    if (activeSection) {
-      setOpenSectionId(prev => (prev === activeSection.id ? prev : activeSection.id));
-    } else if (menuSections.length > 0 && openSectionId === null) {
-      setOpenSectionId(menuSections[0].id);
+    if (!activeTab || !menuSections.length) return;
+
+    const targetSection = menuSections.find(sec => 
+      sec.items?.some(item => item.id === activeTab)
+    );
+
+    if (targetSection) {
+      setOpenSectionId(prev => {
+        if (prev === targetSection.id) return prev;
+        return prev ?? targetSection.id;
+      });
     }
-  }, [activeTab, menuSections, openSectionId]);
+  }, [activeTab, menuSections]);
 
   const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
@@ -151,7 +157,7 @@ export default function Sidebar({
     ? rawAcademyName.trim() 
     : safeT('sidebar.unnamedAcademy', 'أكاديمية بدون اسم');
 
-  // 🟢 بناء رابط اللوجو بأمان كامل لمنع إعادة الـ Render والخلل بـ Query Parameters
+  // 🟢 بناء رابط اللوجو بأمان كامل لمنع إعادة الـ Render ودعم الروابط النسبية والمطلقة
   const academyLogo = useMemo(() => {
     const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
     if (typeof rawLogo !== 'string' || !rawLogo.trim()) return null;
@@ -160,16 +166,19 @@ export default function Sidebar({
     if (!version) return rawLogo;
 
     try {
-      const url = new URL(rawLogo, window.location.origin);
-      url.searchParams.set('v', String(version));
-      return url.toString();
-    } catch {
+      if (rawLogo.startsWith('http://') || rawLogo.startsWith('https://')) {
+        const url = new URL(rawLogo);
+        url.searchParams.set('v', String(version));
+        return url.toString();
+      }
       const separator = rawLogo.includes('?') ? '&' : '?';
-      return `${rawLogo}${separator}v=${version}`;
+      return `${rawLogo}${separator}v=${encodeURIComponent(version)}`;
+    } catch {
+      return rawLogo;
     }
   }, [currentAcademy?.logo_url, currentAcademy?.updated_at, propAcademy?.logo_url, propAcademy?.updated_at]);
 
-  // 🟢 حساب الأيام المتبقية بأمان وتوافق مع DB
+  // 🟢 حساب الأيام المتبقية بدقة معتمدة على التواريخ الصريحة
   const effectiveDaysLeft = useMemo(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
@@ -179,14 +188,15 @@ export default function Sidebar({
       const endDate = new Date(targetExpiryDate);
       if (isNaN(endDate.getTime())) return trialDaysLeft ?? 0;
 
-      const diffDays = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const diffTime = endDate.getTime() - Date.now();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return Math.max(0, diffDays);
     }
 
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
-  // 🟢 الشارة وشروط حالة الاشتراك بدون تكرار "اشتراك نشط"
+  // 🟢 الشارة وشروط حالة الاشتراك المعتمدة بدقة في المنظومة (بدون خطط دائمة)
   const statusBadge = useMemo(() => {
     const getBadgeStyle = (type) => ({
       background: C.status?.[`${type}Bg`] || 'rgba(255,255,255,0.05)',
@@ -196,21 +206,30 @@ export default function Sidebar({
 
     if (!currentAcademy) return null;
 
+    // 1. أكاديمية غير مفعلة
     if (currentAcademy.is_active === false) {
       return { text: safeT('status.pending', 'قيد التفعيل'), style: getBadgeStyle('pending') };
     }
 
     const subStatus = currentAcademy.saas_subscription?.status;
-    const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
 
+    // 2. اشتراك ملغى أو منتهي صريح
+    if (subStatus === 'canceled' || subStatus === 'expired') {
+      return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
+    }
+
+    // 3. فترة تجريبية
+    const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
     if (isTrial && effectiveDaysLeft > 0) {
       return { text: safeT('status.trial', 'فترة تجريبية'), style: getBadgeStyle('trial') };
     }
 
-    if (effectiveDaysLeft > 0 || subStatus === 'active') {
+    // 4. اشتراك نشط بشرط وجود أيام متبقية
+    if (subStatus === 'active' && effectiveDaysLeft > 0) {
       return { text: safeT('status.active', 'اشتراك نشط'), style: getBadgeStyle('active') };
     }
 
+    // 5. في حال انتهاء التاريخ
     return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
 
