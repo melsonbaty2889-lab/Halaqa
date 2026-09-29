@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
 import { useAcademy } from '@/context/AcademyContext';
 import { getMenuSections } from '@/constants/sidebarMenu';
-import { X } from "lucide-react";
 import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
@@ -18,6 +17,7 @@ export default function Sidebar({
   currentAcademyId,
   academy: propAcademy,
   onSwitchAcademy,
+  onOpenCreateAcademy,
   activeTab,
   setActiveTab,
   sidebarOpen,
@@ -33,12 +33,9 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { slug } = useParams();
 
-  // ✅ استخدام البيانات مباشرة من الـ Context الموحد
   const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
-
   const { i18n } = useTranslation();
   
-  // ✅ دعم تعدد اللغات الست مع مراعاة اتجاه اللغة (RTL/LTR)
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
   const currentDir = i18n.dir ? i18n.dir(currentLang) : (['ar', 'ur'].includes(currentLang) ? 'rtl' : 'ltr');
 
@@ -59,7 +56,6 @@ export default function Sidebar({
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // ✅ استخراج النصوص باللغة المناسبة من كائنات اللغات المتعددة
   const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -142,7 +138,6 @@ export default function Sidebar({
   const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
-  // ✅ حساب الأيام المتبقية بدقة مع شمولية بيانات الاشتراكات دون افتراض Infinity
   const calculateEffectiveDaysLeft = useCallback(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
@@ -164,7 +159,6 @@ export default function Sidebar({
 
   const effectiveDaysLeft = calculateEffectiveDaysLeft();
 
-  // ✅ شارة الحالة بالتوافق التام مع متطلبات الألوان والترجمة متعددة اللغات
   const statusBadge = useMemo(() => {
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
@@ -278,6 +272,7 @@ export default function Sidebar({
           <div style={{ flex: 1, minWidth: 0 }}>
             <AcademySelector
               academiesList={academiesList}
+              currentAcademy={currentAcademy}
               currentAcademyId={currentAcademyId || currentAcademy?.id}
               currentAcademyName={currentAcademyName}
               academyLogo={academyLogo}
@@ -286,31 +281,11 @@ export default function Sidebar({
               dropdownRef={dropdownRef}
               statusBadge={statusBadge}
               onSwitchAcademy={handleSwitch}
+              onOpenCreateAcademy={onOpenCreateAcademy}
+              onClose={isMobile ? () => setSidebarOpen(false) : undefined}
               getText={getText}
-              isRtl={currentDir === 'rtl'}
             />
           </div>
-
-          {isMobile && (
-            <button 
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              style={{ 
-                background: C.button?.glassBg, 
-                border: `1px solid ${C.dark?.cardBorder}`, 
-                borderRadius: '8px',
-                color: C.text?.muted, 
-                cursor: 'pointer', 
-                padding: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <X size={18} />
-            </button>
-          )}
         </div>
 
         <div 
