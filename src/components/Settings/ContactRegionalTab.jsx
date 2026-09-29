@@ -76,15 +76,10 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }
   };
 
-  // معالجة تغيير نوع التقويم وتحديث الـ Context لحظياً للقائمة والكائن
+    // معالجة تغيير نوع التقويم داخل مسودة النموذج
   const handleCalendarChange = (val) => {
     if (typeof updateField === 'function') {
       updateField('calendar_type', val);
-    }
-    if (typeof updateAcademyState === 'function') {
-      updateAcademyState({
-        calendar_type: val
-      });
     }
   };
 
