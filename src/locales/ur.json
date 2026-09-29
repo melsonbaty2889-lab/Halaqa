@@ -1033,6 +1033,7 @@
   },
   "sidebar": {
     "academyLogo": "اکیڈمی کا لوگو",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "آزمائشی • اختتام {{date}}",
     "badgeExpired": "پیکیج ختم ہو گیا",
     "badgeExpiringSoon": "{{days}} دنوں میں ختم ہو جائے گا",

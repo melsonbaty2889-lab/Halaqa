@@ -1033,6 +1033,7 @@
   },
   "sidebar": {
     "academyLogo": "Academy Logo",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "Trial • Ends {{date}}",
     "badgeExpired": "Plan Expired",
     "badgeExpiringSoon": "Expires in {{days}} days",

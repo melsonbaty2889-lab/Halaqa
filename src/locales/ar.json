@@ -913,6 +913,7 @@
   },
   "sidebar": {
     "academyLogo": "شعار الأكاديمية",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "تجربة • تنتهي {{date}}",
     "badgeExpired": "باقة منتهية",
     "badgeExpiringSoon": "ينتهي خلال {{days}} أيام",

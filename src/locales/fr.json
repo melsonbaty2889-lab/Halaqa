@@ -1033,6 +1033,7 @@
   },
   "sidebar": {
     "academyLogo": "Logo de l'académie",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "Essai • Expire le {{date}}",
     "badgeExpired": "Abonnement expiré",
     "badgeExpiringSoon": "Expire dans {{days}} jours",

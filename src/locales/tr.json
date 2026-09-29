@@ -1033,6 +1033,7 @@
   },
   "sidebar": {
     "academyLogo": "Akademi Logosu",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "Deneme • Bitiş: {{date}}",
     "badgeExpired": "Süresi Dolan Paket",
     "badgeExpiringSoon": "{{days}} gün içinde doluyor",

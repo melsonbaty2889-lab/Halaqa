@@ -1033,6 +1033,7 @@
   },
   "sidebar": {
     "academyLogo": "Logo Akademi",
+    "badgeActive": "اشتراك المنظومة",
     "badgeActiveUntil": "Uji Coba • Berakhir {{date}}",
     "badgeExpired": "Paket Kedaluwarsa",
     "badgeExpiringSoon": "Berakhir dalam {{days}} hari",
