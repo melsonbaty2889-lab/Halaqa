@@ -37,7 +37,8 @@ export default function Sidebar({
   const { i18n } = useTranslation();
   
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
-  const currentDir = i18n.dir ? i18n.dir(currentLang) : (['ar', 'ur'].includes(currentLang) ? 'rtl' : 'ltr');
+  const isRtlMode = i18n.dir ? i18n.dir(currentLang) === 'rtl' : ['ar', 'ur'].includes(currentLang);
+  const currentDir = isRtlMode ? 'rtl' : 'ltr';
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,7 +61,7 @@ export default function Sidebar({
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      const extracted = val[currentLang] || (isRtl ? (val.ar || val.en) : (val.en || val.ar));
+      const extracted = val[currentLang] || (isRtlMode ? (val.ar || val.en) : (val.en || val.ar));
       if (extracted && typeof extracted !== 'object') return String(extracted);
       
       const firstVal = Object.values(val)[0];
@@ -68,7 +69,7 @@ export default function Sidebar({
       return '';
     }
     return '';
-  }, [currentLang, isRtl]);
+  }, [currentLang, isRtlMode]);
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
@@ -101,23 +102,15 @@ export default function Sidebar({
   }, []);
 
   useEffect(() => {
-    if (isMobile && sidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = isMobile && sidebarOpen ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
   }, [isMobile, sidebarOpen]);
 
   useEffect(() => {
-    const activeSection = menuSections.find(sec => sec.items && sec.items.some(item => item.id === activeTab));
-    if (activeSection) {
-      setOpenSectionId(activeSection.id);
-    } else if (menuSections.length > 0) {
-      setOpenSectionId(menuSections[0].id);
-    }
+    const activeSection = menuSections.find(sec => sec.items?.some(item => item.id === activeTab));
+    setOpenSectionId(activeSection?.id || menuSections[0]?.id || null);
   }, [activeTab, menuSections]);
 
   const toggleSection = (sectionId) => {
@@ -138,8 +131,7 @@ export default function Sidebar({
   const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
-  // ✅ دالة احتساب الأيام المتبقية بدقة متوافقة مع DB
-  const calculateEffectiveDaysLeft = useCallback(() => {
+  const effectiveDaysLeft = useMemo(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
     const targetExpiryDate = currentAcademy.saas_subscription?.expires_at || currentAcademy.trial_ends_at;
@@ -148,55 +140,39 @@ export default function Sidebar({
       const endDate = new Date(targetExpiryDate);
       if (isNaN(endDate.getTime())) return trialDaysLeft ?? 0;
 
-      const now = new Date();
-      const diffTime = endDate.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+      const diffDays = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       return Math.max(0, diffDays);
     }
 
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
-  const effectiveDaysLeft = calculateEffectiveDaysLeft();
-
-  // ✅ الشارة المطابقة لحالات الاشتراكات المعتمدة في النظام
   const statusBadge = useMemo(() => {
-    if (currentAcademy) {
-      if (currentAcademy.is_active === false) {
-        return {
-          text: safeT('status.pending', 'قيد التفعيل'),
-          style: { background: C.status?.pendingBg, color: C.status?.pendingText, border: `1px solid ${C.status?.pendingBorder}` }
-        };
-      }
-      
-      const subStatus = currentAcademy.saas_subscription?.status;
-      const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
+    const getBadgeStyle = (type) => ({
+      background: C.status?.[`${type}Bg`],
+      color: C.status?.[`${type}Text`],
+      border: `1px solid ${C.status?.[`${type}Border`]}`
+    });
 
-      if (isTrial && effectiveDaysLeft > 0) {
-        return {
-          text: safeT('status.trial', 'فترة تجريبية'),
-          style: { background: C.status?.trialBg, color: C.status?.trialText, border: `1px solid ${C.status?.trialBorder}` }
-        };
-      }
-
-      if (effectiveDaysLeft > 0) {
-        return {
-          text: safeT('status.active', 'اشتراك نشط'),
-          style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
-        };
-      }
-
-      return {
-        text: safeT('status.expired', 'منتهي الصلاحية'),
-        style: { background: C.status?.expiredBg, color: C.status?.expiredText, border: `1px solid ${C.status?.expiredBorder}` }
-      };
+    if (!currentAcademy) {
+      return null;
     }
 
-    return {
-      text: safeT('status.active', 'اشتراك نشط'),
-      style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
-    };
+    if (currentAcademy.is_active === false) {
+      return { text: safeT('status.pending', 'قيد التفعيل'), style: getBadgeStyle('pending') };
+    }
+
+    const isTrial = currentAcademy.saas_subscription?.status === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
+
+    if (isTrial && effectiveDaysLeft > 0) {
+      return { text: safeT('status.trial', 'فترة تجريبية'), style: getBadgeStyle('trial') };
+    }
+
+    if (effectiveDaysLeft > 0) {
+      return { text: safeT('status.active', 'اشتراك نشط'), style: getBadgeStyle('active') };
+    }
+
+    return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
 
   const normalizeArabic = useCallback((text) => {
@@ -211,9 +187,12 @@ export default function Sidebar({
   }, [getText]);
 
   const filteredMenuSections = useMemo(() => {
+    const query = normalizeArabic(searchQuery.trim());
+    if (!query) return menuSections;
+
     return menuSections.map(section => {
       const filteredItems = (section.items || []).filter(item =>
-        normalizeArabic(item.label).includes(normalizeArabic(searchQuery.trim()))
+        normalizeArabic(item.label).includes(query)
       );
       return { ...section, items: filteredItems };
     }).filter(section => section.items.length > 0);
@@ -237,7 +216,7 @@ export default function Sidebar({
     transform: isMobile 
       ? (sidebarOpen 
           ? 'translateX(0)' 
-          : (currentDir === 'rtl' ? 'translateX(100%)' : 'translateX(-100%)'))
+          : (isRtlMode ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     boxShadow: isMobile && sidebarOpen ? C.shadows?.sidebarOverlay : 'none',
@@ -306,7 +285,7 @@ export default function Sidebar({
             setShowEarlyUpgrade={setShowEarlyUpgrade}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
-            isRtl={currentDir === 'rtl'}
+            isRtl={isRtlMode}
             effectiveDaysLeft={effectiveDaysLeft}
             t={safeT}
           />
@@ -314,7 +293,7 @@ export default function Sidebar({
           <SidebarSearch
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            isRtl={currentDir === 'rtl'}
+            isRtl={isRtlMode}
             t={safeT}
           />
 
@@ -328,7 +307,7 @@ export default function Sidebar({
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             getText={getText}
-            isRtl={currentDir === 'rtl'}
+            isRtl={isRtlMode}
           />
         </div>
 
@@ -339,7 +318,7 @@ export default function Sidebar({
           flexShrink: 0,
           backgroundColor: C.dark?.card
         }}>
-          <SidebarFooter isRtl={currentDir === 'rtl'} t={safeT} />
+          <SidebarFooter isRtl={isRtlMode} t={safeT} />
         </div>
       </aside>
     </>
