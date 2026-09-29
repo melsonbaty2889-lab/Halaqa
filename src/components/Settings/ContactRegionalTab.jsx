@@ -11,7 +11,7 @@ import { useAcademy } from '@/context/AcademyContext';
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const { academy, setAcademy } = useAcademy();
+  const { updateAcademyState } = useAcademy();
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
   const isAr = i18n.language === 'ar';
@@ -43,7 +43,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     { label: t('timezones.jakarta', isRtl ? 'جاكرتا (GMT+7)' : 'Jakarta (GMT+7)'), value: 'Asia/Jakarta' }
   ], [t, i18n.language, isRtl]);
 
-  // تحضير خيارات نوع التقويم
+  // تحضير خيارات نوع التقويم مع توفير القيم الصريحة (value)
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
     { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' },
@@ -76,14 +76,13 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }
   };
 
-  // معالجة تغيير نوع التقويم وتحديث الـ Context لحظياً
+  // معالجة تغيير نوع التقويم وتحديث الـ Context لحظياً للقائمة والكائن
   const handleCalendarChange = (val) => {
     if (typeof updateField === 'function') {
       updateField('calendar_type', val);
     }
-    if (academy && typeof setAcademy === 'function') {
-      setAcademy({
-        ...academy,
+    if (typeof updateAcademyState === 'function') {
+      updateAcademyState({
         calendar_type: val
       });
     }
