@@ -1,7 +1,6 @@
 // src/components/Sidebar/SidebarSearch.jsx
 import React from 'react';
 import { Search, X } from 'lucide-react';
-import { colors as C } from '@/theme/colors';
 
 export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl, t }) {
   const placeholderText = typeof t === 'function' 
@@ -11,18 +10,9 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl, t })
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'}
-      style={{
-        position: 'relative',
-        marginBottom: '10px',
-        background: C.dark?.card || 'rgba(15, 23, 42, 0.85)',
-        borderRadius: '8px',
-        border: `1px solid ${C.dark?.cardBorder || 'rgba(255, 255, 255, 0.08)'}`,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 10px'
-      }}
+      className="relative mb-2.5 flex items-center px-2.5 bg-semantic-surfaceCard border border-semantic-borderCard rounded-lg"
     >
-      <Search size={14} style={{ color: C.text?.muted || '#94A3B8', flexShrink: 0 }} />
+      <Search size={14} className="text-semantic-textMuted shrink-0" />
       <input 
         type="text"
         placeholder={placeholderText}
@@ -32,32 +22,13 @@ export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl, t })
         autoCorrect="off"
         autoCapitalize="none"
         spellCheck="false"
-        style={{
-          width: '100%',
-          padding: '6px 8px',
-          background: 'transparent',
-          border: 'none',
-          outline: 'none',
-          color: C.text?.title || '#FFFFFF',
-          fontSize: '0.78rem',
-          direction: isRtl ? 'rtl' : 'ltr'
-        }}
+        className="w-full py-1.5 px-2 bg-transparent border-none outline-none text-semantic-textPrimary text-[0.78rem] placeholder:text-semantic-textMuted"
       />
       {searchQuery && (
         <button
           type="button"
           onClick={() => setSearchQuery('')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: C.text?.muted || '#94A3B8',
-            cursor: 'pointer',
-            padding: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}
+          className="bg-transparent border-none text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer p-0.5 flex items-center justify-center shrink-0 transition-colors"
         >
           <X size={13} />
         </button>
