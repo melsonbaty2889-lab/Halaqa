@@ -54,11 +54,24 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
+  // تحديث بيانات الأكاديمية الحالية وقائمة الأكاديميات لحظياً في الـ Context
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
       setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
+
+      setAcademiesList((prevList) => 
+        prevList.map((item) => {
+          if (newAcademyData?.id && item.id === newAcademyData.id) {
+            return { ...item, ...newAcademyData };
+          }
+          if (!newAcademyData?.id && academy?.id && item.id === academy.id) {
+            return { ...item, ...newAcademyData };
+          }
+          return item;
+        })
+      );
     }
-  }, []);
+  }, [academy?.id]);
 
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
@@ -96,7 +109,6 @@ export const AcademyProvider = ({ children }) => {
     try {
       if (isMounted.current) setUser(currentUser);
 
-      // 1. جلب بيانات البروفايل الرسمية حصرياً من قاعدة البيانات
       const { data: profData, error: profError } = await supabase
         .from('profiles')
         .select('*')
@@ -116,7 +128,6 @@ export const AcademyProvider = ({ children }) => {
         setUserRole(activeProfile.role || null);
       }
 
-      // حسابات تفتقر لدور محدد
       if (!activeProfile.role) {
         if (isMounted.current) {
           setAcademy(null);
@@ -126,7 +137,6 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // حسابات Super Admin
       if (activeProfile.role === 'super_admin') {
         if (isMounted.current) {
           setAcademy(null);
@@ -136,7 +146,6 @@ export const AcademyProvider = ({ children }) => {
         return;
       }
 
-      // حسابات غير مفعلة
       if (activeProfile.is_activated === false) {
         if (isMounted.current) {
           setAcademy(null);
@@ -150,7 +159,6 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
-      // 2. الاستعلام عن الأكاديمية المرتبطة عبر profile.academy_id
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -161,7 +169,6 @@ export const AcademyProvider = ({ children }) => {
         if (profileAcademy) fetchedList.push(profileAcademy);
       }
 
-      // 3. الاستعلام عن الأكاديميات كمعلم
       if (fetchedList.length === 0) {
         const { data: teacherList } = await supabase
           .from('academy_teachers')
@@ -175,7 +182,6 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-      // 4. الاستعلام عن الأكاديميات كمالك (Owner)
       if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -190,7 +196,6 @@ export const AcademyProvider = ({ children }) => {
 
       currentAcademy = fetchedList[0] || null;
 
-      // 5. تعيين الحالة المعيارية الحقيقية
       if (isMounted.current) {
         setUserRole(detectedRole);
         setAcademiesList(fetchedList);
@@ -207,7 +212,6 @@ export const AcademyProvider = ({ children }) => {
             setAppState('FULLY_ACTIVE');
           }
         } else {
-          // إذا كان مديراً أو مستخدماً بدون أكاديمية حقيقية
           setAcademy(null);
           if (detectedRole === 'admin') {
             setAppState('NO_ACADEMY');
@@ -243,7 +247,6 @@ export const AcademyProvider = ({ children }) => {
         const { data } = await supabase.auth.getSession();
         if (isSubscribed) {
           const initUser = data?.session?.user;
-          // حماية عند التهيئة الأولية للجلسة المتروكة من SignUp
           if (initUser && Array.isArray(initUser.identities) && initUser.identities.length === 0) {
             await supabase.auth.signOut();
             clearAuthState();
@@ -265,7 +268,6 @@ export const AcademyProvider = ({ children }) => {
         if (event === 'INITIAL_SESSION') return;
 
         const currentUser = session?.user;
-        // 🛑 الحماية المركزية: اعتراض أي جلسة ناتجة عن محاولة SignUp ببريد مسجل
         const isExistingUserFromSignUp =
           currentUser &&
           Array.isArray(currentUser.identities) &&
