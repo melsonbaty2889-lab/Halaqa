@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next';
 import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { CURRENCIES } from '@/constants/currencies';
+import { useAcademy } from '@/context/AcademyContext';
 
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { academy, setAcademy } = useAcademy();
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
   const isAr = i18n.language === 'ar';
@@ -44,7 +46,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   // تحضير خيارات نوع التقويم
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
-    { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' }
+    { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri') },
   ], [t, isRtl]);
 
   const daysList = useMemo(() => [
@@ -71,6 +73,19 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     const matchedCurrency = (CURRENCIES || []).find(c => c.countryCode === countryCode);
     if (matchedCurrency?.code) {
       updateField('currency', matchedCurrency.code);
+    }
+  };
+
+  // معالجة تغيير نوع التقويم وتحديث الـ Context لحظياً
+  const handleCalendarChange = (val) => {
+    if (typeof updateField === 'function') {
+      updateField('calendar_type', val);
+    }
+    if (academy && typeof setAcademy === 'function') {
+      setAcademy({
+        ...academy,
+        calendar_type: val
+      });
     }
   };
 
@@ -201,7 +216,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
               <Select 
                 label={t('settings.calendarType', isRtl ? 'نوع التقويم' : 'Calendar Type')}
                 value={formData?.calendar_type ?? 'gregorian'}
-                onChange={(val) => updateField && updateField('calendar_type', val)}
+                onChange={handleCalendarChange}
                 options={calendarOptions}
               />
             </div>
