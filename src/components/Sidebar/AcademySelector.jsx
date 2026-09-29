@@ -1,7 +1,7 @@
 // src/components/Sidebar/AcademySelector.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Check, Building2, Plus, Sparkles, Clock, AlertTriangle, X } from 'lucide-react';
+import { ChevronDown, Check, Building2, Plus, Clock, AlertTriangle, X } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
 
 export default function AcademySelector({
@@ -14,19 +14,19 @@ export default function AcademySelector({
   dropdownOpen,
   setDropdownOpen,
   dropdownRef,
+  statusBadge,
   onSwitchAcademy,
   onOpenCreateAcademy,
-  onClose, // دالة إغلاق القائمة الجانبية للموبايل
+  onClose,
   getText,
-  dropDirection = 'down' // إمكانية التوجيه للأسفل افتراضياً أو للأعلى حسب مكان المكون
+  dropDirection = 'down'
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  // استخراج البيانات في حال تمرير كائن الأكاديمية مباشرة
   const activeName = currentAcademyName || (currentAcademy?.name ? (typeof currentAcademy.name === 'object' ? currentAcademy.name[i18n.language] || currentAcademy.name.ar : currentAcademy.name) : '');
   const activeLogo = academyLogo || currentAcademy?.logo_url;
-  const activeTrialExpiry = trialEndsAt || currentAcademy?.trial_ends_at;
+  const activeTrialExpiry = trialEndsAt || currentAcademy?.trial_ends_at || currentAcademy?.saas_subscription?.expires_at;
 
   const resolveText = (textObj) => {
     if (typeof getText === 'function') {
@@ -43,9 +43,9 @@ export default function AcademySelector({
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // حساب حالة الاشتراك تلقائياً
+  // ✅ حساب حالة الاشتراك بدقة بدون خطة مدى الحياة
   const getSubStatus = () => {
-    if (!activeTrialExpiry) return { type: 'lifetime' };
+    if (!activeTrialExpiry) return { type: 'expired' };
 
     const now = new Date();
     const expiry = new Date(activeTrialExpiry);
@@ -68,11 +68,14 @@ export default function AcademySelector({
   const subStatus = getSubStatus();
 
   const renderSubscriptionBadge = () => {
-    if (subStatus.type === 'lifetime') {
+    // إذا كانت الشارة ممررة كأوبجكت من Sidebar.jsx
+    if (statusBadge) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-successBg text-semantic-success border border-semantic-successBorder/60">
-          <Sparkles size={10} className="shrink-0" />
-          <span>{t('sidebar.badgeLifetime', 'خطة مدى الحياة ∞')}</span>
+        <span 
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide"
+          style={statusBadge.style}
+        >
+          {statusBadge.text}
         </span>
       );
     }
@@ -100,18 +103,16 @@ export default function AcademySelector({
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide bg-semantic-successBg text-semantic-success border border-semantic-successBorder/60">
         <Clock size={10} className="shrink-0" />
         <span>
-          {t('sidebar.badgeActiveUntil', 'تجربة • تنتهي {{date}}', { date: subStatus.expiryDate })}
+          {t('sidebar.badgeActiveUntil', 'اشتراك • ينتهي {{date}}', { date: subStatus.expiryDate })}
         </span>
       </span>
     );
   };
 
-  // اتجاه الفتح المنسدل
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
 
   return (
     <div ref={dropdownRef} className="relative w-full flex items-center gap-2" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* زر محدد الأكاديمية */}
       <button
         type="button"
         disabled={!canOpenDropdown}
@@ -124,7 +125,6 @@ export default function AcademySelector({
         } ${canOpenDropdown ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* إطار الشعار */}
           <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-0.5 bg-semantic-surfaceInput border border-semantic-borderCard transition-transform duration-200 group-hover:scale-105">
             {activeLogo ? (
               <img
@@ -142,7 +142,6 @@ export default function AcademySelector({
             )}
           </div>
 
-          {/* تفاصيل الاسم والحالة الديناميكية */}
           <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
             <h2 className="text-sm font-bold truncate leading-tight text-semantic-textPrimary transition-colors">
               {activeName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
@@ -164,7 +163,6 @@ export default function AcademySelector({
         )}
       </button>
 
-      {/* زر إغلاق القائمة الجانبية للموبايل */}
       {onClose && (
         <button
           type="button"
@@ -176,7 +174,6 @@ export default function AcademySelector({
         </button>
       )}
 
-      {/* القائمة المنسدلة */}
       {dropdownOpen && canOpenDropdown && (
         <div className={`absolute ${dropdownPositionClasses} inset-x-0 p-1.5 rounded-xl bg-semantic-surfaceCard border border-semantic-borderCard shadow-main backdrop-blur-2xl z-50 overflow-hidden`}>
           {hasMultipleAcademies && (
