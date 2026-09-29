@@ -12,7 +12,7 @@ export default function SidebarWidget({
   setSidebarOpen,
   isRtl,
   effectiveDaysLeft,
-  preferredCalendar = 'gregorian', // يقرأ قيمة calendar_type المباشرة من جدول academies
+  preferredCalendar = 'gregorian',
   t
 }) {
   const { i18n } = useTranslation();
@@ -27,13 +27,11 @@ export default function SidebarWidget({
     return fallback;
   };
 
-  // التحقق مما إذا كان التقويم المعتمد هو الهجري
   const isHijriPreferred = useMemo(() => {
     if (!preferredCalendar) return false;
     return String(preferredCalendar).trim().toLowerCase() === 'hijri';
   }, [preferredCalendar]);
 
-  // معالجة التواريخ والوقت وفق الترتيب المعتمد للأكاديمية
   const { formattedTime, primaryDate, secondaryDate } = useMemo(() => {
     let timeStr = '';
     
@@ -50,8 +48,8 @@ export default function SidebarWidget({
 
     return {
       formattedTime: timeStr,
-      primaryDate: isHijriPreferred ? hijriDate : gregDate,    // التاريخ الأعلى حسب إعداد الأكاديمية
-      secondaryDate: isHijriPreferred ? gregDate : hijriDate  // التاريخ الأسفل
+      primaryDate: isHijriPreferred ? hijriDate : gregDate,
+      secondaryDate: isHijriPreferred ? gregDate : hijriDate
     };
   }, [academyTime, currentLang, isHijriPreferred]);
 
@@ -62,9 +60,9 @@ export default function SidebarWidget({
       className="p-2.5 rounded-xl mb-3 flex items-center justify-between gap-2 shadow-sm backdrop-blur-md select-none bg-semantic-surfaceCard border border-semantic-borderCard transition-colors duration-200"
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* التوقيت */}
+      {/* التوقيت - تم إزالة font-mono لتوحيد خط المشروع الرئيسي */}
       <div 
-        className="flex items-center gap-1.5 text-[11.5px] font-bold font-mono shrink-0 text-brandEmerald-light"
+        className="flex items-center gap-1.5 text-[11.5px] font-bold shrink-0 text-brandEmerald-light"
         title={translate('common.currentTime', 'الوقت الحالي')}
       >
         <Clock size={13} className="shrink-0 text-brandEmerald-light" aria-hidden="true" />
@@ -73,10 +71,16 @@ export default function SidebarWidget({
 
       {/* التاريخ الرئيسي المعتمد والتاريخ الثانوي */}
       <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1 text-center">
-        <span className="text-[11.5px] font-semibold leading-tight whitespace-nowrap text-brandEmerald-light">
+        <span 
+          dir="auto" 
+          className="text-[11.5px] font-bold leading-tight whitespace-nowrap text-brandEmerald-light"
+        >
           {primaryDate}
         </span>
-        <span className="text-[10px] font-medium leading-tight whitespace-nowrap opacity-90 text-semantic-textMuted">
+        <span 
+          dir="auto" 
+          className="text-[10px] font-medium leading-tight whitespace-nowrap opacity-90 text-semantic-textMuted"
+        >
           {secondaryDate}
         </span>
       </div>
