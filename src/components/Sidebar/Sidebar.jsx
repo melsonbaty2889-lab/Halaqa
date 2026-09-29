@@ -36,6 +36,7 @@ export default function Sidebar({
   const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
   const { i18n } = useTranslation();
   
+  // 🟢 تحديد اللغة والاتجاه بدقة مع دعم RTL/LTR
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
   const isRtlMode = i18n.dir ? i18n.dir(currentLang) === 'rtl' : ['ar', 'ur'].includes(currentLang);
   const currentDir = isRtlMode ? 'rtl' : 'ltr';
@@ -44,6 +45,7 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
+  // 🟢 دالة ترجمة آمنة
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       return t(key, { defaultValue: fallback || key });
@@ -51,46 +53,56 @@ export default function Sidebar({
     return fallback || key;
   }, [t]);
 
+  // 🟢 جلب عناصر القائمة بناءً على الدور الصريح
   const menuSections = useMemo(() => {
     return getMenuSections(safeT, userRole);
   }, [safeT, userRole]);
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
+  // 🟢 دالة آمنة لاستخراج النصوص المتعددة اللغات (تغطي اللغات الست)
   const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      const extracted = val[currentLang] || (isRtlMode ? (val.ar || val.en) : (val.en || val.ar));
+      const extracted = val[currentLang] || (isRtlMode ? (val.ar || val.en) : (val.en || val.ar)) || val.fr || val.tr || val.ur || val.id;
       if (extracted && typeof extracted !== 'object') return String(extracted);
       
-      const firstVal = Object.values(val)[0];
-      if (firstVal && typeof firstVal !== 'object') return String(firstVal);
+      const firstVal = Object.values(val).find(v => v && typeof v !== 'object');
+      if (firstVal) return String(firstVal);
       return '';
     }
     return '';
   }, [currentLang, isRtlMode]);
 
-  const handleSelectTab = (tabId) => {
-    setActiveTab(tabId);
+  // 🟢 إدارة خيارات التنقل والمسارات على الهاتف وسطح المكتب
+  const handleSelectTab = useCallback((tabId) => {
+    if (typeof setActiveTab === 'function') {
+      setActiveTab(tabId);
+    }
     if (slug) {
       navigate(`/${slug}/${tabId}`);
     }
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
     }
-  };
+  }, [setActiveTab, slug, navigate, isMobile, setSidebarOpen]);
 
-  const handleSwitch = (academyId) => {
+  // 🟢 تبديل الأكاديمية دون كود تكراري
+  const handleSwitch = useCallback((academyId) => {
     const selected = academiesList.find(a => a.id === academyId);
-    if (selected) {
+    if (selected && typeof setAcademy === 'function') {
       setAcademy(selected);
     }
     if (typeof onSwitchAcademy === 'function') {
       onSwitchAcademy(academyId);
     }
-  };
+    if (isMobile && typeof setSidebarOpen === 'function') {
+      setSidebarOpen(false);
+    }
+  }, [academiesList, setAcademy, onSwitchAcademy, isMobile, setSidebarOpen]);
 
+  // 🟢 إغلاق القائمة المنسدلة عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -101,26 +113,37 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 🟢 ضبط قفل Tmmrir الصفحة على الهاتف دون إغلاق تمرير سطح المكتب
   useEffect(() => {
-    document.body.style.overflow = isMobile && sidebarOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
+    if (isMobile && sidebarOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle === 'hidden' ? '' : originalStyle;
+      };
+    }
   }, [isMobile, sidebarOpen]);
 
+  // 🟢 مزامنة القسم المفتوح التلقائي مع التبويب النشط بدون إعادة ضبط زائدة
   useEffect(() => {
+    if (!activeTab) return;
     const activeSection = menuSections.find(sec => sec.items?.some(item => item.id === activeTab));
-    setOpenSectionId(activeSection?.id || menuSections[0]?.id || null);
-  }, [activeTab, menuSections]);
+    if (activeSection) {
+      setOpenSectionId(prev => (prev === activeSection.id ? prev : activeSection.id));
+    } else if (menuSections.length > 0 && openSectionId === null) {
+      setOpenSectionId(menuSections[0].id);
+    }
+  }, [activeTab, menuSections, openSectionId]);
 
-  const toggleSection = (sectionId) => {
+  const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
-  };
+  }, []);
 
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
+  // 🟢 الأكاديمية الحالية
   const currentAcademy = useMemo(() => {
-    return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0];
+    return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
   }, [academiesList, currentAcademyId, propAcademy, contextAcademy]);
 
   const rawAcademyName = getText(currentAcademy?.name);
@@ -128,9 +151,25 @@ export default function Sidebar({
     ? rawAcademyName.trim() 
     : safeT('sidebar.unnamedAcademy', 'أكاديمية بدون اسم');
 
-  const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
-  const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
+  // 🟢 بناء رابط اللوجو بأمان كامل لمنع إعادة الـ Render والخلل بـ Query Parameters
+  const academyLogo = useMemo(() => {
+    const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
+    if (typeof rawLogo !== 'string' || !rawLogo.trim()) return null;
 
+    const version = currentAcademy?.updated_at || propAcademy?.updated_at;
+    if (!version) return rawLogo;
+
+    try {
+      const url = new URL(rawLogo, window.location.origin);
+      url.searchParams.set('v', String(version));
+      return url.toString();
+    } catch {
+      const separator = rawLogo.includes('?') ? '&' : '?';
+      return `${rawLogo}${separator}v=${version}`;
+    }
+  }, [currentAcademy?.logo_url, currentAcademy?.updated_at, propAcademy?.logo_url, propAcademy?.updated_at]);
+
+  // 🟢 حساب الأيام المتبقية بأمان وتوافق مع DB
   const effectiveDaysLeft = useMemo(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
@@ -147,57 +186,60 @@ export default function Sidebar({
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
+  // 🟢 الشارة وشروط حالة الاشتراك بدون تكرار "اشتراك نشط"
   const statusBadge = useMemo(() => {
     const getBadgeStyle = (type) => ({
-      background: C.status?.[`${type}Bg`],
-      color: C.status?.[`${type}Text`],
-      border: `1px solid ${C.status?.[`${type}Border`]}`
+      background: C.status?.[`${type}Bg`] || 'rgba(255,255,255,0.05)',
+      color: C.status?.[`${type}Text`] || '#ffffff',
+      border: `1px solid ${C.status?.[`${type}Border`] || 'transparent'}`
     });
 
-    if (!currentAcademy) {
-      return null;
-    }
+    if (!currentAcademy) return null;
 
     if (currentAcademy.is_active === false) {
       return { text: safeT('status.pending', 'قيد التفعيل'), style: getBadgeStyle('pending') };
     }
 
-    const isTrial = currentAcademy.saas_subscription?.status === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
+    const subStatus = currentAcademy.saas_subscription?.status;
+    const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
 
     if (isTrial && effectiveDaysLeft > 0) {
       return { text: safeT('status.trial', 'فترة تجريبية'), style: getBadgeStyle('trial') };
     }
 
-    if (effectiveDaysLeft > 0) {
+    if (effectiveDaysLeft > 0 || subStatus === 'active') {
       return { text: safeT('status.active', 'اشتراك نشط'), style: getBadgeStyle('active') };
     }
 
     return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
 
-  const normalizeArabic = useCallback((text) => {
-    const str = getText(text);
+  // 🟢 تنظيف ومعالجة الحروف العربية والبحث
+  const normalizeArabic = useCallback((str) => {
     if (!str) return '';
-    return str
+    return String(str)
       .replace(/[\u064B-\u0652]/g, '')
       .replace(/[أإآ]/g, 'ا')
       .replace(/ة/g, 'ه')
       .replace(/ى/g, 'ي')
       .toLowerCase();
-  }, [getText]);
+  }, []);
 
+  // 🟢 تصفية العناصر مع حماية تحويل الكائنات متعددة اللغات
   const filteredMenuSections = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim());
     if (!query) return menuSections;
 
     return menuSections.map(section => {
-      const filteredItems = (section.items || []).filter(item =>
-        normalizeArabic(item.label).includes(query)
-      );
+      const filteredItems = (section.items || []).filter(item => {
+        const labelText = getText(item.label);
+        return normalizeArabic(labelText).includes(query);
+      });
       return { ...section, items: filteredItems };
     }).filter(section => section.items.length > 0);
-  }, [menuSections, searchQuery, normalizeArabic]);
+  }, [menuSections, searchQuery, normalizeArabic, getText]);
 
+  // 🟢 التنسيقات العامة للـ Sidebar
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
@@ -206,10 +248,10 @@ export default function Sidebar({
     insetInlineStart: 0,
     width: isMobile ? '100%' : '280px',
     maxWidth: isMobile ? '100vw' : '280px',
-    backgroundColor: C.dark?.card,
+    backgroundColor: C.dark?.card || 'var(--surface-card)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderInlineEnd: `1px solid ${C.dark?.cardBorder}`,
+    borderInlineEnd: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -219,7 +261,7 @@ export default function Sidebar({
           : (isRtlMode ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: isMobile && sidebarOpen ? C.shadows?.sidebarOverlay : 'none',
+    boxShadow: isMobile && sidebarOpen ? (C.shadows?.sidebarOverlay || '0 10px 25px -5px rgba(0, 0, 0, 0.5)') : 'none',
     boxSizing: 'border-box'
   };
 
@@ -232,7 +274,7 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: C.dark?.overlay,
+            backgroundColor: C.dark?.overlay || 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
             zIndex: 999
@@ -243,7 +285,7 @@ export default function Sidebar({
       <aside style={sidebarStyles} dir={currentDir}>
         <div style={{ 
           padding: '12px 14px',
-          borderBottom: `1px solid ${C.dark?.cardBorder}`,
+          borderBottom: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -314,9 +356,9 @@ export default function Sidebar({
         <div style={{ 
           padding: '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
-          borderTop: `1px solid ${C.dark?.cardBorder}`,
+          borderTop: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
           flexShrink: 0,
-          backgroundColor: C.dark?.card
+          backgroundColor: C.dark?.card || 'var(--surface-card)'
         }}>
           <SidebarFooter isRtl={isRtlMode} t={safeT} />
         </div>
