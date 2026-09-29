@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
-import { useAcademy } from '@/context/AcademyContext'; // ✅ استيراد الـ Context المركزي
+import { useAcademy } from '@/context/AcademyContext';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import { X } from "lucide-react";
 import { colors as C } from '@/theme/colors';
@@ -33,12 +33,14 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { slug } = useParams();
 
-  // ✅ استخدام البيانات مباشرة من الـ Context دون أي طلبات شبكة جديدة
+  // ✅ استخدام البيانات مباشرة من الـ Context الموحد
   const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
 
   const { i18n } = useTranslation();
+  
+  // ✅ دعم تعدد اللغات الست مع مراعاة اتجاه اللغة (RTL/LTR)
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
-  const currentDir = i18n.dir ? i18n.dir(currentLang) : (isRtl ? 'rtl' : 'ltr');
+  const currentDir = i18n.dir ? i18n.dir(currentLang) : (['ar', 'ur'].includes(currentLang) ? 'rtl' : 'ltr');
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,11 +59,12 @@ export default function Sidebar({
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
+  // ✅ استخراج النصوص باللغة المناسبة من كائنات اللغات المتعددة
   const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      const extracted = isRtl ? (val.ar || val.en) : (val.en || val.ar);
+      const extracted = val[currentLang] || (isRtl ? (val.ar || val.en) : (val.en || val.ar));
       if (extracted && typeof extracted !== 'object') return String(extracted);
       
       const firstVal = Object.values(val)[0];
@@ -69,7 +72,7 @@ export default function Sidebar({
       return '';
     }
     return '';
-  }, [isRtl]);
+  }, [currentLang, isRtl]);
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
@@ -139,19 +142,20 @@ export default function Sidebar({
   const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
   const academyLogo = typeof rawLogo === 'string' && rawLogo ? `${rawLogo}?v=${currentAcademy?.updated_at || Date.now()}` : null;
 
+  // ✅ حساب الأيام المتبقية بدقة مع شمولية بيانات الاشتراكات دون افتراض Infinity
   const calculateEffectiveDaysLeft = useCallback(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
-    if (currentAcademy.is_active && !currentAcademy.trial_ends_at) return Infinity;
 
-    if (currentAcademy.trial_ends_at) {
-      const endDate = new Date(currentAcademy.trial_ends_at);
+    const targetExpiryDate = currentAcademy.saas_subscription?.expires_at || currentAcademy.trial_ends_at;
+
+    if (targetExpiryDate) {
+      const endDate = new Date(targetExpiryDate);
       if (isNaN(endDate.getTime())) return trialDaysLeft ?? 0;
 
       const now = new Date();
       const diffTime = endDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (diffDays > 3650) return Infinity;
       return diffDays > 0 ? diffDays : 0;
     }
 
@@ -160,6 +164,7 @@ export default function Sidebar({
 
   const effectiveDaysLeft = calculateEffectiveDaysLeft();
 
+  // ✅ شارة الحالة بالتوافق التام مع متطلبات الألوان والترجمة متعددة اللغات
   const statusBadge = useMemo(() => {
     if (currentAcademy) {
       if (currentAcademy.is_active === false) {
@@ -168,29 +173,30 @@ export default function Sidebar({
           style: { background: C.status?.pendingBg, color: C.status?.pendingText, border: `1px solid ${C.status?.pendingBorder}` }
         };
       }
-      if (effectiveDaysLeft === Infinity) {
-        return {
-          text: safeT('status.lifetime', 'حساب دائم ∞'),
-          style: { background: C.status?.lifetimeBg, color: C.status?.lifetimeText, border: `1px solid ${C.status?.lifetimeBorder}` }
-        };
-      }
-      if (effectiveDaysLeft > 14) {
-        return {
-          text: safeT('status.active', 'اشتراك نشط'),
-          style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
-        };
-      }
-      if (effectiveDaysLeft > 0) {
+      
+      const subStatus = currentAcademy.saas_subscription?.status;
+      const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
+
+      if (isTrial && effectiveDaysLeft > 0) {
         return {
           text: safeT('status.trial', 'فترة تجريبية'),
           style: { background: C.status?.trialBg, color: C.status?.trialText, border: `1px solid ${C.status?.trialBorder}` }
         };
       }
+
+      if (effectiveDaysLeft > 0) {
+        return {
+          text: safeT('status.active', 'اشتراك نشط'),
+          style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
+        };
+      }
+
       return {
         text: safeT('status.expired', 'منتهي الصلاحية'),
         style: { background: C.status?.expiredBg, color: C.status?.expiredText, border: `1px solid ${C.status?.expiredBorder}` }
       };
     }
+
     return {
       text: safeT('status.active', 'اشتراك نشط'),
       style: { background: C.status?.activeBg, color: C.status?.activeText, border: `1px solid ${C.status?.activeBorder}` }
@@ -235,7 +241,7 @@ export default function Sidebar({
     transform: isMobile 
       ? (sidebarOpen 
           ? 'translateX(0)' 
-          : (isRtl ? 'translateX(100%)' : 'translateX(-100%)'))
+          : (currentDir === 'rtl' ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     boxShadow: isMobile && sidebarOpen ? C.shadows?.sidebarOverlay : 'none',
@@ -281,7 +287,7 @@ export default function Sidebar({
               statusBadge={statusBadge}
               onSwitchAcademy={handleSwitch}
               getText={getText}
-              isRtl={isRtl}
+              isRtl={currentDir === 'rtl'}
             />
           </div>
 
@@ -323,7 +329,7 @@ export default function Sidebar({
             setShowEarlyUpgrade={setShowEarlyUpgrade}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
-            isRtl={isRtl}
+            isRtl={currentDir === 'rtl'}
             effectiveDaysLeft={effectiveDaysLeft}
             t={safeT}
           />
@@ -331,7 +337,7 @@ export default function Sidebar({
           <SidebarSearch
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            isRtl={isRtl}
+            isRtl={currentDir === 'rtl'}
             t={safeT}
           />
 
@@ -345,7 +351,7 @@ export default function Sidebar({
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
             getText={getText}
-            isRtl={isRtl}
+            isRtl={currentDir === 'rtl'}
           />
         </div>
 
@@ -356,7 +362,7 @@ export default function Sidebar({
           flexShrink: 0,
           backgroundColor: C.dark?.card
         }}>
-          <SidebarFooter isRtl={isRtl} t={safeT} />
+          <SidebarFooter isRtl={currentDir === 'rtl'} t={safeT} />
         </div>
       </aside>
     </>
