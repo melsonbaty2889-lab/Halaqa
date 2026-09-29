@@ -46,7 +46,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
   // تحضير خيارات نوع التقويم
   const calendarOptions = useMemo(() => [
     { label: t('calendar.gregorian', isRtl ? 'ميلادي' : 'Gregorian'), value: 'gregorian' },
-    { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri') },
+    { label: t('calendar.hijri', isRtl ? 'هجري' : 'Hijri'), value: 'hijri' },
   ], [t, isRtl]);
 
   const daysList = useMemo(() => [
