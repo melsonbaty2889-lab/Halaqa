@@ -340,16 +340,16 @@ export default function Sidebar({
           }}
         >
           <SidebarWidget
-            academyTime={academyTime}
-            hijri={hijri}
-            setActiveTab={handleSelectTab}
-            setShowEarlyUpgrade={setShowEarlyUpgrade}
-            isMobile={isMobile}
-            setSidebarOpen={setSidebarOpen}
-            isRtl={isRtlMode}
-            effectiveDaysLeft={effectiveDaysLeft}
-            t={safeT}
-          />
+  academyTime={academyTime}
+  setActiveTab={setActiveTab}
+  setShowEarlyUpgrade={setShowEarlyUpgrade}
+  isMobile={isMobile}
+  setSidebarOpen={setSidebarOpen}
+  isRtl={isRtl}
+  effectiveDaysLeft={effectiveDaysLeft}
+  preferredCalendar={currentAcademy?.calendar_type} // يقرأ حقل calendar_type القادم من جدول academies
+  t={t}
+/>
 
           <SidebarSearch
             searchQuery={searchQuery}
