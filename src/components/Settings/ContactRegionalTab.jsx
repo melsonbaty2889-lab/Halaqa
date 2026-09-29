@@ -6,12 +6,10 @@ import { useTranslation } from 'react-i18next';
 import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
 import { CURRENCIES } from '@/constants/currencies';
-import { useAcademy } from '@/context/AcademyContext';
 
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const { updateAcademyState } = useAcademy();
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
   const isAr = i18n.language === 'ar';
@@ -76,7 +74,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }
   };
 
-    // معالجة تغيير نوع التقويم داخل مسودة النموذج
+  // 🟢 التحديث يقتصر فقط على مسودة النموذج المحلي (formData)
   const handleCalendarChange = (val) => {
     if (typeof updateField === 'function') {
       updateField('calendar_type', val);
