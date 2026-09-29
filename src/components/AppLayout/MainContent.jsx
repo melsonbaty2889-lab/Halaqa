@@ -263,7 +263,7 @@ export default function MainContent() {
             path="/subscription" 
             element={
               <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
-                <SubscriptionPlansPage />
+                <SubscriptionPage />
               </ProtectedRoute>
             } 
           />
