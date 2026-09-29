@@ -64,7 +64,7 @@ export default function SidebarWidget({
     >
       {/* التوقيت */}
       <div 
-        className="flex items-center gap-1.5 text-[11px] font-bold font-mono shrink-0 text-brandEmerald-light"
+        className="flex items-center gap-1.5 text-[11.5px] font-bold font-mono shrink-0 text-brandEmerald-light"
         title={translate('common.currentTime', 'الوقت الحالي')}
       >
         <Clock size={13} className="shrink-0 text-brandEmerald-light" aria-hidden="true" />
@@ -73,10 +73,10 @@ export default function SidebarWidget({
 
       {/* التاريخ الرئيسي المعتمد والتاريخ الثانوي */}
       <div className="flex flex-col items-center justify-center min-w-0 flex-1 px-1 text-center">
-        <span className="text-[11px] font-semibold leading-tight whitespace-nowrap text-brandEmerald-light">
+        <span className="text-[11.5px] font-semibold leading-tight whitespace-nowrap text-brandEmerald-light">
           {primaryDate}
         </span>
-        <span className="text-[9.5px] font-medium leading-tight whitespace-nowrap opacity-90 text-semantic-textMuted">
+        <span className="text-[10px] font-medium leading-tight whitespace-nowrap opacity-90 text-semantic-textMuted">
           {secondaryDate}
         </span>
       </div>
