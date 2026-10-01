@@ -75,13 +75,15 @@ export default function Sidebar({
     return '';
   }, [currentLang, isRtlMode]);
 
-  // 🟢 إدارة خيارات التنقل والمسارات على الهاتف وسطح المكتب
+  // 🟢 إدارة خيارات التنقل والمسارات على الهاتف وسطق المكتب مع ضمان التوجيه الصحيح
   const handleSelectTab = useCallback((tabId) => {
     if (typeof setActiveTab === 'function') {
       setActiveTab(tabId);
     }
     if (slug) {
       navigate(`/${slug}/${tabId}`);
+    } else {
+      navigate(`/${tabId}`);
     }
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
@@ -340,16 +342,16 @@ export default function Sidebar({
           }}
         >
           <SidebarWidget
-  academyTime={academyTime}
-  setActiveTab={setActiveTab}
-  setShowEarlyUpgrade={setShowEarlyUpgrade}
-  isMobile={isMobile}
-  setSidebarOpen={setSidebarOpen}
-  isRtl={isRtl}
-  effectiveDaysLeft={effectiveDaysLeft}
-  preferredCalendar={currentAcademy?.calendar_type} // يقرأ حقل calendar_type القادم من جدول academies
-  t={t}
-/>
+            academyTime={academyTime}
+            setActiveTab={setActiveTab}
+            setShowEarlyUpgrade={setShowEarlyUpgrade}
+            isMobile={isMobile}
+            setSidebarOpen={setSidebarOpen}
+            isRtl={isRtl}
+            effectiveDaysLeft={effectiveDaysLeft}
+            preferredCalendar={currentAcademy?.calendar_type}
+            t={t}
+          />
 
           <SidebarSearch
             searchQuery={searchQuery}
