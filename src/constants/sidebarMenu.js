@@ -31,25 +31,25 @@ export const getMenuSections = (t, userRole = 'admin') => {
           id: 'dashboard', 
           label: safeT('menu.items.dashboard', 'لوحة التحكم'), 
           icon: BarChart3, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'attendance', 
           label: safeT('menu.items.attendance', 'التسميع والحضور'), 
           icon: CheckCircle2, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'interactive_quran', 
           label: safeT('menu.items.interactive_quran', 'المصحف والتسميع الذكي'), 
           icon: BookMarked, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'communication', 
           label: safeT('menu.items.communication', 'مركز التواصل والإشعارات'), 
           icon: Send, 
-          roles: ['admin', 'teacher', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         }
       ]
     },
@@ -61,25 +61,25 @@ export const getMenuSections = (t, userRole = 'admin') => {
           id: 'halaqas', 
           label: safeT('menu.items.halaqas', 'إدارة الحلقات والفصول'), 
           icon: BookOpen, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'super_admin', 'teacher'] 
         },
         { 
           id: 'students', 
           label: safeT('menu.items.students', 'شؤون الطلاب'), 
           icon: GraduationCap, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'super_admin', 'teacher'] 
         },
         { 
           id: 'parents', 
           label: safeT('menu.items.parents', 'سجلات أولياء الأمور'), 
           icon: HeartHandshake, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'super_admin', 'teacher'] 
         },
         { 
           id: 'teachers', 
           label: safeT('menu.items.teachers', 'الكادر التعليمي والإداري'), 
           icon: Users, 
-          roles: ['admin'] 
+          roles: ['admin', 'super_admin'] 
         }
       ]
     },
@@ -91,25 +91,25 @@ export const getMenuSections = (t, userRole = 'admin') => {
           id: 'curricula', 
           label: safeT('menu.items.curricula', 'المناهج والخطط الدراسية'), 
           icon: Library, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'exams', 
           label: safeT('menu.items.exams', 'الاختبارات والشهادات'), 
           icon: Award, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'gamification', 
           label: safeT('menu.items.gamification', 'نظام التحفيز والأوسمة'), 
           icon: Flame, 
-          roles: ['admin', 'teacher', 'student', 'parent'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'documents', 
           label: safeT('menu.items.documents', 'المكتبة والمستندات'), 
           icon: FolderOpen, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'super_admin', 'teacher', 'student', 'parent'] 
         }
       ]
     },
@@ -121,13 +121,13 @@ export const getMenuSections = (t, userRole = 'admin') => {
           id: 'reports', 
           label: safeT('menu.items.reports', 'التقارير والتحليلات'), 
           icon: FileBarChart, 
-          roles: ['admin', 'teacher'] 
+          roles: ['admin', 'super_admin', 'teacher'] 
         },
         { 
           id: 'finance', 
           label: safeT('menu.items.finance', 'المالية والاشتراكات'), 
           icon: CreditCard, 
-          roles: ['admin', 'parent'] 
+          roles: ['admin', 'super_admin', 'parent', 'student'] 
         },
         { 
           id: 'audit_logs', 
@@ -139,7 +139,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
           id: 'settings', 
           label: safeT('menu.items.settings', 'إعدادات المنظومة'), 
           icon: SlidersHorizontal, 
-          roles: ['admin'] 
+          roles: ['admin', 'super_admin'] 
         }
       ]
     }
@@ -148,7 +148,12 @@ export const getMenuSections = (t, userRole = 'admin') => {
   return sections
     .map(section => ({
       ...section,
-      items: section.items.filter(item => !item.roles || item.roles.includes(userRole))
+      items: section.items.filter(item => {
+        if (!item.roles) return true;
+        // 🟢 منح super_admin كامل الصلاحيات تلقائياً
+        if (userRole === 'super_admin') return true;
+        return item.roles.includes(userRole);
+      })
     }))
     .filter(section => section.items.length > 0);
 };
