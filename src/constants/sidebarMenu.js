@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export const getMenuSections = (t, userRole = 'admin') => {
-  // 🟢 دالة حماية آمنة للترجمة
+  // 🟢 دالة حماية آمنة للترجمة لمنع انهيار الواجهة
   const safeT = typeof t === 'function' ? t : (key, fallback) => fallback || key;
 
   const sections = [
@@ -150,7 +150,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
       ...section,
       items: section.items.filter(item => {
         if (!item.roles) return true;
-        // 🟢 منح super_admin كامل الصلاحيات تلقائياً على كل عناصر القائمة
+        // 🟢 منح super_admin كامل الوصول لكافة العناصر
         if (userRole === 'super_admin') return true;
         return item.roles.includes(userRole);
       })
