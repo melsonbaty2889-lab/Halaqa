@@ -12,14 +12,15 @@ export const LANGUAGES = [
   { code: 'id', name: 'Bahasa Indonesia', dir: 'ltr' },
 ];
 
-export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto' }) {
+export default function LanguageSwitcher({ dropDirection = 'down', placement = 'auth' }) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // تحديد كود اللغة الحالية واتجاهها الأساسي
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[0];
-  const isRtl = document.documentElement.dir === 'rtl' || currentLang.dir === 'rtl';
+  const isRtl = currentLang.dir === 'rtl';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -40,17 +41,25 @@ export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto
     setIsOpen(false);
   };
 
-  const dropdownPositionClasses = 
+  // اتجاه الفتح الرأسي (أعلى / أسفل)
+  const dropdownVerticalClass = 
     dropDirection === 'up' 
       ? 'bottom-full mb-2' 
       : 'top-full mt-2';
 
-  // تحديد اتجاه الفتح بدقة: إما استلامها كـ Prop أو حساب الاتجاه الداخلي تلقائياً
-  const getAlignClass = () => {
-    if (align === 'start') return 'start-0';
-    if (align === 'end') return 'end-0';
-    // في الوضع التلقائي (auto): تفتح القائمة دائماً للداخل بناءً على اتجاه الصفحة الحالية
-    return isRtl ? 'start-0' : 'end-0';
+  // اتجاه الفتح الأفقي المحسوب بدقة هندسية حسب مكان المكون
+  const getAlignmentClass = () => {
+    if (placement === 'footer') {
+      // الفوتر:
+      // العربية (RTL) -> يفتح إلى اليسار (left-0)
+      // الإنجليزية والأخرى (LTR) -> يفتح إلى اليمين (right-0)
+      return isRtl ? 'left-0' : 'right-0';
+    }
+
+    // صفحات المصادقة (auth):
+    // العربية (RTL) -> يفتح إلى اليمين (right-0)
+    // الإنجليزية والأخرى (LTR) -> يفتح إلى اليسار (left-0)
+    return isRtl ? 'right-0' : 'left-0';
   };
 
   return (
@@ -78,7 +87,7 @@ export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto
       {/* القائمة المنسدلة */}
       {isOpen && (
         <div 
-          className={`absolute ${dropdownPositionClasses} ${getAlignClass()} w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+          className={`absolute ${dropdownVerticalClass} ${getAlignmentClass()} w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
         >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
