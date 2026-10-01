@@ -36,7 +36,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
 
   return (
     <footer 
-      className="w-full flex items-center gap-2 pt-2 border-t border-semantic-borderCard relative z-50 overflow-visible" 
+      className="w-full flex items-center gap-2 relative z-50 overflow-visible" 
       dir={isRtl ? 'rtl' : 'ltr'}
       aria-label={safeT('sidebar.footer', 'إعدادات الجلسة واللغات')}
     >
