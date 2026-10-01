@@ -19,6 +19,7 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[0];
+  const isCurrentRtl = currentLang.dir === 'rtl';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,6 +45,9 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
       ? 'bottom-full mb-2' 
       : 'top-full mt-2';
 
+  // محاذاة القائمة لتبقى دائماً داخل إطار الشاشة بغض النظر عن اتجاه الواجهة
+  const alignClass = isCurrentRtl ? 'start-0' : 'end-0';
+
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
       {/* زر محول اللغات */}
@@ -66,10 +70,10 @@ export default function LanguageSwitcher({ dropDirection = 'down' }) {
         />
       </button>
 
-      {/* القائمة المنسدلة: تم ضبط التموضع بـ end-0 لتفتح باتجاه الداخل ولعدم الخروج عن إطار الشاشة */}
+      {/* القائمة المنسدلة */}
       {isOpen && (
         <div 
-          className={`absolute ${dropdownPositionClasses} end-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+          className={`absolute ${dropdownPositionClasses} ${alignClass} w-44 rounded-2xl border border-semantic-borderCard dropdown-surface shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
         >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
