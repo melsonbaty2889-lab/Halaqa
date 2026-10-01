@@ -25,7 +25,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
   const sections = [
     {
       id: 'main-operations',
-      title: safeT('menu.sections.main_operations', 'الرئيسية والعمليات'),
+      title: safeT('menu.sections.main_operations', 'العمليات والتشغيل اليومي'),
       items: [
         { 
           id: 'dashboard', 
@@ -47,7 +47,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
         },
         { 
           id: 'communication', 
-          label: safeT('menu.items.communication', 'التواصل والتعاميم'), 
+          label: safeT('menu.items.communication', 'مركز التواصل والإشعارات'), 
           icon: Send, 
           roles: ['admin', 'teacher', 'parent'] 
         }
@@ -55,23 +55,23 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'halaqas-people',
-      title: safeT('menu.sections.halaqas_people', 'الحلقات والأفراد'),
+      title: safeT('menu.sections.academic_people', safeT('menu.sections.halaqas_people', 'الشؤون الأكاديمية والأفراد')),
       items: [
         { 
           id: 'halaqas', 
-          label: safeT('menu.items.halaqas', 'الحلقات والفصول'), 
+          label: safeT('menu.items.halaqas', 'إدارة الحلقات والفصول'), 
           icon: BookOpen, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'students', 
-          label: safeT('menu.items.students', 'إدارة الطلاب'), 
+          label: safeT('menu.items.students', 'شؤون الطلاب'), 
           icon: GraduationCap, 
           roles: ['admin', 'teacher'] 
         },
         { 
           id: 'parents', 
-          label: safeT('menu.items.parents', 'أولياء الأمور'), 
+          label: safeT('menu.items.parents', 'سجلات أولياء الأمور'), 
           icon: HeartHandshake, 
           roles: ['admin', 'teacher'] 
         },
@@ -85,11 +85,11 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'curriculum-progress',
-      title: safeT('menu.sections.curriculum_progress', 'المناهج والتقييم'),
+      title: safeT('menu.sections.curriculum_development', safeT('menu.sections.curriculum_progress', 'المناهج والتطوير التعليمي')),
       items: [
         { 
           id: 'curricula', 
-          label: safeT('menu.items.curricula', 'المناهج والعلوم الشرعية'), 
+          label: safeT('menu.items.curricula', 'المناهج والخطط الدراسية'), 
           icon: Library, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
@@ -101,13 +101,13 @@ export const getMenuSections = (t, userRole = 'admin') => {
         },
         { 
           id: 'gamification', 
-          label: safeT('menu.items.gamification', 'التحفيز والأوسمة'), 
+          label: safeT('menu.items.gamification', 'نظام التحفيز والأوسمة'), 
           icon: Flame, 
           roles: ['admin', 'teacher', 'student', 'parent'] 
         },
         { 
           id: 'documents', 
-          label: safeT('menu.items.documents', 'المستندات والملفات'), 
+          label: safeT('menu.items.documents', 'المكتبة والمستندات'), 
           icon: FolderOpen, 
           roles: ['admin', 'teacher'] 
         }
@@ -115,7 +115,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'management-finance',
-      title: safeT('menu.sections.management_finance', 'الإدارة والمالية'),
+      title: safeT('menu.sections.governance_finance', safeT('menu.sections.management_finance', 'الحوكمة والمالية')),
       items: [
         { 
           id: 'reports', 
@@ -125,13 +125,13 @@ export const getMenuSections = (t, userRole = 'admin') => {
         },
         { 
           id: 'finance', 
-          label: safeT('menu.items.finance', 'الاشتراكات والمالية'), 
+          label: safeT('menu.items.finance', 'المالية والاشتراكات'), 
           icon: CreditCard, 
           roles: ['admin', 'parent'] 
         },
         { 
           id: 'audit_logs', 
-          label: safeT('menu.items.audit_logs', 'سجل العمليات الأمني'), 
+          label: safeT('menu.items.audit_logs', 'سجل النشاطات والأمان'), 
           icon: ShieldCheck, 
           roles: ['admin', 'super_admin'] 
         },
