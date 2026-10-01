@@ -12,7 +12,7 @@ export const LANGUAGES = [
   { code: 'id', name: 'Bahasa Indonesia', dir: 'ltr' },
 ];
 
-export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto' }) {
+export default function LanguageSwitcher({ dropDirection = 'down' }) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -44,17 +44,6 @@ export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto
       ? 'bottom-full mb-2' 
       : 'top-full mt-2';
 
-  // تحديد محاذاة القائمة بشكل دقيق لمنع الخروج عن إطار الشاشة
-  const getAlignmentClass = () => {
-    if (align === 'left') return 'left-0';
-    if (align === 'right') return 'right-0';
-    if (align === 'start') return 'start-0';
-    if (align === 'end') return 'end-0';
-    
-    // التلقائي (auto): محاذاة ذكية تفتح دائماً باتجاه الداخل
-    return currentLang.dir === 'rtl' ? 'left-0' : 'right-0';
-  };
-
   return (
     <div className="relative inline-block text-start z-50" ref={dropdownRef}>
       {/* زر محول اللغات */}
@@ -77,10 +66,10 @@ export default function LanguageSwitcher({ dropDirection = 'down', align = 'auto
         />
       </button>
 
-      {/* القائمة المنسدلة */}
+      {/* القائمة المنسدلة: تم اعتماد start-0 لتفتح باتجاه الداخل المباشر للمشروع دائماً */}
       {isOpen && (
         <div 
-          className={`absolute ${dropdownPositionClasses} ${getAlignmentClass()} w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
+          className={`absolute ${dropdownPositionClasses} start-0 w-44 rounded-2xl border border-semantic-borderCard bg-dark-card shadow-2xl py-1.5 z-50 overflow-hidden backdrop-blur-md`}
         >
           {LANGUAGES.map((lang) => {
             const isSelected = currentLangCode === lang.code;
