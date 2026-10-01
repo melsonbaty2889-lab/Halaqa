@@ -45,13 +45,13 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
         <LanguageSwitcher dropDirection="up" placement="footer" />
       </div>
 
-      {/* زر تسجيل الخروج */}
+      {/* زر تسجيل الخروج المحسن */}
       <button
         type="button"
         onClick={handleLogout}
         disabled={isLoggingOut}
         aria-label={safeT('common.logout', 'تسجيل الخروج')}
-        className="group h-10 flex-1 flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 border border-semantic-danger/30 bg-semantic-dangerBg text-semantic-danger"
+        className="group h-10 flex-1 flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-card border border-semantic-danger/20 bg-semantic-danger/10 text-semantic-danger hover:bg-semantic-danger/20 hover:border-semantic-danger/35 shadow-sm"
       >
         {isLoggingOut ? (
           <Loader2 size={15} className="animate-spin shrink-0 text-semantic-danger" />
@@ -60,7 +60,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
             size={15} 
             className={`shrink-0 text-semantic-danger transition-transform duration-200 ${
               isRtl 
-                ? 'rotate-180 group-hover:-translate-x-0.5' 
+                ? 'scale-x-[-1] group-hover:-translate-x-0.5' 
                 : 'group-hover:translate-x-0.5'
             }`} 
           />
