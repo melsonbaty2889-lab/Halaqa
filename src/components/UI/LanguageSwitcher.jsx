@@ -17,7 +17,6 @@ export default function LanguageSwitcher({ dropDirection = 'down', placement = '
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // تحديد كود اللغة الحالية واتجاهها الأساسي
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
   const currentLang = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[0];
   const isRtl = currentLang.dir === 'rtl';
@@ -41,25 +40,24 @@ export default function LanguageSwitcher({ dropDirection = 'down', placement = '
     setIsOpen(false);
   };
 
-  // اتجاه الفتح الرأسي (أعلى / أسفل)
   const dropdownVerticalClass = 
     dropDirection === 'up' 
       ? 'bottom-full mb-2' 
       : 'top-full mt-2';
 
-  // اتجاه الفتح الأفقي المحسوب بدقة هندسية حسب مكان المكون
+  // حساب كلاس المحاذاة الدقيق لمنع خروج القائمة عن إطار الشاشة
   const getAlignmentClass = () => {
     if (placement === 'footer') {
       // الفوتر:
-      // العربية (RTL) -> يفتح إلى اليسار (left-0)
-      // الإنجليزية والأخرى (LTR) -> يفتح إلى اليمين (right-0)
-      return isRtl ? 'left-0' : 'right-0';
+      // العربية -> تفتح يساراً (نثبت حافتها اليمنى مع الزر right-0 فتتمدد لليسار)
+      // الإنجليزية -> تفتح يميناً (نثبت حافتها اليسرى مع الزر left-0 فتتمدد لليمين)
+      return isRtl ? 'right-0' : 'left-0';
     }
 
     // صفحات المصادقة (auth):
-    // العربية (RTL) -> يفتح إلى اليمين (right-0)
-    // الإنجليزية والأخرى (LTR) -> يفتح إلى اليسار (left-0)
-    return isRtl ? 'right-0' : 'left-0';
+    // العربية -> تفتح يميناً (نثبت حافتها اليسرى مع الزر left-0 فتتمدد لليمين)
+    // الإنجليزية -> تفتح يساراً (نثبت حافتها اليمنى مع الزر right-0 فتتمدد لليسار)
+    return isRtl ? 'left-0' : 'right-0';
   };
 
   return (
