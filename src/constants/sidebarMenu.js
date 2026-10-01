@@ -19,8 +19,19 @@ import {
 } from "lucide-react";
 
 export const getMenuSections = (t, userRole = 'admin') => {
-  // 🟢 دالة حماية آمنة للترجمة لمنع انهيار الواجهة
-  const safeT = typeof t === 'function' ? t : (key, fallback) => fallback || key;
+  // 🟢 دالة ترجمة فائقة الأمان تمنع ظهور المفاتيح الإنجليزية الخام على الشاشة
+  const safeT = (key, fallback) => {
+    if (typeof t === 'function') {
+      const res = t(key, { defaultValue: fallback });
+      const rawKey = key.split('.').pop();
+      // إذا أعادت دالة الترجمة نفس المفتاح أو الكلمة الإنجليزية الخام، يتم اعتماد النص العربي الافتراضي
+      if (!res || res === key || res === rawKey) {
+        return fallback;
+      }
+      return res;
+    }
+    return fallback || key;
+  };
 
   const sections = [
     {
@@ -55,7 +66,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'halaqas-people',
-      title: safeT('menu.sections.academic_people', safeT('menu.sections.halaqas_people', 'الشؤون الأكاديمية والأفراد')),
+      title: safeT('menu.sections.academic_people', 'الشؤون الأكاديمية والأفراد'),
       items: [
         { 
           id: 'halaqas', 
@@ -85,7 +96,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'curriculum-progress',
-      title: safeT('menu.sections.curriculum_development', safeT('menu.sections.curriculum_progress', 'المناهج والتطوير التعليمي')),
+      title: safeT('menu.sections.curriculum_development', 'المناهج والتطوير التعليمي'),
       items: [
         { 
           id: 'curricula', 
@@ -115,7 +126,7 @@ export const getMenuSections = (t, userRole = 'admin') => {
     },
     {
       id: 'management-finance',
-      title: safeT('menu.sections.governance_finance', safeT('menu.sections.management_finance', 'الحوكمة والمالية')),
+      title: safeT('menu.sections.governance_finance', 'الحوكمة والمالية'),
       items: [
         { 
           id: 'reports', 
@@ -150,7 +161,6 @@ export const getMenuSections = (t, userRole = 'admin') => {
       ...section,
       items: section.items.filter(item => {
         if (!item.roles) return true;
-        // 🟢 منح super_admin كامل الوصول لكافة العناصر
         if (userRole === 'super_admin') return true;
         return item.roles.includes(userRole);
       })
