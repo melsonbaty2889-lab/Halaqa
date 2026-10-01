@@ -77,13 +77,13 @@ export default function SidebarMenu({
 
           return (
             <div key={section.id} className="mb-1 w-full">
-              {/* زر عنوان القسم الرئيسي */}
+              {/* زر عنوان القسم الرئيسي - التنسيق المحايد للمشروع */}
               <button
                 type="button"
                 onClick={() => toggleSection && toggleSection(section.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border-0 text-[12.5px] font-bold cursor-pointer transition-all duration-200 select-none ${
                   isExpanded
-                    ? 'bg-semantic-successBg/40 text-semantic-success border-b border-semantic-successBorder/30'
+                    ? 'bg-white/5 text-semantic-textPrimary border-b border-white/10'
                     : 'bg-transparent text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-white/5'
                 }`}
               >
@@ -91,7 +91,7 @@ export default function SidebarMenu({
                   {sectionTitle}
                 </span>
                 {isExpanded ? (
-                  <ChevronUp size={15} className="text-semantic-success shrink-0" />
+                  <ChevronUp size={15} className="text-semantic-textPrimary shrink-0" />
                 ) : (
                   <ChevronDown size={15} className="text-semantic-textMuted shrink-0" />
                 )}
