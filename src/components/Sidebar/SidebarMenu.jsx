@@ -1,5 +1,5 @@
 // src/components/Sidebar/SidebarMenu.jsx
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { colors as C } from '@/theme/colors';
 
@@ -12,36 +12,92 @@ export default function SidebarMenu({
   setActiveTab,
   isMobile,
   setSidebarOpen,
-  getText = (key) => key,
+  t,
+  getText: propGetText,
   isRtl = true
 }) {
+  // 🟢 دالة استخراج النص مع تعيين العربية دائماً كلغة افتراضية أساسية
+  const getText = useCallback((val) => {
+    if (typeof propGetText === 'function') {
+      const res = propGetText(val);
+      if (res) return res;
+    }
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      // الاعتماد على اللغة العربية ar أولاً وبشكل صريح
+      const extracted = val.ar || val.en || val.fr || val.tr || val.ur || val.id;
+      if (extracted && typeof extracted !== 'object') return String(extracted);
+      
+      const firstVal = Object.values(val).find(v => v && typeof v !== 'object');
+      if (firstVal) return String(firstVal);
+    }
+    return '';
+  }, [propGetText]);
+
+  // 🟢 دالة ترجمة تعتمد العربية دائماً كـ Fallback
+  const safeT = useCallback((key, fallback) => {
+    const defaultArText = typeof fallback === 'object' ? getText(fallback) : (fallback || key);
+
+    if (typeof t === 'function' && typeof key === 'string' && key.trim() !== '') {
+      try {
+        const res = t(key, { returnObjects: true, defaultValue: defaultArText });
+        
+        if (res && typeof res === 'object') {
+          const valFromObj = getText(res);
+          if (valFromObj) return valFromObj;
+        }
+        
+        if (typeof res === 'string' && res !== key && !res.includes('returned an object')) {
+          return res;
+        }
+      } catch (e) {
+        console.warn(`Translation error for key: ${key}`, e);
+      }
+    }
+    
+    return defaultArText;
+  }, [t, getText]);
+
+  // 🟢 استخراج المفتاح الأساسي للتبويب النشط لمعالجة المسارات الفرعية
+  const currentActiveKey = useMemo(() => {
+    if (!activeTab || typeof activeTab !== 'string') return '';
+    return activeTab.split('/')[0].trim();
+  }, [activeTab]);
+
   return (
     <nav className="flex flex-col gap-1.5 w-full flex-1" dir={isRtl ? 'rtl' : 'ltr'}>
       {filteredMenuSections && filteredMenuSections.length > 0 ? (
         filteredMenuSections.map((section) => {
           const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
+          
+          // استخراج عنوان القسم باللغة العربية كـ Fallback
+          const rawTitle = typeof section.title === 'string' ? section.title : getText(section.title);
+          const sectionTitle = safeT(rawTitle, rawTitle);
 
           return (
             <div key={section.id} className="mb-1 w-full">
+              {/* زر عنوان القسم الرئيسي */}
               <button
                 type="button"
                 onClick={() => toggleSection && toggleSection(section.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border-0 text-[12.5px] font-bold cursor-pointer transition-all duration-200 ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border-0 text-[12.5px] font-bold cursor-pointer transition-all duration-200 select-none ${
                   isExpanded
-                    ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/20'
-                    : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                    ? 'bg-semantic-successBg/40 text-semantic-success border-b border-semantic-successBorder/30'
+                    : 'bg-transparent text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-white/5'
                 }`}
               >
-                <span className="tracking-wide text-start leading-relaxed py-0.5 inline-block">
-                  {getText(section.title)}
+                <span className="tracking-wide text-start leading-relaxed py-0.5 inline-block truncate">
+                  {sectionTitle}
                 </span>
                 {isExpanded ? (
-                  <ChevronUp size={15} className="text-emerald-400 shrink-0" />
+                  <ChevronUp size={15} className="text-semantic-success shrink-0" />
                 ) : (
-                  <ChevronDown size={15} className="text-slate-500 shrink-0" />
+                  <ChevronDown size={15} className="text-semantic-textMuted shrink-0" />
                 )}
               </button>
 
+              {/* عناصر القائمة الجانبية التابعة للقسم */}
               {isExpanded && (
                 <div 
                   className="flex flex-col gap-1 mt-1.5"
@@ -52,7 +108,11 @@ export default function SidebarMenu({
                 >
                   {section.items && section.items.map((item) => {
                     const Icon = item.icon;
-                    const isActive = activeTab === item.id;
+                    const isActive = currentActiveKey === item.id;
+                    
+                    // استخراج مسمى العنصر باللغة العربية كـ Fallback
+                    const rawLabel = typeof item.label === 'string' ? item.label : getText(item.label);
+                    const itemLabel = safeT(rawLabel, rawLabel);
 
                     return (
                       <button
@@ -67,29 +127,29 @@ export default function SidebarMenu({
                         style={
                           isActive
                             ? {
-                                background: `linear-gradient(135deg, ${C.amber?.DEFAULT || '#D97706'} 0%, #B45309 100%)`,
-                                color: '#FFFFFF',
-                                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+                                background: `linear-gradient(135deg, ${C.primary?.btnStart || '#E67E00'} 0%, ${C.primary?.btnEnd || '#D97706'} 100%)`,
+                                color: C.appText?.main || '#FFFFFF',
+                                boxShadow: `0 4px 14px ${C.primary?.glow || 'rgba(224, 122, 0, 0.35)'}`,
                                 border: '1px solid rgba(255, 255, 255, 0.2)'
                               }
                             : {}
                         }
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-xs text-start cursor-pointer active:scale-98 ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-xs text-start cursor-pointer active:scale-[0.98] select-none ${
                           isActive
                             ? 'font-bold'
-                            : 'bg-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200 font-medium'
+                            : 'bg-transparent text-semantic-textSecondary hover:bg-white/5 hover:text-semantic-textPrimary font-medium'
                         }`}
                       >
                         {Icon && (
                           <Icon
                             size={17}
                             className={`shrink-0 transition-colors duration-200 ${
-                              isActive ? 'text-white' : 'text-slate-400'
+                              isActive ? 'text-white' : 'text-semantic-textSecondary'
                             }`}
                           />
                         )}
                         <span className="text-[13px] leading-relaxed py-0.5 inline-block truncate">
-                          {getText(item.label)}
+                          {itemLabel}
                         </span>
                       </button>
                     );
@@ -100,9 +160,10 @@ export default function SidebarMenu({
           );
         })
       ) : (
-        <div className="text-center py-4 px-3 text-slate-400 text-xs bg-slate-900/60 rounded-xl border border-white/5">
+        /* واجهة عدم وجود نتائج عند البحث */
+        <div className="text-center py-4 px-3 text-semantic-textSecondary text-xs bg-semantic-surfaceInput/60 rounded-xl border border-semantic-borderCard">
           <span className="leading-relaxed py-0.5 inline-block">
-            {isRtl ? 'لا توجد نتائج تطابق بحثك' : 'No matching results'}
+            {safeT('common.no_search_results', 'لا توجد نتائج تطابق بحثك')}
           </span>
         </div>
       )}
