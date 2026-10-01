@@ -3,14 +3,13 @@ import React from 'react';
 import { Search, X } from 'lucide-react';
 
 export default function SidebarSearch({ searchQuery, setSearchQuery, isRtl, t }) {
-  // استخدام مفتاح ترجمة مخصص للبحث السريع مع توفير Fallback مناسب
   const placeholderText = typeof t === 'function' 
-    ? t('common.quickSearch', isRtl ? 'بحث سريع...' : 'Quick search...')
-    : (isRtl ? 'بحث سريع...' : 'Quick search...');
+    ? t('common.quickSearch') 
+    : 'بحث سريع...';
 
   const clearText = typeof t === 'function'
-    ? t('common.clear', isRtl ? 'مسح' : 'Clear')
-    : (isRtl ? 'مسح' : 'Clear');
+    ? t('common.clear') 
+    : 'مسح';
 
   return (
     <div 
