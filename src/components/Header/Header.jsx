@@ -290,10 +290,30 @@ export default function Header({
     pathname = '';
   }
 
-  const rawKey = activeTab || pathname.replace(/^\//, '') || 'dashboard';
-  const activeKey = rawKey.split('/')[0].trim();
+  // 🟢 استدعاء قائمة الأقسام مع تمرير دالة الترجمة t وليس قيمة activeRtl
+  const menuSections = useMemo(() => getMenuSections(t, userRole), [t, userRole]);
 
-  const menuSections = useMemo(() => getMenuSections(activeRtl, userRole), [activeRtl, userRole]);
+  // 🟢 استخراج معرف الصفحة النشط دون الخلط مع slug الأكاديمية
+  const activeKey = useMemo(() => {
+    if (activeTab && typeof activeTab === 'string') {
+      return activeTab.split('/')[0].trim();
+    }
+    
+    if (!pathname) return 'dashboard';
+    
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 0) return 'dashboard';
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+      const seg = segments[i].trim();
+      const matchesItem = menuSections.some(sec => 
+        sec.items?.some(item => item.id === seg)
+      );
+      if (matchesItem) return seg;
+    }
+
+    return segments[segments.length - 1] || 'dashboard';
+  }, [activeTab, pathname, menuSections]);
 
   const pageTitle = useMemo(() => {
     for (const section of menuSections) {
