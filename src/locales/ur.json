@@ -833,7 +833,10 @@
       "teachers": "تدریسی و انتظامی عملہ"
     },
     "sections": {
+      "academic_people": "",
+      "curriculum_development": "",
       "curriculum_progress": "نصاب اور ارزابی",
+      "governance_finance": "",
       "halaqas_people": "حلقے اور افراد",
       "main_operations": "ہوم اور آپریشنز",
       "management_finance": "انتظامیہ اور مالیات"

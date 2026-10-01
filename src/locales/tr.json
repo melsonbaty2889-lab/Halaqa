@@ -833,7 +833,10 @@
       "teachers": "Eğitmen ve İdari Kadro"
     },
     "sections": {
+      "academic_people": "",
+      "curriculum_development": "",
       "curriculum_progress": "Müfredat ve Değerlendirme",
+      "governance_finance": "",
       "halaqas_people": "Halkalar ve Kişiler",
       "main_operations": "Ana Sayfa ve İşlemler",
       "management_finance": "Yönetim ve Finans"

@@ -833,7 +833,10 @@
       "teachers": "Corps enseignant & Admin"
     },
     "sections": {
+      "academic_people": "",
+      "curriculum_development": "",
       "curriculum_progress": "Programmes & Évaluations",
+      "governance_finance": "",
       "halaqas_people": "Halaqas & Membres",
       "main_operations": "Accueil & Opérations",
       "management_finance": "Gestion & Finances"

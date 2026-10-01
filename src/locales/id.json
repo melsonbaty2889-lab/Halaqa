@@ -833,7 +833,10 @@
       "teachers": "Pengajar & Staf Admin"
     },
     "sections": {
+      "academic_people": "",
+      "curriculum_development": "",
       "curriculum_progress": "Kurikulum & Penilaian",
+      "governance_finance": "",
       "halaqas_people": "Halaqah & Anggota",
       "main_operations": "Utama & Operasional",
       "management_finance": "Manajemen & Keuangan"

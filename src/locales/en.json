@@ -833,7 +833,10 @@
       "teachers": "Teaching & Admin Staff"
     },
     "sections": {
+      "academic_people": "",
+      "curriculum_development": "",
       "curriculum_progress": "Curriculum & Assessment",
+      "governance_finance": "",
       "halaqas_people": "Halaqas & People",
       "main_operations": "Main & Operations",
       "management_finance": "Management & Finance"

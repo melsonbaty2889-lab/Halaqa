@@ -739,7 +739,10 @@
       "teachers": "الكادر التعليمي والإداري"
     },
     "sections": {
+      "academic_people": "academic_people",
+      "curriculum_development": "curriculum_development",
       "curriculum_progress": "المناهج والتقييم",
+      "governance_finance": "governance_finance",
       "halaqas_people": "الحلقات والأفراد",
       "main_operations": "الرئيسية والعمليات",
       "management_finance": "الإدارة والمالية"
