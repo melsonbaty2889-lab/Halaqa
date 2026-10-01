@@ -54,9 +54,9 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
         className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border border-semantic-borderCard bg-dark-card text-semantic-textPrimary shadow-2xl space-y-6 box-border"
       >
-        {/* زر تغيير اللغة */}
+        {/* زر تغيير اللغة - مررنا placement="auth" لتطبيق الاتجاه المحدد بدقة */}
         <div className="flex justify-end w-full -mb-2 relative z-50">
-          {langBtn || <LanguageSwitcher dropDirection="down" />}
+          {langBtn || <LanguageSwitcher dropDirection="down" placement="auth" />}
         </div>
 
         <AppBrand subtitle={appSubtitle} />
