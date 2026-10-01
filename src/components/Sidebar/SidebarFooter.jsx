@@ -7,6 +7,7 @@ import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // دالة مساعدة لضمان إرجاع fallback مناسب عبر i18next
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       const translated = t(key, { defaultValue: fallback });
@@ -39,7 +40,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
       dir={isRtl ? 'rtl' : 'ltr'}
       aria-label={safeT('sidebar.footer', 'إعدادات الجلسة واللغات')}
     >
-      {/* محول اللغات مع تحديد الفتح للأعلى والسماح بالانبثاق */}
+      {/* محول اللغات */}
       <div className="shrink-0 relative z-50 overflow-visible">
         <LanguageSwitcher dropDirection="up" />
       </div>
