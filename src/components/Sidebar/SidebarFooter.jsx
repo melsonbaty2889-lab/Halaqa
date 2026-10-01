@@ -42,7 +42,7 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
     >
       {/* محول اللغات */}
       <div className="shrink-0 relative z-50 overflow-visible">
-        <LanguageSwitcher dropDirection="up" align="auto" />
+        <LanguageSwitcher dropDirection="up" placement="footer" />
       </div>
 
       {/* زر تسجيل الخروج */}
