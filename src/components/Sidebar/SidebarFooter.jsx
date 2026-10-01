@@ -59,7 +59,9 @@ export default function SidebarFooter({ isRtl = true, t, onLogoutSuccess }) {
           <LogOut 
             size={15} 
             className={`shrink-0 text-semantic-danger transition-transform duration-200 ${
-              isRtl ? 'group-hover:-translate-x-0.5' : 'group-hover:translate-x-0.5'
+              isRtl 
+                ? 'rotate-180 group-hover:-translate-x-0.5' 
+                : 'group-hover:translate-x-0.5'
             }`} 
           />
         )}
