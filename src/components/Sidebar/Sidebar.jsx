@@ -36,7 +36,6 @@ export default function Sidebar({
   const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
   const { i18n } = useTranslation();
   
-  // 🟢 تحديد اللغة والاتجاه بدقة مع دعم RTL/LTR
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
   const isRtlMode = i18n.dir ? i18n.dir(currentLang) === 'rtl' : ['ar', 'ur'].includes(currentLang);
   const currentDir = isRtlMode ? 'rtl' : 'ltr';
@@ -45,7 +44,6 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  // 🟢 دالة ترجمة آمنة
   const safeT = useCallback((key, fallback) => {
     if (typeof t === 'function') {
       return t(key, { defaultValue: fallback || key });
@@ -53,14 +51,12 @@ export default function Sidebar({
     return fallback || key;
   }, [t]);
 
-  // 🟢 جلب عناصر القائمة بناءً على الدور الصريح
   const menuSections = useMemo(() => {
     return getMenuSections(safeT, userRole);
   }, [safeT, userRole]);
 
   const [openSectionId, setOpenSectionId] = useState(null);
 
-  // 🟢 دالة آمنة لاستخراج النصوص المتعددة اللغات (تغطي اللغات الست)
   const getText = useCallback((val) => {
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -75,7 +71,6 @@ export default function Sidebar({
     return '';
   }, [currentLang, isRtlMode]);
 
-  // 🟢 إدارة خيارات التنقل والمسارات على الهاتف وسطق المكتب مع ضمان التوجيه الصحيح
   const handleSelectTab = useCallback((tabId) => {
     if (typeof setActiveTab === 'function') {
       setActiveTab(tabId);
@@ -90,7 +85,6 @@ export default function Sidebar({
     }
   }, [setActiveTab, slug, navigate, isMobile, setSidebarOpen]);
 
-  // 🟢 تبديل الأكاديمية دون كود تكراري
   const handleSwitch = useCallback((academyId) => {
     const selected = academiesList.find(a => a.id === academyId);
     if (selected && typeof setAcademy === 'function') {
@@ -104,7 +98,6 @@ export default function Sidebar({
     }
   }, [academiesList, setAcademy, onSwitchAcademy, isMobile, setSidebarOpen]);
 
-  // 🟢 إغلاق القائمة المنسدلة عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -115,7 +108,6 @@ export default function Sidebar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🟢 ضبط قفل تمرير الصفحة على الهاتف دون التأثير على المودالات الأخرى
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       const previousOverflow = document.body.style.overflow;
@@ -127,7 +119,6 @@ export default function Sidebar({
     }
   }, [isMobile, sidebarOpen]);
 
-  // 🟢 مزامنة القسم المفتوح التلقائي مع التبويب النشط والحفاظ على اختيار المستخدم
   useEffect(() => {
     if (!activeTab || !menuSections.length) return;
 
@@ -143,13 +134,13 @@ export default function Sidebar({
     }
   }, [activeTab, menuSections]);
 
+  // 🟢 نمط الأكورديون الأحادي الحصري (يغلق القسم السابق تلقائياً)
   const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   }, []);
 
   const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
-  // 🟢 الأكاديمية الحالية
   const currentAcademy = useMemo(() => {
     return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
   }, [academiesList, currentAcademyId, propAcademy, contextAcademy]);
@@ -159,7 +150,6 @@ export default function Sidebar({
     ? rawAcademyName.trim() 
     : safeT('sidebar.unnamedAcademy', 'أكاديمية بدون اسم');
 
-  // 🟢 بناء رابط اللوجو بأمان كامل لمنع إعادة الـ Render ودعم الروابط النسبية والمطلقة
   const academyLogo = useMemo(() => {
     const rawLogo = currentAcademy?.logo_url || propAcademy?.logo_url;
     if (typeof rawLogo !== 'string' || !rawLogo.trim()) return null;
@@ -180,7 +170,6 @@ export default function Sidebar({
     }
   }, [currentAcademy?.logo_url, currentAcademy?.updated_at, propAcademy?.logo_url, propAcademy?.updated_at]);
 
-  // 🟢 حساب الأيام المتبقية بدقة معتمدة على التواريخ الصريحة
   const effectiveDaysLeft = useMemo(() => {
     if (!currentAcademy) return trialDaysLeft ?? 0;
 
@@ -198,7 +187,6 @@ export default function Sidebar({
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
-  // 🟢 الشارة وشروط حالة الاشتراك المعتمدة بدقة في المنظومة (بدون خطط دائمة)
   const statusBadge = useMemo(() => {
     const getBadgeStyle = (type) => ({
       background: C.status?.[`${type}Bg`] || 'rgba(255,255,255,0.05)',
@@ -208,34 +196,28 @@ export default function Sidebar({
 
     if (!currentAcademy) return null;
 
-    // 1. أكاديمية غير مفعلة
     if (currentAcademy.is_active === false) {
       return { text: safeT('status.pending', 'قيد التفعيل'), style: getBadgeStyle('pending') };
     }
 
     const subStatus = currentAcademy.saas_subscription?.status;
 
-    // 2. اشتراك ملغى أو منتهي صريح
     if (subStatus === 'canceled' || subStatus === 'expired') {
       return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
     }
 
-    // 3. فترة تجريبية
     const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
     if (isTrial && effectiveDaysLeft > 0) {
       return { text: safeT('status.trial', 'فترة تجريبية'), style: getBadgeStyle('trial') };
     }
 
-    // 4. اشتراك نشط بشرط وجود أيام متبقية
     if (subStatus === 'active' && effectiveDaysLeft > 0) {
       return { text: safeT('status.active', 'اشتراك نشط'), style: getBadgeStyle('active') };
     }
 
-    // 5. في حال انتهاء التاريخ
     return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
 
-  // 🟢 تنظيف ومعالجة الحروف العربية والبحث
   const normalizeArabic = useCallback((str) => {
     if (!str) return '';
     return String(str)
@@ -246,7 +228,6 @@ export default function Sidebar({
       .toLowerCase();
   }, []);
 
-  // 🟢 تصفية العناصر مع حماية تحويل الكائنات متعددة اللغات
   const filteredMenuSections = useMemo(() => {
     const query = normalizeArabic(searchQuery.trim());
     if (!query) return menuSections;
@@ -260,7 +241,6 @@ export default function Sidebar({
     }).filter(section => section.items.length > 0);
   }, [menuSections, searchQuery, normalizeArabic, getText]);
 
-  // 🟢 التنسيقات العامة للـ Sidebar
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'sticky',
     top: 0,
@@ -304,8 +284,9 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={currentDir}>
+        {/* 🟢 تحسين حشوة رأس القائمة لتقليل الارتفاع على الهواتف */}
         <div style={{ 
-          padding: '12px 14px',
+          padding: isMobile ? '8px 10px' : '12px 14px',
           borderBottom: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
           flexShrink: 0,
           display: 'flex',
@@ -332,9 +313,10 @@ export default function Sidebar({
           </div>
         </div>
 
+        {/* 🟢 تحسين حشوة المنطقة القابلة للتمرير لدعم إتاحة الأقسام فور فتح القائمة */}
         <div 
           style={{ 
-            padding: '12px', 
+            padding: isMobile ? '8px' : '12px', 
             flex: 1, 
             overflowY: 'auto', 
             WebkitOverflowScrolling: 'touch',
@@ -375,7 +357,7 @@ export default function Sidebar({
         </div>
 
         <div style={{ 
-          padding: '10px 12px',
+          padding: isMobile ? '8px 10px' : '10px 12px',
           paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
           borderTop: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
           flexShrink: 0,
