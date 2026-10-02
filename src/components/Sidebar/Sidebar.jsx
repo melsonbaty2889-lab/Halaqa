@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { formatHijriDate } from '@/utils/dateUtils';
 import { useAcademy } from '@/context/AcademyContext';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import { colors as C } from '@/theme/colors';
@@ -17,7 +18,6 @@ export default function Sidebar({
   academy: propAcademy,
   onSwitchAcademy,
   onOpenCreateAcademy,
-  canCreateAcademy = false,
   activeTab,
   setActiveTab,
   sidebarOpen,
@@ -33,7 +33,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { slug } = useParams();
 
-  const { academy: contextAcademy, academiesList = [], setAcademy } = useAcademy();
+  const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
   const { i18n } = useTranslation();
   
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
@@ -71,16 +71,15 @@ export default function Sidebar({
     return '';
   }, [currentLang, isRtlMode]);
 
-  // 🟢 اختيار التبويب مع ضمان التوافق التام مع React Router وإغلاق القائمة في الهواتف
   const handleSelectTab = useCallback((tabId) => {
     if (typeof setActiveTab === 'function') {
       setActiveTab(tabId);
     }
-    
-    // التوجيه المعياري الموحد لصفحات التطبيق
-    const targetPath = slug ? `/${slug}/${tabId}` : `/${tabId}`;
-    navigate(targetPath);
-
+    if (slug) {
+      navigate(`/${slug}/${tabId}`);
+    } else {
+      navigate(`/${tabId}`);
+    }
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
     }
@@ -120,7 +119,6 @@ export default function Sidebar({
     }
   }, [isMobile, sidebarOpen]);
 
-  // 🟢 تزامن الأكورديون مع التبويب النشط
   useEffect(() => {
     if (!activeTab || !menuSections.length) return;
 
@@ -129,13 +127,19 @@ export default function Sidebar({
     );
 
     if (targetSection) {
-      setOpenSectionId(targetSection.id);
+      setOpenSectionId(prev => {
+        if (prev === targetSection.id) return prev;
+        return prev ?? targetSection.id;
+      });
     }
   }, [activeTab, menuSections]);
 
+  // 🟢 نمط الأكورديون الأحادي الحصري (يغلق القسم السابق تلقائياً)
   const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   }, []);
+
+  const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
   const currentAcademy = useMemo(() => {
     return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
@@ -183,35 +187,64 @@ export default function Sidebar({
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
+  // 🟢 دالة حساب الشارات التفصيلية الموحدة وتنسيق الألوان
   const statusBadge = useMemo(() => {
-    const getBadgeStyle = (type) => ({
-      background: C.status?.[`${type}Bg`] || 'rgba(255,255,255,0.05)',
-      color: C.status?.[`${type}Text`] || '#ffffff',
-      border: `1px solid ${C.status?.[`${type}Border`] || 'transparent'}`
-    });
-
     if (!currentAcademy) return null;
 
+    // 1. التعطيل الإداري (Priority 1)
     if (currentAcademy.is_active === false) {
-      return { text: safeT('status.pending', 'قيد التفعيل'), style: getBadgeStyle('pending') };
+      return {
+        text: safeT('sidebar.badgeBlocked', 'معطل'),
+        style: {
+          background: C.status?.blockedBg || 'rgba(239, 68, 68, 0.15)',
+          color: C.status?.blockedText || '#f87171',
+          border: `1px solid ${C.status?.blockedBorder || 'rgba(239, 68, 68, 0.3)'}`
+        }
+      };
     }
 
     const subStatus = currentAcademy.saas_subscription?.status;
+    const planDuration = currentAcademy.saas_subscription?.plan_duration || 'monthly';
 
-    if (subStatus === 'canceled' || subStatus === 'expired') {
-      return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
+    // 2. اشتراك مدفوع نشط (Priority 2)
+    if (subStatus === 'active') {
+      const isYearly = planDuration === 'yearly';
+      const label = isYearly 
+        ? safeT('sidebar.badgeYearly', 'اشتراك سنوي')
+        : safeT('sidebar.badgeMonthly', 'اشتراك شهري');
+
+      return {
+        text: label,
+        style: {
+          background: C.status?.activeBg || 'rgba(16, 185, 129, 0.15)',
+          color: C.status?.activeText || '#34d399',
+          border: `1px solid ${C.status?.activeBorder || 'rgba(16, 185, 129, 0.3)'}`
+        }
+      };
     }
 
-    const isTrial = subStatus === 'trial' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
+    // 3. الفترة التجريبية (Priority 3)
+    const isTrial = subStatus === 'trial' || subStatus === 'trialing' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
     if (isTrial && effectiveDaysLeft > 0) {
-      return { text: safeT('status.trial', 'فترة تجريبية'), style: getBadgeStyle('trial') };
+      return {
+        text: safeT('sidebar.badgeTrial', 'تجريبي'),
+        style: {
+          background: C.status?.trialBg || 'rgba(59, 130, 246, 0.15)',
+          color: C.status?.trialText || '#60a5fa',
+          border: `1px solid ${C.status?.trialBorder || 'rgba(59, 130, 246, 0.3)'}`
+        }
+      };
     }
 
-    if (subStatus === 'active' && effectiveDaysLeft > 0) {
-      return { text: safeT('status.active', 'اشتراك نشط'), style: getBadgeStyle('active') };
-    }
-
-    return { text: safeT('status.expired', 'منتهي الصلاحية'), style: getBadgeStyle('expired') };
+    // 4. منتهي الصلاحية (Priority 4)
+    return {
+      text: safeT('sidebar.badgeExpired', 'منتهي'),
+      style: {
+        background: C.status?.expiredBg || 'rgba(245, 158, 11, 0.15)',
+        color: C.status?.expiredText || '#fbbf24',
+        border: `1px solid ${C.status?.expiredBorder || 'rgba(245, 158, 11, 0.3)'}`
+      }
+    };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
 
   const normalizeArabic = useCallback((str) => {
@@ -280,6 +313,7 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={currentDir}>
+        {/* تحسين حشوة رأس القائمة لتقليل الارتفاع على الهواتف */}
         <div style={{ 
           padding: isMobile ? '8px 10px' : '12px 14px',
           borderBottom: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
@@ -301,13 +335,14 @@ export default function Sidebar({
               dropdownRef={dropdownRef}
               statusBadge={statusBadge}
               onSwitchAcademy={handleSwitch}
-              onOpenCreateAcademy={canCreateAcademy ? onOpenCreateAcademy : null}
+              onOpenCreateAcademy={onOpenCreateAcademy}
               onClose={isMobile ? () => setSidebarOpen(false) : undefined}
               getText={getText}
             />
           </div>
         </div>
 
+        {/* تحسين حشوة المنطقة القابلة للتمرير لدعم إتاحة الأقسام فور فتح القائمة */}
         <div 
           style={{ 
             padding: isMobile ? '8px' : '12px', 
@@ -319,14 +354,14 @@ export default function Sidebar({
         >
           <SidebarWidget
             academyTime={academyTime}
-            setActiveTab={handleSelectTab}
+            setActiveTab={setActiveTab}
             setShowEarlyUpgrade={setShowEarlyUpgrade}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
-            isRtl={isRtlMode}
+            isRtl={isRtl}
             effectiveDaysLeft={effectiveDaysLeft}
             preferredCalendar={currentAcademy?.calendar_type}
-            t={safeT}
+            t={t}
           />
 
           <SidebarSearch
