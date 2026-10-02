@@ -134,7 +134,6 @@ export default function Sidebar({
     }
   }, [activeTab, menuSections]);
 
-  // 🟢 نمط الأكورديون الأحادي الحصري (يغلق القسم السابق تلقائياً)
   const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   }, []);
@@ -187,18 +186,17 @@ export default function Sidebar({
     return trialDaysLeft ?? 0;
   }, [currentAcademy, trialDaysLeft]);
 
-  // 🟢 دالة حساب الشارات التفصيلية الموحدة وتنسيق الألوان
+  //  تحديد شارات الحالة الموحدة بالاعتماد على التوكنز
   const statusBadge = useMemo(() => {
     if (!currentAcademy) return null;
 
-    // 1. التعطيل الإداري (Priority 1)
     if (currentAcademy.is_active === false) {
       return {
         text: safeT('sidebar.badgeBlocked', 'معطل'),
         style: {
-          background: C.status?.blockedBg || 'rgba(239, 68, 68, 0.15)',
-          color: C.status?.blockedText || '#f87171',
-          border: `1px solid ${C.status?.blockedBorder || 'rgba(239, 68, 68, 0.3)'}`
+          background: 'var(--color-danger-bg)',
+          color: 'var(--color-danger)',
+          border: '1px solid rgba(239, 68, 68, 0.3)'
         }
       };
     }
@@ -206,7 +204,6 @@ export default function Sidebar({
     const subStatus = currentAcademy.saas_subscription?.status;
     const planDuration = currentAcademy.saas_subscription?.plan_duration || 'monthly';
 
-    // 2. اشتراك مدفوع نشط (Priority 2)
     if (subStatus === 'active') {
       const isYearly = planDuration === 'yearly';
       const label = isYearly 
@@ -216,33 +213,31 @@ export default function Sidebar({
       return {
         text: label,
         style: {
-          background: C.status?.activeBg || 'rgba(16, 185, 129, 0.15)',
-          color: C.status?.activeText || '#34d399',
-          border: `1px solid ${C.status?.activeBorder || 'rgba(16, 185, 129, 0.3)'}`
+          background: 'var(--color-success-bg)',
+          color: 'var(--color-success)',
+          border: '1px solid var(--color-success-border)'
         }
       };
     }
 
-    // 3. الفترة التجريبية (Priority 3)
     const isTrial = subStatus === 'trial' || subStatus === 'trialing' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
     if (isTrial && effectiveDaysLeft > 0) {
       return {
         text: safeT('sidebar.badgeTrial', 'تجريبي'),
         style: {
-          background: C.status?.trialBg || 'rgba(59, 130, 246, 0.15)',
-          color: C.status?.trialText || '#60a5fa',
-          border: `1px solid ${C.status?.trialBorder || 'rgba(59, 130, 246, 0.3)'}`
+          background: 'rgba(59, 130, 246, 0.15)',
+          color: '#60a5fa',
+          border: '1px solid rgba(59, 130, 246, 0.3)'
         }
       };
     }
 
-    // 4. منتهي الصلاحية (Priority 4)
     return {
       text: safeT('sidebar.badgeExpired', 'منتهي'),
       style: {
-        background: C.status?.expiredBg || 'rgba(245, 158, 11, 0.15)',
-        color: C.status?.expiredText || '#fbbf24',
-        border: `1px solid ${C.status?.expiredBorder || 'rgba(245, 158, 11, 0.3)'}`
+        background: 'rgba(245, 158, 11, 0.15)',
+        color: '#fbbf24',
+        border: '1px solid rgba(245, 158, 11, 0.3)'
       }
     };
   }, [currentAcademy, effectiveDaysLeft, safeT]);
@@ -276,12 +271,12 @@ export default function Sidebar({
     bottom: 0,
     height: '100dvh',
     insetInlineStart: 0,
-    width: isMobile ? '100%' : '280px',
-    maxWidth: isMobile ? '100vw' : '280px',
-    backgroundColor: C.dark?.card || 'var(--surface-card)',
+    width: isMobile ? '100%' : '17.5rem',
+    maxWidth: isMobile ? '100vw' : '17.5rem',
+    backgroundColor: 'var(--color-surface-card)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderInlineEnd: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
+    borderInlineEnd: '1px solid var(--color-border-card)',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -291,7 +286,7 @@ export default function Sidebar({
           : (isRtlMode ? 'translateX(100%)' : 'translateX(-100%)'))
       : 'none',
     transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: isMobile && sidebarOpen ? (C.shadows?.sidebarOverlay || '0 10px 25px -5px rgba(0, 0, 0, 0.5)') : 'none',
+    boxShadow: isMobile && sidebarOpen ? 'var(--shadow-main)' : 'none',
     boxSizing: 'border-box'
   };
 
@@ -304,7 +299,7 @@ export default function Sidebar({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: C.dark?.overlay || 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
             zIndex: 999
@@ -313,15 +308,14 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={currentDir}>
-        {/* تحسين حشوة رأس القائمة لتقليل الارتفاع على الهواتف */}
         <div style={{ 
-          padding: isMobile ? '8px 10px' : '12px 14px',
-          borderBottom: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
+          padding: isMobile ? '0.5rem 0.625rem' : '0.75rem 0.875rem',
+          borderBottom: '1px solid var(--color-border-card)',
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '8px'
+          gap: '0.5rem'
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <AcademySelector
@@ -342,10 +336,9 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* تحسين حشوة المنطقة القابلة للتمرير لدعم إتاحة الأقسام فور فتح القائمة */}
         <div 
           style={{ 
-            padding: isMobile ? '8px' : '12px', 
+            padding: isMobile ? '0.5rem' : '0.75rem', 
             flex: 1, 
             overflowY: 'auto', 
             WebkitOverflowScrolling: 'touch',
@@ -386,11 +379,11 @@ export default function Sidebar({
         </div>
 
         <div style={{ 
-          padding: isMobile ? '8px 10px' : '10px 12px',
-          paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
-          borderTop: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
+          padding: isMobile ? '0.5rem 0.625rem' : '0.625rem 0.75rem',
+          paddingBottom: 'calc(0.875rem + env(safe-area-inset-bottom, 0px))',
+          borderTop: '1px solid var(--color-border-card)',
           flexShrink: 0,
-          backgroundColor: C.dark?.card || 'var(--surface-card)'
+          backgroundColor: 'var(--color-surface-card)'
         }}>
           <SidebarFooter isRtl={isRtlMode} t={safeT} />
         </div>
