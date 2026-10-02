@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { formatHijriDate } from '@/utils/dateUtils';
 import { useAcademy } from '@/context/AcademyContext';
 import { getMenuSections } from '@/constants/sidebarMenu';
 import { colors as C } from '@/theme/colors';
@@ -18,6 +17,7 @@ export default function Sidebar({
   academy: propAcademy,
   onSwitchAcademy,
   onOpenCreateAcademy,
+  canCreateAcademy = false,
   activeTab,
   setActiveTab,
   sidebarOpen,
@@ -33,7 +33,7 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { slug } = useParams();
 
-  const { academy: contextAcademy, academiesList, setAcademy } = useAcademy();
+  const { academy: contextAcademy, academiesList = [], setAcademy } = useAcademy();
   const { i18n } = useTranslation();
   
   const currentLang = i18n.language || (isRtl ? 'ar' : 'en');
@@ -71,15 +71,16 @@ export default function Sidebar({
     return '';
   }, [currentLang, isRtlMode]);
 
+  // 🟢 اختيار التبويب مع ضمان التوافق التام مع React Router وإغلاق القائمة في الهواتف
   const handleSelectTab = useCallback((tabId) => {
     if (typeof setActiveTab === 'function') {
       setActiveTab(tabId);
     }
-    if (slug) {
-      navigate(`/${slug}/${tabId}`);
-    } else {
-      navigate(`/${tabId}`);
-    }
+    
+    // التوجيه المعياري الموحد لصفحات التطبيق
+    const targetPath = slug ? `/${slug}/${tabId}` : `/${tabId}`;
+    navigate(targetPath);
+
     if (isMobile && typeof setSidebarOpen === 'function') {
       setSidebarOpen(false);
     }
@@ -119,6 +120,7 @@ export default function Sidebar({
     }
   }, [isMobile, sidebarOpen]);
 
+  // 🟢 تزامن الأكورديون مع التبويب النشط
   useEffect(() => {
     if (!activeTab || !menuSections.length) return;
 
@@ -127,19 +129,13 @@ export default function Sidebar({
     );
 
     if (targetSection) {
-      setOpenSectionId(prev => {
-        if (prev === targetSection.id) return prev;
-        return prev ?? targetSection.id;
-      });
+      setOpenSectionId(targetSection.id);
     }
   }, [activeTab, menuSections]);
 
-  // 🟢 نمط الأكورديون الأحادي الحصري (يغلق القسم السابق تلقائياً)
   const toggleSection = useCallback((sectionId) => {
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   }, []);
-
-  const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
 
   const currentAcademy = useMemo(() => {
     return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
@@ -284,7 +280,6 @@ export default function Sidebar({
       )}
 
       <aside style={sidebarStyles} dir={currentDir}>
-        {/* 🟢 تحسين حشوة رأس القائمة لتقليل الارتفاع على الهواتف */}
         <div style={{ 
           padding: isMobile ? '8px 10px' : '12px 14px',
           borderBottom: `1px solid ${C.dark?.cardBorder || C.appBorder?.card || 'transparent'}`,
@@ -306,14 +301,13 @@ export default function Sidebar({
               dropdownRef={dropdownRef}
               statusBadge={statusBadge}
               onSwitchAcademy={handleSwitch}
-              onOpenCreateAcademy={onOpenCreateAcademy}
+              onOpenCreateAcademy={canCreateAcademy ? onOpenCreateAcademy : null}
               onClose={isMobile ? () => setSidebarOpen(false) : undefined}
               getText={getText}
             />
           </div>
         </div>
 
-        {/* 🟢 تحسين حشوة المنطقة القابلة للتمرير لدعم إتاحة الأقسام فور فتح القائمة */}
         <div 
           style={{ 
             padding: isMobile ? '8px' : '12px', 
@@ -325,14 +319,14 @@ export default function Sidebar({
         >
           <SidebarWidget
             academyTime={academyTime}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSelectTab}
             setShowEarlyUpgrade={setShowEarlyUpgrade}
             isMobile={isMobile}
             setSidebarOpen={setSidebarOpen}
-            isRtl={isRtl}
+            isRtl={isRtlMode}
             effectiveDaysLeft={effectiveDaysLeft}
             preferredCalendar={currentAcademy?.calendar_type}
-            t={t}
+            t={safeT}
           />
 
           <SidebarSearch
