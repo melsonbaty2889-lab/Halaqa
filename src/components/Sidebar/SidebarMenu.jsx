@@ -1,7 +1,6 @@
 // src/components/Sidebar/SidebarMenu.jsx
 import React, { useMemo, useCallback } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { colors as C } from '@/theme/colors';
 
 export default function SidebarMenu({
   filteredMenuSections = [],
@@ -25,7 +24,6 @@ export default function SidebarMenu({
     if (val === null || val === undefined) return '';
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      // الاعتماد على اللغة العربية ar أولاً وبشكل صريح
       const extracted = val.ar || val.en || val.fr || val.tr || val.ur || val.id;
       if (extracted && typeof extracted !== 'object') return String(extracted);
       
@@ -71,19 +69,18 @@ export default function SidebarMenu({
         filteredMenuSections.map((section) => {
           const isExpanded = searchQuery.trim().length > 0 || openSectionId === section.id;
           
-          // استخراج عنوان القسم باللغة العربية كـ Fallback
           const rawTitle = typeof section.title === 'string' ? section.title : getText(section.title);
           const sectionTitle = safeT(rawTitle, rawTitle);
 
           return (
             <div key={section.id} className="mb-1 w-full">
-              {/* زر عنوان القسم الرئيسي - التنسيق المحايد للمشروع */}
+              {/* زر عنوان القسم الرئيسي - متناسق مع ألوان الهوية المحايدة */}
               <button
                 type="button"
                 onClick={() => toggleSection && toggleSection(section.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border-0 text-[12.5px] font-bold cursor-pointer transition-all duration-200 select-none ${
                   isExpanded
-                    ? 'bg-white/5 text-semantic-textPrimary border-b border-white/10'
+                    ? 'bg-white/5 text-semantic-textPrimary border-b border-semantic-borderCard'
                     : 'bg-transparent text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-white/5'
                 }`}
               >
@@ -110,7 +107,6 @@ export default function SidebarMenu({
                     const Icon = item.icon;
                     const isActive = currentActiveKey === item.id;
                     
-                    // استخراج مسمى العنصر باللغة العربية كـ Fallback
                     const rawLabel = typeof item.label === 'string' ? item.label : getText(item.label);
                     const itemLabel = safeT(rawLabel, rawLabel);
 
@@ -124,19 +120,9 @@ export default function SidebarMenu({
                             setSidebarOpen(false);
                           }
                         }}
-                        style={
-                          isActive
-                            ? {
-                                background: `linear-gradient(135deg, ${C.primary?.btnStart || '#E67E00'} 0%, ${C.primary?.btnEnd || '#D97706'} 100%)`,
-                                color: C.appText?.main || '#FFFFFF',
-                                boxShadow: `0 4px 14px ${C.primary?.glow || 'rgba(224, 122, 0, 0.35)'}`,
-                                border: '1px solid rgba(255, 255, 255, 0.2)'
-                              }
-                            : {}
-                        }
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-xs text-start cursor-pointer active:scale-[0.98] select-none ${
                           isActive
-                            ? 'font-bold'
+                            ? 'bg-gradient-to-r from-primary-btnStart to-primary-btnEnd text-semantic-textPrimary font-bold shadow-lg shadow-primary-glow/20 border border-white/20'
                             : 'bg-transparent text-semantic-textSecondary hover:bg-white/5 hover:text-semantic-textPrimary font-medium'
                         }`}
                       >
@@ -144,7 +130,7 @@ export default function SidebarMenu({
                           <Icon
                             size={17}
                             className={`shrink-0 transition-colors duration-200 ${
-                              isActive ? 'text-white' : 'text-semantic-textSecondary'
+                              isActive ? 'text-semantic-textPrimary' : 'text-semantic-textSecondary'
                             }`}
                           />
                         )}
