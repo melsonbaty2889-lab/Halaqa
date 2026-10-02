@@ -271,6 +271,7 @@
     "close": "إغلاق",
     "confirm": "تأكيد",
     "continue_next_step": "متابعة إلى الخطوة التالية",
+    "currentTime": "الوقت الحالي",
     "date": "التاريخ",
     "delete": "حذف",
     "disabled": "معطل",
@@ -318,6 +319,8 @@
     "unarchive": "إلغاء الأرشفة",
     "unknown": "غير معروف",
     "unspecified": "غير محدد",
+    "upgrade": "ترقية",
+    "upgradeAccount": "ترقية الحساب",
     "upload": "رفع",
     "uploading": "جاري الرفع...",
     "view": "عرض",
@@ -912,6 +915,9 @@
   "trackTilawah": "مسار التلاوة وتصحيح الأداء",
   "unassigned": "بانتظار تعيين معتمد",
   "unnamed_student": "طالب بدون اسم",
+  "user": {
+    "role": "مستخدم"
+  },
   "viewActive": "الحلقات النشطة",
   "viewArchived": "الأرشيف",
   "whatsapp": {

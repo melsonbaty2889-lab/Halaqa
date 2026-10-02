@@ -271,6 +271,7 @@
     "close": "Close",
     "confirm": "Confirm",
     "continue_next_step": "Continue to Next Step",
+    "currentTime": "الوقت الحالي",
     "date": "Date",
     "delete": "Delete",
     "disabled": "Disabled",
@@ -318,6 +319,8 @@
     "unarchive": "Unarchive",
     "unknown": "Unknown",
     "unspecified": "Unspecified",
+    "upgrade": "ترقية",
+    "upgradeAccount": "ترقية الحساب",
     "upload": "Upload",
     "uploading": "Uploading...",
     "view": "View",
@@ -917,6 +920,9 @@
   "trackTilawah": "Recitation & Performance Correction Track",
   "unassigned": "Awaiting Certified Assignment",
   "unnamed_student": "Unnamed Student",
+  "user": {
+    "role": "مستخدم"
+  },
   "viewActive": "Active Halaqas",
   "viewArchived": "Archive",
   "whatsapp": {
