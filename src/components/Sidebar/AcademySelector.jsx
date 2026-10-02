@@ -47,22 +47,46 @@ export default function AcademySelector({
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // حساب الأيام المتبقية تلقائياً إن لم تتم تمريرها
+  // استخراج بيانات الاشتراك أو الفترة التجريبية بترتيب الأولوية
+  const subscriptionData = useMemo(() => {
+    const sub = currentAcademy?.saas_subscription;
+    const isActiveSub = sub && sub.status === 'active';
+
+    // 1. إذا كان لديه اشتراك مدفوع نشط
+    if (isActiveSub && sub.expires_at) {
+      return {
+        isTrial: false,
+        planTier: sub.plan_tier || 'pro',
+        expiryDate: sub.expires_at,
+        badgeText: sub.plan_tier === 'pro' ? t('sidebar.badgePro', 'احترافي') : t('sidebar.badgeActive', 'نشط')
+      };
+    }
+
+    // 2. إذا كان في الفترة التجريبية
+    const trialEnds = currentAcademy?.trial_ends_at;
+    return {
+      isTrial: true,
+      planTier: 'trial',
+      expiryDate: trialEnds || null,
+      badgeText: t('sidebar.badgeTrial', 'تجريبي')
+    };
+  }, [currentAcademy, t]);
+
+  // حساب الأيام المتبقية بناءً على تاريخ الانتهاء الصحيح
   const daysLeft = useMemo(() => {
     if (typeof effectiveDaysLeft === 'number') return effectiveDaysLeft;
-    const expiry = currentAcademy?.saas_subscription?.expires_at || currentAcademy?.trial_ends_at;
-    if (!expiry) return null;
-    const diffTime = new Date(expiry) - new Date();
+    if (!subscriptionData.expiryDate) return null;
+    
+    const diffTime = new Date(subscriptionData.expiryDate) - new Date();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
-  }, [effectiveDaysLeft, currentAcademy]);
+  }, [effectiveDaysLeft, subscriptionData.expiryDate]);
 
-  // تنسيق تاريخ الانتهاء
+  // تنسيق تاريخ الانتهاء بحسب اللغة الحالية
   const formattedExpiryDate = useMemo(() => {
-    const rawDate = currentAcademy?.saas_subscription?.expires_at || currentAcademy?.trial_ends_at;
-    if (!rawDate) return null;
+    if (!subscriptionData.expiryDate) return null;
     try {
-      const d = new Date(rawDate);
+      const d = new Date(subscriptionData.expiryDate);
       if (isNaN(d.getTime())) return null;
       return d.toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
         day: 'numeric',
@@ -72,7 +96,7 @@ export default function AcademySelector({
     } catch {
       return null;
     }
-  }, [currentAcademy, i18n.language]);
+  }, [subscriptionData.expiryDate, i18n.language]);
 
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
 
@@ -90,7 +114,7 @@ export default function AcademySelector({
         } ${canOpenDropdown ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* إطار الشعار بمقاس بارز ومريح */}
+          {/* إطار الشعار */}
           <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-1 bg-semantic-surfaceInput border border-semantic-borderCard transition-transform duration-200 group-hover:scale-105 shadow-sm">
             {activeLogo ? (
               <img
@@ -114,6 +138,7 @@ export default function AcademySelector({
             </h2>
 
             <div className="flex items-center gap-1.5 flex-wrap">
+              {/* شارة الحالة الديناميكية */}
               {statusBadge ? (
                 <span 
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
@@ -122,8 +147,12 @@ export default function AcademySelector({
                   {statusBadge.text}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-surfaceSecondary text-semantic-textMuted border border-semantic-borderCard">
-                  {t('sidebar.badgeActive', 'اشتراك المنظومة')}
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide ${
+                  subscriptionData.isTrial
+                    ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
+                    : 'bg-semantic-successBg text-semantic-success border border-semantic-success/20'
+                }`}>
+                  {subscriptionData.badgeText}
                 </span>
               )}
 
@@ -136,7 +165,7 @@ export default function AcademySelector({
               )}
             </div>
 
-            {/* تاريخ الانتهاء المنسق بصورة صحيحة للمجموعتين العربية والإنجليزية */}
+            {/* تاريخ الانتهاء الصحيح */}
             {formattedExpiryDate && (
               <span className="text-[10px] text-semantic-textMuted leading-none mt-0.5">
                 {t('sidebar.expiresOn', 'ينتهي في:')} {formattedExpiryDate}
