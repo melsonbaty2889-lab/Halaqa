@@ -1,5 +1,5 @@
 // src/components/Sidebar/AcademySelector.jsx
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Building2, Plus, X } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
@@ -23,10 +23,7 @@ export default function AcademySelector({
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
 
-  const activeName = currentAcademyName || (currentAcademy?.name ? (typeof currentAcademy.name === 'object' ? currentAcademy.name[i18n.language] || currentAcademy.name.ar : currentAcademy.name) : '');
-  const activeLogo = academyLogo || currentAcademy?.logo_url;
-
-  const resolveText = (textObj) => {
+  const resolveText = useCallback((textObj) => {
     if (typeof getText === 'function') {
       const res = getText(textObj);
       if (res) return res;
@@ -36,12 +33,19 @@ export default function AcademySelector({
       return textObj[i18n.language] || textObj.ar || textObj.en || '';
     }
     return '';
-  };
+  }, [getText, i18n.language]);
+
+  const activeName = useMemo(() => {
+    if (currentAcademyName) return currentAcademyName;
+    if (currentAcademy?.name) return resolveText(currentAcademy.name);
+    return '';
+  }, [currentAcademyName, currentAcademy?.name, resolveText]);
+
+  const activeLogo = academyLogo || currentAcademy?.logo_url;
 
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // 🟢 عرض شارة الاشتراك الموحدة ممررة مباشرة من Sidebar.jsx لمنع تكرار المنطق
   const renderSubscriptionBadge = () => {
     if (statusBadge) {
       return (
@@ -72,7 +76,7 @@ export default function AcademySelector({
         aria-label={activeName || t('sidebar.academyLogo', 'شعار الأكاديمية')}
         className={`w-full flex items-center justify-between p-3 min-h-[62px] rounded-2xl bg-semantic-surfaceCard border transition-all duration-200 select-none group focus:outline-none ${
           dropdownOpen 
-            ? 'border-semantic-success ring-1 ring-semantic-success/20 shadow-[0_0_15px_var(--emerald-radial-glow)]' 
+            ? 'border-semantic-success ring-1 ring-semantic-success/20 shadow-[0_0_15px_var(--color-shadow-glow)]' 
             : 'border-semantic-borderCard hover:border-semantic-borderHover'
         } ${canOpenDropdown ? 'cursor-pointer' : 'cursor-default'}`}
       >
@@ -146,7 +150,7 @@ export default function AcademySelector({
                     className={`w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group ${
                       isSelected
                         ? 'bg-semantic-successBg text-semantic-success font-bold'
-                        : 'text-semantic-textSecondary hover:bg-semantic-borderCard hover:text-semantic-textPrimary'
+                        : 'text-semantic-textSecondary hover:bg-semantic-surfaceHover hover:text-semantic-textPrimary'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
