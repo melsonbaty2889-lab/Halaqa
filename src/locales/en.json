@@ -736,6 +736,11 @@
   "sidebar": {
     "academyLogo": "Academy Logo",
     "badgeActive": "System Subscription",
+    "badgeBlocked": "معطل",
+    "badgeExpired": "منتهي",
+    "badgeMonthly": "اشتراك شهري",
+    "badgeTrial": "تجريبي",
+    "badgeYearly": "اشتراك سنوي",
     "createNewAcademy": "Create New Academy",
     "footer": "Session & Language Settings",
     "unnamedAcademy": "Unnamed Academy"

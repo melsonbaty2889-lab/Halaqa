@@ -736,6 +736,11 @@
   "sidebar": {
     "academyLogo": "شعار الأكاديمية",
     "badgeActive": "اشتراك المنظومة",
+    "badgeBlocked": "معطل",
+    "badgeExpired": "منتهي",
+    "badgeMonthly": "اشتراك شهري",
+    "badgeTrial": "تجريبي",
+    "badgeYearly": "اشتراك سنوي",
     "createNewAcademy": "إنشاء أكاديمية جديدة",
     "footer": "إعدادات الجلسة واللغات",
     "unnamedAcademy": "أكاديمية بدون اسم"
