@@ -159,10 +159,21 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
-      if (activeProfile.academy_id) {
+            if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
-          .select('*')
+          .select(`
+            *,
+            saas_subscriptions (
+              id,
+              plan_tier,
+              status,
+              trial_ends_at,
+              expires_at,
+              price,
+              currency
+            )
+          `)
           .eq('id', activeProfile.academy_id)
           .maybeSingle();
 
@@ -182,10 +193,21 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-      if (fetchedList.length === 0) {
+            if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
-          .select('*')
+          .select(`
+            *,
+            saas_subscriptions (
+              id,
+              plan_tier,
+              status,
+              trial_ends_at,
+              expires_at,
+              price,
+              currency
+            )
+          `)
           .eq('owner_id', currentUser.id);
 
         if (ownedAcademies && ownedAcademies.length > 0) {
