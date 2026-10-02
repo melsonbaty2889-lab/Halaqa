@@ -51,13 +51,13 @@ export default function SidebarFooter({ isRtl, t, onLogoutSuccess }) {
         <LanguageSwitcher dropDirection="up" placement="footer" />
       </div>
 
-      {/* زر تسجيل الخروج المطابق لنظام التصميم الموحد */}
+      {/* زر تسجيل الخروج بخلفية شفافة هادئة ونمط ثانوي تحذيري */}
       <button
         type="button"
         onClick={handleLogout}
         disabled={isLoggingOut}
         aria-label={safeT('common.logout', 'تسجيل الخروج')}
-        className="group h-10 flex-1 flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50 border border-semantic-dangerBg bg-semantic-dangerBg text-semantic-danger hover:border-semantic-danger/40 [-webkit-tap-highlight-color:transparent] shadow-sm"
+        className="group h-10 flex-1 flex items-center justify-center gap-2 px-3 rounded-xl font-bold text-xs cursor-pointer transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/40 border border-semantic-borderCard bg-transparent hover:bg-semantic-dangerBg/20 hover:border-semantic-danger/30 text-semantic-danger [-webkit-tap-highlight-color:transparent]"
       >
         {isLoggingOut ? (
           <Loader2 size={15} className="animate-spin shrink-0 text-semantic-danger" />
