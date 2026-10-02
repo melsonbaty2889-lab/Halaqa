@@ -742,6 +742,8 @@
     "badgeTrial": "تجريبي",
     "badgeYearly": "اشتراك سنوي",
     "createNewAcademy": "إنشاء أكاديمية جديدة",
+    "daysLeft": "متبقي {{days}} يوم",
+    "expiresOn": "ينتهي في:",
     "footer": "إعدادات الجلسة واللغات",
     "unnamedAcademy": "أكاديمية بدون اسم"
   },

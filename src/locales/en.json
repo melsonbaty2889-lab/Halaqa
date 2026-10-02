@@ -742,6 +742,8 @@
     "badgeTrial": "تجريبي",
     "badgeYearly": "اشتراك سنوي",
     "createNewAcademy": "Create New Academy",
+    "daysLeft": "متبقي {{days}} يوم",
+    "expiresOn": "ينتهي في:",
     "footer": "Session & Language Settings",
     "unnamedAcademy": "Unnamed Academy"
   },
