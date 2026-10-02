@@ -14,7 +14,7 @@ export default function AcademySelector({
   setDropdownOpen,
   dropdownRef,
   statusBadge,
-  effectiveDaysLeft = 0,
+  effectiveDaysLeft,
   onSwitchAcademy,
   onOpenCreateAcademy,
   onClose,
@@ -47,7 +47,17 @@ export default function AcademySelector({
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // استخراج تاريخ انتهاء الاشتراك أو الفترة التجريبية
+  // حساب الأيام المتبقية تلقائياً إن لم تتم تمريرها
+  const daysLeft = useMemo(() => {
+    if (typeof effectiveDaysLeft === 'number') return effectiveDaysLeft;
+    const expiry = currentAcademy?.saas_subscription?.expires_at || currentAcademy?.trial_ends_at;
+    if (!expiry) return null;
+    const diffTime = new Date(expiry) - new Date();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  }, [effectiveDaysLeft, currentAcademy]);
+
+  // تنسيق تاريخ الانتهاء
   const formattedExpiryDate = useMemo(() => {
     const rawDate = currentAcademy?.saas_subscription?.expires_at || currentAcademy?.trial_ends_at;
     if (!rawDate) return null;
@@ -63,34 +73,6 @@ export default function AcademySelector({
       return null;
     }
   }, [currentAcademy, i18n.language]);
-
-  // عرض شارة الاشتراك وعداد الأيام المتبقية
-  const renderSubscriptionBadge = () => {
-    return (
-      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-        {statusBadge ? (
-          <span 
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide"
-            style={statusBadge.style}
-          >
-            {statusBadge.text}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide bg-semantic-surfaceSecondary text-semantic-textMuted border border-semantic-borderCard">
-            {t('sidebar.badgeActive', 'اشتراك المنظومة')}
-          </span>
-        )}
-
-        {/* عرض عداد الأيام التجريبية المتبقية */}
-        {effectiveDaysLeft > 0 && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-md border border-amber-400/20">
-            <Clock size={11} />
-            <span>{t('sidebar.daysLeft', 'متبقي {{days}} يوم', { days: effectiveDaysLeft })}</span>
-          </span>
-        )}
-      </div>
-    );
-  };
 
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
 
@@ -108,8 +90,8 @@ export default function AcademySelector({
         } ${canOpenDropdown ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* تم تكبير مقاس الحاوية والشعار من w-11 h-11 إلى w-14 h-14 */}
-          <div className="w-14 h-14 rounded-xl shrink-0 flex items-center justify-center overflow-hidden bg-semantic-surfaceInput border border-semantic-borderCard transition-transform duration-200 group-hover:scale-105 shadow-sm">
+          {/* إطار الشعار بمقاس بارز ومريح */}
+          <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center overflow-hidden p-1 bg-semantic-surfaceInput border border-semantic-borderCard transition-transform duration-200 group-hover:scale-105 shadow-sm">
             {activeLogo ? (
               <img
                 src={activeLogo}
@@ -119,23 +101,44 @@ export default function AcademySelector({
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-contain rounded-lg"
               />
             ) : (
-              <SmartHalaqaProLogo size={34} />
+              <SmartHalaqaProLogo size={30} />
             )}
           </div>
 
-          <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-0.5">
+          <div className="flex flex-col text-start min-w-0 flex-1 justify-center gap-1">
             <h2 className="text-base font-bold truncate leading-tight text-semantic-textPrimary transition-colors">
               {activeName || t('sidebar.unnamedAcademy', 'أكاديمية بدون اسم')}
             </h2>
 
-            {renderSubscriptionBadge()}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {statusBadge ? (
+                <span 
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
+                  style={statusBadge.style}
+                >
+                  {statusBadge.text}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide bg-semantic-surfaceSecondary text-semantic-textMuted border border-semantic-borderCard">
+                  {t('sidebar.badgeActive', 'اشتراك المنظومة')}
+                </span>
+              )}
 
-            {/* عرض تاريخ الانتهاء بنص مصغر عند وجوده */}
+              {/* عداد الأيام المتبقية */}
+              {daysLeft !== null && daysLeft > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-md border border-amber-400/20">
+                  <Clock size={10} />
+                  <span>{t('sidebar.daysLeft', 'متبقي {{days}} يوم', { days: daysLeft })}</span>
+                </span>
+              )}
+            </div>
+
+            {/* تاريخ الانتهاء المنسق بصورة صحيحة للمجموعتين العربية والإنجليزية */}
             {formattedExpiryDate && (
-              <span className="text-[10px] text-semantic-textMuted mt-0.5 truncate">
+              <span className="text-[10px] text-semantic-textMuted leading-none mt-0.5">
                 {t('sidebar.expiresOn', 'ينتهي في:')} {formattedExpiryDate}
               </span>
             )}
@@ -189,7 +192,7 @@ export default function AcademySelector({
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-8 h-8 rounded-md shrink-0 flex items-center justify-center overflow-hidden p-0.5 bg-semantic-surfaceInput border border-semantic-borderCard">
                         {accLogo ? (
-                          <img src={accLogo} alt={accName} className="w-full h-full object-cover rounded" />
+                          <img src={accLogo} alt={accName} className="w-full h-full object-contain rounded" />
                         ) : (
                           <Building2 size={16} className="text-semantic-success" />
                         )}
