@@ -15,6 +15,7 @@ export default function AcademySelector({
   dropdownRef,
   statusBadge,
   effectiveDaysLeft,
+  subscription,
   onSwitchAcademy,
   onOpenCreateAcademy,
   onClose,
@@ -47,46 +48,20 @@ export default function AcademySelector({
   const hasMultipleAcademies = academiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // استخراج بيانات الاشتراك أو الفترة التجريبية بترتيب الأولوية
-  const subscriptionData = useMemo(() => {
-    const sub = currentAcademy?.saas_subscription;
-    const isActiveSub = sub && sub.status === 'active';
-
-    // 1. إذا كان لديه اشتراك مدفوع نشط
-    if (isActiveSub && sub.expires_at) {
-      return {
-        isTrial: false,
-        planTier: sub.plan_tier || 'pro',
-        expiryDate: sub.expires_at,
-        badgeText: sub.plan_tier === 'pro' ? t('sidebar.badgePro', 'احترافي') : t('sidebar.badgeActive', 'نشط')
-      };
+  // استخراج تاريخ الانتهاء الصحيح بدون تكرار
+  const expiryDate = useMemo(() => {
+    const sub = subscription || currentAcademy?.saas_subscription;
+    if (sub && sub.status === 'active') {
+      return sub.expires_at;
     }
-
-    // 2. إذا كان في الفترة التجريبية
-    const trialEnds = currentAcademy?.trial_ends_at;
-    return {
-      isTrial: true,
-      planTier: 'trial',
-      expiryDate: trialEnds || null,
-      badgeText: t('sidebar.badgeTrial', 'تجريبي')
-    };
-  }, [currentAcademy, t]);
-
-  // حساب الأيام المتبقية بناءً على تاريخ الانتهاء الصحيح
-  const daysLeft = useMemo(() => {
-    if (typeof effectiveDaysLeft === 'number') return effectiveDaysLeft;
-    if (!subscriptionData.expiryDate) return null;
-    
-    const diffTime = new Date(subscriptionData.expiryDate) - new Date();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  }, [effectiveDaysLeft, subscriptionData.expiryDate]);
+    return sub?.trial_ends_at || currentAcademy?.trial_ends_at || null;
+  }, [subscription, currentAcademy]);
 
   // تنسيق تاريخ الانتهاء بحسب اللغة الحالية
   const formattedExpiryDate = useMemo(() => {
-    if (!subscriptionData.expiryDate) return null;
+    if (!expiryDate) return null;
     try {
-      const d = new Date(subscriptionData.expiryDate);
+      const d = new Date(expiryDate);
       if (isNaN(d.getTime())) return null;
       return d.toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
         day: 'numeric',
@@ -96,7 +71,7 @@ export default function AcademySelector({
     } catch {
       return null;
     }
-  }, [subscriptionData.expiryDate, i18n.language]);
+  }, [expiryDate, i18n.language]);
 
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
 
@@ -138,29 +113,21 @@ export default function AcademySelector({
             </h2>
 
             <div className="flex items-center gap-1.5 flex-wrap">
-              {/* شارة الحالة الديناميكية */}
-              {statusBadge ? (
+              {/* شارة الحالة الديناميكية المعتمِدة على التوكنز واللغة */}
+              {statusBadge && (
                 <span 
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
                   style={statusBadge.style}
                 >
                   {statusBadge.text}
                 </span>
-              ) : (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide ${
-                  subscriptionData.isTrial
-                    ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20'
-                    : 'bg-semantic-successBg text-semantic-success border border-semantic-success/20'
-                }`}>
-                  {subscriptionData.badgeText}
-                </span>
               )}
 
               {/* عداد الأيام المتبقية */}
-              {daysLeft !== null && daysLeft > 0 && (
+              {typeof effectiveDaysLeft === 'number' && effectiveDaysLeft > 0 && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-md border border-amber-400/20">
                   <Clock size={10} />
-                  <span>{t('sidebar.daysLeft', 'متبقي {{days}} يوم', { days: daysLeft })}</span>
+                  <span>{t('sidebar.daysLeft', 'متبقي {{days}} يوم', { days: effectiveDaysLeft })}</span>
                 </span>
               )}
             </div>
