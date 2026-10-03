@@ -6,7 +6,7 @@ import {
 
 export default function AcademyCard({
   academy,
-  selectedAcademyIds,
+  selectedAcademyIds = [],
   onToggleSelect,
   onOpenDrawer,
   onStatusToggle,
@@ -19,7 +19,29 @@ export default function AcademyCard({
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === 'rtl';
-  const isSelected = selectedAcademyIds.includes(academy.id);
+  const isSelected = Array.isArray(selectedAcademyIds) && selectedAcademyIds.includes(academy.id);
+
+  // 🛡️ استخراج اسم المجمع/الأكاديمية المالك بطريقة آمنة مع دعم النصوص العربية والترجمات
+  const resolveSafeText = (val, defaultVal = '') => {
+    if (typeof getSafeText === 'function') {
+      return getSafeText(val, defaultVal);
+    }
+    if (!val) return defaultVal;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.ar || val.en || defaultVal;
+    return String(val);
+  };
+
+  const academyName = resolveSafeText(academy?.name, t('common.unknown', 'غير معروف'));
+  const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
+  const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
+
+  // 🗓️ استخراج أحدث تاريخ انتهاء اشتراك/تجربة من الاشتراكات المرفقة إن وجد
+  const latestSubscription = Array.isArray(academy?.saas_subscriptions) && academy.saas_subscriptions.length > 0
+    ? academy.saas_subscriptions[0]
+    : null;
+
+  const expiryDateString = academy?.trial_ends_at || latestSubscription?.expires_at || latestSubscription?.trial_ends_at;
 
   const handleEnterAcademy = (e) => {
     e.preventDefault();
@@ -35,7 +57,7 @@ export default function AcademyCard({
     <div className={`card-surface p-4 rounded-xl transition-all relative border ${
       isSelected 
         ? 'border-sky-500 ring-1 ring-sky-500/50' 
-        : academy.is_active 
+        : academy?.is_active 
           ? 'border-semantic-borderCard' 
           : 'border-semantic-danger/40 bg-semantic-dangerBg/10'
     }`}>
@@ -43,12 +65,14 @@ export default function AcademyCard({
       {/* Checkbox للإجراءات الجماعية */}
       <div className="absolute top-4 left-4 z-10">
         <button
-          onClick={() => onToggleSelect(academy.id)}
+          onClick={() => typeof onToggleSelect === 'function' && onToggleSelect(academy.id)}
           className={`w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer ${
             isSelected 
               ? 'bg-sky-500 border-sky-500 text-white' 
               : 'border-semantic-borderInput bg-semantic-surfaceInput hover:border-semantic-borderHover'
           }`}
+          type="button"
+          aria-label={t('common.select', 'تحديد')}
         >
           {isSelected && <Check size={12} strokeWidth={3} />}
         </button>
@@ -56,24 +80,29 @@ export default function AcademyCard({
 
       <div className="flex justify-between items-start mb-3 pr-2 pl-7">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 font-bold text-base">
-            {getSafeText(academy.name)?.[0]?.toUpperCase() || 'A'}
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 font-bold text-base select-none">
+            {academyName?.[0]?.toUpperCase() || 'A'}
           </div>
           <div>
             <h3 className="m-0 text-semantic-textPrimary font-bold text-sm flex items-center gap-2">
-              {getSafeText(academy.name)}
-              {academy.is_active ? (
+              {academyName}
+              {academy?.is_active ? (
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-normal">
                   {t('common.active', 'نشط')}
                 </span>
               ) : (
                 <span className="bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/20 text-[10px] px-2 py-0.5 rounded-full font-normal">
-                  {t('common.blocked', 'محظور')}
+                  {t('common.blocked', 'محظر')}
                 </span>
               )}
             </h3>
             <p className="m-0 text-xs text-semantic-textSecondary mt-0.5">
-              {t('academy.owner_label', 'المالك:')} {getSafeText(academy.ownerProfile?.full_name, t('common.unknown', 'غير معروف'))}
+              {t('academy.owner_label', 'المالك:')} {ownerName}
+              {complexName && (
+                <span className="text-semantic-textMuted mr-1">
+                  / {t('academy.complex_label', 'المجمع:')} {complexName}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -83,13 +112,13 @@ export default function AcademyCard({
         <div className="flex justify-between text-semantic-textSecondary">
           <span>{t('academy.registered_at', 'تاريخ التسجيل:')}</span>
           <span className="text-semantic-textPrimary ltr">
-            {academy.created_at ? new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+            {academy?.created_at ? new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
         <div className="flex justify-between text-semantic-textSecondary">
-          <span>{t('academy.trial_ends', 'انتهاء التجربة:')}</span>
-          <span className={`font-semibold ${new Date(academy.trial_ends_at) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
-            {academy.trial_ends_at ? new Date(academy.trial_ends_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+          <span>{t('academy.trial_ends', 'انتهاء التجربة / الاشتراك:')}</span>
+          <span className={`font-semibold ${expiryDateString && new Date(expiryDateString) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
+            {expiryDateString ? new Date(expiryDateString).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
       </div>
@@ -98,6 +127,7 @@ export default function AcademyCard({
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-semantic-borderCard">
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
+            type="button"
             onClick={handleEnterAcademy}
             className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1 transition-colors z-20"
           >
@@ -105,14 +135,16 @@ export default function AcademyCard({
           </button>
 
           <button
-            onClick={() => onOpenDrawer(academy)}
+            type="button"
+            onClick={() => typeof onOpenDrawer === 'function' && onOpenDrawer(academy)}
             className="bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium border border-semantic-borderInput transition-colors"
           >
             {t('common.details', 'التفاصيل')}
           </button>
 
           <button
-            onClick={() => onExtendClick(academy)}
+            type="button"
+            onClick={() => typeof onExtendClick === 'function' && onExtendClick(academy)}
             className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1.5 rounded-lg cursor-pointer text-xs flex items-center gap-1 transition-colors"
           >
             <PlusCircle size={13} /> {t('academy.extend', 'تمديد')}
@@ -120,9 +152,10 @@ export default function AcademyCard({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {academy.ownerProfile?.phone ? (
+          {academy?.ownerProfile?.phone ? (
             <button
-              onClick={() => onWhatsAppClick(academy.ownerProfile.phone, getSafeText(academy.name))}
+              type="button"
+              onClick={() => typeof onWhatsAppClick === 'function' && onWhatsAppClick(academy.ownerProfile.phone, academyName)}
               className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors"
               title={t('academy.whatsapp_chat', 'تواصل واتساب')}
             >
@@ -130,7 +163,8 @@ export default function AcademyCard({
             </button>
           ) : (
             <button
-              onClick={() => onOpenPhoneModal(academy)}
+              type="button"
+              onClick={() => typeof onOpenPhoneModal === 'function' && onOpenPhoneModal(academy)}
               className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors"
               title={t('academy.add_phone', 'إضافة رقم هاتف')}
             >
@@ -139,15 +173,16 @@ export default function AcademyCard({
           )}
 
           <button
-            onClick={() => onStatusToggle(academy.id, academy.is_active)}
+            type="button"
+            onClick={() => typeof onStatusToggle === 'function' && onStatusToggle(academy.id, academy.is_active)}
             disabled={processingId === academy.id}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border cursor-pointer transition-colors ${
-              academy.is_active 
+              academy?.is_active 
                 ? 'bg-semantic-dangerBg text-semantic-danger border-semantic-danger/30 hover:opacity-90' 
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
             }`}
           >
-            {processingId === academy.id ? '...' : (academy.is_active ? t('common.block', 'حظر') : t('common.activate', 'تفعيل'))}
+            {processingId === academy.id ? '...' : (academy?.is_active ? t('common.block', 'حظر') : t('common.activate', 'تفعيل'))}
           </button>
         </div>
       </div>
