@@ -154,60 +154,46 @@ export const updateAcademyStatus = async (ids, isStatusActive) => {
   if (error) throw error;
 };
 
-// ⏳ 5. تمديد اشتراك أكاديمية في جدول saas_subscriptions الحقيقي
-export const extendAcademySubscription = async (academyId, daysToAdd, isLifetime = false) => {
-  // 1. جلب الاشتراك الحالي للأكاديمية
+// ⏳ 5. تمديد اشتراك أكاديمية بمدد محددة فقط
+export const extendAcademySubscription = async (academyId, daysToAdd) => {
   const { data: currentSub } = await supabase
     .from('saas_subscriptions')
     .select('*')
     .eq('academy_id', academyId)
     .maybeSingle();
 
+  if (!currentSub) return;
+
   const now = new Date();
-  
-  if (isLifetime) {
-    // رخصة مدى الحياة (100 سنة مستقبلاً)
-    const lifetimeDate = new Date();
-    lifetimeDate.setFullYear(lifetimeDate.getFullYear() + 100);
 
-    if (currentSub) {
-      await supabase
-        .from('saas_subscriptions')
-        .update({
-          expires_at: lifetimeDate.toISOString(),
-          status: 'active',
-          updated_at: now.toISOString()
-        })
-        .eq('id', currentSub.id);
-    }
+  if (currentSub.status === 'active' || currentSub.expires_at) {
+    const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : now;
+    const baseDate = currentExpiry > now ? currentExpiry : now;
+    baseDate.setDate(baseDate.getDate() + Number(daysToAdd));
+
+    const { error } = await supabase
+      .from('saas_subscriptions')
+      .update({
+        expires_at: baseDate.toISOString(),
+        status: 'active',
+        updated_at: now.toISOString()
+      })
+      .eq('id', currentSub.id);
+
+    if (error) throw error;
   } else {
-    // تمديد بالأيام
-    if (currentSub && currentSub.status === 'active') {
-      // إذا كان الاشتراك نشط، نمدد تاريخ الانتهاء الأصلي
-      const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : new Date();
-      const baseDate = currentExpiry > now ? currentExpiry : now;
-      baseDate.setDate(baseDate.getDate() + daysToAdd);
+    const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : now;
+    const baseDate = currentTrial > now ? currentTrial : now;
+    baseDate.setDate(baseDate.getDate() + Number(daysToAdd));
 
-      await supabase
-        .from('saas_subscriptions')
-        .update({
-          expires_at: baseDate.toISOString(),
-          updated_at: now.toISOString()
-        })
-        .eq('id', currentSub.id);
-    } else if (currentSub) {
-      // إذا كان تجريبي أو غير نشط، نمدد تاريخ التجربة
-      const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : new Date();
-      const baseDate = currentTrial > now ? currentTrial : now;
-      baseDate.setDate(baseDate.getDate() + daysToAdd);
+    const { error } = await supabase
+      .from('saas_subscriptions')
+      .update({
+        trial_ends_at: baseDate.toISOString(),
+        updated_at: now.toISOString()
+      })
+      .eq('id', currentSub.id);
 
-      await supabase
-        .from('saas_subscriptions')
-        .update({
-          trial_ends_at: baseDate.toISOString(),
-          updated_at: now.toISOString()
-        })
-        .eq('id', currentSub.id);
-    }
+    if (error) throw error;
   }
 };
