@@ -354,6 +354,11 @@
     "typeWordToConfirm": "اكتب كلمة",
     "warningTitle": "تأكيد الإجراء"
   },
+  "currency": {
+    "egp": "egp",
+    "sar": "sar",
+    "usd": "usd"
+  },
   "dashboard": {
     "active_halaqas_title": "الحلقات النشطة وحالة التسميع اللحظية",
     "active_streak": "التتابع المستمر",

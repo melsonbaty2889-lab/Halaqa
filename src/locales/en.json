@@ -354,6 +354,11 @@
     "typeWordToConfirm": "Type word",
     "warningTitle": "Confirm Action"
   },
+  "currency": {
+    "egp": "",
+    "sar": "",
+    "usd": ""
+  },
   "dashboard": {
     "active_halaqas_title": "Active Halaqas & Realtime Recitation Status",
     "active_streak": "Active Streak",
