@@ -112,7 +112,7 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
     pendingCount: pCount || 0,
     activeCount: aCount || 0,
     blockedCount: bCount || 0,
-    totalRevenue: revenueByCurrency, // يُرجع كائن الإيرادات مقسمًا حسب العملات { EGP: 195, SAR: 200, USD: 50 }
+    totalRevenue: revenueByCurrency,
     pendingSubscriptions: subData || [],
     academies: enrichedAcademies
   };
@@ -162,13 +162,17 @@ export const updateAcademyStatus = async (ids, isStatusActive) => {
 
 // ⏳ 5. تمديد اشتراك أكاديمية بمدد محددة وبشكل آمن
 export const extendAcademySubscription = async (academyId, daysToAdd) => {
-  const { data: currentSub, error: fetchErr } = await supabase
+  // جلب أحدث اشتراك تجنباً لخطأ التكرار
+  const { data: subs, error: fetchErr } = await supabase
     .from('saas_subscriptions')
     .select('*')
     .eq('academy_id', academyId)
-    .maybeSingle();
+    .order('created_at', { ascending: false })
+    .limit(1);
 
   if (fetchErr) throw fetchErr;
+  
+  const currentSub = subs && subs.length > 0 ? subs[0] : null;
   if (!currentSub) throw new Error('لم يتم العثور على اشتراك لهذه الأكاديمية');
 
   const now = new Date();
