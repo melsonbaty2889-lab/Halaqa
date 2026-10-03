@@ -154,27 +154,31 @@ export const updateAcademyStatus = async (ids, isStatusActive) => {
   if (error) throw error;
 };
 
-// ⏳ 5. تمديد اشتراك أكاديمية بمدد محددة فقط
+// ⏳ 5. تمديد اشتراك أكاديمية بمدد محددة وبشكل آمن
 export const extendAcademySubscription = async (academyId, daysToAdd) => {
-  const { data: currentSub } = await supabase
+  const { data: currentSub, error: fetchErr } = await supabase
     .from('saas_subscriptions')
     .select('*')
     .eq('academy_id', academyId)
     .maybeSingle();
 
-  if (!currentSub) return;
+  if (fetchErr) throw fetchErr;
+  if (!currentSub) throw new Error('لم يتم العثور على اشتراك لهذه الأكاديمية');
 
   const now = new Date();
+  const addedDays = Number(daysToAdd);
 
-  if (currentSub.status === 'active' || currentSub.expires_at) {
+  if (currentSub.status === 'active') {
     const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : now;
     const baseDate = currentExpiry > now ? currentExpiry : now;
-    baseDate.setDate(baseDate.getDate() + Number(daysToAdd));
+    
+    baseDate.setDate(baseDate.getDate() + addedDays);
 
     const { error } = await supabase
       .from('saas_subscriptions')
       .update({
         expires_at: baseDate.toISOString(),
+        trial_ends_at: null,
         status: 'active',
         updated_at: now.toISOString()
       })
@@ -184,12 +188,15 @@ export const extendAcademySubscription = async (academyId, daysToAdd) => {
   } else {
     const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : now;
     const baseDate = currentTrial > now ? currentTrial : now;
-    baseDate.setDate(baseDate.getDate() + Number(daysToAdd));
+    
+    baseDate.setDate(baseDate.getDate() + addedDays);
 
     const { error } = await supabase
       .from('saas_subscriptions')
       .update({
         trial_ends_at: baseDate.toISOString(),
+        expires_at: baseDate.toISOString(),
+        status: 'trial',
         updated_at: now.toISOString()
       })
       .eq('id', currentSub.id);
