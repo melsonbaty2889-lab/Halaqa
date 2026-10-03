@@ -26,7 +26,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard.jsx'));
+const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
 
 export default function Dashboard({ 
   session, 
