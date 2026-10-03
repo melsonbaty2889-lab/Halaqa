@@ -4,8 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatHijriDate } from '@/utils/dateUtils';
 import { useAcademy } from '@/context/AcademyContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { getMenuSections } from '@/constants/sidebarMenu';
-import { colors as C } from '@/theme/colors';
 
 import AcademySelector from './AcademySelector';
 import SidebarWidget from './SidebarWidget';
@@ -70,6 +70,17 @@ export default function Sidebar({
     }
     return '';
   }, [currentLang, isRtlMode]);
+
+  const currentAcademy = useMemo(() => {
+    return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
+  }, [academiesList, currentAcademyId, propAcademy, contextAcademy]);
+
+  // 📡 جلب بيانات الاشتراك مباشرة وحياً عبر useSubscription
+  const { 
+    subscription, 
+    isTrial, 
+    daysRemaining 
+  } = useSubscription(currentAcademy?.id);
 
   const handleSelectTab = useCallback((tabId) => {
     if (typeof setActiveTab === 'function') {
@@ -138,12 +149,6 @@ export default function Sidebar({
     setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
   }, []);
 
-  const hijri = useMemo(() => formatHijriDate(new Date(), currentLang), [currentLang]);
-
-  const currentAcademy = useMemo(() => {
-    return academiesList.find(a => a.id === currentAcademyId) || propAcademy || contextAcademy || academiesList[0] || null;
-  }, [academiesList, currentAcademyId, propAcademy, contextAcademy]);
-
   const rawAcademyName = getText(currentAcademy?.name);
   const currentAcademyName = typeof rawAcademyName === 'string' && rawAcademyName.trim() !== '' 
     ? rawAcademyName.trim() 
@@ -169,24 +174,12 @@ export default function Sidebar({
     }
   }, [currentAcademy?.logo_url, currentAcademy?.updated_at, propAcademy?.logo_url, propAcademy?.updated_at]);
 
+  // الأيام المتبقية المحسوبة
   const effectiveDaysLeft = useMemo(() => {
-    if (!currentAcademy) return trialDaysLeft ?? 0;
+    return daysRemaining ?? trialDaysLeft ?? 0;
+  }, [daysRemaining, trialDaysLeft]);
 
-    const targetExpiryDate = currentAcademy.saas_subscription?.expires_at || currentAcademy.trial_ends_at;
-
-    if (targetExpiryDate) {
-      const endDate = new Date(targetExpiryDate);
-      if (isNaN(endDate.getTime())) return trialDaysLeft ?? 0;
-
-      const diffTime = endDate.getTime() - Date.now();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return Math.max(0, diffDays);
-    }
-
-    return trialDaysLeft ?? 0;
-  }, [currentAcademy, trialDaysLeft]);
-
-  //  تحديد شارات الحالة الموحدة بالاعتماد على التوكنز
+  //  تحديد شارات الحالة الموحدة بالاعتماد على التوكنز وعرض اسم الخطة بدقة
   const statusBadge = useMemo(() => {
     if (!currentAcademy) return null;
 
@@ -201,8 +194,8 @@ export default function Sidebar({
       };
     }
 
-    const subStatus = currentAcademy.saas_subscription?.status;
-    const planDuration = currentAcademy.saas_subscription?.plan_duration || 'monthly';
+    const subStatus = subscription?.status || currentAcademy.saas_subscription?.status;
+    const planDuration = subscription?.plan_duration || currentAcademy.saas_subscription?.plan_duration || 'monthly';
 
     if (subStatus === 'active') {
       const isYearly = planDuration === 'yearly';
@@ -220,7 +213,6 @@ export default function Sidebar({
       };
     }
 
-    const isTrial = subStatus === 'trial' || subStatus === 'trialing' || (!currentAcademy.saas_subscription && effectiveDaysLeft > 0);
     if (isTrial && effectiveDaysLeft > 0) {
       return {
         text: safeT('sidebar.badgeTrial', 'تجريبي'),
@@ -240,7 +232,7 @@ export default function Sidebar({
         border: '1px solid rgba(245, 158, 11, 0.3)'
       }
     };
-  }, [currentAcademy, effectiveDaysLeft, safeT]);
+  }, [currentAcademy, subscription, isTrial, effectiveDaysLeft, safeT]);
 
   const normalizeArabic = useCallback((str) => {
     if (!str) return '';
@@ -328,6 +320,8 @@ export default function Sidebar({
               setDropdownOpen={setDropdownOpen}
               dropdownRef={dropdownRef}
               statusBadge={statusBadge}
+              effectiveDaysLeft={effectiveDaysLeft}
+              subscription={subscription}
               onSwitchAcademy={handleSwitch}
               onOpenCreateAcademy={onOpenCreateAcademy}
               onClose={isMobile ? () => setSidebarOpen(false) : undefined}
