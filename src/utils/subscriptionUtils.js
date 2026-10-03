@@ -1,16 +1,37 @@
 // src/utils/subscriptionUtils.js
 
 /**
- * دالة موحدة لاستخراج وحساب حالة الاشتراك بناءً على بيانات المنظومة الحقيقية
+ * 💱 دالة مساعدة لتنسيق المبالغ المالية والعملات (EGP, SAR, USD)
+ */
+export function formatCurrencyAmount(amount, currencyCode = 'EGP', t = (k) => k) {
+  const num = Number(amount || 0);
+  const formattedNumber = num.toLocaleString('ar-EG');
+  const cleanCode = (currencyCode || 'EGP').trim().toUpperCase();
+
+  const symbols = {
+    EGP: t('currency.egp') !== 'currency.egp' ? t('currency.egp') : 'ج.م',
+    SAR: t('currency.sar') !== 'currency.sar' ? t('currency.sar') : 'ر.س',
+    USD: t('currency.usd') !== 'currency.usd' ? t('currency.usd') : '$',
+  };
+
+  const symbol = symbols[cleanCode] || cleanCode;
+  return `${formattedNumber} ${symbol}`;
+}
+
+/**
+ * 📊 دالة موحدة لاستخراج وحساب حالة الاشتراك بناءً على بيانات المنظومة الحقيقية
  */
 export function getAcademySubscriptionInfo(academy, t = (k) => k) {
   if (!academy) {
     return {
       isTrial: true,
       planTier: 'monthly',
+      planDuration: 'monthly',
       statusText: t('subscription.status.trial') || 'تجريبي',
       expiryDate: null,
-      daysLeft: 0
+      daysLeft: 0,
+      currency: 'EGP',
+      priceFormatted: formatCurrencyAmount(0, 'EGP', t),
     };
   }
 
@@ -20,7 +41,7 @@ export function getAcademySubscriptionInfo(academy, t = (k) => k) {
   const isSubActive = sub && sub.status === 'active';
   const now = new Date();
 
-  // تحديد تاريخ الانتهاء (حسابه بدقة وإهمال التداخلات القديمة)
+  // تحديد تاريخ الانتهاء
   const targetExpiry = isSubActive
     ? sub?.expires_at
     : (sub?.trial_ends_at || academy?.trial_ends_at);
@@ -43,12 +64,18 @@ export function getAcademySubscriptionInfo(academy, t = (k) => k) {
     }
   }
 
+  const currency = sub?.currency || 'EGP';
+  const price = sub?.price || 0;
+
   return {
     isTrial: !isSubActive,
     planTier: sub?.plan_tier || 'monthly',
     planDuration: sub?.plan_duration || 'monthly',
     statusText,
     expiryDate: targetExpiry,
-    daysLeft
+    daysLeft,
+    currency,
+    price,
+    priceFormatted: formatCurrencyAmount(price, currency, t),
   };
 }
