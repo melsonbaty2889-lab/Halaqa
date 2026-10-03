@@ -24,12 +24,13 @@ import AddPhoneModal from './Modals/AddPhoneModal';
 import { formatCurrencyAmount } from '@/utils/subscriptionUtils';
 
 export default function AdminDashboard({ onLogout, onSelectAcademy }) {
+  // 💰 تهيئة totalRevenue ككائن لدعم كافة العملات (EGP, SAR, USD)
   const [stats, setStats] = useState({
     totalAcademiesCount: 0,
     pendingCount: 0,
     activeCount: 0,
     blockedCount: 0,
-    totalRevenue: 0
+    totalRevenue: {}
   });
   const [academies, setAcademies] = useState([]);
   const [pendingSubscriptions, setPendingSubscriptions] = useState([]);
@@ -58,7 +59,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         pendingCount: data.pendingCount || 0,
         activeCount: data.activeCount || 0,
         blockedCount: data.blockedCount || 0,
-        totalRevenue: data.totalRevenue || 0
+        totalRevenue: data.totalRevenue || {} // استلام كائن الإيرادات الموزعة بالعملات
       });
       setPendingSubscriptions(data.pendingSubscriptions || []);
       setAcademies(data.academies || []);
@@ -377,8 +378,8 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
               const receiptUrl = sub.metadata?.receipt_url;
               const academyName = getSafeText(sub.academies?.name) || 'أكاديمية غير محددة';
               const planDuration = getSafeText(sub.plan_duration) === 'yearly' ? 'سنوي' : 'شهري';
-              const priceText = getSafeText(sub.price);
-              const currencyText = getSafeText(sub.currency);
+              const priceText = sub.price;
+              const currencyText = sub.currency || 'EGP';
               const gatewayText = getSafeText(sub.payment_gateway);
               const refText = getSafeText(sub.metadata?.transaction_ref);
 
@@ -396,7 +397,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
 
                     <div className="flex flex-wrap gap-4 text-xs text-semantic-textSecondary">
                       <div>الخطة: <strong className="text-semantic-textPrimary">{planDuration}</strong></div>
-                      <div>المبلغ: <strong className="text-semantic-textPrimary">{priceText} {currencyText}</strong></div>
+                      <div>المبلغ: <strong className="text-semantic-textPrimary">{formatCurrencyAmount(priceText, currencyText)}</strong></div>
                       <div>بوابة الدفع: <strong className="text-semantic-textPrimary">{gatewayText}</strong></div>
                       {refText && (
                         <div>المرجع: <strong className="text-semantic-textPrimary font-mono">{refText}</strong></div>
