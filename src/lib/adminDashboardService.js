@@ -30,7 +30,7 @@ export const getSafeText = (val, defaultVal = '') => {
   return String(val);
 };
 
-// 📊 1. جلب بيانات الإحصائيات العامة والأكاديميات
+// 📊 1. جلب بيانات الإحصائيات العامة والأكاديميات (مع حساب الإيرادات لكل عملة على حدة)
 export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
   const [
     { count: totalCount },
@@ -43,12 +43,18 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
     supabase.from('saas_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'pending_verification'),
     supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('academies').select('*', { count: 'exact', head: true }).eq('is_active', false),
-    supabase.from('saas_subscriptions').select('price, status')
+    supabase.from('saas_subscriptions').select('price, currency, status')
   ]);
 
-  const revenue = (allSubsForRevenue || [])
+  // 💰 تجميع الإيرادات مقسمة حسب كل عملة لضمان الدقة المالية
+  const revenueByCurrency = (allSubsForRevenue || [])
     .filter(sub => sub.status === 'active' || sub.status === 'approved' || sub.status === 'completed')
-    .reduce((sum, sub) => sum + (Number(sub.price) || 0), 0);
+    .reduce((acc, sub) => {
+      const currency = (sub.currency || 'EGP').trim().toUpperCase();
+      const price = Number(sub.price) || 0;
+      acc[currency] = (acc[currency] || 0) + price;
+      return acc;
+    }, {});
 
   const { data: subData, error: subErr } = await supabase
     .from('saas_subscriptions')
@@ -106,7 +112,7 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
     pendingCount: pCount || 0,
     activeCount: aCount || 0,
     blockedCount: bCount || 0,
-    totalRevenue: revenue,
+    totalRevenue: revenueByCurrency, // يُرجع كائن الإيرادات مقسمًا حسب العملات { EGP: 195, SAR: 200, USD: 50 }
     pendingSubscriptions: subData || [],
     academies: enrichedAcademies
   };
