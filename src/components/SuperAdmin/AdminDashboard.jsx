@@ -21,6 +21,7 @@ import AcademyCard from './AcademyCard';
 import AcademyDrawerDetails from './Modals/AcademyDrawerDetails';
 import ExtendTrialModal from './Modals/ExtendTrialModal';
 import AddPhoneModal from './Modals/AddPhoneModal';
+import { formatCurrencyAmount } from '@/utils/subscriptionUtils';
 
 export default function AdminDashboard({ onLogout, onSelectAcademy }) {
   const [stats, setStats] = useState({
