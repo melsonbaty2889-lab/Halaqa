@@ -16,7 +16,7 @@ const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
 const RoleSelectionPage = lazy(() => import('@/components/Auth/RoleSelectionPage'));
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
-const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard'));
+const AdminDashboard = lazy(() => import('@/components/Dashboard/AdminDashboard.jsx'));
 const SubscriptionPage = lazy(() => import('@/components/SaaS/SubscriptionPage'));
 
 const getText = (tFunc, key, fallback) => {
