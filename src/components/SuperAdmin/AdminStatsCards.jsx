@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Clock, CheckCircle, DollarSign } from 'lucide-react';
+import { formatCurrencyAmount } from '@/utils/subscriptionUtils';
 
 export default function AdminStatsCards({ stats = {} }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl';
+  const { t } = useTranslation();
 
   const safeNumber = (val) => {
     if (typeof val === 'number') return val;
@@ -19,8 +19,12 @@ export default function AdminStatsCards({ stats = {} }) {
     totalAcademiesCount: safeNumber(stats?.totalAcademiesCount),
     pendingCount: safeNumber(stats?.pendingCount),
     activeCount: safeNumber(stats?.activeCount),
-    totalRevenue: safeNumber(stats?.totalRevenue)
+    totalRevenue: typeof stats?.totalRevenue === 'object' && stats?.totalRevenue !== null 
+      ? stats.totalRevenue 
+      : { EGP: safeNumber(stats?.totalRevenue) }
   };
+
+  const revenueEntries = Object.entries(safeStats.totalRevenue);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 font-cairo">
@@ -57,18 +61,25 @@ export default function AdminStatsCards({ stats = {} }) {
         </h3>
       </div>
 
-      {/* إجمالي الإيرادات */}
+      {/* إجمالي الإيرادات (موزعة حسب العملة) */}
       <div className="card-surface p-4 rounded-xl border border-semantic-borderCard">
         <div className="flex items-center gap-2 text-semantic-textSecondary text-xs mb-1">
           <DollarSign size={16} className="text-semantic-success" />
           <span>{t('admin.total_revenue', 'إجمالي الإيرادات')}</span>
         </div>
-        <h3 className="text-xl font-bold text-semantic-textPrimary m-0">
-          {safeStats.totalRevenue.toLocaleString()}{' '}
-          <span className="text-xs font-normal text-semantic-textMuted">
-            {isRtl ? 'ج.م' : 'EGP'}
-          </span>
-        </h3>
+        <div className="space-y-1">
+          {revenueEntries.length === 0 ? (
+            <h3 className="text-xl font-bold text-semantic-textPrimary m-0">
+              {formatCurrencyAmount(0, 'EGP')}
+            </h3>
+          ) : (
+            revenueEntries.map(([currency, amount]) => (
+              <div key={currency} className="text-base font-bold text-semantic-textPrimary">
+                {formatCurrencyAmount(amount, currency)}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
