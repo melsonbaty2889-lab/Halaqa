@@ -53,7 +53,6 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
   const [academyId, setAcademyId] = useState<string | null>(explicitAcademyId || null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const isMountedRef = useRef<boolean>(true);
 
   // 🔄 جلب academy_id تلقائياً إذا لم يتم تحديده يدوياً
   useEffect(() => {
@@ -61,6 +60,8 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       setAcademyId(explicitAcademyId);
       return;
     }
+
+    let isSubscribed = true;
 
     async function resolveAcademyId() {
       try {
@@ -73,7 +74,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
           .eq('id', user.id)
           .maybeSingle();
 
-        if (profile?.academy_id && isMountedRef.current) {
+        if (profile?.academy_id && isSubscribed) {
           setAcademyId(profile.academy_id);
         }
       } catch (err) {
@@ -82,22 +83,22 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
     }
 
     resolveAcademyId();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [explicitAcademyId]);
 
   const fetchSubscription = useCallback(async () => {
     if (!academyId) {
-      if (isMountedRef.current) {
-        setSubscription(null);
-        setLoading(false);
-      }
+      setSubscription(null);
+      setLoading(false);
       return;
     }
 
     try {
-      if (isMountedRef.current) {
-        setLoading(true);
-        setError(null);
-      }
+      setLoading(true);
+      setError(null);
 
       if (!supabase?.from) {
         throw new Error(t('subscription.errors.clientNotInitialized', 'لم يتم تهيئة الاتصال بالسحابة بشكل صحيح'));
@@ -111,31 +112,31 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
       if (apiError) throw apiError;
 
-      if (isMountedRef.current) {
-        setSubscription(data as SaasSubscription | null);
-      }
+      setSubscription(data as SaasSubscription | null);
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
-      if (isMountedRef.current) {
-        const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
-        setError(err?.message || fallbackMsg);
-      }
+      const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
+      setError(err?.message || fallbackMsg);
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }, [academyId, t]);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    if (!academyId) {
+      setSubscription(null);
+      setLoading(false);
+      return;
+    }
+
+    // 1. جلب البيانات أول مرة
     fetchSubscription();
 
-    if (!academyId) return;
-
-    // 📡 الاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
+    // 2. إنتاج قناة Realtime متفردة وآمنة
+    const channelName = `subscription_${academyId}_${Date.now()}`;
+    
     const channel = supabase
-      .channel(`subscription_${academyId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -147,11 +148,13 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         () => {
           fetchSubscription();
         }
-      )
-      .subscribe();
+      );
 
+    // استدعاء subscribe بعد الانتهاء من إعداد جميع الفلاتر .on()
+    channel.subscribe();
+
+    // 3. تنظيف الاشتراك بدقة
     return () => {
-      isMountedRef.current = false;
       supabase.removeChannel(channel);
     };
   }, [academyId, fetchSubscription]);
