@@ -1,10 +1,9 @@
 import { supabase } from '@/lib/supabase';
 
-// 🛡️ دالة مساعدة معالجة النصوص والأسماء متعددة اللغات الآمنة
-export const getSafeText = (val, defaultVal = '', lang = 'ar') => {
+// 🛡️ دالة مساعدة لمعالجة النصوص والأسماء باللغة العربية حصراً
+export const getSafeText = (val, defaultVal = '') => {
   if (val === null || val === undefined) return defaultVal;
   
-  // إذا كانت القيمة نصاً محولاً لـ JSON
   let parsed = val;
   if (typeof val === 'string') {
     try {
@@ -17,20 +16,11 @@ export const getSafeText = (val, defaultVal = '', lang = 'ar') => {
   if (typeof parsed === 'number') return String(parsed);
 
   if (typeof parsed === 'object' && parsed !== null) {
-    // 1. استخراج القيمة باللغة المطلوبة أو اللغات الأخرى البديلة
-    if (parsed[lang] && typeof parsed[lang] === 'string') return parsed[lang];
     if (parsed.ar && typeof parsed.ar === 'string') return parsed.ar;
     if (parsed.en && typeof parsed.en === 'string') return parsed.en;
-    if (parsed.tr && typeof parsed.tr === 'string') return parsed.tr;
-    if (parsed.fr && typeof parsed.fr === 'string') return parsed.fr;
-    if (parsed.ur && typeof parsed.ur === 'string') return parsed.ur;
-    if (parsed.id && typeof parsed.id === 'string') return parsed.id;
-    
-    // 2. فحص الحقول الفرعية الممكنة
-    if (parsed.name) return getSafeText(parsed.name, defaultVal, lang);
-    if (parsed.title) return getSafeText(parsed.title, defaultVal, lang);
+    if (parsed.name) return getSafeText(parsed.name, defaultVal);
+    if (parsed.title) return getSafeText(parsed.title, defaultVal);
 
-    // 3. أخذ أول قيمة نصية غير فارغة
     const firstVal = Object.values(parsed).find((v) => typeof v === 'string' && v.trim() !== '');
     if (firstVal) return String(firstVal);
 
@@ -136,7 +126,7 @@ export const fetchAcademyDeepDetails = async (academyId) => {
 
   return {
     studentsCount: stCount || 0,
-    halakatCount: hCount || 0,
+    halaqatCount: hCount || 0,
     payments: paymentsData || []
   };
 };
@@ -164,25 +154,60 @@ export const updateAcademyStatus = async (ids, isStatusActive) => {
   if (error) throw error;
 };
 
-// ⏳ 5. تمديد اشتراك أكاديمية واحدة أو جماعي
-export const extendAcademySubscription = async (ids, daysToAdd, isLifetime = false) => {
-  const academyIds = Array.isArray(ids) ? ids : [ids];
-  let newDateIso = null;
+// ⏳ 5. تمديد اشتراك أكاديمية في جدول saas_subscriptions الحقيقي
+export const extendAcademySubscription = async (academyId, daysToAdd, isLifetime = false) => {
+  // 1. جلب الاشتراك الحالي للأكاديمية
+  const { data: currentSub } = await supabase
+    .from('saas_subscriptions')
+    .select('*')
+    .eq('academy_id', academyId)
+    .maybeSingle();
 
+  const now = new Date();
+  
   if (isLifetime) {
+    // رخصة مدى الحياة (100 سنة مستقبلاً)
     const lifetimeDate = new Date();
     lifetimeDate.setFullYear(lifetimeDate.getFullYear() + 100);
-    newDateIso = lifetimeDate.toISOString();
+
+    if (currentSub) {
+      await supabase
+        .from('saas_subscriptions')
+        .update({
+          expires_at: lifetimeDate.toISOString(),
+          status: 'active',
+          updated_at: now.toISOString()
+        })
+        .eq('id', currentSub.id);
+    }
   } else {
-    const now = new Date();
-    now.setDate(now.getDate() + daysToAdd);
-    newDateIso = now.toISOString();
+    // تمديد بالأيام
+    if (currentSub && currentSub.status === 'active') {
+      // إذا كان الاشتراك نشط، نمدد تاريخ الانتهاء الأصلي
+      const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : new Date();
+      const baseDate = currentExpiry > now ? currentExpiry : now;
+      baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+      await supabase
+        .from('saas_subscriptions')
+        .update({
+          expires_at: baseDate.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('id', currentSub.id);
+    } else if (currentSub) {
+      // إذا كان تجريبي أو غير نشط، نمدد تاريخ التجربة
+      const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : new Date();
+      const baseDate = currentTrial > now ? currentTrial : now;
+      baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+      await supabase
+        .from('saas_subscriptions')
+        .update({
+          trial_ends_at: baseDate.toISOString(),
+          updated_at: now.toISOString()
+        })
+        .eq('id', currentSub.id);
+    }
   }
-
-  const { error } = await supabase
-    .from('academies')
-    .update({ trial_ends_at: newDateIso })
-    .in('id', academyIds);
-
-  if (error) throw error;
 };
