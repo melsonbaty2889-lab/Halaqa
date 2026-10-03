@@ -22,7 +22,7 @@ import AcademyDrawerDetails from './Modals/AcademyDrawerDetails';
 import ExtendTrialModal from './Modals/ExtendTrialModal';
 import AddPhoneModal from './Modals/AddPhoneModal';
 
-export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy }) {
+export default function AdminDashboard({ onLogout, onSelectAcademy }) {
   const [stats, setStats] = useState({
     totalAcademiesCount: 0,
     pendingCount: 0,
@@ -35,7 +35,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'active' | 'blocked' | 'pending_subscriptions'
+  const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('created_at_desc');
   const [selectedAcademyIds, setSelectedAcademyIds] = useState([]);
 
@@ -72,19 +72,31 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     loadData();
   }, [activeTab, sortBy]);
 
+  // 🔄 الاستماع للتحديثات اللحظية (Realtime)
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin_dashboard_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => loadData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const showToast = (text, type = 'info') => {
     setToastMessage({ text: getSafeText(text), type });
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-    // 🎯 تفعيل طلب الاشتراك المعلق
+  // 🎯 تفعيل طلب الاشتراك المعلق
   const handleApproveSubscription = async (sub) => {
     setProcessingId(sub.id);
     try {
       const now = new Date();
       const expiresAt = new Date(now);
-      
-      // تحديد مدة الاشتراك والقيمة الموحدة للـ tier
+
       const isYearly = sub.plan_duration === 'yearly' || sub.plan_tier === 'yearly';
       const safeDuration = isYearly ? 'yearly' : 'monthly';
 
@@ -98,8 +110,8 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         .from('saas_subscriptions')
         .update({
           status: 'active',
-          plan_tier: safeDuration,       // توحيد القيم لمنع مخالفة constraint
-          plan_duration: safeDuration,   // توحيد القيم لمنع مخالفة constraint
+          plan_tier: safeDuration,
+          plan_duration: safeDuration,
           starts_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           updated_at: now.toISOString()
@@ -185,10 +197,10 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     }
   };
 
-  const handleExtendSubscription = async (academyId, days, isLifetime = false) => {
+  const handleExtendSubscription = async (academyId, days) => {
     setProcessingId(academyId);
     try {
-      await extendAcademySubscription(academyId, days, isLifetime);
+      await extendAcademySubscription(academyId, days);
       showToast('تم تمديد الاشتراك بنجاح', 'success');
       setExtendModalAcademy(null);
       loadData();
@@ -261,24 +273,24 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
             <Building2 size={22} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-semantic-textPrimary m-0">{isRtl ? 'لوحة تحكم المدير العام' : 'Super Admin Dashboard'}</h1>
-            <p className="text-xs text-semantic-textSecondary m-0">{isRtl ? 'إدارة أكاديميات منصة مقراة والاشتراكات' : 'Manage all academies and subscriptions'}</p>
+            <h1 className="text-lg font-bold text-semantic-textPrimary m-0">لوحة تحكم المدير العام</h1>
+            <p className="text-xs text-semantic-textSecondary m-0">إدارة أكاديميات منصة مقرأة والاشتراكات</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={loadData} className="p-2 card-surface hover:border-semantic-borderHover rounded-lg text-semantic-textSecondary transition-colors" title={isRtl ? 'تحديث البيانات' : 'Refresh'}>
+          <button onClick={loadData} className="p-2 card-surface hover:border-semantic-borderHover rounded-lg text-semantic-textSecondary transition-colors" title="تحديث البيانات">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           {onLogout && (
             <button onClick={onLogout} className="flex items-center gap-1.5 bg-semantic-dangerBg hover:opacity-90 text-semantic-danger border border-semantic-danger/30 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer">
-              <LogOut size={15} /> {isRtl ? 'خروج' : 'Logout'}
+              <LogOut size={15} /> خروج
             </button>
           )}
         </div>
       </div>
 
-      <AdminStatsCards stats={stats} isRtl={isRtl} />
+      <AdminStatsCards stats={stats} isRtl={true} />
 
       {/* Controls Bar */}
       <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center card-surface p-3 rounded-xl">
@@ -287,7 +299,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
           <Search size={16} className="absolute right-3 top-3 text-semantic-textMuted" />
           <input
             type="text"
-            placeholder={isRtl ? 'بحث باسم الأكاديمية أو المالك أو البريد...' : 'Search academy, owner, or email...'}
+            placeholder="بحث باسم الأكاديمية أو المالك أو البريد..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`${UI.input} pr-9`}
@@ -297,17 +309,17 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         <div className="flex gap-2 items-center flex-wrap">
           <div className="flex bg-semantic-surfaceInput p-1 rounded-lg border border-semantic-borderInput text-xs">
             <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'all' ? 'bg-semantic-surfaceCard text-semantic-textPrimary' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
-              {isRtl ? 'الكل' : 'All'}
+              الكل
             </button>
             <button onClick={() => setActiveTab('active')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'active' ? 'bg-semantic-successBg text-semantic-success' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
-              {isRtl ? 'النشطة' : 'Active'}
+              النشطة
             </button>
             <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'blocked' ? 'bg-semantic-dangerBg text-semantic-danger' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
-              {isRtl ? 'المحظورة' : 'Blocked'}
+              المحظورة
             </button>
             <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-950/60 text-amber-400' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               <CreditCard size={14} />
-              {isRtl ? 'طلبات معلقة' : 'Pending Subscriptions'}
+              طلبات معلقة
               {pendingSubscriptions.length > 0 && (
                 <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
                   {pendingSubscriptions.length}
@@ -321,9 +333,9 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
             onChange={(e) => setSortBy(e.target.value)}
             className="bg-semantic-surfaceInput border border-semantic-borderInput rounded-lg px-2.5 py-2 text-xs text-semantic-textSecondary outline-none cursor-pointer focus:border-semantic-actionPrimary"
           >
-            <option value="created_at_desc">{isRtl ? 'الأحدث تسجيلاً' : 'Newest First'}</option>
-            <option value="created_at_asc">{isRtl ? 'الأقدم تسجيلاً' : 'Oldest First'}</option>
-            <option value="trial_ends_asc">{isRtl ? 'الأقرب انتهاءً للتجربة' : 'Trial Ending Soon'}</option>
+            <option value="created_at_desc">الأحدث تسجيلاً</option>
+            <option value="created_at_asc">الأقدم تسجيلاً</option>
+            <option value="trial_ends_asc">الأقرب انتهاءً للتجربة</option>
           </select>
         </div>
       </div>
@@ -332,14 +344,14 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       {selectedAcademyIds.length > 0 && activeTab !== 'pending_subscriptions' && (
         <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fade-in">
           <span className="text-xs text-sky-300 font-bold">
-            {isRtl ? `تم تحديد ${selectedAcademyIds.length} أكاديمية` : `Selected ${selectedAcademyIds.length} academies`}
+            {`تم تحديد ${selectedAcademyIds.length} أكاديمية`}
           </span>
           <div className="flex gap-2">
             <button onClick={() => handleBulkStatus(true)} disabled={processingId === 'bulk'} className="bg-semantic-success hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all">
-              {isRtl ? 'تفعيل الكل' : 'Activate All'}
+              تفعيل الكل
             </button>
             <button onClick={() => handleBulkStatus(false)} disabled={processingId === 'bulk'} className="bg-semantic-danger hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all">
-              {isRtl ? 'حظر الكل' : 'Block All'}
+              حظر الكل
             </button>
           </div>
         </div>
@@ -349,7 +361,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       {loading ? (
         <div className="text-center py-20 text-semantic-textMuted text-xs">
           <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-semantic-actionPrimary" />
-          {isRtl ? 'جاري جلب البيانات...' : 'Loading Data...'}
+          جاري جلب البيانات...
         </div>
       ) : activeTab === 'pending_subscriptions' ? (
         pendingSubscriptions.length === 0 ? (
@@ -417,13 +429,13 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
                     </button>
 
                     <button
-                  onClick={() => handleApproveSubscription(sub)}
-                 disabled={processingId === sub.id}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-all cursor-pointer shadow-md"
-             >
-             {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
-              تفعيل الرخصة
-               </button>
+                      onClick={() => handleApproveSubscription(sub)}
+                      disabled={processingId === sub.id}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-all cursor-pointer shadow-md"
+                    >
+                      {processingId === sub.id ? <RefreshCw className="animate-spin" size={15} /> : <CheckCircle2 size={15} />}
+                      تفعيل الرخصة
+                    </button>
                   </div>
                 </div>
               );
@@ -433,7 +445,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       ) : filteredAcademies.length === 0 ? (
         <div className="card-surface p-12 text-center text-semantic-textMuted text-xs">
           <Building2 size={36} className="mx-auto mb-2 opacity-30" />
-          {isRtl ? 'لا يوجد أكاديميات تقتفي هذا البحث أو التصفية.' : 'No academies match your filter.'}
+          لا يوجد أكاديميات تقتفي هذا البحث أو التصفية.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -441,7 +453,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
             <AcademyCard
               key={academy.id}
               academy={academy}
-              isRtl={isRtl}
+              isRtl={true}
               selectedAcademyIds={selectedAcademyIds}
               onToggleSelect={(id) => {
                 setSelectedAcademyIds(prev => 
@@ -472,7 +484,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
       <AcademyDrawerDetails
         selectedAcademyDetails={selectedAcademyDetails}
         onClose={() => setSelectedAcademyDetails(null)}
-        isRtl={isRtl}
+        isRtl={true}
         deepStats={deepStats}
         academyStatsLoading={academyStatsLoading}
         handleWhatsAppClick={handleWhatsAppClick}
@@ -485,7 +497,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         extendModalAcademy={extendModalAcademy}
         onClose={() => setExtendModalAcademy(null)}
         onExtend={handleExtendSubscription}
-        isRtl={isRtl}
+        isRtl={true}
         getSafeText={getSafeText}
       />
 
@@ -496,7 +508,7 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         inputPhone={inputPhone}
         setInputPhone={setInputPhone}
         processingId={processingId}
-        isRtl={isRtl}
+        isRtl={true}
         getSafeText={getSafeText}
       />
 
