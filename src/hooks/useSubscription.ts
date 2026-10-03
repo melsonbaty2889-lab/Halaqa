@@ -1,10 +1,8 @@
 // src/hooks/useSubscription.ts
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
-
-// ── Types & Interfaces ──────────────────────────────────────────
 
 export type SubscriptionStatus = 'trial' | 'active' | 'pending_verification' | 'unpaid' | 'canceled' | 'past_due' | string;
 export type PlanTier = 'monthly' | 'yearly' | string;
@@ -45,16 +43,20 @@ export interface UseSubscriptionReturn {
   refetch: () => Promise<void>;
 }
 
-// ── Main Hook ───────────────────────────────────────────────────
-
 export function useSubscription(explicitAcademyId?: string | null): UseSubscriptionReturn {
   const { t } = useTranslation();
   const [subscription, setSubscription] = useState<SaasSubscription | null>(null);
   const [academyId, setAcademyId] = useState<string | null>(explicitAcademyId || null);
+  const [computedData, setComputedData] = useState({
+    isActive: false,
+    isTrial: false,
+    daysRemaining: 0,
+    status: 'trial',
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔄 جلب academy_id تلقائياً إذا لم يتم تحديده يدوياً
+  // جلب academy_id إذا لم يتم تمريره
   useEffect(() => {
     if (explicitAcademyId) {
       setAcademyId(explicitAcademyId);
@@ -100,11 +102,8 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       setLoading(true);
       setError(null);
 
-      if (!supabase?.from) {
-        throw new Error(t('subscription.errors.clientNotInitialized', 'لم يتم تهيئة الاتصال بالسحابة بشكل صحيح'));
-      }
-
-      const { data, error: apiError } = await supabase
+      // 1. جلب السجل الكامل للاشتراك
+      const { data: subData, error: apiError } = await supabase
         .from('saas_subscriptions')
         .select('*')
         .eq('academy_id', academyId)
@@ -112,7 +111,24 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
       if (apiError) throw apiError;
 
-      setSubscription(data as SaasSubscription | null);
+      // 2. استدعاء RPC الموحدة لحساب الأيام والحالة بدقة دقيقة
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_academy_subscription_status', { target_academy_id: academyId });
+
+      if (rpcError) throw rpcError;
+
+      const computed = Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : null;
+
+      setSubscription(subData as SaasSubscription | null);
+
+      if (computed) {
+        setComputedData({
+          isActive: Boolean(computed.is_active),
+          isTrial: Boolean(computed.is_trial),
+          daysRemaining: Number(computed.days_remaining) || 0,
+          status: computed.status || subData?.status || 'trial',
+        });
+      }
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
       const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
@@ -129,12 +145,9 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       return;
     }
 
-    // 1. جلب البيانات أول مرة
     fetchSubscription();
 
-    // 2. إنتاج قناة Realtime متفردة وآمنة
     const channelName = `subscription_${academyId}_${Date.now()}`;
-    
     const channel = supabase
       .channel(channelName)
       .on(
@@ -150,62 +163,28 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         }
       );
 
-    // استدعاء subscribe بعد الانتهاء من إعداد جميع الفلاتر .on()
     channel.subscribe();
 
-    // 3. تنظيف الاشتراك بدقة
     return () => {
       supabase.removeChannel(channel);
     };
   }, [academyId, fetchSubscription]);
 
-  // ⏱️ حساب الحالات والمدد بشكل موحد
-  const computedState = useMemo(() => {
-    const now = new Date();
+  const isPending = Boolean(
+    subscription?.status === 'pending_verification' || 
+    subscription?.status === 'unpaid' || 
+    subscription?.status === 'past_due'
+  );
 
-    const isSubActive = subscription?.status === 'active';
-
-    // التمييز بين فترة التجربة والاشتراك النشط
-    const isTrial = Boolean(
-      subscription?.status === 'trial' ||
-      (!isSubActive && subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
-    );
-
-    // تحديد التاريخ المستهدف لحساب الأيام المتبقية
-    const targetExpiryDate = isSubActive
-      ? (subscription?.expires_at ? new Date(subscription.expires_at) : null)
-      : (subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
-
-    const isExpired = targetExpiryDate ? targetExpiryDate < now : false;
-
-    const isActive = Boolean((isSubActive || isTrial) && !isExpired);
-
-    const isPending = Boolean(
-      subscription?.status === 'pending_verification' || 
-      subscription?.status === 'unpaid' || 
-      subscription?.status === 'past_due'
-    );
-
-    const daysRemaining = targetExpiryDate
-      ? Math.max(0, Math.ceil((targetExpiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-      : 0;
-
-    return {
-      isTrial,
-      isExpired,
-      isActive,
-      isPending,
-      daysRemaining,
-    };
-  }, [subscription]);
+  const isExpired = !computedData.isActive && !computedData.isTrial && !isPending;
 
   return {
     subscription,
-    isActive: computedState.isActive,
-    isPending: computedState.isPending,
-    isExpired: computedState.isExpired,
-    isTrial: computedState.isTrial,
-    daysRemaining: computedState.daysRemaining,
+    isActive: computedData.isActive,
+    isPending,
+    isExpired,
+    isTrial: computedData.isTrial,
+    daysRemaining: computedData.daysRemaining,
     loading,
     error,
     refetch: fetchSubscription,
