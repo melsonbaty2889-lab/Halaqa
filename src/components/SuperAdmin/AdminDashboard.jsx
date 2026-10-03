@@ -124,7 +124,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
       loadData();
     } catch (err) {
       showToast('خطأ أثناء التفعيل: ' + err.message, 'error');
-    } fontally {
+    } finally {
       setProcessingId(null);
     }
   };
