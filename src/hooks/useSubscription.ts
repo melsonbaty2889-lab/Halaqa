@@ -1,3 +1,5 @@
+// src/hooks/useSubscription.ts
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
@@ -5,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 // ── Types & Interfaces ──────────────────────────────────────────
 
 export type SubscriptionStatus = 'trial' | 'active' | 'pending_verification' | 'unpaid' | 'canceled' | 'past_due' | string;
-export type PlanTier = 'free' | 'basic' | 'pro' | 'premium' | string;
+export type PlanTier = 'monthly' | 'yearly' | string;
 export type PlanDuration = 'monthly' | 'yearly' | string;
 
 export interface SaasSubscription {
@@ -53,7 +55,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef<boolean>(true);
 
-  // 🔄 جلب academy_id تلقائياً إذا لم يتم يدوياً
+  // 🔄 جلب academy_id تلقائياً إذا لم يتم تحديده يدوياً
   useEffect(() => {
     if (explicitAcademyId) {
       setAcademyId(explicitAcademyId);
@@ -131,7 +133,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     if (!academyId) return;
 
-    // 📡 الاشتراك بالاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
+    // 📡 الاستماع للتغييرات الفورية للخطط والاشتراكات عبر Realtime
     const channel = supabase
       .channel(`subscription_${academyId}`)
       .on(
@@ -154,26 +156,26 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
     };
   }, [academyId, fetchSubscription]);
 
-  // ⏱️ حساب الحالات والمدد
+  // ⏱️ حساب الحالات والمدد بشكل موحد
   const computedState = useMemo(() => {
     const now = new Date();
 
+    const isSubActive = subscription?.status === 'active';
+
+    // التمييز بين فترة التجربة والاشتراك النشط
     const isTrial = Boolean(
       subscription?.status === 'trial' ||
-      (subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
+      (!isSubActive && subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > now)
     );
 
-    const targetExpiryDate = subscription?.expires_at
-      ? new Date(subscription.expires_at)
-      : isTrial && subscription?.trial_ends_at
-      ? new Date(subscription.trial_ends_at)
-      : null;
+    // تحديد التاريخ المستهدف لحساب الأيام المتبقية
+    const targetExpiryDate = isSubActive
+      ? (subscription?.expires_at ? new Date(subscription.expires_at) : null)
+      : (subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
 
     const isExpired = targetExpiryDate ? targetExpiryDate < now : false;
 
-    const isActive = Boolean(
-      (subscription?.status === 'active' || subscription?.status === 'trial') && !isExpired
-    );
+    const isActive = Boolean((isSubActive || isTrial) && !isExpired);
 
     const isPending = Boolean(
       subscription?.status === 'pending_verification' || 
