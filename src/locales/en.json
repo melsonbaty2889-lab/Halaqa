@@ -1,5 +1,6 @@
 {
   "academy": {
+    "add_14_days": "+14 يوماً",
     "add_30_days": "+30 Days",
     "add_7_days": "+7 Days",
     "add_phone": "+ Add Phone Number",
@@ -7,6 +8,7 @@
     "create_subtitle": "Enter basic details to establish the Quranic school or academy",
     "create_title": "Create New Academy",
     "created_success": "Academy created successfully!",
+    "custom_days": "عدد أيام مخصص:",
     "enter_owner_phone": "Enter Owner Phone Number",
     "enter_phone_description": "Enter the phone number of the owner of ({{academyName}}) to enable WhatsApp communication:",
     "extend_subscription": "Extend Academy Subscription",

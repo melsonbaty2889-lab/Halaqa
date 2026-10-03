@@ -1,5 +1,6 @@
 {
   "academy": {
+    "add_14_days": "+14 يوماً",
     "add_30_days": "+30 يوم",
     "add_7_days": "+7 أيام",
     "add_phone": "+ إضافة رقم",
@@ -7,6 +8,7 @@
     "create_subtitle": "قم بإدخال البيانات الأساسية لتأسيس المقرأة أو الأكاديمية",
     "create_title": "إنشاء أكاديمية جديدة",
     "created_success": "تم إنشاء الأكاديمية بنجاح!",
+    "custom_days": "عدد أيام مخصص:",
     "enter_owner_phone": "إدخال رقم هاتف المالك",
     "enter_phone_description": "أدخل رقم هاتف مالك أكاديمية ({{academyName}}) لتفعيل التواصل عبر الواتساب:",
     "extend_subscription": "تمديد اشتراك الأكاديمية",
