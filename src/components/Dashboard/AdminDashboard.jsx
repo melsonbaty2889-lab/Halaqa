@@ -77,13 +77,18 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // 🎯 تفعيل طلب الاشتراك المعلق
+    // 🎯 تفعيل طلب الاشتراك المعلق
   const handleApproveSubscription = async (sub) => {
     setProcessingId(sub.id);
     try {
       const now = new Date();
       const expiresAt = new Date(now);
-      if (sub.plan_duration === 'yearly') {
+      
+      // تحديد مدة الاشتراك والقيمة الموحدة للـ tier
+      const isYearly = sub.plan_duration === 'yearly' || sub.plan_tier === 'yearly';
+      const safeDuration = isYearly ? 'yearly' : 'monthly';
+
+      if (isYearly) {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       } else {
         expiresAt.setMonth(expiresAt.getMonth() + 1);
@@ -93,6 +98,8 @@ export default function AdminDashboard({ onLogout, isRtl = true, onSelectAcademy
         .from('saas_subscriptions')
         .update({
           status: 'active',
+          plan_tier: safeDuration,       // توحيد القيم لمنع مخالفة constraint
+          plan_duration: safeDuration,   // توحيد القيم لمنع مخالفة constraint
           starts_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
           updated_at: now.toISOString()
