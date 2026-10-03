@@ -82,7 +82,7 @@ export default function AcademyDrawerDetails({
         {/* بطاقة المالك والتواصل */}
         <div className="rounded-2xl p-4 mb-5 border border-semantic-borderCard bg-semantic-surfaceInput/40 backdrop-blur-sm transition-all">
           <p className="m-0 text-[11px] font-semibold text-semantic-textSecondary mb-1">
-            {t('academy.owner_label', 'مالك الأكاديمية / المجمع:')}
+            {t('academy.owner_label','مالك الأكاديمية')}
           </p>
           <h4 className="m-0 text-semantic-textPrimary text-sm font-bold mb-0.5">
             {getSafeText(
