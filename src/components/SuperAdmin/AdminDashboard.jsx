@@ -124,7 +124,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
       loadData();
     } catch (err) {
       showToast('خطأ أثناء التفعيل: ' + err.message, 'error');
-    } finally {
+    } fontally {
       setProcessingId(null);
     }
   };
@@ -267,7 +267,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
       )}
 
       {/* Header Bar */}
-      <div className="flex justify-between items-center mb-6 card-surface p-4 rounded-2xl">
+      <div className="flex justify-between items-center mb-6 card-surface p-4 rounded-2xl border border-semantic-borderCard">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
             <Building2 size={22} />
@@ -279,7 +279,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={loadData} className="p-2 card-surface hover:border-semantic-borderHover rounded-lg text-semantic-textSecondary transition-colors" title="تحديث البيانات">
+          <button onClick={loadData} className="p-2 card-surface hover:border-semantic-borderHover rounded-lg text-semantic-textSecondary transition-colors cursor-pointer" title="تحديث البيانات">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           {onLogout && (
@@ -290,10 +290,10 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         </div>
       </div>
 
-      <AdminStatsCards stats={stats} isRtl={true} />
+      <AdminStatsCards stats={stats} />
 
       {/* Controls Bar */}
-      <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center card-surface p-3 rounded-xl">
+      <div className="flex flex-col md:flex-row gap-3 mb-4 justify-between items-stretch md:items-center card-surface p-3 rounded-xl border border-semantic-borderCard">
         
         <div className="relative flex-1">
           <Search size={16} className="absolute right-3 top-3 text-semantic-textMuted" />
@@ -308,16 +308,16 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
 
         <div className="flex gap-2 items-center flex-wrap">
           <div className="flex bg-semantic-surfaceInput p-1 rounded-lg border border-semantic-borderInput text-xs">
-            <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'all' ? 'bg-semantic-surfaceCard text-semantic-textPrimary' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
+            <button onClick={() => setActiveTab('all')} className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${activeTab === 'all' ? 'bg-semantic-surfaceCard text-semantic-textPrimary shadow-sm' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               الكل
             </button>
-            <button onClick={() => setActiveTab('active')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'active' ? 'bg-semantic-successBg text-semantic-success' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
+            <button onClick={() => setActiveTab('active')} className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${activeTab === 'active' ? 'bg-semantic-successBg text-semantic-success shadow-sm' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               النشطة
             </button>
-            <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors ${activeTab === 'blocked' ? 'bg-semantic-dangerBg text-semantic-danger' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
+            <button onClick={() => setActiveTab('blocked')} className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${activeTab === 'blocked' ? 'bg-semantic-dangerBg text-semantic-danger shadow-sm' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               المحظورة
             </button>
-            <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-950/60 text-amber-400' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
+            <button onClick={() => setActiveTab('pending_subscriptions')} className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${activeTab === 'pending_subscriptions' ? 'bg-amber-500/20 text-amber-400 shadow-sm' : 'text-semantic-textSecondary hover:text-semantic-textPrimary'}`}>
               <CreditCard size={14} />
               طلبات معلقة
               {pendingSubscriptions.length > 0 && (
@@ -342,8 +342,8 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
 
       {/* Bulk Action Controls */}
       {selectedAcademyIds.length > 0 && activeTab !== 'pending_subscriptions' && (
-        <div className="bg-sky-950/40 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fade-in">
-          <span className="text-xs text-sky-300 font-bold">
+        <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3 mb-4 flex items-center justify-between gap-2 animate-fade-in">
+          <span className="text-xs text-sky-400 font-bold">
             {`تم تحديد ${selectedAcademyIds.length} أكاديمية`}
           </span>
           <div className="flex gap-2">
@@ -365,7 +365,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         </div>
       ) : activeTab === 'pending_subscriptions' ? (
         pendingSubscriptions.length === 0 ? (
-          <div className="card-surface p-12 text-center text-semantic-textMuted text-xs space-y-2">
+          <div className="card-surface p-12 text-center text-semantic-textMuted text-xs space-y-2 rounded-2xl border border-semantic-borderCard">
             <CheckCircle size={36} className="mx-auto text-semantic-success/40" />
             <div className="text-sm font-bold text-semantic-textPrimary">لا توجد طلبات اشتراك معلقة حالياً</div>
             <p>تم تفعيل أو مراجعة كافة الطلبات بنجاح.</p>
@@ -382,7 +382,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
               const refText = getSafeText(sub.metadata?.transaction_ref);
 
               return (
-                <div key={sub.id} className="card-surface p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-semantic-borderHover transition-all">
+                <div key={sub.id} className="card-surface p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-semantic-borderCard hover:border-semantic-borderHover transition-all">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-sm text-sky-400">
@@ -443,7 +443,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
           </div>
         )
       ) : filteredAcademies.length === 0 ? (
-        <div className="card-surface p-12 text-center text-semantic-textMuted text-xs">
+        <div className="card-surface p-12 text-center text-semantic-textMuted text-xs rounded-2xl border border-semantic-borderCard">
           <Building2 size={36} className="mx-auto mb-2 opacity-30" />
           لا يوجد أكاديميات تقتفي هذا البحث أو التصفية.
         </div>
@@ -453,7 +453,6 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
             <AcademyCard
               key={academy.id}
               academy={academy}
-              isRtl={true}
               selectedAcademyIds={selectedAcademyIds}
               onToggleSelect={(id) => {
                 setSelectedAcademyIds(prev => 
@@ -484,7 +483,6 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
       <AcademyDrawerDetails
         selectedAcademyDetails={selectedAcademyDetails}
         onClose={() => setSelectedAcademyDetails(null)}
-        isRtl={true}
         deepStats={deepStats}
         academyStatsLoading={academyStatsLoading}
         handleWhatsAppClick={handleWhatsAppClick}
@@ -497,7 +495,6 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         extendModalAcademy={extendModalAcademy}
         onClose={() => setExtendModalAcademy(null)}
         onExtend={handleExtendSubscription}
-        isRtl={true}
         getSafeText={getSafeText}
       />
 
@@ -508,7 +505,6 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         inputPhone={inputPhone}
         setInputPhone={setInputPhone}
         processingId={processingId}
-        isRtl={true}
         getSafeText={getSafeText}
       />
 
