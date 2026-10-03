@@ -869,8 +869,14 @@
       "yearly": "Yearly"
     },
     "plans": {
+      "monthly": {
+        "title": ""
+      },
       "monthlyDesc": "Suitable for emerging centers and institutions for payment flexibility",
       "monthlyTitle": "Flexible Access (Monthly Subscription)",
+      "yearly": {
+        "title": ""
+      },
       "yearlyDesc": "Sustainable option for integrated institutions and educational complexes",
       "yearlyTitle": "Academic Stability (Yearly Subscription)"
     },
@@ -881,6 +887,9 @@
     "selectCurrencyTitle": "Select Currency & Price Range Suitable for You",
     "selectPlan": "Select This Plan",
     "selectReceiptFile": "Choose receipt file or take a photo",
+    "status": {
+      "trial": ""
+    },
     "successDesc": "Your transfer receipt is being reviewed and your academy's subscription plan will be activated shortly.",
     "successTitle": "Subscription Request Received Successfully",
     "summaryBasePrice": "Base Price:",
