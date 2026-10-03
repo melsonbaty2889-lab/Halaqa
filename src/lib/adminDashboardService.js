@@ -162,7 +162,6 @@ export const updateAcademyStatus = async (ids, isStatusActive) => {
 
 // ⏳ 5. تمديد اشتراك أكاديمية بمدد محددة وبشكل آمن
 export const extendAcademySubscription = async (academyId, daysToAdd) => {
-  // جلب أحدث اشتراك تجنباً لخطأ التكرار
   const { data: subs, error: fetchErr } = await supabase
     .from('saas_subscriptions')
     .select('*')
@@ -171,7 +170,7 @@ export const extendAcademySubscription = async (academyId, daysToAdd) => {
     .limit(1);
 
   if (fetchErr) throw fetchErr;
-  
+
   const currentSub = subs && subs.length > 0 ? subs[0] : null;
   if (!currentSub) throw new Error('لم يتم العثور على اشتراك لهذه الأكاديمية');
 
