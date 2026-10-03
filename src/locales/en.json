@@ -33,6 +33,12 @@
   "activeSession": "Active Session",
   "add_new_student": "Add New Student",
   "addHalaqa": "Create New Halaqa",
+  "admin": {
+    "active_academies": "نشطة",
+    "pending_verification": "معلقة المراجعة",
+    "total_academies": "إجمالي الأكاديميات",
+    "total_revenue": "إجمالي الإيرادات"
+  },
   "affiliate": {
     "activeAcademies": "Affiliated Academies",
     "autoDiscount": "Automatic Discount Applied",

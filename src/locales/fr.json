@@ -33,6 +33,12 @@
   "activeSession": "جلسة نشطة",
   "add_new_student": "إضافة طالب جديد",
   "addHalaqa": "إنشاء حلقة جديدة",
+  "admin": {
+    "active_academies": "نشطة",
+    "pending_verification": "معلقة المراجعة",
+    "total_academies": "إجمالي الأكاديميات",
+    "total_revenue": "إجمالي الإيرادات"
+  },
   "affiliate": {
     "activeAcademies": "أكاديميات مشتركة",
     "autoDiscount": "تطبيق تلقائي للخصم",
