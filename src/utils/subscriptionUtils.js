@@ -18,8 +18,9 @@ export function getAcademySubscriptionInfo(academy, t = (k) => k) {
   const sub = Array.isArray(rawSub) ? rawSub[0] : rawSub;
 
   const isSubActive = sub && sub.status === 'active';
+  const now = new Date();
 
-  // تحديد تاريخ الانتهاء
+  // تحديد تاريخ الانتهاء (حسابه بدقة وإهمال التداخلات القديمة)
   const targetExpiry = isSubActive
     ? sub?.expires_at
     : (sub?.trial_ends_at || academy?.trial_ends_at);
@@ -27,11 +28,11 @@ export function getAcademySubscriptionInfo(academy, t = (k) => k) {
   // حساب الأيام المتبقية
   let daysLeft = 0;
   if (targetExpiry) {
-    const diff = new Date(targetExpiry) - new Date();
+    const diff = new Date(targetExpiry).getTime() - now.getTime();
     daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 
-  // تحديد نص الحالة والمسمى بناءً على المدة والنوع في subscriptionData.js
+  // تحديد نص الحالة والمسمى بناءً على نوع الاشتراك والمدة
   let statusText = t('subscription.status.trial') || 'تجريبي';
   
   if (isSubActive) {
