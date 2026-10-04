@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, useMemo, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User } from '@supabase/supabase-js';
@@ -42,11 +42,13 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
   const isMounted = useRef<boolean>(true);
 
-  // استخراج كود اللغة الأساسي (مثلاً ur من ur-PK)
-  const currentLangCode = (i18n?.language?.split('-')[0] || 'ar').toLowerCase();
+  // استخراج كود اللغة الأساسي للواجهة فقط
+  const currentLangCode = (i18n?.resolvedLanguage || i18n?.language || 'ar').split('-')[0].toLowerCase();
   
-  // التحقق الصحيح من اتجاه RTL بمرونة عالية
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : RTL_LANGUAGES.includes(currentLangCode);
+  // تثبيت حساب الاتجاه لمنع إعادة الرسم اللحظية أثناء إدخال أندرويد
+  const isRtl = useMemo(() => {
+    return RTL_LANGUAGES.includes(currentLangCode);
+  }, [currentLangCode]);
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -86,7 +88,6 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  // التبديل الدوري بين اللغات الـ 6 المدعومة
   const toggleLanguage = () => {
     const currentIndex = SUPPORTED_LANGUAGES.indexOf(currentLangCode as SupportedLanguage);
     const nextIndex = currentIndex !== -1 ? (currentIndex + 1) % SUPPORTED_LANGUAGES.length : 0;
@@ -146,7 +147,6 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (isMounted.current) setRedirecting(true);
 
-      // 1. تحديث تاريخ آخر دخول والحالة بجدول profiles
       await supabase
         .from('profiles')
         .update({
@@ -155,7 +155,6 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         })
         .eq('id', user.id);
 
-      // 2. جلب الملف والصلاحيات
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, academy_id, is_activated, is_deleted')
@@ -164,7 +163,6 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (profileError) throw profileError;
 
-      // 3. التحقق من الحساب المحذوف/المعطل
       if (profile?.is_deleted) {
         await supabase.auth.signOut();
         if (isMounted.current) setRedirecting(false);
