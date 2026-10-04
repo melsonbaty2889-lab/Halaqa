@@ -145,17 +145,16 @@ export default function Dashboard({
     try {
       if (typeof supabase.channel === 'function') {
         const channelName = `dashboard-realtime-${academyId}-${Date.now()}`;
-        channel = supabase.channel(channelName);
         
-        if (channel && typeof channel.on === 'function') {
-          channel
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'student_streaks', filter: filterCondition }, handleRealtimeChange)
-            .subscribe();
-        }
+        // ✅ بناء القناة وإضافة المستمعات أولاً ثم الاشتراك في النهاية تماماً
+        channel = supabase
+          .channel(channelName)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_progress', filter: filterCondition }, handleRealtimeChange)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: filterCondition }, handleRealtimeChange)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'halaqas', filter: filterCondition }, handleRealtimeChange)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'student_streaks', filter: filterCondition }, handleRealtimeChange)
+          .subscribe();
       }
     } catch (err) {
       console.error("Error in dashboard realtime setup:", err);
