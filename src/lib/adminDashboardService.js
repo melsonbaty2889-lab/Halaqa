@@ -64,9 +64,23 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
 
   if (subErr) throw subErr;
 
+  // 🔄 جلب الأكاديميات مع ترتيب الاشتراكات المرفقة تنازلياً للحصول على أحدث اشتراك دائماً
   let acadQuery = supabase
     .from('academies')
-    .select('*, saas_subscriptions(*)', { count: 'exact' });
+    .select(`
+      *,
+      saas_subscriptions (
+        id,
+        academy_id,
+        status,
+        expires_at,
+        trial_ends_at,
+        created_at,
+        plan_tier,
+        price,
+        currency
+      )
+    `, { count: 'exact' });
 
   if (activeTab === 'active') {
     acadQuery = acadQuery.eq('is_active', true);
@@ -102,10 +116,19 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
     }
   }
 
-  const enrichedAcademies = (acadData || []).map(acad => ({
-    ...acad,
-    ownerProfile: profilesMap[acad.owner_id] || null
-  }));
+  // 🛠️ ترتيب اشتراكات كل أكاديمية تنازلياً واقتطاع أحدث اشتراك في المقدمة
+  const enrichedAcademies = (acadData || []).map(acad => {
+    const rawSubs = Array.isArray(acad.saas_subscriptions) ? acad.saas_subscriptions : [];
+    
+    // ترتيب الاشتراكات بحيث يكون الأحدث بفرز تاريخ الإنشاء هو الأول
+    const sortedSubs = [...rawSubs].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    return {
+      ...acad,
+      saas_subscriptions: sortedSubs,
+      ownerProfile: profilesMap[acad.owner_id] || null
+    };
+  });
 
   return {
     totalAcademiesCount: totalCount || 0,
