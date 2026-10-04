@@ -196,43 +196,61 @@ export const extendAcademySubscription = async (academyId, daysToAdd) => {
   if (fetchErr) throw fetchErr;
 
   const currentSub = subs && subs.length > 0 ? subs[0] : null;
-  if (!currentSub) throw new Error('لم يتم العثور على اشتراك لهذه الأكاديمية');
-
   const now = new Date();
-  const addedDays = Number(daysToAdd);
+  const addedDays = Number(daysToAdd) || 0;
 
-  if (currentSub.status === 'active') {
-    const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : now;
-    const baseDate = currentExpiry > now ? currentExpiry : now;
-    
-    baseDate.setDate(baseDate.getDate() + addedDays);
+  if (currentSub) {
+    if (currentSub.status === 'active') {
+      const currentExpiry = currentSub.expires_at ? new Date(currentSub.expires_at) : now;
+      const baseDate = currentExpiry > now ? currentExpiry : now;
+      baseDate.setDate(baseDate.getDate() + addedDays);
 
-    const { error } = await supabase
-      .from('saas_subscriptions')
-      .update({
-        expires_at: baseDate.toISOString(),
-        trial_ends_at: null,
-        status: 'active',
-        updated_at: now.toISOString()
-      })
-      .eq('id', currentSub.id);
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .update({
+          expires_at: baseDate.toISOString(),
+          trial_ends_at: null,
+          status: 'active',
+          updated_at: now.toISOString()
+        })
+        .eq('id', currentSub.id);
 
-    if (error) throw error;
+      if (error) throw error;
+    } else {
+      const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : now;
+      const baseDate = currentTrial > now ? currentTrial : now;
+      baseDate.setDate(baseDate.getDate() + addedDays);
+
+      const { error } = await supabase
+        .from('saas_subscriptions')
+        .update({
+          trial_ends_at: baseDate.toISOString(),
+          expires_at: baseDate.toISOString(),
+          status: 'trial',
+          updated_at: now.toISOString()
+        })
+        .eq('id', currentSub.id);
+
+      if (error) throw error;
+    }
   } else {
-    const currentTrial = currentSub.trial_ends_at ? new Date(currentTrial.trial_ends_at) : now;
-    const baseDate = currentTrial > now ? currentTrial : now;
-    
-    baseDate.setDate(baseDate.getDate() + addedDays);
+    // إنشاء سجل جديد في حالة الأكاديميات التي لا تملك اشتراكاً سابقاً
+    const newExpiry = new Date();
+    newExpiry.setDate(newExpiry.getDate() + addedDays);
 
     const { error } = await supabase
       .from('saas_subscriptions')
-      .update({
-        trial_ends_at: baseDate.toISOString(),
-        expires_at: baseDate.toISOString(),
-        status: 'trial',
+      .insert({
+        academy_id: academyId,
+        status: 'active',
+        expires_at: newExpiry.toISOString(),
+        trial_ends_at: null,
+        plan_tier: 'standard',
+        price: 0,
+        currency: 'EGP',
+        created_at: now.toISOString(),
         updated_at: now.toISOString()
-      })
-      .eq('id', currentSub.id);
+      });
 
     if (error) throw error;
   }
