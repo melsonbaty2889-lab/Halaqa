@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Clock, X } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
@@ -9,10 +8,19 @@ export default function ExtendTrialModal({
   onExtend,
   getSafeText
 }) {
-  const { t } = useTranslation();
   const [customDays, setCustomDays] = useState('');
 
   if (!extendModalAcademy) return null;
+
+  const resolveSafeText = (val, defaultVal = '') => {
+    if (typeof getSafeText === 'function') {
+      return getSafeText(val, defaultVal);
+    }
+    if (!val) return defaultVal;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.ar || val.en || defaultVal;
+    return String(val);
+  };
 
   const handleCustomSubmit = (e) => {
     e.preventDefault();
@@ -24,7 +32,7 @@ export default function ExtendTrialModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-4 transition-all duration-300 font-cairo">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-4 transition-all duration-300 font-cairo" dir="rtl">
       <div className="card-surface border border-semantic-borderCard rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative space-y-4">
         
         {/* زر الإغلاق العلوي */}
@@ -42,10 +50,10 @@ export default function ExtendTrialModal({
 
         <div>
           <h3 className="m-0 text-base font-bold text-semantic-textPrimary">
-            {t('academy.extend_subscription', 'تمديد اشتراك الأكاديمية')}
+            تمديد اشتراك الأكاديمية
           </h3>
           <p className="text-sky-400 text-xs font-semibold mt-1">
-            {getSafeText(extendModalAcademy.name)}
+            {resolveSafeText(extendModalAcademy.name)}
           </p>
         </div>
 
@@ -55,28 +63,28 @@ export default function ExtendTrialModal({
             onClick={() => onExtend(extendModalAcademy.id, 7)} 
             className="p-2.5 rounded-xl cursor-pointer font-bold text-xs transition-all bg-semantic-surfaceInput border border-semantic-borderInput text-semantic-textPrimary hover:border-semantic-borderHover active:scale-[0.98]"
           >
-            {t('academy.add_7_days', '+7 أيام')}
+            +7 أيام
           </button>
 
           <button 
             onClick={() => onExtend(extendModalAcademy.id, 14)} 
             className="p-2.5 rounded-xl cursor-pointer font-bold text-xs transition-all bg-semantic-surfaceInput border border-semantic-borderInput text-semantic-textPrimary hover:border-semantic-borderHover active:scale-[0.98]"
           >
-            {t('academy.add_14_days', '+14 يوماً')}
+            +14 يوماً
           </button>
 
           <button 
             onClick={() => onExtend(extendModalAcademy.id, 30)} 
             className="p-2.5 rounded-xl cursor-pointer font-bold text-xs transition-all bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 active:scale-[0.98]"
           >
-            {t('academy.add_30_days', '+30 يوماً')}
+            +30 يوماً
           </button>
         </div>
 
         {/* إدخال عدد أيام مخصص */}
         <form onSubmit={handleCustomSubmit} className="pt-3 border-t border-semantic-borderCard space-y-2">
           <label className="block text-xs font-medium text-semantic-textSecondary text-right">
-            {t('academy.custom_days', 'عدد أيام مخصص:')}
+            عدد أيام مخصص:
           </label>
           <div className="flex gap-2">
             <input
@@ -92,7 +100,7 @@ export default function ExtendTrialModal({
               disabled={!customDays}
               className="px-4 py-2 bg-semantic-actionPrimary hover:opacity-90 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
-              {t('common.confirm', 'تأكيد')}
+              تأكيد
             </button>
           </div>
         </form>
@@ -102,7 +110,7 @@ export default function ExtendTrialModal({
           onClick={onClose} 
           className="w-full bg-transparent border-0 text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer text-xs transition-colors py-1"
         >
-          {t('common.cancel', 'إلغاء')}
+          إلغاء
         </button>
       </div>
     </div>
