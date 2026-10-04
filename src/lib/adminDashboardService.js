@@ -30,7 +30,7 @@ export const getSafeText = (val, defaultVal = '') => {
   return String(val);
 };
 
-// 📊 1. جلب بيانات الإحصائيات العامة والأكاديميات (مع حساب الإيرادات لكل عملة على حدة)
+// 📊 1. جلب بيانات الإحصائيات العامة والأكاديميات (مع ربط التواريخ والأشتراكات)
 export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
   const [
     { count: totalCount },
@@ -116,16 +116,17 @@ export const fetchAdminDashboardData = async ({ activeTab, sortBy }) => {
     }
   }
 
-  // 🛠️ ترتيب اشتراكات كل أكاديمية تنازلياً واقتطاع أحدث اشتراك في المقدمة
+  // 🛠️ ترتيب اشتراكات كل أكاديمية تنازلياً وتمرير تاريخ أحدث اشتراك مباشر
   const enrichedAcademies = (acadData || []).map(acad => {
     const rawSubs = Array.isArray(acad.saas_subscriptions) ? acad.saas_subscriptions : [];
-    
-    // ترتيب الاشتراكات بحيث يكون الأحدث بفرز تاريخ الإنشاء هو الأول
     const sortedSubs = [...rawSubs].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    const latestSub = sortedSubs.length > 0 ? sortedSubs[0] : null;
 
     return {
       ...acad,
       saas_subscriptions: sortedSubs,
+      expires_at: latestSub?.expires_at || acad.expires_at || null,
+      trial_ends_at: latestSub?.trial_ends_at || acad.trial_ends_at || null,
       ownerProfile: profilesMap[acad.owner_id] || null
     };
   });
@@ -218,7 +219,7 @@ export const extendAcademySubscription = async (academyId, daysToAdd) => {
 
     if (error) throw error;
   } else {
-    const currentTrial = currentSub.trial_ends_at ? new Date(currentSub.trial_ends_at) : now;
+    const currentTrial = currentSub.trial_ends_at ? new Date(currentTrial.trial_ends_at) : now;
     const baseDate = currentTrial > now ? currentTrial : now;
     
     baseDate.setDate(baseDate.getDate() + addedDays);
