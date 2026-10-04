@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { ExternalLink, MessageCircle, PlusCircle, Check } from 'lucide-react';
 
 export default function AcademyCard({
@@ -15,8 +14,6 @@ export default function AcademyCard({
   processingId,
   getSafeText
 }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === 'rtl';
   const isSelected = Array.isArray(selectedAcademyIds) && selectedAcademyIds.includes(academy.id);
 
   const resolveSafeText = (val, defaultVal = '') => {
@@ -29,15 +26,15 @@ export default function AcademyCard({
     return String(val);
   };
 
-  const academyName = resolveSafeText(academy?.name, t('common.unknown', 'غير معروف'));
-  const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
+  const academyName = resolveSafeText(academy?.name, 'غير معروف');
+  const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, 'غير معروف');
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
   // 1. استخراج أحدث اشتراك من المصفوفة المرفقة
   const subs = Array.isArray(academy?.saas_subscriptions) ? academy.saas_subscriptions : (academy?.subscriptions || []);
   const activeSub = subs.length > 0 ? subs[0] : (typeof subs === 'object' ? subs : null);
 
-  // 2. البحث عن تاريخ الانتهاء بجميع مسارات التجميع (من الاشتراك أو من الكائن المباشر)
+  // 2. البحث عن تاريخ الانتهاء بجميع مسارات التجميع
   const expiryDate = 
     activeSub?.expires_at || 
     academy?.expires_at || 
@@ -45,13 +42,11 @@ export default function AcademyCard({
     academy?.trial_ends_at || 
     null;
 
-  // 3. تحديد نوع الفعالية (هل هو اشتراك مدفوع أم تجربة مجانية)
+  // 3. تحديد نوع الفعالية (هل هو اشتراك أم تجربة مجانية)
   const isTrial = !activeSub?.expires_at && !academy?.expires_at && Boolean(activeSub?.trial_ends_at || academy?.trial_ends_at);
 
   // 4. التسمية المناسبة
-  const expiryLabel = isTrial 
-    ? t('academy.trial_ends', 'انتهاء التجربة:') 
-    : t('academy.subscription_expires', 'انتهاء الاشتراك:');
+  const expiryLabel = isTrial ? 'انتهاء التجربة:' : 'انتهاء الاشتراك:';
 
   const handleEnterAcademy = (e) => {
     e.preventDefault();
@@ -64,13 +59,13 @@ export default function AcademyCard({
   };
 
   return (
-    <div className={`card-surface p-3 sm:p-4 rounded-xl transition-all relative border ${
+    <div className={`card-surface p-3 sm:p-4 rounded-xl transition-all relative border font-cairo ${
       isSelected 
         ? 'border-sky-500 ring-1 ring-sky-500/50' 
         : academy?.is_active 
           ? 'border-semantic-borderCard' 
           : 'border-semantic-danger/40 bg-semantic-dangerBg/10'
-    }`}>
+    }`} dir="rtl">
       
       {/* رأس البطاقة */}
       <div className="flex items-start justify-between gap-2 mb-3">
@@ -85,21 +80,21 @@ export default function AcademyCard({
               </h3>
               {academy?.is_active ? (
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0">
-                  {t('common.active', 'نشط')}
+                  نشط
                 </span>
               ) : (
                 <span className="bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/20 text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0">
-                  {t('common.blocked', 'محظور')}
+                  محظور
                 </span>
               )}
             </div>
             
             <p className="m-0 text-[11px] text-semantic-textSecondary mt-0.5 truncate">
-              <span className="text-semantic-textMuted">{t('academy.owner_label', 'المالك:')}</span> {ownerName}
+              <span className="text-semantic-textMuted">المالك:</span> {ownerName}
             </p>
             {complexName && (
               <p className="m-0 text-[11px] text-semantic-textMuted mt-0.5 truncate">
-                <span>{t('academy.complex_label', 'المجمع:')}</span> {complexName}
+                <span>المجمع:</span> {complexName}
               </p>
             )}
           </div>
@@ -114,7 +109,7 @@ export default function AcademyCard({
               ? 'bg-sky-500 border-sky-500 text-white' 
               : 'border-semantic-borderInput bg-semantic-surfaceInput hover:border-semantic-borderHover'
           }`}
-          aria-label={t('common.select', 'تحديد')}
+          aria-label="تحديد"
         >
           {isSelected && <Check size={12} strokeWidth={3} />}
         </button>
@@ -123,16 +118,16 @@ export default function AcademyCard({
       {/* تفاصيل التواريخ */}
       <div className="bg-semantic-surfaceInput/60 rounded-lg p-2.5 mb-3 text-[11px] sm:text-xs border border-semantic-borderInput space-y-1">
         <div className="flex justify-between items-center text-semantic-textSecondary">
-          <span>{t('academy.registered_at', 'تاريخ التسجيل:')}</span>
+          <span>تاريخ التسجيل:</span>
           <span className="text-semantic-textPrimary ltr font-medium">
-            {academy?.created_at ? new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+            {academy?.created_at ? new Date(academy.created_at).toLocaleDateString('ar-EG') : '-'}
           </span>
         </div>
         
         <div className="flex justify-between items-center text-semantic-textSecondary">
           <span>{expiryLabel}</span>
           <span className={`font-semibold ltr ${expiryDate && new Date(expiryDate) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
-            {expiryDate ? new Date(expiryDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+            {expiryDate ? new Date(expiryDate).toLocaleDateString('ar-EG') : '-'}
           </span>
         </div>
       </div>
@@ -144,7 +139,7 @@ export default function AcademyCard({
           onClick={handleEnterAcademy}
           className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg cursor-pointer text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
         >
-          <ExternalLink size={14} /> {t('academy.enter', 'دخول للأكاديمية')}
+          <ExternalLink size={14} /> دخول للأكاديمية
         </button>
 
         <div className="flex items-center gap-1.5">
@@ -153,7 +148,7 @@ export default function AcademyCard({
             onClick={() => typeof onOpenDrawer === 'function' && onOpenDrawer(academy)}
             className="flex-1 bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary py-1.5 px-1 text-[11px] font-medium border border-semantic-borderInput rounded-lg transition-colors text-center truncate"
           >
-            {t('common.details', 'التفاصيل')}
+            التفاصيل
           </button>
 
           <button
@@ -162,7 +157,7 @@ export default function AcademyCard({
             className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 py-1.5 px-1 text-[11px] font-semibold flex items-center justify-center gap-1 rounded-lg transition-colors truncate"
           >
             <PlusCircle size={12} className="shrink-0" />
-            <span className="truncate">{t('academy.extend', 'تمديد')}</span>
+            <span className="truncate">تمديد</span>
           </button>
 
           {academy?.ownerProfile?.phone ? (
@@ -170,7 +165,7 @@ export default function AcademyCard({
               type="button"
               onClick={() => typeof onWhatsAppClick === 'function' && onWhatsAppClick(academy.ownerProfile.phone, academyName)}
               className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors flex items-center justify-center shrink-0"
-              title={t('academy.whatsapp_chat', 'تواصل واتساب')}
+              title="تواصل واتساب"
             >
               <MessageCircle size={15} />
             </button>
@@ -179,7 +174,7 @@ export default function AcademyCard({
               type="button"
               onClick={() => typeof onOpenPhoneModal === 'function' && onOpenPhoneModal(academy)}
               className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors flex items-center justify-center shrink-0"
-              title={t('academy.add_phone', 'إضافة رقم هاتف')}
+              title="إضافة رقم هاتف"
             >
               <MessageCircle size={15} />
             </button>
@@ -195,7 +190,7 @@ export default function AcademyCard({
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
             }`}
           >
-            {processingId === academy.id ? '...' : (academy?.is_active ? t('common.block', 'حظر') : t('common.activate', 'تفعيل'))}
+            {processingId === academy.id ? '...' : (academy?.is_active ? 'حظر' : 'تفعيل')}
           </button>
         </div>
       </div>
