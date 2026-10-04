@@ -73,16 +73,20 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
     loadData();
   }, [activeTab, sortBy]);
 
-  // 🔄 الاستماع للتحديثات اللحظية (Realtime)
+  // 🔄 الاستماع للتحديثات اللحظية (Realtime) آمن من التضارب والتكرار
   useEffect(() => {
-    const channel = supabase
-      .channel('admin_dashboard_realtime')
+    const channelName = `admin_dashboard_realtime_${Date.now()}`;
+    const channel = supabase.channel(channelName);
+
+    channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'saas_subscriptions' }, () => loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'academies' }, () => loadData())
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
