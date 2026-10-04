@@ -1,8 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  ExternalLink, MessageCircle, PlusCircle, Check
-} from 'lucide-react';
+import { ExternalLink, MessageCircle, PlusCircle, Check } from 'lucide-react';
 
 export default function AcademyCard({
   academy,
@@ -35,7 +33,6 @@ export default function AcademyCard({
   const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
-  // استخراج أحدث اشتراك
   const latestSubscription = Array.isArray(academy?.saas_subscriptions) && academy.saas_subscriptions.length > 0
     ? academy.saas_subscriptions[0]
     : null;
@@ -61,7 +58,7 @@ export default function AcademyCard({
           : 'border-semantic-danger/40 bg-semantic-dangerBg/10'
     }`}>
       
-      {/* رأس البطاقة: مربع الاختيار الشعار واسم الأكاديمية */}
+      {/* رأس البطاقة */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 font-bold text-sm shrink-0 select-none">
@@ -87,14 +84,14 @@ export default function AcademyCard({
               <span className="text-semantic-textMuted">{t('academy.owner_label', 'المالك:')}</span> {ownerName}
             </p>
             {complexName && (
-              <p className="m-0 text-[11px] text-semantic-textMuted mt-0.2 truncate">
+              <p className="m-0 text-[11px] text-semantic-textMuted mt-0.5 truncate">
                 <span>{t('academy.complex_label', 'المجمع:')}</span> {complexName}
               </p>
             )}
           </div>
         </div>
 
-        {/* Checkbox للإجراءات الجماعية محاذى بدقة */}
+        {/* Checkbox */}
         <button
           type="button"
           onClick={() => typeof onToggleSelect === 'function' && onToggleSelect(academy.id)}
@@ -118,28 +115,30 @@ export default function AcademyCard({
           </span>
         </div>
         <div className="flex justify-between items-center text-semantic-textSecondary">
-          <span>{t('academy.trial_ends', 'انتهاء الاشتراك/التجربة:')}</span>
+          <span>{t('academy.trial_ends', 'انتهاء التجربة/الاشتراك:')}</span>
           <span className={`font-semibold ltr ${expiryDateString && new Date(expiryDateString) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
             {expiryDateString ? new Date(expiryDateString).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
       </div>
 
-      {/* شريط الأزرار والإجراءات متنسق للجوال */}
-      <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-semantic-borderCard">
+      {/* شريط الأزرار - منسق ومتجاوب */}
+      <div className="space-y-2 pt-2 border-t border-semantic-borderCard">
+        {/* زر دخول الأكاديمية بالكامل */}
         <button
           type="button"
           onClick={handleEnterAcademy}
-          className="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-2 rounded-lg cursor-pointer text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg cursor-pointer text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
         >
-          <ExternalLink size={13} /> {t('academy.enter', 'دخول للأكاديمية')}
+          <ExternalLink size={14} /> {t('academy.enter', 'دخول للأكاديمية')}
         </button>
 
-        <div className="flex items-center gap-1">
+        {/* الأزرار الفرعية مرتبة في سطر واحد بنسب متوازية */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => typeof onOpenDrawer === 'function' && onOpenDrawer(academy)}
-            className="flex-1 bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary py-1.5 text-[11px] font-medium border border-semantic-borderInput rounded-lg transition-colors text-center"
+            className="flex-1 bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary py-1.5 px-1 text-[11px] font-medium border border-semantic-borderInput rounded-lg transition-colors text-center truncate"
           >
             {t('common.details', 'التفاصيل')}
           </button>
@@ -147,30 +146,29 @@ export default function AcademyCard({
           <button
             type="button"
             onClick={() => typeof onExtendClick === 'function' && onExtendClick(academy)}
-            className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 py-1.5 text-[11px] font-semibold flex items-center justify-center gap-1 rounded-lg transition-colors"
+            className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 py-1.5 px-1 text-[11px] font-semibold flex items-center justify-center gap-1 rounded-lg transition-colors truncate"
           >
-            <PlusCircle size={12} /> {t('academy.extend', 'تمديد')}
+            <PlusCircle size={12} className="shrink-0" />
+            <span className="truncate">{t('academy.extend', 'تمديد')}</span>
           </button>
-        </div>
 
-        <div className="flex items-center gap-1">
           {academy?.ownerProfile?.phone ? (
             <button
               type="button"
               onClick={() => typeof onWhatsAppClick === 'function' && onWhatsAppClick(academy.ownerProfile.phone, academyName)}
-              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors flex items-center justify-center"
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors flex items-center justify-center shrink-0"
               title={t('academy.whatsapp_chat', 'تواصل واتساب')}
             >
-              <MessageCircle size={14} />
+              <MessageCircle size={15} />
             </button>
           ) : (
             <button
               type="button"
               onClick={() => typeof onOpenPhoneModal === 'function' && onOpenPhoneModal(academy)}
-              className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors flex items-center justify-center"
+              className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors flex items-center justify-center shrink-0"
               title={t('academy.add_phone', 'إضافة رقم هاتف')}
             >
-              <MessageCircle size={14} />
+              <MessageCircle size={15} />
             </button>
           )}
 
@@ -178,7 +176,7 @@ export default function AcademyCard({
             type="button"
             onClick={() => typeof onStatusToggle === 'function' && onStatusToggle(academy.id, academy.is_active)}
             disabled={processingId === academy.id}
-            className={`flex-1 py-1.5 text-[11px] font-bold border rounded-lg cursor-pointer transition-colors text-center ${
+            className={`flex-1 py-1.5 px-1 text-[11px] font-bold border rounded-lg cursor-pointer transition-colors text-center truncate ${
               academy?.is_active 
                 ? 'bg-semantic-dangerBg text-semantic-danger border-semantic-danger/30 hover:opacity-90' 
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
