@@ -24,7 +24,6 @@ import AddPhoneModal from './Modals/AddPhoneModal';
 import { formatCurrencyAmount } from '@/utils/subscriptionUtils';
 
 export default function AdminDashboard({ onLogout, onSelectAcademy }) {
-  // 💰 تهيئة totalRevenue ككائن لدعم كافة العملات (EGP, SAR, USD)
   const [stats, setStats] = useState({
     totalAcademiesCount: 0,
     pendingCount: 0,
@@ -59,7 +58,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
         pendingCount: data.pendingCount || 0,
         activeCount: data.activeCount || 0,
         blockedCount: data.blockedCount || 0,
-        totalRevenue: data.totalRevenue || {} // استلام كائن الإيرادات الموزعة بالعملات
+        totalRevenue: data.totalRevenue || {}
       });
       setPendingSubscriptions(data.pendingSubscriptions || []);
       setAcademies(data.academies || []);
@@ -257,7 +256,7 @@ export default function AdminDashboard({ onLogout, onSelectAcademy }) {
   });
 
   return (
-    <div className="min-h-screen bg-semantic-bgPage text-semantic-textPrimary p-4 md:p-6 font-cairo">
+    <div className="min-h-screen bg-semantic-bgPage text-semantic-textPrimary p-4 md:p-6 font-cairo" dir="rtl">
       
       {/* Toast Message */}
       {toastMessage && (
