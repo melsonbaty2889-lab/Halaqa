@@ -100,7 +100,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       setLoading(true);
       setError(null);
 
-      // 1. جلب السجل الكامل للاشتراك مع بيانات الأكاديمية
+      // 1. جلب بيانات الاشتراك والأكاديمية
       const [subRes, academyRes] = await Promise.all([
         supabase
           .from('saas_subscriptions')
@@ -121,7 +121,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       const subData = subRes.data as SaasSubscription | null;
       const academyData = academyRes.data;
 
-      // 2. استدعاء RPC الموحدة لحساب الأيام والحالة
+      // 2. استدعاء RPC للحسابات
       const { data: rpcData } = await supabase
         .rpc('get_academy_subscription_status', { target_academy_id: academyId });
 
@@ -129,7 +129,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
       setSubscription(subData);
 
-      // 3. حساب مباشر احتياطي لضمان الدقة اللحظية حتى لو تأخرت نتائج الـ RPC
+      // 3. حساب احتياطي مباشر
       const now = new Date();
       const targetExpiryStr = 
         subData?.expires_at || 
@@ -174,7 +174,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    // قناة استماع لحظية شاملة لجدولي saas_subscriptions و academies
+    // ربط كافة مستمعي التغييرات قبل استدعاء subscribe() مرة واحدة
     const channelName = `realtime_subscription_${academyId}`;
     const channel = supabase
       .channel(channelName)
@@ -201,9 +201,8 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         () => {
           fetchSubscription();
         }
-      );
-
-    channel.subscribe();
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
