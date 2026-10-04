@@ -159,7 +159,7 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
-            if (activeProfile.academy_id) {
+      if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
           .select(`
@@ -193,7 +193,7 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
-            if (fetchedList.length === 0) {
+      if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
           .select(`
@@ -325,12 +325,14 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus, clearAuthState]);
 
+  // 🔄 الاستماع للتغييرات اللحظية للبروفايل بأمان مع منع تصادم القنوات
   useEffect(() => {
     if (!user?.id || !supabase) return;
 
     let channel = null;
     try {
-      channel = supabase.channel(`profile_changes_${user.id}`);
+      const channelName = `profile_changes_${user.id}_${Date.now()}`;
+      channel = supabase.channel(channelName);
       
       if (channel && typeof channel.on === 'function') {
         channel
@@ -357,7 +359,7 @@ export const AcademyProvider = ({ children }) => {
         supabase.removeChannel(channel);
       }
     };
-  }, [user?.id, refreshStatus]);
+  }, [user?.id]); // تمت إزالة refreshStatus لمنع إعادة إنشاء القناة دون حاجة
 
   const logout = async () => {
     try {
