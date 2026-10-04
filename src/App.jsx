@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useCallback } from 'react';
+import React, { useState, lazy, Suspense, useCallback, useEffect } from 'react';
 import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { C } from '@/theme/colors';
@@ -19,6 +19,35 @@ const DevPlayground = lazy(() => {
   }
   return Promise.resolve({ default: () => null });
 });
+
+// Hook لحفظ الحقل النشط وتفادي فقدان التركيز العشوائي في Android عند منبثقات النظام
+function useAndroidFocusFix() {
+  useEffect(() => {
+    let lastActiveInput = null;
+
+    const handleFocusIn = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        lastActiveInput = e.target;
+      }
+    };
+
+    const handleWindowFocus = () => {
+      if (lastActiveInput && document.contains(lastActiveInput)) {
+        setTimeout(() => {
+          lastActiveInput.focus({ preventScroll: true });
+        }, 100);
+      }
+    };
+
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, []);
+}
 
 // 🌟 مكون الخلفية الموحد المطابق لشاشة SplashScreen (الشبكة + التوهج الزمردي)
 const GlobalEmeraldBackground = () => (
@@ -72,6 +101,8 @@ const FallbackLoader = () => (
 );
 
 export default function App() {
+  useAndroidFocusFix();
+
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
 
