@@ -1,17 +1,11 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Building2, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import { formatCurrencyAmount } from '@/utils/subscriptionUtils';
 
 export default function AdminStatsCards({ stats = {} }) {
-  const { t } = useTranslation();
-
   const safeNumber = (val) => {
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return Number(val) || 0;
-    if (typeof val === 'object' && val !== null) {
-      return Number(val.ar || val.en || 0) || 0;
-    }
     return 0;
   };
 
@@ -27,14 +21,14 @@ export default function AdminStatsCards({ stats = {} }) {
   const revenueEntries = Object.entries(safeStats.totalRevenue);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 font-cairo">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 font-cairo" dir="rtl">
       
       {/* 1. إجمالي الأكاديميات */}
       <div className="relative overflow-hidden card-surface p-3 sm:p-4 rounded-xl border border-semantic-borderCard shadow-sm transition-all">
         <div className="absolute top-0 right-0 w-1 h-full bg-sky-500" />
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] sm:text-xs font-semibold text-semantic-textSecondary truncate">
-            {t('admin.total_academies', 'إجمالي الأكاديميات')}
+            إجمالي الأكاديميات
           </span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
             <Building2 size={15} />
@@ -50,7 +44,7 @@ export default function AdminStatsCards({ stats = {} }) {
         <div className="absolute top-0 right-0 w-1 h-full bg-amber-500" />
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] sm:text-xs font-semibold text-semantic-textSecondary truncate">
-            {t('admin.pending_verification', 'معلقة المراجعة')}
+            معلقة المراجعة
           </span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
             <Clock size={15} />
@@ -66,7 +60,7 @@ export default function AdminStatsCards({ stats = {} }) {
         <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500" />
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] sm:text-xs font-semibold text-semantic-textSecondary truncate">
-            {t('admin.active_academies', 'نشطة')}
+            نشطة
           </span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
             <CheckCircle size={15} />
@@ -82,7 +76,7 @@ export default function AdminStatsCards({ stats = {} }) {
         <div className="absolute top-0 right-0 w-1 h-full bg-indigo-500" />
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] sm:text-xs font-semibold text-semantic-textSecondary truncate">
-            {t('admin.total_revenue', 'إجمالي الإيرادات')}
+            إجمالي الإيرادات
           </span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
             <DollarSign size={15} />
