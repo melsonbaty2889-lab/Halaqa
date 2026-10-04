@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useId } from 'react';
+import React, { useState, forwardRef } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -28,8 +28,9 @@ export const Input = forwardRef(({
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const autoId = useId();
-  const inputId = customId || autoId;
+
+  // استخدام المعرف الخارجي أو ترك المعرف فارغاً لتجنب تغير ID أثناء كتابة الكيبورد في أندرويد
+  const inputId = customId || undefined;
 
   const isPasswordType = type === "password";
   const actualType = isPasswordType ? (showPassword ? "text" : "password") : type;
@@ -62,7 +63,7 @@ export const Input = forwardRef(({
     boxSizing: "border-box",
     textAlign: "start",
     boxShadow: isFocused ? `0 0 0 3px ${errorText ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-action-primary-glow)'}` : "none",
-    transition: "all 0.2s ease",
+    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
     colorScheme: "dark",
     ...style
   };
