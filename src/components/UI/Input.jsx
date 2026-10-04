@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef, useRef, useImperativeHandle } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -28,10 +28,11 @@ export const Input = forwardRef(({
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  const innerRef = useRef(null);
+  useImperativeHandle(ref, () => innerRef.current);
 
-  // استخدام المعرف الخارجي أو ترك المعرف فارغاً لتجنب تغير ID أثناء كتابة الكيبورد في أندرويد
   const inputId = customId || undefined;
-
   const isPasswordType = type === "password";
   const actualType = isPasswordType ? (showPassword ? "text" : "password") : type;
 
@@ -43,8 +44,22 @@ export const Input = forwardRef(({
   };
 
   const handleBlur = (e) => {
+    // إذا فقد الحقل التركيز بسبب منبثق النظام (الضغط المطول في أندرويد)
+    // نتحقق مما إذا كانت الصفحة لا تزال نشطة، ونعيد التركيز إذا تمت العودة سريعاً
     setIsFocused(false);
     if (onBlur) onBlur(e);
+
+    const activeEl = document.activeElement;
+    if (activeEl === innerRef.current) return;
+
+    const handleWindowFocus = () => {
+      if (innerRef.current) {
+        innerRef.current.focus({ preventScroll: true });
+      }
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+
+    window.addEventListener('focus', handleWindowFocus, { once: true });
   };
 
   const baseStyle = { 
@@ -88,7 +103,7 @@ export const Input = forwardRef(({
 
         {as === "textarea" ? (
           <textarea 
-            ref={ref} 
+            ref={innerRef} 
             id={inputId}
             value={value} 
             onChange={onChange} 
@@ -96,27 +111,29 @@ export const Input = forwardRef(({
             onBlur={handleBlur} 
             placeholder={placeholder} 
             aria-invalid={!!errorText}
+            dir="auto"
+            autoCorrect="off"
             className={`ui-textarea ${className}`} 
             style={{ ...baseStyle, resize: "vertical", minHeight: 90 }} 
             {...props} 
           />
         ) : (
           <input 
-  ref={ref} 
-  id={inputId}
-  type={actualType} 
-  value={value} 
-  onChange={onChange} 
-  onFocus={handleFocus} 
-  onBlur={handleBlur} 
-  placeholder={placeholder} 
-  aria-invalid={!!errorText}
-  dir="auto"
-  autoCorrect="off"
-  className={`ui-input ${className}`} 
-  style={baseStyle} 
-  {...props} 
-/>
+            ref={innerRef} 
+            id={inputId}
+            type={actualType} 
+            value={value} 
+            onChange={onChange} 
+            onFocus={handleFocus} 
+            onBlur={handleBlur} 
+            placeholder={placeholder} 
+            aria-invalid={!!errorText}
+            dir="auto"
+            autoCorrect="off"
+            className={`ui-input ${className}`} 
+            style={baseStyle} 
+            {...props} 
+          />
         )}
 
         {isPasswordType ? (
