@@ -63,10 +63,15 @@ if (typeof document !== 'undefined') {
   document.documentElement.setAttribute('lang', initialLng);
 }
 
+// حماية حدث تغيير اللغة لمنع الاهتزاز المفاجئ للـ HTML أثناء الكتابة
+let lastAppliedLang = initialLng;
+
 if (i18n && typeof i18n.on === 'function') {
   i18n.on('languageChanged', (lng) => {
     const validLanguage = getCleanLang(lng);
-    if (typeof document !== 'undefined') {
+    // تنفيذ التغيير فقط إذا اختلفت اللغة فعلياً عن اللغة الحالية
+    if (validLanguage !== lastAppliedLang && typeof document !== 'undefined') {
+      lastAppliedLang = validLanguage;
       document.documentElement.setAttribute('dir', getLanguageDirection(validLanguage));
       document.documentElement.setAttribute('lang', validLanguage);
     }
