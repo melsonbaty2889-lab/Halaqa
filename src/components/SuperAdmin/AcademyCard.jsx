@@ -33,11 +33,18 @@ export default function AcademyCard({
   const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
-  const latestSubscription = Array.isArray(academy?.saas_subscriptions) && academy.saas_subscriptions.length > 0
-    ? academy.saas_subscriptions[0]
-    : null;
+  // 1. استخراج الاشتراك النشط أو الأحدث
+  const subscriptions = academy?.saas_subscriptions || academy?.subscriptions || [];
+  const activeSub = Array.isArray(subscriptions) && subscriptions.length > 0 ? subscriptions[0] : null;
 
-  const expiryDateString = academy?.trial_ends_at || latestSubscription?.expires_at || latestSubscription?.trial_ends_at;
+  // 2. تحديد تاريخ وقوة الانتهاء (إما تاريخ انتهاء الاشتراك أو تاريخ انتهاء التجربة)
+  const expiryDate = activeSub?.expires_at || academy?.trial_ends_at || activeSub?.trial_ends_at;
+  const isTrial = !activeSub?.expires_at && (academy?.trial_ends_at || activeSub?.trial_ends_at);
+
+  // 3. تحديد تسمية الحقل بحسب الحالة
+  const expiryLabel = isTrial 
+    ? t('academy.trial_ends', 'انتهاء التجربة:') 
+    : t('academy.subscription_expires', 'انتهاء الاشتراك:');
 
   const handleEnterAcademy = (e) => {
     e.preventDefault();
@@ -114,17 +121,17 @@ export default function AcademyCard({
             {academy?.created_at ? new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
+        
         <div className="flex justify-between items-center text-semantic-textSecondary">
-          <span>{t('academy.trial_ends', 'انتهاء التجربة/الاشتراك:')}</span>
-          <span className={`font-semibold ltr ${expiryDateString && new Date(expiryDateString) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
-            {expiryDateString ? new Date(expiryDateString).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+          <span>{expiryLabel}</span>
+          <span className={`font-semibold ltr ${expiryDate && new Date(expiryDate) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
+            {expiryDate ? new Date(expiryDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
       </div>
 
-      {/* شريط الأزرار - منسق ومتجاوب */}
+      {/* شريط الأزرار والإجراءات */}
       <div className="space-y-2 pt-2 border-t border-semantic-borderCard">
-        {/* زر دخول الأكاديمية بالكامل */}
         <button
           type="button"
           onClick={handleEnterAcademy}
@@ -133,7 +140,6 @@ export default function AcademyCard({
           <ExternalLink size={14} /> {t('academy.enter', 'دخول للأكاديمية')}
         </button>
 
-        {/* الأزرار الفرعية مرتبة في سطر واحد بنسب متوازية */}
         <div className="flex items-center gap-1.5">
           <button
             type="button"
