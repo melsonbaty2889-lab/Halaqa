@@ -24,7 +24,6 @@ export default function LoginPage({
   const { toastState, hideToast } = useToast();
 
   const {
-    isRtl,
     email,
     setEmail,
     password,
@@ -118,6 +117,7 @@ export default function LoginPage({
       <div className="w-full flex flex-col justify-between relative z-10">
         <div className="w-full">
           
+          {/* النصوص الأساسية */}
           <div className="text-center mb-5">
             <h1
               className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
@@ -133,6 +133,7 @@ export default function LoginPage({
             </p>
           </div>
 
+          {/* صندوق الأخطاء والتنبيهات المباشرة */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
@@ -147,9 +148,10 @@ export default function LoginPage({
             </div>
           )}
 
+          {/* النموذج */}
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             
-            {/* حقل البريد الإلكتروني مع تثبيت التنسيق و إضافة inputMode */}
+            {/* حقل البريد الإلكتروني - تثبيت الموقع و inputMode والـ key */}
             <div className="relative flex items-center group w-full">
               <Mail
                 size={18}
@@ -164,6 +166,7 @@ export default function LoginPage({
                 name="email"
                 dir="ltr"
                 inputMode="email"
+                autoComplete="email"
                 autoCapitalize="none"
                 autoCorrect="off"
                 value={email || ''}
@@ -182,7 +185,7 @@ export default function LoginPage({
               />
             </div>
 
-            {/* حقل كلمة المرور مع تثبيت التنسيق و إضافة inputMode */}
+            {/* حقل كلمة المرور - تثبيت الموقع و inputMode والـ key */}
             <div className="relative flex items-center group w-full">
               <Lock
                 size={18}
@@ -223,6 +226,7 @@ export default function LoginPage({
               </button>
             </div>
 
+            {/* رابط نسيت كلمة المرور */}
             <div className="flex justify-end">
               <button
                 type="button"
@@ -236,11 +240,13 @@ export default function LoginPage({
               </button>
             </div>
 
+            {/* زر الدخول الرئيسي الموحد */}
             <PrimaryButton loading={loading && !googleLoading} disabled={googleLoading}>
               {t('auth.login', 'تسجيل الدخول')}
             </PrimaryButton>
           </form>
 
+          {/* الفاصل الزمني (OR) */}
           <div className="relative my-4 flex items-center justify-center">
             <div className="border-t w-full" style={{ borderColor: borderInputColor }} />
             <span
@@ -255,6 +261,7 @@ export default function LoginPage({
             </span>
           </div>
 
+          {/* زر تسجيل الدخول عبر جوجل الموحد */}
           <GoogleButton 
             onClick={handleGoogleLogin}
             loading={googleLoading}
@@ -262,6 +269,7 @@ export default function LoginPage({
             text={t('auth.loginWithGoogle', 'متابعة باستخدام Google')}
           />
 
+          {/* إنشاء حساب جديد */}
           <div
             className="text-center mt-5 text-xs flex items-center justify-center gap-1.5"
             style={{ color: textSecondaryColor }}
@@ -282,6 +290,7 @@ export default function LoginPage({
         </div>
       </div>
 
+      {/* تنبيه Toast الموحد المنسدل */}
       <Toast
         isOpen={toastState.isOpen}
         message={toastState.message}
