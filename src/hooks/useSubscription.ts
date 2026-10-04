@@ -54,7 +54,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // جلب academy_id إذا لم يتم تمريره
+  // 1. جلب academy_id إذا لم يتم تمريره
   useEffect(() => {
     if (explicitAcademyId) {
       setAcademyId(explicitAcademyId);
@@ -89,6 +89,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
     };
   }, [explicitAcademyId]);
 
+  // 2. دالة جلب بيانات الاشتراك والأكاديمية
   const fetchSubscription = useCallback(async () => {
     if (!academyId) {
       setSubscription(null);
@@ -100,7 +101,6 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       setLoading(true);
       setError(null);
 
-      // 1. جلب بيانات الاشتراك والأكاديمية
       const [subRes, academyRes] = await Promise.all([
         supabase
           .from('saas_subscriptions')
@@ -121,7 +121,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       const subData = subRes.data as SaasSubscription | null;
       const academyData = academyRes.data;
 
-      // 2. استدعاء RPC للحسابات
+      // استدعاء RPC للحسابات
       const { data: rpcData } = await supabase
         .rpc('get_academy_subscription_status', { target_academy_id: academyId });
 
@@ -129,7 +129,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
       setSubscription(subData);
 
-      // 3. حساب احتياطي مباشر
+      // حساب احتياطي مباشر
       const now = new Date();
       const targetExpiryStr = 
         subData?.expires_at || 
@@ -165,6 +165,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
     }
   }, [academyId, t]);
 
+  // 3. الاشتراك بالبث المباشر (Realtime) للجدولين في قناة واحدة مرتبة
   useEffect(() => {
     if (!academyId) {
       setSubscription(null);
@@ -174,9 +175,10 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    // إنشاء قناة الاستماع الخاصة بالاشتراك
-    const subChannel = supabase
-      .channel(`sub_realtime_${academyId}`)
+    // إنشاء قناة واحدة وتجميع كل التغييرات فيها مع وضع subscribe() في النهاية
+    const channelName = `sub_realtime_${academyId}_${Date.now()}`;
+    const channel = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -187,11 +189,6 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         },
         () => fetchSubscription()
       )
-      .subscribe();
-
-    // إنشاء قناة الاستماع الخاصة بالأكاديمية
-    const acadChannel = supabase
-      .channel(`acad_realtime_${academyId}`)
       .on(
         'postgres_changes',
         {
@@ -202,11 +199,12 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         },
         () => fetchSubscription()
       )
-      .subscribe();
+      .subscribe(); // ✅ الاشتراك يتم في النهاية تماماً بعد إضافة جميع الـ on
 
     return () => {
-      supabase.removeChannel(subChannel);
-      supabase.removeChannel(acadChannel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [academyId, fetchSubscription]);
 
