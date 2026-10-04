@@ -33,21 +33,22 @@ export default function AcademyCard({
   const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
-  // 1. استخراج الاشتراك من جميع الحقول والمصفوفات المحتملة
-  const subs = academy?.saas_subscriptions || academy?.subscriptions || [];
-  const activeSub = Array.isArray(subs) ? subs[0] : (typeof subs === 'object' ? subs : null);
+  // 1. استخراج أحدث اشتراك من المصفوفة المرفقة
+  const subs = Array.isArray(academy?.saas_subscriptions) ? academy.saas_subscriptions : (academy?.subscriptions || []);
+  const activeSub = subs.length > 0 ? subs[0] : (typeof subs === 'object' ? subs : null);
 
-  // 2. البحث عن تاريخ الانتهاء الصريح
+  // 2. البحث عن تاريخ الانتهاء بجميع مسارات التجميع (من الاشتراك أو من الكائن المباشر)
   const expiryDate = 
     activeSub?.expires_at || 
-    activeSub?.trial_ends_at || 
     academy?.expires_at || 
+    activeSub?.trial_ends_at || 
     academy?.trial_ends_at || 
     null;
 
-  // 3. تحديد هل هي تجربة مجانية أم اشتراك مدفوع
+  // 3. تحديد نوع الفعالية (هل هو اشتراك مدفوع أم تجربة مجانية)
   const isTrial = !activeSub?.expires_at && !academy?.expires_at && Boolean(activeSub?.trial_ends_at || academy?.trial_ends_at);
 
+  // 4. التسمية المناسبة
   const expiryLabel = isTrial 
     ? t('academy.trial_ends', 'انتهاء التجربة:') 
     : t('academy.subscription_expires', 'انتهاء الاشتراك:');
