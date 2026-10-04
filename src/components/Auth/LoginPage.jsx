@@ -117,7 +117,7 @@ export default function LoginPage({
       langBtn={<LanguageSwitcher />}
       subtitle={appSubtitle}
     >
-      <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="w-full flex flex-col justify-between relative z-10">
         <div className="w-full">
           
           {/* النصوص الأساسية */}
@@ -154,7 +154,7 @@ export default function LoginPage({
           {/* النموذج */}
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             
-            {/* حقل البريد الإلكتروني */}
+            {/* حقل البريد الإلكتروني - تم تثبيت الاتجاه dir="ltr" وحفظ التركيز */}
             <div className="relative flex items-center group w-full">
               <Mail
                 size={18}
@@ -166,8 +166,12 @@ export default function LoginPage({
                 }}
               />
               <input
+                key="input-login-email"
                 type="email"
                 name="email"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
                 value={email || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
@@ -176,7 +180,7 @@ export default function LoginPage({
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
+                  isRtl ? 'pr-11 pl-4 text-left' : 'pl-11 pr-4 text-left'
                 }`}
                 style={{
                   borderColor: fieldErrors?.email ? dangerColor : borderInputColor,
@@ -186,7 +190,7 @@ export default function LoginPage({
               />
             </div>
 
-            {/* حقل كلمة المرور */}
+            {/* حقل كلمة المرور - تم تثبيت المفتاح وضبط المحاذاة */}
             <div className="relative flex items-center group w-full">
               <Lock
                 size={18}
@@ -198,8 +202,10 @@ export default function LoginPage({
                 }}
               />
               <input
+                key="input-login-password"
                 type={showPassword ? 'text' : 'password'}
                 name="password"
+                dir="ltr"
                 value={password || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
@@ -208,7 +214,7 @@ export default function LoginPage({
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
+                  isRtl ? 'pr-11 pl-11 text-left' : 'pl-11 pr-11 text-left'
                 }`}
                 style={{
                   borderColor: fieldErrors?.password ? dangerColor : borderInputColor,
