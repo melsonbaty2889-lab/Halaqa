@@ -102,19 +102,21 @@ export const Input = forwardRef(({
           />
         ) : (
           <input 
-            ref={ref} 
-            id={inputId}
-            type={actualType} 
-            value={value} 
-            onChange={onChange} 
-            onFocus={handleFocus} 
-            onBlur={handleBlur} 
-            placeholder={placeholder} 
-            aria-invalid={!!errorText}
-            className={`ui-input ${className}`} 
-            style={baseStyle} 
-            {...props} 
-          />
+  ref={ref} 
+  id={inputId}
+  type={actualType} 
+  value={value} 
+  onChange={onChange} 
+  onFocus={handleFocus} 
+  onBlur={handleBlur} 
+  placeholder={placeholder} 
+  aria-invalid={!!errorText}
+  dir="auto"
+  autoCorrect="off"
+  className={`ui-input ${className}`} 
+  style={baseStyle} 
+  {...props} 
+/>
         )}
 
         {isPasswordType ? (
