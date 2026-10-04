@@ -325,17 +325,18 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus, clearAuthState]);
 
-  // 🔄 الاستماع للتغييرات اللحظية للبروفايل بأمان مع منع تصادم القنوات
+  // 🔄 الاستماع للتغييرات اللحظية للبروفايل بأمان مع ترتيب الاشتراكات
   useEffect(() => {
     if (!user?.id || !supabase) return;
 
     let channel = null;
     try {
-      const channelName = `profile_changes_${user.id}_${Date.now()}`;
-      channel = supabase.channel(channelName);
-      
-      if (channel && typeof channel.on === 'function') {
-        channel
+      if (typeof supabase.channel === 'function') {
+        const channelName = `profile_changes_${user.id}_${Date.now()}`;
+        
+        // ✅ ربط الأحداث أولاً ثم الاشتراك في النهاية تماماً
+        channel = supabase
+          .channel(channelName)
           .on(
             'postgres_changes',
             {
@@ -359,7 +360,7 @@ export const AcademyProvider = ({ children }) => {
         supabase.removeChannel(channel);
       }
     };
-  }, [user?.id]); // تمت إزالة refreshStatus لمنع إعادة إنشاء القناة دون حاجة
+  }, [user?.id, refreshStatus]);
 
   const logout = async () => {
     try {
