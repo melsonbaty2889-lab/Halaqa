@@ -33,15 +33,22 @@ export default function AcademyCard({
   const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
-  // 1. استخراج الاشتراك النشط أو الأحدث
-  const subscriptions = academy?.saas_subscriptions || academy?.subscriptions || [];
-  const activeSub = Array.isArray(subscriptions) && subscriptions.length > 0 ? subscriptions[0] : null;
+  // 1. استخراج الاشتراكات والوصول لأول اشتراك أو كائن الاشتراك
+  const rawSubs = academy?.saas_subscriptions || academy?.subscriptions;
+  const activeSub = Array.isArray(rawSubs) ? rawSubs[0] : (rawSubs && typeof rawSubs === 'object' ? rawSubs : null);
 
-  // 2. تحديد تاريخ وقوة الانتهاء (إما تاريخ انتهاء الاشتراك أو تاريخ انتهاء التجربة)
-  const expiryDate = activeSub?.expires_at || academy?.trial_ends_at || activeSub?.trial_ends_at;
-  const isTrial = !activeSub?.expires_at && (academy?.trial_ends_at || activeSub?.trial_ends_at);
+  // 2. البحث عن تاريخ الانتهاء بأكثر من مسار لضمان عدم ظهور (-)
+  const rawExpiryDate = 
+    activeSub?.expires_at || 
+    activeSub?.trial_ends_at || 
+    academy?.expires_at || 
+    academy?.trial_ends_at || 
+    null;
 
-  // 3. تحديد تسمية الحقل بحسب الحالة
+  // 3. تحديد ما إذا كانت الفترة تجريبية أم اشتراك فعلي
+  const isTrial = !activeSub?.expires_at && !academy?.expires_at && Boolean(activeSub?.trial_ends_at || academy?.trial_ends_at);
+
+  // 4. تحديد التسمية الصحيحة
   const expiryLabel = isTrial 
     ? t('academy.trial_ends', 'انتهاء التجربة:') 
     : t('academy.subscription_expires', 'انتهاء الاشتراك:');
@@ -124,8 +131,8 @@ export default function AcademyCard({
         
         <div className="flex justify-between items-center text-semantic-textSecondary">
           <span>{expiryLabel}</span>
-          <span className={`font-semibold ltr ${expiryDate && new Date(expiryDate) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
-            {expiryDate ? new Date(expiryDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
+          <span className={`font-semibold ltr ${rawExpiryDate && new Date(rawExpiryDate) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
+            {rawExpiryDate ? new Date(rawExpiryDate).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
       </div>
