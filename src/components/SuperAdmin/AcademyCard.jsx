@@ -21,7 +21,6 @@ export default function AcademyCard({
   const isRtl = i18n.dir() === 'rtl';
   const isSelected = Array.isArray(selectedAcademyIds) && selectedAcademyIds.includes(academy.id);
 
-  // 🛡️ استخراج اسم المجمع/الأكاديمية المالك بطريقة آمنة مع دعم النصوص العربية والترجمات
   const resolveSafeText = (val, defaultVal = '') => {
     if (typeof getSafeText === 'function') {
       return getSafeText(val, defaultVal);
@@ -36,7 +35,7 @@ export default function AcademyCard({
   const ownerName = resolveSafeText(academy?.ownerProfile?.full_name, t('common.unknown', 'غير معروف'));
   const complexName = resolveSafeText(academy?.complex_name || academy?.metadata?.complex_name, '');
 
-  // 🗓️ استخراج أحدث تاريخ انتهاء اشتراك/تجربة من الاشتراكات المرفقة إن وجد
+  // استخراج أحدث اشتراك
   const latestSubscription = Array.isArray(academy?.saas_subscriptions) && academy.saas_subscriptions.length > 0
     ? academy.saas_subscriptions[0]
     : null;
@@ -54,7 +53,7 @@ export default function AcademyCard({
   };
 
   return (
-    <div className={`card-surface p-4 rounded-xl transition-all relative border ${
+    <div className={`card-surface p-3 sm:p-4 rounded-xl transition-all relative border ${
       isSelected 
         ? 'border-sky-500 ring-1 ring-sky-500/50' 
         : academy?.is_active 
@@ -62,82 +61,85 @@ export default function AcademyCard({
           : 'border-semantic-danger/40 bg-semantic-dangerBg/10'
     }`}>
       
-      {/* Checkbox للإجراءات الجماعية */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* رأس البطاقة: مربع الاختيار الشعار واسم الأكاديمية */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 font-bold text-sm shrink-0 select-none">
+            {academyName?.[0]?.toUpperCase() || 'A'}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="m-0 text-semantic-textPrimary font-bold text-sm truncate">
+                {academyName}
+              </h3>
+              {academy?.is_active ? (
+                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0">
+                  {t('common.active', 'نشط')}
+                </span>
+              ) : (
+                <span className="bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/20 text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0">
+                  {t('common.blocked', 'محظور')}
+                </span>
+              )}
+            </div>
+            
+            <p className="m-0 text-[11px] text-semantic-textSecondary mt-0.5 truncate">
+              <span className="text-semantic-textMuted">{t('academy.owner_label', 'المالك:')}</span> {ownerName}
+            </p>
+            {complexName && (
+              <p className="m-0 text-[11px] text-semantic-textMuted mt-0.2 truncate">
+                <span>{t('academy.complex_label', 'المجمع:')}</span> {complexName}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Checkbox للإجراءات الجماعية محاذى بدقة */}
         <button
+          type="button"
           onClick={() => typeof onToggleSelect === 'function' && onToggleSelect(academy.id)}
-          className={`w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer ${
+          className={`w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5 ${
             isSelected 
               ? 'bg-sky-500 border-sky-500 text-white' 
               : 'border-semantic-borderInput bg-semantic-surfaceInput hover:border-semantic-borderHover'
           }`}
-          type="button"
           aria-label={t('common.select', 'تحديد')}
         >
           {isSelected && <Check size={12} strokeWidth={3} />}
         </button>
       </div>
 
-      <div className="flex justify-between items-start mb-3 pr-2 pl-7">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 font-bold text-base select-none">
-            {academyName?.[0]?.toUpperCase() || 'A'}
-          </div>
-          <div>
-            <h3 className="m-0 text-semantic-textPrimary font-bold text-sm flex items-center gap-2">
-              {academyName}
-              {academy?.is_active ? (
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-normal">
-                  {t('common.active', 'نشط')}
-                </span>
-              ) : (
-                <span className="bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/20 text-[10px] px-2 py-0.5 rounded-full font-normal">
-                  {t('common.blocked', 'محظر')}
-                </span>
-              )}
-            </h3>
-            <p className="m-0 text-xs text-semantic-textSecondary mt-0.5">
-              {t('academy.owner_label', 'المالك:')} {ownerName}
-              {complexName && (
-                <span className="text-semantic-textMuted mr-1">
-                  / {t('academy.complex_label', 'المجمع:')} {complexName}
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-semantic-surfaceInput/60 rounded-lg p-2.5 mb-3 text-xs border border-semantic-borderInput space-y-1">
-        <div className="flex justify-between text-semantic-textSecondary">
+      {/* تفاصيل التواريخ */}
+      <div className="bg-semantic-surfaceInput/60 rounded-lg p-2.5 mb-3 text-[11px] sm:text-xs border border-semantic-borderInput space-y-1">
+        <div className="flex justify-between items-center text-semantic-textSecondary">
           <span>{t('academy.registered_at', 'تاريخ التسجيل:')}</span>
-          <span className="text-semantic-textPrimary ltr">
+          <span className="text-semantic-textPrimary ltr font-medium">
             {academy?.created_at ? new Date(academy.created_at).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
-        <div className="flex justify-between text-semantic-textSecondary">
-          <span>{t('academy.trial_ends', 'انتهاء التجربة / الاشتراك:')}</span>
-          <span className={`font-semibold ${expiryDateString && new Date(expiryDateString) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
+        <div className="flex justify-between items-center text-semantic-textSecondary">
+          <span>{t('academy.trial_ends', 'انتهاء الاشتراك/التجربة:')}</span>
+          <span className={`font-semibold ltr ${expiryDateString && new Date(expiryDateString) < new Date() ? 'text-semantic-danger' : 'text-semantic-success'}`}>
             {expiryDateString ? new Date(expiryDateString).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US') : '-'}
           </span>
         </div>
       </div>
 
-      {/* الأزرار وشريط التحكم */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-semantic-borderCard">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            type="button"
-            onClick={handleEnterAcademy}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-bold flex items-center gap-1 transition-colors z-20"
-          >
-            <ExternalLink size={14} /> {t('academy.enter', 'دخول للأكاديمية')}
-          </button>
+      {/* شريط الأزرار والإجراءات متنسق للجوال */}
+      <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-semantic-borderCard">
+        <button
+          type="button"
+          onClick={handleEnterAcademy}
+          className="col-span-2 bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-2 rounded-lg cursor-pointer text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+        >
+          <ExternalLink size={13} /> {t('academy.enter', 'دخول للأكاديمية')}
+        </button>
 
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => typeof onOpenDrawer === 'function' && onOpenDrawer(academy)}
-            className="bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-medium border border-semantic-borderInput transition-colors"
+            className="flex-1 bg-semantic-surfaceInput hover:bg-semantic-surfaceSecondary text-semantic-textPrimary py-1.5 text-[11px] font-medium border border-semantic-borderInput rounded-lg transition-colors text-center"
           >
             {t('common.details', 'التفاصيل')}
           </button>
@@ -145,30 +147,30 @@ export default function AcademyCard({
           <button
             type="button"
             onClick={() => typeof onExtendClick === 'function' && onExtendClick(academy)}
-            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1.5 rounded-lg cursor-pointer text-xs flex items-center gap-1 transition-colors"
+            className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 py-1.5 text-[11px] font-semibold flex items-center justify-center gap-1 rounded-lg transition-colors"
           >
-            <PlusCircle size={13} /> {t('academy.extend', 'تمديد')}
+            <PlusCircle size={12} /> {t('academy.extend', 'تمديد')}
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {academy?.ownerProfile?.phone ? (
             <button
               type="button"
               onClick={() => typeof onWhatsAppClick === 'function' && onWhatsAppClick(academy.ownerProfile.phone, academyName)}
-              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors"
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-1.5 rounded-lg cursor-pointer transition-colors flex items-center justify-center"
               title={t('academy.whatsapp_chat', 'تواصل واتساب')}
             >
-              <MessageCircle size={15} />
+              <MessageCircle size={14} />
             </button>
           ) : (
             <button
               type="button"
               onClick={() => typeof onOpenPhoneModal === 'function' && onOpenPhoneModal(academy)}
-              className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors"
+              className="bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput p-1.5 rounded-lg cursor-pointer hover:text-semantic-textPrimary transition-colors flex items-center justify-center"
               title={t('academy.add_phone', 'إضافة رقم هاتف')}
             >
-              <MessageCircle size={15} />
+              <MessageCircle size={14} />
             </button>
           )}
 
@@ -176,7 +178,7 @@ export default function AcademyCard({
             type="button"
             onClick={() => typeof onStatusToggle === 'function' && onStatusToggle(academy.id, academy.is_active)}
             disabled={processingId === academy.id}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border cursor-pointer transition-colors ${
+            className={`flex-1 py-1.5 text-[11px] font-bold border rounded-lg cursor-pointer transition-colors text-center ${
               academy?.is_active 
                 ? 'bg-semantic-dangerBg text-semantic-danger border-semantic-danger/30 hover:opacity-90' 
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
