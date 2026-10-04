@@ -149,51 +149,58 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
 
     if (!userId) return;
 
-    const channel = supabase
-      .channel(`public:notifications:user_id=${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const newNotif = payload.new as NotificationItem;
-          if (academyId && newNotif.academy_id && newNotif.academy_id !== academyId) return;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-          setNotifications((prev) => [newNotif, ...prev]);
-          if (!newNotif.is_read) {
-            setUnreadCount((prev) => prev + 1);
+    try {
+      const channelName = `notifications_${userId}_${Date.now()}`;
+      channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            const newNotif = payload.new as NotificationItem;
+            if (academyId && newNotif.academy_id && newNotif.academy_id !== academyId) return;
+
+            setNotifications((prev) => [newNotif, ...prev]);
+            if (!newNotif.is_read) {
+              setUnreadCount((prev) => prev + 1);
+            }
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const updatedNotif = payload.new as NotificationItem;
-          setNotifications((prev) =>
-            prev.map((item) => (item.id === updatedNotif.id ? updatedNotif : item))
-          );
-          setUnreadCount((prev) => {
-            const list = notifications.map((n) => (n.id === updatedNotif.id ? updatedNotif : n));
-            return list.filter((n) => !n.is_read).length;
-          });
-        }
-      )
-      .subscribe();
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            const updatedNotif = payload.new as NotificationItem;
+            setNotifications((prev) => {
+              const updatedList = prev.map((item) => (item.id === updatedNotif.id ? updatedNotif : item));
+              setUnreadCount(updatedList.filter((n) => !n.is_read).length);
+              return updatedList;
+            });
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error('Error subscribing to notifications channel:', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
-  }, [userId, academyId, fetchNotifications]);
+  }, [userId, academyId]);
 
   return {
     notifications,
