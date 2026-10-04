@@ -174,10 +174,9 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    // ربط كافة مستمعي التغييرات قبل استدعاء subscribe() مرة واحدة
-    const channelName = `realtime_subscription_${academyId}`;
-    const channel = supabase
-      .channel(channelName)
+    // إنشاء قناة الاستماع الخاصة بالاشتراك
+    const subChannel = supabase
+      .channel(`sub_realtime_${academyId}`)
       .on(
         'postgres_changes',
         {
@@ -186,10 +185,13 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
           table: 'saas_subscriptions',
           filter: `academy_id=eq.${academyId}`,
         },
-        () => {
-          fetchSubscription();
-        }
+        () => fetchSubscription()
       )
+      .subscribe();
+
+    // إنشاء قناة الاستماع الخاصة بالأكاديمية
+    const acadChannel = supabase
+      .channel(`acad_realtime_${academyId}`)
       .on(
         'postgres_changes',
         {
@@ -198,14 +200,13 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
           table: 'academies',
           filter: `id=eq.${academyId}`,
         },
-        () => {
-          fetchSubscription();
-        }
+        () => fetchSubscription()
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(subChannel);
+      supabase.removeChannel(acadChannel);
     };
   }, [academyId, fetchSubscription]);
 
