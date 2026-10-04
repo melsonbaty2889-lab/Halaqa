@@ -1,3 +1,5 @@
+// Src/components/Auth/SignUpPage.jsx
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignUpForm } from '@/hooks/useSignUpForm';
@@ -91,7 +93,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
 
   return (
     <AuthLayout>
-      <div className="w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div className="w-full">
         <div className="text-center mb-4">
           <h1 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1 text-semantic-textPrimary">
             {t('auth.createNewAccount', 'إنشاء حساب جديد')}
@@ -136,6 +138,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 } ${fullName ? 'text-semantic-actionPrimary' : 'text-semantic-textSecondary'}`}
               />
               <input
+                key="input-signup-fullname"
                 type="text"
                 value={fullName || ''}
                 onChange={(e) => {
@@ -167,7 +170,11 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 } ${email ? 'text-semantic-actionPrimary' : 'text-semantic-textSecondary'}`}
               />
               <input
+                key="input-signup-email"
                 type="email"
+                dir="ltr"
+                autoCapitalize="none"
+                autoCorrect="off"
                 value={email || ''}
                 onChange={(e) => {
                   clearFieldError('email');
@@ -177,7 +184,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 required
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] bg-semantic-surfaceInput text-semantic-textPrimary ${
-                  isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
+                  isRtl ? 'pr-11 pl-4 text-left' : 'pl-11 pr-4 text-left'
                 } ${fieldErrors?.email ? 'border-semantic-danger' : 'border-semantic-borderInput'}`}
               />
             </div>
@@ -198,7 +205,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 } ${password ? 'text-semantic-actionPrimary' : 'text-semantic-textSecondary'}`}
               />
               <input
+                key="input-signup-password"
                 type={showPassword ? 'text' : 'password'}
+                dir="ltr"
                 value={password || ''}
                 onChange={(e) => {
                   clearFieldError('password');
@@ -208,7 +217,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 required
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] bg-semantic-surfaceInput text-semantic-textPrimary ${
-                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
+                  isRtl ? 'pr-11 pl-11 text-left' : 'pl-11 pr-11 text-left'
                 } ${fieldErrors?.password ? 'border-semantic-danger' : 'border-semantic-borderInput'}`}
               />
               <button
@@ -294,7 +303,9 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 } ${confirmPassword ? 'text-semantic-actionPrimary' : 'text-semantic-textSecondary'}`}
               />
               <input
+                key="input-signup-confirmpassword"
                 type={showConfirmPassword ? 'text' : 'password'}
+                dir="ltr"
                 value={confirmPassword || ''}
                 onChange={(e) => {
                   clearFieldError('confirmPassword');
@@ -304,7 +315,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                 aria-label={t('auth.confirmPasswordPlaceholder', 'تأكيد كلمة المرور')}
                 required
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] bg-semantic-surfaceInput text-semantic-textPrimary ${
-                  isRtl ? 'pr-11 pl-11 text-right' : 'pl-11 pr-11 text-left'
+                  isRtl ? 'pr-11 pl-11 text-left' : 'pl-11 pr-11 text-left'
                 } ${fieldErrors?.confirmPassword ? 'border-semantic-danger' : 'border-semantic-borderInput'}`}
               />
               <button
