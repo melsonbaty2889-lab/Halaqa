@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useId } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -29,10 +29,13 @@ export const Input = forwardRef(({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  const innerRef = useRef(null);
-  useImperativeHandle(ref, () => innerRef.current);
+  // 1. توليد معرفات آمنة ومستقرة لإمكانية الوصول
+  const generatedInputId = useId();
+  const generatedDescribedById = useId();
+  
+  const inputId = customId || generatedInputId;
+  const describedById = (errorText || helperText) ? generatedDescribedById : undefined;
 
-  const inputId = customId || undefined;
   const isPasswordType = type === "password";
   const actualType = isPasswordType ? (showPassword ? "text" : "password") : type;
 
@@ -40,26 +43,16 @@ export const Input = forwardRef(({
 
   const handleFocus = (e) => {
     setIsFocused(true);
-    if (onFocus) onFocus(e);
+    if (typeof onFocus === 'function') {
+      onFocus(e);
+    }
   };
 
   const handleBlur = (e) => {
-    // إذا فقد الحقل التركيز بسبب منبثق النظام (الضغط المطول في أندرويد)
-    // نتحقق مما إذا كانت الصفحة لا تزال نشطة، ونعيد التركيز إذا تمت العودة سريعاً
     setIsFocused(false);
-    if (onBlur) onBlur(e);
-
-    const activeEl = document.activeElement;
-    if (activeEl === innerRef.current) return;
-
-    const handleWindowFocus = () => {
-      if (innerRef.current) {
-        innerRef.current.focus({ preventScroll: true });
-      }
-      window.removeEventListener('focus', handleWindowFocus);
-    };
-
-    window.addEventListener('focus', handleWindowFocus, { once: true });
+    if (typeof onBlur === 'function') {
+      onBlur(e);
+    }
   };
 
   const baseStyle = { 
@@ -103,7 +96,7 @@ export const Input = forwardRef(({
 
         {as === "textarea" ? (
           <textarea 
-            ref={innerRef} 
+            ref={ref} 
             id={inputId}
             value={value} 
             onChange={onChange} 
@@ -111,15 +104,14 @@ export const Input = forwardRef(({
             onBlur={handleBlur} 
             placeholder={placeholder} 
             aria-invalid={!!errorText}
-            dir="auto"
-            autoCorrect="off"
+            aria-describedby={describedById}
             className={`ui-textarea ${className}`} 
             style={{ ...baseStyle, resize: "vertical", minHeight: 90 }} 
             {...props} 
           />
         ) : (
           <input 
-            ref={innerRef} 
+            ref={ref} 
             id={inputId}
             type={actualType} 
             value={value} 
@@ -128,8 +120,7 @@ export const Input = forwardRef(({
             onBlur={handleBlur} 
             placeholder={placeholder} 
             aria-invalid={!!errorText}
-            dir="auto"
-            autoCorrect="off"
+            aria-describedby={describedById}
             className={`ui-input ${className}`} 
             style={baseStyle} 
             {...props} 
@@ -165,7 +156,11 @@ export const Input = forwardRef(({
       </div>
 
       {(errorText || helperText) && (
-        <span role={errorText ? "alert" : undefined} style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: errorText ? getDanger() : getTextSub() }}>
+        <span 
+          id={describedById}
+          role={errorText ? "alert" : undefined} 
+          style={{ fontSize: "0.75rem", marginTop: 4, display: "block", textAlign: "start", color: errorText ? getDanger() : getTextSub() }}
+        >
           {errorText || helperText}
         </span>
       )}
