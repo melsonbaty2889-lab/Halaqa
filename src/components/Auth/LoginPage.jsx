@@ -41,7 +41,6 @@ export default function LoginPage({
 
   const [localError, setLocalError] = useState('');
 
-  // 🛑 استلام البريد الإلكتروني الممرر سواء من الـ State أو من الـ Props مباشرة
   useEffect(() => {
     const targetEmail = location?.state?.email || initialEmail || propEmail;
     if (targetEmail) {
@@ -104,7 +103,6 @@ export default function LoginPage({
     activeError = t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
   }
 
-  // توحيد استخدام متغيرات ألوان نظام التصميم مع الدعم المتبادل لضمان الاتساق الكامل
   const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
   const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
   const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
@@ -120,7 +118,6 @@ export default function LoginPage({
       <div className="w-full flex flex-col justify-between relative z-10">
         <div className="w-full">
           
-          {/* النصوص الأساسية */}
           <div className="text-center mb-5">
             <h1
               className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
@@ -136,7 +133,6 @@ export default function LoginPage({
             </p>
           </div>
 
-          {/* صندوق الأخطاء والتنبيهات المباشرة */}
           {activeError && (
             <div
               className="p-3 rounded-xl mb-4 text-xs leading-relaxed flex items-center gap-2 border transition-all"
@@ -151,16 +147,13 @@ export default function LoginPage({
             </div>
           )}
 
-          {/* النموذج */}
           <form onSubmit={handleSubmitForm} noValidate className="flex flex-col gap-3.5">
             
-            {/* حقل البريد الإلكتروني - تم تثبيت الاتجاه dir="ltr" وحفظ التركيز */}
+            {/* حقل البريد الإلكتروني مع تثبيت التنسيق و إضافة inputMode */}
             <div className="relative flex items-center group w-full">
               <Mail
                 size={18}
-                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 left-3.5"
                 style={{
                   color: email ? actionPrimaryColor : textSecondaryColor,
                 }}
@@ -170,6 +163,7 @@ export default function LoginPage({
                 type="email"
                 name="email"
                 dir="ltr"
+                inputMode="email"
                 autoCapitalize="none"
                 autoCorrect="off"
                 value={email || ''}
@@ -179,9 +173,7 @@ export default function LoginPage({
                 }}
                 placeholder={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
                 aria-label={t('auth.emailPlaceholder', 'البريد الإلكتروني')}
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-4 text-left' : 'pl-11 pr-4 text-left'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] pl-11 pr-4 text-left"
                 style={{
                   borderColor: fieldErrors?.email ? dangerColor : borderInputColor,
                   backgroundColor: surfaceInputColor,
@@ -190,13 +182,11 @@ export default function LoginPage({
               />
             </div>
 
-            {/* حقل كلمة المرور - تم تثبيت المفتاح وضبط المحاذاة */}
+            {/* حقل كلمة المرور مع تثبيت التنسيق و إضافة inputMode */}
             <div className="relative flex items-center group w-full">
               <Lock
                 size={18}
-                className={`absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 ${
-                  isRtl ? 'right-3.5' : 'left-3.5'
-                }`}
+                className="absolute z-10 pointer-events-none transition-colors top-1/2 -translate-y-1/2 left-3.5"
                 style={{
                   color: password ? actionPrimaryColor : textSecondaryColor,
                 }}
@@ -206,6 +196,7 @@ export default function LoginPage({
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 dir="ltr"
+                inputMode="text"
                 value={password || ''}
                 onChange={(e) => {
                   if (localError) setLocalError('');
@@ -213,9 +204,7 @@ export default function LoginPage({
                 }}
                 placeholder={t('auth.passwordPlaceholder', 'كلمة المرور')}
                 aria-label={t('auth.passwordPlaceholder', 'كلمة المرور')}
-                className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] ${
-                  isRtl ? 'pr-11 pl-11 text-left' : 'pl-11 pr-11 text-left'
-                }`}
+                className="w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] pl-11 pr-11 text-left"
                 style={{
                   borderColor: fieldErrors?.password ? dangerColor : borderInputColor,
                   backgroundColor: surfaceInputColor,
@@ -227,16 +216,13 @@ export default function LoginPage({
                 onClick={() => setShowPassword(!showPassword)}
                 title={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
                 aria-label={showPassword ? t('auth.hidePassword', 'إخفاء كلمة المرور') : t('auth.showPassword', 'إظهار كلمة المرور')}
-                className={`absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                  isRtl ? 'left-1' : 'right-1'
-                }`}
+                className="absolute z-10 top-1/2 -translate-y-1/2 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center right-1"
                 style={{ color: textSecondaryColor }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
-            {/* رابط نسيت كلمة المرور */}
             <div className="flex justify-end">
               <button
                 type="button"
@@ -250,13 +236,11 @@ export default function LoginPage({
               </button>
             </div>
 
-            {/* زر الدخول الرئيسي الموحد */}
             <PrimaryButton loading={loading && !googleLoading} disabled={googleLoading}>
               {t('auth.login', 'تسجيل الدخول')}
             </PrimaryButton>
           </form>
 
-          {/* الفاصل الزمني (OR) */}
           <div className="relative my-4 flex items-center justify-center">
             <div className="border-t w-full" style={{ borderColor: borderInputColor }} />
             <span
@@ -271,7 +255,6 @@ export default function LoginPage({
             </span>
           </div>
 
-          {/* زر تسجيل الدخول عبر جوجل الموحد */}
           <GoogleButton 
             onClick={handleGoogleLogin}
             loading={googleLoading}
@@ -279,7 +262,6 @@ export default function LoginPage({
             text={t('auth.loginWithGoogle', 'متابعة باستخدام Google')}
           />
 
-          {/* إنشاء حساب جديد */}
           <div
             className="text-center mt-5 text-xs flex items-center justify-center gap-1.5"
             style={{ color: textSecondaryColor }}
@@ -300,7 +282,6 @@ export default function LoginPage({
         </div>
       </div>
 
-      {/* تنبيه Toast الموحد المنسدل */}
       <Toast
         isOpen={toastState.isOpen}
         message={toastState.message}
