@@ -80,14 +80,15 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
 
   // تحديد إشعار محدد كـ "تمت القراءة"
   const markAsRead = useCallback(async (notificationId: string) => {
-    const previousNotifs = [...notifications];
+    let previousNotifs: NotificationItem[] = [];
 
     // Optimistic Update
-    setNotifications((prev) =>
-      prev.map((item) =>
+    setNotifications((prev) => {
+      previousNotifs = prev;
+      return prev.map((item) =>
         item.id === notificationId ? { ...item, is_read: true, read_at: new Date().toISOString() } : item
-      )
-    );
+      );
+    });
     setUnreadCount((prev) => Math.max(0, prev - 1));
 
     try {
@@ -101,24 +102,25 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
     } catch (err) {
       console.error('Error marking notification as read:', err);
       // Revert upon error
-      if (isMounted.current) {
+      if (isMounted.current && previousNotifs.length > 0) {
         setNotifications(previousNotifs);
         setUnreadCount(previousNotifs.filter((n) => !n.is_read).length);
       }
     }
-  }, [notifications]);
+  }, []);
 
   // تحديد كل الإشعارات كـ "تمت القراءة"
   const markAllAsRead = useCallback(async () => {
     if (!userId) return;
 
-    const previousNotifs = [...notifications];
+    let previousNotifs: NotificationItem[] = [];
     const now = new Date().toISOString();
 
     // Optimistic Update
-    setNotifications((prev) =>
-      prev.map((item) => ({ ...item, is_read: true, read_at: now }))
-    );
+    setNotifications((prev) => {
+      previousNotifs = prev;
+      return prev.map((item) => ({ ...item, is_read: true, read_at: now }));
+    });
     setUnreadCount(0);
 
     try {
@@ -136,12 +138,12 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
       if (error) throw error;
     } catch (err) {
       console.error('Error marking all notifications as read:', err);
-      if (isMounted.current) {
+      if (isMounted.current && previousNotifs.length > 0) {
         setNotifications(previousNotifs);
         setUnreadCount(previousNotifs.filter((n) => !n.is_read).length);
       }
     }
-  }, [userId, academyId, notifications]);
+  }, [userId, academyId]);
 
   // الاشتراك بالبث المباشر (Realtime) لطلب الإشعارات الجديدة وتحديث الأحداث
   useEffect(() => {
@@ -190,7 +192,7 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
             });
           }
         )
-        .subscribe();
+        .subscribe(); // ✅ الترتيب صحيح بوضع subscribe في النهاية
     } catch (err) {
       console.error('Error subscribing to notifications channel:', err);
     }
@@ -200,7 +202,7 @@ export function useNotifications(userId?: string | null, academyId?: string | nu
         supabase.removeChannel(channel);
       }
     };
-  }, [userId, academyId]);
+  }, [userId, academyId, fetchNotifications]);
 
   return {
     notifications,
