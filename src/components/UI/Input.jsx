@@ -29,7 +29,7 @@ export const Input = forwardRef(({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // 1. توليد معرفات آمنة ومستقرة لإمكانية الوصول
+  // توليد معرفات ثابته ومستقرة لمنع إعادة الرسم
   const generatedInputId = useId();
   const generatedDescribedById = useId();
   
@@ -43,16 +43,12 @@ export const Input = forwardRef(({
 
   const handleFocus = (e) => {
     setIsFocused(true);
-    if (typeof onFocus === 'function') {
-      onFocus(e);
-    }
+    if (typeof onFocus === 'function') onFocus(e);
   };
 
   const handleBlur = (e) => {
     setIsFocused(false);
-    if (typeof onBlur === 'function') {
-      onBlur(e);
-    }
+    if (typeof onBlur === 'function') onBlur(e);
   };
 
   const baseStyle = { 
@@ -105,6 +101,8 @@ export const Input = forwardRef(({
             placeholder={placeholder} 
             aria-invalid={!!errorText}
             aria-describedby={describedById}
+            dir="auto"
+            autoCorrect="off"
             className={`ui-textarea ${className}`} 
             style={{ ...baseStyle, resize: "vertical", minHeight: 90 }} 
             {...props} 
@@ -121,6 +119,8 @@ export const Input = forwardRef(({
             placeholder={placeholder} 
             aria-invalid={!!errorText}
             aria-describedby={describedById}
+            dir="auto"
+            autoCorrect="off"
             className={`ui-input ${className}`} 
             style={baseStyle} 
             {...props} 
