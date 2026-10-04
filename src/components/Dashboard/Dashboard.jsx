@@ -144,7 +144,8 @@ export default function Dashboard({
 
     try {
       if (typeof supabase.channel === 'function') {
-        channel = supabase.channel(`dashboard-realtime-${academyId}`);
+        const channelName = `dashboard-realtime-${academyId}-${Date.now()}`;
+        channel = supabase.channel(channelName);
         
         if (channel && typeof channel.on === 'function') {
           channel
@@ -443,7 +444,7 @@ export default function Dashboard({
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-appBorder-input flex justify-between items-center">
+                  <div className="pt-2 border-t border-appBorder-input flex justify-between items-center mt-2">
                     <span className="text-[10px] px-2 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary font-bold inline-flex items-center gap-1">
                       <Award size={11} />
                       <span>{teachingType}</span>
