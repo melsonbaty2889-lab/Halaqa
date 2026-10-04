@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { 
   Building2, 
   X, 
@@ -22,24 +21,29 @@ export default function AcademyDrawerDetails({
   setInputPhone,
   getSafeText
 }) {
-  const { t, i18n } = useTranslation();
-
   if (!selectedAcademyDetails) return null;
 
-  const currentLang = i18n.language || 'ar';
-  const isRtl = i18n.dir() === 'rtl';
+  const resolveSafeText = (val, defaultVal = '') => {
+    if (typeof getSafeText === 'function') {
+      return getSafeText(val, defaultVal);
+    }
+    if (!val) return defaultVal;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.ar || val.en || defaultVal;
+    return String(val);
+  };
 
-  const countryName = getSafeText(
-    selectedAcademyDetails.country, 
-    t('academy.unspecified_country', 'غير محدد')
-  );
-  
+  const academyName = resolveSafeText(selectedAcademyDetails.name, 'أكاديمية');
+  const ownerName = resolveSafeText(selectedAcademyDetails.ownerProfile?.full_name, 'غير معروف');
+  const ownerEmail = resolveSafeText(selectedAcademyDetails.ownerProfile?.email, '-');
+  const countryName = resolveSafeText(selectedAcademyDetails.country, 'غير محدد');
+
   const createdDate = selectedAcademyDetails.created_at 
-    ? new Date(selectedAcademyDetails.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US')
+    ? new Date(selectedAcademyDetails.created_at).toLocaleDateString('ar-EG')
     : '';
 
   return (
-    <div className={`fixed inset-0 z-[3000] flex ${isRtl ? 'justify-start' : 'justify-end'} bg-black/80 backdrop-blur-md transition-all duration-300 font-cairo`}>
+    <div className="fixed inset-0 z-[3000] flex justify-start bg-black/80 backdrop-blur-md transition-all duration-300 font-cairo" dir="rtl">
       <div className="w-full max-w-md h-full p-6 overflow-y-auto flex flex-col shadow-2xl transition-transform duration-300 card-surface border-s border-semantic-borderCard">
         
         {/* الهيدر العلوي */}
@@ -50,7 +54,7 @@ export default function AcademyDrawerDetails({
             </div>
             <div>
               <h3 className="m-0 text-semantic-textPrimary text-base font-bold leading-tight">
-                {getSafeText(selectedAcademyDetails.name)}
+                {academyName}
               </h3>
               <div className="flex items-center gap-2 mt-1 text-[11px] text-semantic-textSecondary">
                 <span className="flex items-center gap-1">
@@ -72,7 +76,7 @@ export default function AcademyDrawerDetails({
           
           <button 
             onClick={onClose} 
-            aria-label={t('common.close', 'إغلاق')}
+            aria-label="إغلاق"
             className="p-2 rounded-lg text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer bg-semantic-surfaceInput"
           >
             <X size={18} />
@@ -82,44 +86,41 @@ export default function AcademyDrawerDetails({
         {/* بطاقة المالك والتواصل */}
         <div className="rounded-2xl p-4 mb-5 border border-semantic-borderCard bg-semantic-surfaceInput/40 backdrop-blur-sm transition-all">
           <p className="m-0 text-[11px] font-semibold text-semantic-textSecondary mb-1">
-            {t('academy.owner_label','مالك الأكاديمية')}
+            مالك الأكاديمية
           </p>
           <h4 className="m-0 text-semantic-textPrimary text-sm font-bold mb-0.5">
-            {getSafeText(
-              selectedAcademyDetails.ownerProfile?.full_name, 
-              t('common.unknown', 'غير معروف')
-            )}
+            {ownerName}
           </h4>
           <p className="m-0 text-xs text-semantic-textMuted mb-3 break-all font-mono">
-            {getSafeText(selectedAcademyDetails.ownerProfile?.email, '-')}
+            {ownerEmail}
           </p>
 
           {selectedAcademyDetails.ownerProfile?.phone ? (
             <button
-              onClick={() => handleWhatsAppClick(selectedAcademyDetails.ownerProfile.phone, getSafeText(selectedAcademyDetails.name))}
+              onClick={() => handleWhatsAppClick(selectedAcademyDetails.ownerProfile.phone, academyName)}
               className="w-full flex items-center justify-center gap-2 border-0 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-all active:scale-[0.98] shadow-md bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               <MessageCircle size={16} /> 
-              <span>{t('academy.whatsapp_chat', 'تواصل مباشر عبر الواتساب')}</span>
+              <span>تواصل مباشر عبر الواتساب</span>
             </button>
           ) : (
             <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-semantic-dangerBg/30 border border-semantic-danger/20">
               <p className="m-0 text-[11px] text-semantic-danger font-medium">
-                {t('academy.no_owner_phone', 'لا يوجد رقم هاتف مسجل للمالك')}
+                لا يوجد رقم هاتف مسجل للمالك
               </p>
               <button
                 onClick={() => {
                   setPhoneModalData({
                     ownerId: selectedAcademyDetails.owner_id,
-                    academyName: getSafeText(selectedAcademyDetails.name),
-                    currentPhone: getSafeText(selectedAcademyDetails.ownerProfile?.phone)
+                    academyName: academyName,
+                    currentPhone: resolveSafeText(selectedAcademyDetails.ownerProfile?.phone)
                   });
-                  setInputPhone(getSafeText(selectedAcademyDetails.ownerProfile?.phone));
+                  setInputPhone(resolveSafeText(selectedAcademyDetails.ownerProfile?.phone));
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer transition-colors bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30 hover:opacity-90"
               >
                 <PhoneCall size={13} />
-                <span>{t('academy.add_phone', '+ إضافة رقم')}</span>
+                <span>+ إضافة رقم</span>
               </button>
             </div>
           )}
@@ -132,7 +133,7 @@ export default function AcademyDrawerDetails({
               <Users size={18} />
             </div>
             <p className="m-0 text-[11px] font-medium text-semantic-textSecondary">
-              {t('dashboard.total_students', 'إجمالي الطلاب')}
+              إجمالي الطلاب
             </p>
             <h3 className="m-0 mt-1 text-semantic-textPrimary text-lg font-extrabold tracking-tight">
               {academyStatsLoading ? '...' : (deepStats?.studentsCount ?? 0)}
@@ -144,7 +145,7 @@ export default function AcademyDrawerDetails({
               <BookOpen size={18} />
             </div>
             <p className="m-0 text-[11px] font-medium text-semantic-textSecondary">
-              {t('dashboard.halaqat_classes', 'الحلقات الدراسية')}
+              الحلقات الدراسية
             </p>
             <h3 className="m-0 mt-1 text-semantic-textPrimary text-lg font-extrabold tracking-tight">
               {academyStatsLoading ? '...' : (deepStats?.halaqatCount ?? 0)}
@@ -155,19 +156,25 @@ export default function AcademyDrawerDetails({
         {/* سجل المدفوعات */}
         <h4 className="text-semantic-textPrimary text-xs font-bold mb-3 flex items-center gap-2 tracking-wide uppercase">
           <History size={15} className="text-amber-400" /> 
-          <span>{t('academy.payment_history', 'سجل المدفوعات والاشتراكات')}</span>
+          <span>سجل المدفوعات والاشتراكات</span>
         </h4>
 
         <div className="flex-1 overflow-y-auto space-y-2.5 pe-1">
           {!deepStats?.payments || deepStats.payments.length === 0 ? (
             <div className="p-6 text-center rounded-2xl border border-dashed border-semantic-borderCard bg-semantic-surfaceInput/20">
               <p className="m-0 text-xs text-semantic-textMuted">
-                {t('academy.no_payment_history', 'لا يوجد سجل مدفوعات أو اشتراكات حتى الآن')}
+                لا يوجد سجل مدفوعات أو اشتراكات حتى الآن
               </p>
             </div>
           ) : (
             deepStats.payments.map((p) => {
-              const isActive = getSafeText(p.status) === 'active';
+              const statusStr = resolveSafeText(p.status);
+              const isActive = statusStr === 'active' || statusStr === 'approved';
+              const planTier = resolveSafeText(p.plan_tier, 'خطة أساسية');
+              const planDuration = resolveSafeText(p.plan_duration) === 'yearly' ? 'سنوي' : 'شهري';
+              const price = resolveSafeText(p.price, '0');
+              const currency = resolveSafeText(p.currency, 'EGP');
+
               return (
                 <div 
                   key={p.id} 
@@ -175,18 +182,18 @@ export default function AcademyDrawerDetails({
                 >
                   <div className="flex justify-between items-center text-semantic-textPrimary mb-1.5">
                     <span className="font-bold">
-                      {getSafeText(p.plan_tier, t('academy.basic_plan', 'خطة أساسية'))} ({getSafeText(p.plan_duration, t('academy.monthly', 'شهري'))})
+                      {planTier} ({planDuration})
                     </span>
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                      {isActive ? t('common.active', 'نشط') : getSafeText(p.status, t('common.pending', 'معلق'))}
+                      {isActive ? 'نشط' : 'معلق'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-semantic-textSecondary text-[11px] font-mono pt-1 border-t border-semantic-borderCard">
                     <span className="font-semibold text-semantic-textPrimary">
-                      {getSafeText(p.price, '0')} {getSafeText(p.currency, 'EGP')}
+                      {price} {currency}
                     </span>
                     <span>
-                      {p.created_at ? new Date(getSafeText(p.created_at)).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US') : ''}
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG') : ''}
                     </span>
                   </div>
                 </div>
