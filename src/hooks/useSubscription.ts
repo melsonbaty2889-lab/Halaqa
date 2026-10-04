@@ -1,5 +1,3 @@
-// src/hooks/useSubscription.ts
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
@@ -102,33 +100,62 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
       setLoading(true);
       setError(null);
 
-      // 1. جلب السجل الكامل للاشتراك
-      const { data: subData, error: apiError } = await supabase
-        .from('saas_subscriptions')
-        .select('*')
-        .eq('academy_id', academyId)
-        .maybeSingle();
+      // 1. جلب السجل الكامل للاشتراك مع بيانات الأكاديمية
+      const [subRes, academyRes] = await Promise.all([
+        supabase
+          .from('saas_subscriptions')
+          .select('*')
+          .eq('academy_id', academyId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('academies')
+          .select('expires_at, trial_ends_at, is_active')
+          .eq('id', academyId)
+          .maybeSingle()
+      ]);
 
-      if (apiError) throw apiError;
+      if (subRes.error) throw subRes.error;
 
-      // 2. استدعاء RPC الموحدة لحساب الأيام والحالة بدقة دقيقة
-      const { data: rpcData, error: rpcError } = await supabase
+      const subData = subRes.data as SaasSubscription | null;
+      const academyData = academyRes.data;
+
+      // 2. استدعاء RPC الموحدة لحساب الأيام والحالة
+      const { data: rpcData } = await supabase
         .rpc('get_academy_subscription_status', { target_academy_id: academyId });
-
-      if (rpcError) throw rpcError;
 
       const computed = Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : null;
 
-      setSubscription(subData as SaasSubscription | null);
+      setSubscription(subData);
 
-      if (computed) {
-        setComputedData({
-          isActive: Boolean(computed.is_active),
-          isTrial: Boolean(computed.is_trial),
-          daysRemaining: Number(computed.days_remaining) || 0,
-          status: computed.status || subData?.status || 'trial',
-        });
+      // 3. حساب مباشر احتياطي لضمان الدقة اللحظية حتى لو تأخرت نتائج الـ RPC
+      const now = new Date();
+      const targetExpiryStr = 
+        subData?.expires_at || 
+        academyData?.expires_at || 
+        subData?.trial_ends_at || 
+        academyData?.trial_ends_at;
+
+      let calcDays = 0;
+      let calcIsActive = false;
+      let calcIsTrial = false;
+
+      if (targetExpiryStr) {
+        const expiryDate = new Date(targetExpiryStr);
+        const diffTime = expiryDate.getTime() - now.getTime();
+        calcDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        calcIsActive = diffTime > 0;
+        calcIsTrial = !subData?.expires_at && !academyData?.expires_at && Boolean(targetExpiryStr);
       }
+
+      setComputedData({
+        isActive: computed ? Boolean(computed.is_active) : calcIsActive,
+        isTrial: computed ? Boolean(computed.is_trial) : calcIsTrial,
+        daysRemaining: computed ? Number(computed.days_remaining) || 0 : calcDays,
+        status: computed?.status || subData?.status || (calcIsActive ? 'active' : 'trial'),
+      });
+
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
       const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
@@ -147,7 +174,8 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    const channelName = `subscription_${academyId}_${Date.now()}`;
+    // قناة استماع لحظية شاملة لجدولي saas_subscriptions و academies
+    const channelName = `realtime_subscription_${academyId}`;
     const channel = supabase
       .channel(channelName)
       .on(
@@ -157,6 +185,18 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
           schema: 'public',
           table: 'saas_subscriptions',
           filter: `academy_id=eq.${academyId}`,
+        },
+        () => {
+          fetchSubscription();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'academies',
+          filter: `id=eq.${academyId}`,
         },
         () => {
           fetchSubscription();
