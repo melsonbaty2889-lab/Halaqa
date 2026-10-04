@@ -26,6 +26,7 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
   const { t, i18n } = useTranslation();
 
   const currentLangCode = i18n?.language?.split('-')[0] || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLangCode);
 
   const appSubtitle = useMemo(() => {
     if (subtitle) return subtitle;
@@ -43,14 +44,17 @@ export default function AuthLayout({ children, langBtn, subtitle }) {
   );
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden max-w-full font-cairo bg-transparent">
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 relative overflow-x-hidden max-w-full font-cairo bg-transparent"
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       {/* حاوية المحتوى الرئيسية */}
       <main
         role="main"
         aria-label={safeT('auth.containerLabel', 'حاوية تسجيل الدخول')}
         className="w-full max-w-sm sm:max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-8 relative z-10 border border-semantic-borderCard bg-dark-card text-semantic-textPrimary shadow-2xl space-y-6 box-border"
       >
-        {/* زر تغيير اللغة */}
+        {/* زر تغيير اللغة - مررنا placement="auth" لتطبيق الاتجاه المحدد بدقة */}
         <div className="flex justify-end w-full -mb-2 relative z-50">
           {langBtn || <LanguageSwitcher dropDirection="down" placement="auth" />}
         </div>
