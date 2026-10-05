@@ -48,7 +48,8 @@ export default function UpdatePassword({ onSuccess }) {
 
   useEffect(() => {
     document.title = `${t('auth.updatePasswordTitle', 'تحديث كلمة المرور')} | ${appSubtitle}`;
-  }, [i18n.language, t, appSubtitle]);
+    document.dir = isRtl ? 'rtl' : 'ltr';
+  }, [i18n.language, t, appSubtitle, isRtl]);
 
   // إظهار Toast عند حدث أخطاء أو تنبيهات
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function UpdatePassword({ onSuccess }) {
     }
   }, [status, showToast]);
 
-  // دالة تحويل الخطأ إلى نص واضح بدلاً من إرجاع {}
+  // دالة تحويل الخطأ إلى نص واضح
   const getErrorMessage = (err, fallbackKey, fallbackDefault) => {
     if (!err) return t(fallbackKey, fallbackDefault);
     if (typeof err === 'string') return err;
@@ -94,9 +95,16 @@ export default function UpdatePassword({ onSuccess }) {
         const successMsg = t('auth.updateSuccessTitle', 'تم التحديث بنجاح!');
         setStatus({ type: 'success', msg: successMsg });
         setIsDone(true);
-        setTimeout(() => {
-          if (onSuccess) onSuccess();
-        }, 2500);
+
+        // إغلاق جلسة استعادة كلمة المرور والتوجيه الصريح لصفحة الدخول
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            window.location.href = '/';
+          }
+        }, 2000);
       }
     } catch (err) {
       const errorMsg = getErrorMessage(err, 'common.unexpectedError', 'حدث خطأ غير متوقع');
@@ -123,7 +131,7 @@ export default function UpdatePassword({ onSuccess }) {
       <div className="w-full flex flex-col justify-between relative z-10" dir={isRtl ? 'rtl' : 'ltr'}>
         {!isDone ? (
           <>
-            {/* النصوص الأساسية */}
+            {/* النصوص الأساسية المترجمة */}
             <div className="text-center mb-5">
               <h2 
                 className="text-lg sm:text-xl font-extrabold tracking-tight mb-1"
@@ -228,14 +236,14 @@ export default function UpdatePassword({ onSuccess }) {
                 </button>
               </div>
 
-              {/* زر الحفظ الرئيسي الموحد */}
+              {/* زر الحفظ الرئيسي */}
               <PrimaryButton loading={loading}>
                 {t('auth.saveNewPassword', 'حفظ كلمة المرور')}
               </PrimaryButton>
             </form>
           </>
         ) : (
-          /* حالة النجاح */
+          /* حالة النجاح مع ترجمة نصوصها */
           <div className="text-center py-4 animate-fadeIn">
             <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: successColor }} />
             <h2 
@@ -265,7 +273,6 @@ export default function UpdatePassword({ onSuccess }) {
         </div>
       </div>
 
-      {/* مكون الـ Toast المنزلق أسفل الشاشة */}
       <Toast
         isOpen={toastState.isOpen}
         message={toastState.message}
