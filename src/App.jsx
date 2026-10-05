@@ -10,6 +10,7 @@ import MainContent from '@/components/AppLayout/MainContent';
 const TestHooks = lazy(() => import('@/components/TestHooks'));
 const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
 const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
+const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
 const DevPlayground = lazy(() => {
   const isDev = import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
   const hasTestParam = typeof window !== 'undefined' && window.location.search.includes('view=test');
@@ -144,6 +145,7 @@ export default function App() {
               <Routes>
                 <Route path="/test" element={<TestHooks />} />
                 <Route path="/verify/:certId" element={<CertificateVerify />} />
+                <Route path="/update-password" element={<UpdatePassword />} />
                 <Route path="/*" element={<MainContent />} />
               </Routes>
             )}
