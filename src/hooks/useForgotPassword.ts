@@ -103,7 +103,10 @@ export function useForgotPassword(): UseForgotPasswordReturn {
 
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-          redirectTo: `${window.location.origin}/update-password`,
+          redirectTo: `${window.location.origin}/update-password?lang=${currentLang}`,
+          data: {
+            lang: currentLang, // إرسال اللغة الحالية لتحديد لغة بريد Supabase
+          },
         });
 
         if (error) {
@@ -140,7 +143,7 @@ export function useForgotPassword(): UseForgotPasswordReturn {
         setLoading(false);
       }
     },
-    [email, cooldown, loading, t]
+    [email, cooldown, loading, t, currentLang]
   );
 
   const resendResetEmail = useCallback(async () => {
