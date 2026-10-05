@@ -28,7 +28,8 @@ import {
   Trophy,
   UserX,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  BookmarkCheck
 } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
@@ -228,7 +229,7 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 🟢 الترحب وتزامن البيانات */}
+      {/* 🟢 الترحيب وتزامن البيانات */}
       <header className={`${UI.card} flex flex-col md:flex-row md:items-center justify-between gap-4`}>
         <div>
           <h1 className={`${UI.title} flex items-center gap-2 m-0`}>
@@ -248,32 +249,32 @@ export default function Dashboard({
         </div>
       </header>
 
-      {/* 🟢 شريط الإجراءات المباشرة */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 🟢 شريط الإجراءات المباشرة السريع */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
           aria-label={t('dashboard.launch_session', 'إطلاق حلقة تعليمية')}
-          className={`${UI.btnPrimary} min-h-[48px]`}
+          className={`${UI.btnPrimary} min-h-[44px] py-2 text-xs`}
         >
-          <Plus size={18} />
+          <Plus size={16} />
           <span>{t('dashboard.launch_session', 'إطلاق حلقة تعليمية')}</span>
         </button>
 
         <button 
           onClick={() => setActiveTab && setActiveTab('attendance')} 
           aria-label={t('dashboard.record_attendance', 'تسجيل الحضور')}
-          className={`${UI.btnSecondary} min-h-[48px]`}
+          className={`${UI.btnSecondary} min-h-[44px] py-2 text-xs`}
         >
-          <ClipboardCheck size={18} className="text-semantic-success" />
+          <ClipboardCheck size={16} className="text-semantic-success" />
           <span>{t('dashboard.record_attendance', 'تسجيل الحضور')}</span>
         </button>
 
         <button 
           onClick={() => setActiveTab && setActiveTab('students')} 
           aria-label={t('dashboard.evaluations', 'توثيق الإنجاز والتسميع')}
-          className={`${UI.btnEmerald} min-h-[48px]`}
+          className={`${UI.btnEmerald} min-h-[44px] py-2 text-xs`}
         >
-          <BookOpen size={18} />
+          <BookmarkCheck size={16} />
           <span>{t('dashboard.evaluations', 'توثيق الإنجاز والتسميع')}</span>
         </button>
       </section>
@@ -341,16 +342,16 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* جلسات التسميع */}
+        {/* معدل التسميع اليومي */}
         <div 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
           tabIndex={0}
           role="button"
-          aria-label={t('dashboard.evaluations_sessions', 'جلسات التسميع')}
+          aria-label={t('dashboard.daily_recitation_rate', 'معدل التسميع اليومي')}
           className={`${UI.card} p-3.5 md:p-4 cursor-pointer hover:border-semantic-actionPrimary/40 flex flex-col justify-between min-w-0`}
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-semantic-textSecondary gap-1">
-            <span className="truncate min-w-0">{t('dashboard.evaluations_sessions', 'جلسات التسميع')}</span>
+            <span className="truncate min-w-0">{t('dashboard.daily_recitation_rate', 'معدل التسميع اليومي')}</span>
             <div className="p-1.5 md:p-2 rounded-lg bg-semantic-surfaceInput border border-semantic-borderInput shrink-0">
               <BookOpen className="text-semantic-actionPrimary" size={18} />
             </div>
@@ -363,16 +364,16 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* المتأخرات */}
+        {/* التنبيهات المالية والمستحقات */}
         <div 
           onClick={() => setActiveTab && setActiveTab('payments')}
           tabIndex={0}
           role="button"
-          aria-label={t('dashboard.overdue_status', 'حالة المتأخرات')}
+          aria-label={t('dashboard.financial_alerts', 'التنبيهات المالية والمستحقات')}
           className={`${UI.card} p-3.5 md:p-4 cursor-pointer hover:border-semantic-danger/40 flex flex-col justify-between min-w-0 col-span-2 sm:col-span-1`}
         >
           <div className="flex justify-between items-center text-xs font-bold mb-2 text-semantic-textSecondary gap-1">
-            <span className="truncate min-w-0">{t('dashboard.overdue_status', 'المتأخرات')}</span>
+            <span className="truncate min-w-0">{t('dashboard.financial_alerts', 'التنبيهات المالية')}</span>
             <div className="p-1.5 md:p-2 rounded-lg bg-semantic-surfaceInput border border-semantic-borderInput shrink-0">
               <AlertTriangle className={(stats?.overdueCount || 0) > 0 ? 'text-semantic-danger' : 'text-semantic-success'} size={18} />
             </div>
@@ -386,15 +387,15 @@ export default function Dashboard({
         </div>
       </section>
 
-      {/* 🚀 قسم الرادار التنافسي الذكي: المتصدرون + الطلاب العالقون */}
+      {/* 🚀 قسم الرادار التنافسي الذكي: لوحة الشرف + رادار المتابعة الاستباقية */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
-        {/* أبطال التسميع والمتصدرون اليوميون */}
+        {/* لوحة شرف الإنجاز اليومي */}
         <div className={UI.card}>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-sm md:text-base font-extrabold flex items-center gap-2 m-0 text-semantic-textPrimary">
               <Trophy className="text-semantic-actionPrimary" size={18} />
-              <span>{t('dashboard.top_performers_title', 'أبطال التسميع اليوم')}</span>
+              <span>{t('dashboard.daily_honor_roll', 'لوحة شرف الإنجاز اليومي')}</span>
             </h2>
             <button 
               onClick={() => setActiveTab && setActiveTab('students')}
@@ -429,12 +430,12 @@ export default function Dashboard({
           )}
         </div>
 
-        {/* رادار التنبيه المبكر: الطلاب العالقون / في خطر الانقطاع */}
+        {/* رادار المتابعة الاستباقية */}
         <div className={UI.card}>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-sm md:text-base font-extrabold flex items-center gap-2 m-0 text-semantic-textPrimary">
               <UserX className="text-semantic-danger" size={18} />
-              <span>{t('dashboard.at_risk_title', 'رادار المتابعة والاستمرارية')}</span>
+              <span>{t('dashboard.proactive_radar', 'رادار المتابعة الاستباقية')}</span>
             </h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold">
               {stats?.atRiskStudents?.length || 0} {t('dashboard.needs_followup', 'يحتاج متابعة')}
