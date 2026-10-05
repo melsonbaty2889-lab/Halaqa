@@ -54,11 +54,13 @@ export default function Dashboard({
   
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
+  // دالة موحدة لاستخراج النص المترجم المناسب للغة الحالية
   const safeText = useCallback((val, fallback = '') => {
     if (val === null || val === undefined) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
     if (typeof val === 'object') {
-      const extracted = isArabic ? (val.ar || val.en) : (val.en || val.ar);
+      const langKey = currentLang.split('-')[0];
+      const extracted = val[langKey] || val.ar || val.en;
       if (extracted && (typeof extracted === 'string' || typeof extracted === 'number')) {
         return String(extracted);
       }
@@ -69,7 +71,7 @@ export default function Dashboard({
       return fallback;
     }
     return fallback;
-  }, [isArabic]);
+  }, [currentLang]);
 
   const isSuperAdmin = userRole === 'super_admin';
 
@@ -146,7 +148,6 @@ export default function Dashboard({
       if (typeof supabase.channel === 'function') {
         const channelName = `dashboard-realtime-${academyId}-${Date.now()}`;
         
-        // ✅ بناء القناة وإضافة المستمعات أولاً ثم الاشتراك في النهاية تماماً
         channel = supabase
           .channel(channelName)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: filterCondition }, handleRealtimeChange)
@@ -202,9 +203,9 @@ export default function Dashboard({
   return (
     <div className={`p-4 md:p-6 pb-24 space-y-6 font-cairo bg-dark-bg text-appText-main ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
       
-      {/* 🔴 تنبيه وضع المسؤول العام Super Admin */}
+      {/* تنبيه وضع المسؤول العام Super Admin */}
       {isSuperAdmin && selectedAdminAcademy && (
-        <div className="flex items-center justify-between p-3.5 rounded-xl border bg-primary/10 border-primary/30 text-primary">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 rounded-xl border bg-primary/10 border-primary/30 text-primary">
           <span className="text-xs font-bold flex items-center gap-2">
             <ShieldCheck size={18} />
             <span>{t('dashboard.viewing_academy', 'تتصفح الآن أكاديمية:')} {displayName}</span>
@@ -220,7 +221,7 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 🟢 الترحيب وتزامن البيانات */}
+      {/* التترحيب وتزامن البيانات */}
       <header className="card-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-black flex items-center gap-2 m-0 text-appText-main">
@@ -240,7 +241,7 @@ export default function Dashboard({
         </div>
       </header>
 
-      {/* 🟢 شريط الإجراءات المباشرة */}
+      {/* شريط الإجراءات المباشرة */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
@@ -270,7 +271,7 @@ export default function Dashboard({
         </button>
       </section>
 
-      {/* 🟢 بطاقات أداء الأكاديمية KPIs Grid */}
+      {/* بطاقات أداء الأكاديمية KPIs Grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         
         {/* الطلاب */}
@@ -279,35 +280,35 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.total_students', 'إجمالي الطلاب')}
-          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-3.5 md:p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden flex flex-col justify-between min-w-0"
         >
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
-            <span className="truncate">{t('dashboard.total_students', 'إجمالي الطلاب')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub gap-1">
+            <span className="truncate min-w-0">{t('dashboard.total_students', 'إجمالي الطلاب')}</span>
+            <div className="p-1.5 md:p-2 rounded-lg bg-dark-bg border border-appBorder-input shrink-0">
               <GraduationCap className="text-brandEmerald" size={18} />
             </div>
           </div>
           <div className="text-2xl md:text-3xl font-black text-appText-main">
             {safeText(stats?.studentsCount, '0')}
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald">
-            <span>●</span> {t('dashboard.active_students', 'طلاب نشطون')}
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald truncate">
+            <span>●</span> <span className="truncate">{t('dashboard.active_students', 'طلاب نشطون')}</span>
           </div>
         </div>
 
         {/* الاستمرارية والتتابع */}
-        <div className="bg-dark-card border border-appBorder-card p-4 rounded-xl shadow-main group relative overflow-hidden">
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
-            <span>{t('dashboard.consistency', 'مؤشر الاستمرارية')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+        <div className="bg-dark-card border border-appBorder-card p-3.5 md:p-4 rounded-xl shadow-main group relative overflow-hidden flex flex-col justify-between min-w-0">
+          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub gap-1">
+            <span className="truncate min-w-0">{t('dashboard.consistency', 'مؤشر الاستمرارية')}</span>
+            <div className="p-1.5 md:p-2 rounded-lg bg-dark-bg border border-appBorder-input shrink-0">
               <Flame className="text-primary" size={18} />
             </div>
           </div>
           <div className="text-2xl md:text-3xl font-black text-primary">
             {safeText(stats?.avgStreak, '0')} <span className="text-xs font-normal text-appText-sub">{t('dashboard.days', 'يوم')}</span>
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary">
-            <span>🔥</span> {t('dashboard.active_streak', 'التتابع المستمر')}
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary truncate">
+            <span>🔥</span> <span className="truncate">{t('dashboard.active_streak', 'التتابع المستمر')}</span>
           </div>
         </div>
 
@@ -317,19 +318,19 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.attendance_rate', 'نسبة الحضور')}
-          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-brandEmerald/40 transition-all shadow-main group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-3.5 md:p-4 rounded-xl cursor-pointer hover:border-brandEmerald/40 transition-all shadow-main group relative overflow-hidden flex flex-col justify-between min-w-0"
         >
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
-            <span>{t('dashboard.attendance_rate', 'نسبة الحضور')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub gap-1">
+            <span className="truncate min-w-0">{t('dashboard.attendance_rate', 'نسبة الحضور')}</span>
+            <div className="p-1.5 md:p-2 rounded-lg bg-dark-bg border border-appBorder-input shrink-0">
               <TrendingUp className="text-brandEmerald" size={18} />
             </div>
           </div>
           <div className="text-2xl md:text-3xl font-black text-brandEmerald">
             {safeText(stats?.attendanceRate, '0%')}
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald">
-            <span>📈</span> {t('dashboard.engagement_rate', 'معدل المشاركة')}
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-brandEmerald truncate">
+            <span>📈</span> <span className="truncate">{t('dashboard.engagement_rate', 'معدل المشاركة')}</span>
           </div>
         </div>
 
@@ -339,19 +340,19 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.evaluations_sessions', 'جلسات التسميع')}
-          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-3.5 md:p-4 rounded-xl cursor-pointer hover:border-primary/40 transition-all shadow-main group relative overflow-hidden flex flex-col justify-between min-w-0"
         >
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
-            <span>{t('dashboard.evaluations_sessions', 'جلسات التسميع')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub gap-1">
+            <span className="truncate min-w-0">{t('dashboard.evaluations_sessions', 'جلسات التسميع')}</span>
+            <div className="p-1.5 md:p-2 rounded-lg bg-dark-bg border border-appBorder-input shrink-0">
               <BookOpen className="text-primary" size={18} />
             </div>
           </div>
           <div className="text-2xl md:text-3xl font-black text-primary">
             {safeText(stats?.totalSessions, '0')} <span className="text-xs font-normal text-appText-sub">{t('dashboard.sessions', 'جلسة')}</span>
           </div>
-          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary">
-            <span>✅</span> {t('dashboard.completed_today', 'المكتملة اليوم')}
+          <div className="text-[11px] mt-1 font-semibold flex items-center gap-1 text-primary truncate">
+            <span>✅</span> <span className="truncate">{t('dashboard.completed_today', 'المكتملة اليوم')}</span>
           </div>
         </div>
 
@@ -361,24 +362,24 @@ export default function Dashboard({
           tabIndex={0}
           role="button"
           aria-label={t('dashboard.overdue_status', 'حالة المتأخرات')}
-          className="bg-dark-card border border-appBorder-card p-4 rounded-xl cursor-pointer hover:border-appError/40 transition-all shadow-main group relative overflow-hidden"
+          className="bg-dark-card border border-appBorder-card p-3.5 md:p-4 rounded-xl cursor-pointer hover:border-appError/40 transition-all shadow-main group relative overflow-hidden flex flex-col justify-between min-w-0 col-span-2 sm:col-span-1"
         >
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub">
-            <span>{t('dashboard.overdue_status', 'المتأخرات')}</span>
-            <div className="p-2 rounded-lg bg-dark-bg border border-appBorder-input">
+          <div className="flex justify-between items-center text-xs font-bold mb-2 text-appText-sub gap-1">
+            <span className="truncate min-w-0">{t('dashboard.overdue_status', 'المتأخرات')}</span>
+            <div className="p-1.5 md:p-2 rounded-lg bg-dark-bg border border-appBorder-input shrink-0">
               <AlertTriangle className={(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'} size={18} />
             </div>
           </div>
           <div className={`text-2xl md:text-3xl font-black ${(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'}`}>
             {safeText(stats?.overdueCount, '0')}
           </div>
-          <div className={`text-[11px] mt-1 font-semibold flex items-center gap-1 ${(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'}`}>
-            <span>⚠️</span> {t('dashboard.pending_tasks', 'طلبات وملاحظات')}
+          <div className={`text-[11px] mt-1 font-semibold flex items-center gap-1 truncate ${(stats?.overdueCount || 0) > 0 ? 'text-appError' : 'text-brandEmerald'}`}>
+            <span>⚠️</span> <span className="truncate">{t('dashboard.pending_tasks', 'طلبات وملاحظات')}</span>
           </div>
         </div>
       </section>
 
-      {/* 🟢 جدول وقائمة الحلقات النشطة */}
+      {/* جدول وقائمة الحلقات النشطة */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
         <section className="card-surface">
           <div className="flex justify-between items-center mb-4">
@@ -409,9 +410,9 @@ export default function Dashboard({
                 : t('dashboard.status_scheduled', 'مجدولة');
 
               const StatusIcon = isLive ? RefreshCw : isFinished ? CheckCircle2 : Hourglass;
-              const halaqaName = safeText(isArabic ? halaqa.name_ar : halaqa.name_en, t('dashboard.default_halaqa_name', 'حلقة قرآنية'));
-              const teacherName = safeText(isArabic ? halaqa.teacher_name_ar : halaqa.teacher_name_en, t('dashboard.unspecified', 'غير محدد'));
-              const timeDisplay = safeText(isArabic ? halaqa.time_display_ar : halaqa.time_display_en, '');
+              const halaqaName = safeText(halaqa.name, t('dashboard.default_halaqa_name', 'حلقة قرآنية'));
+              const teacherName = safeText(halaqa.teacher_name, t('dashboard.unspecified', 'غير محدد'));
+              const timeDisplay = safeText(halaqa.time_display, '');
               const teachingType = safeText(halaqa.teaching_type, t('dashboard.in_person', 'حضوري'));
 
               return (
@@ -451,9 +452,10 @@ export default function Dashboard({
                     <button 
                       onClick={() => setActiveTab && setActiveTab('halaqas')} 
                       aria-label={t('dashboard.view_halaqa_details', 'تفاصيل الحلقة')}
-                      className="text-[11px] font-bold text-primary bg-transparent border-0 cursor-pointer p-0 hover:underline min-h-[44px] flex items-center"
+                      className="text-[11px] font-bold text-primary bg-transparent border-0 cursor-pointer p-0 hover:underline min-h-[44px] flex items-center gap-1"
                     >
-                      {t('dashboard.view_details', 'تفاصيل الحلقة ←')}
+                      <span>{t('dashboard.view_details', 'تفاصيل الحلقة')}</span>
+                      {isRtl ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}
                     </button>
                   </div>
                 </div>
