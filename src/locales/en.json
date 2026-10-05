@@ -141,6 +141,8 @@
     "quickGoogleSignUp": "Quick Sign-Up with Google",
     "rate_limit": "Rate limit exceeded. Please wait a minute and try again.",
     "resend_cooldown": "resend_cooldown",
+    "resend_cooldown_one": "إعادة الإرسال بعد {{count}} ثانية",
+    "resend_cooldown_other": "إعادة الإرسال بعد {{count}} ثانية",
     "resend_link": "Resend Link",
     "reset_email_sent": "A reset link has been sent to your email.",
     "reset_link_sent_to": "Password reset link sent to:",
