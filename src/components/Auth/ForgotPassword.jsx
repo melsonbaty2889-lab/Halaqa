@@ -10,7 +10,6 @@ import { useForgotPassword } from '@/hooks/useForgotPassword';
 
 import { 
   Mail, 
-  ArrowRight, 
   ArrowLeft, 
   AlertCircle, 
   ShieldCheck, 
@@ -61,13 +60,13 @@ export default function ForgotPassword({ onBackToLogin }) {
   const isMsgValid = status?.msg && typeof status.msg === 'string' && status.msg.trim() !== '' && !status.msg.includes('{}');
 
   // توحيد استخدام متغيرات ألوان نظام التصميم
-  const textPrimaryColor = C.semantic?.textPrimary || C.text?.title;
-  const textSecondaryColor = C.semantic?.textSecondary || C.text?.muted;
-  const actionPrimaryColor = C.semantic?.actionPrimary || C.amber?.DEFAULT;
-  const dangerColor = C.semantic?.danger || C.error?.DEFAULT;
-  const successColor = C.semantic?.success || C.emerald?.DEFAULT;
-  const borderInputColor = C.semantic?.borderInput || C.inputs?.border;
-  const surfaceInputColor = C.semantic?.surfaceInput || C.inputs?.bg;
+  const textPrimaryColor = C.semantic?.textPrimary || 'var(--color-text-primary)';
+  const textSecondaryColor = C.semantic?.textSecondary || 'var(--color-text-secondary)';
+  const actionPrimaryColor = C.semantic?.actionPrimary || 'var(--color-action-primary)';
+  const dangerColor = C.semantic?.danger || 'var(--color-danger)';
+  const successColor = C.semantic?.success || 'var(--color-success)';
+  const borderInputColor = C.semantic?.borderInput || 'var(--color-border-input)';
+  const surfaceInputColor = C.semantic?.surfaceInput || 'var(--color-surface-input)';
 
   return (
     <AuthLayout 
@@ -180,7 +179,7 @@ export default function ForgotPassword({ onBackToLogin }) {
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               <span>
                 {cooldown > 0 
-                  ? t('auth.resend_cooldown', `إعادة الإرسال بعد (${cooldown} ثانية)`, { count: cooldown })
+                  ? t('auth.resend_cooldown', 'إعادة الإرسال بعد {{count}} ثانية', { count: cooldown })
                   : t('auth.resend_link', 'إعادة إرسال الرابط')}
               </span>
             </button>
@@ -196,11 +195,11 @@ export default function ForgotPassword({ onBackToLogin }) {
             className="bg-transparent border-none cursor-pointer inline-flex items-center gap-2 text-xs font-semibold transition-colors min-h-[44px] px-2 hover:underline"
             style={{ color: textSecondaryColor }}
           >
-            {isRtl ? (
-              <ArrowRight size={16} style={{ color: actionPrimaryColor }} />
-            ) : (
-              <ArrowLeft size={16} style={{ color: actionPrimaryColor }} />
-            )}
+            <ArrowLeft 
+              size={16} 
+              className="rtl:rotate-180 transition-transform"
+              style={{ color: actionPrimaryColor }} 
+            />
             <span>{t('auth.back_to_login', 'العودة لتسجيل الدخول')}</span>
           </button>
         </div>
