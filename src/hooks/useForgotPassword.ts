@@ -102,12 +102,12 @@ export function useForgotPassword(): UseForgotPasswordReturn {
       setStatus({ type: null, msg: '' });
 
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-          redirectTo: `${window.location.origin}/update-password?lang=${currentLang}`,
-          data: {
-            lang: currentLang, // إرسال اللغة الحالية لتحديد لغة بريد Supabase
-          },
-        });
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+    redirectTo: `${window.location.origin}/update-password`,
+    data: {
+      lang: currentLang, // إرسال اللغة الحالية لتحديد لغة بريد Supabase
+    },
+  });
 
         if (error) {
           const rawMessage = parseErrorMessage(error);
