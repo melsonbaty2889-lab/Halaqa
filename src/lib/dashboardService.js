@@ -1,7 +1,7 @@
 /**
  * src/lib/dashboardService.js
  * التحديث الشامل لدعم الإحصائيات العالمية، الـ Streaks، والروايات وأنظمة التسميع
- * معدّل لدعم تعدد اللغات الموحد عبر JSONB (AR, EN, TR, FR, UR, ID)
+ * مطابق تماماً لهيكل جداول Supabase المتعددة اللغات (JSONB)
  */
 
 export async function getDashboardStats(supabase, profile) {
@@ -25,7 +25,9 @@ export async function getDashboardStats(supabase, profile) {
         totalSessions: 0,
         overdueCount: 0,
         activeHalaqasData: [],
-        avgStreak: 0
+        avgStreak: 0,
+        atRiskStudents: [],
+        topPerformers: []
       };
     } 
     
@@ -39,16 +41,29 @@ export async function getDashboardStats(supabase, profile) {
         .select('*', { count: 'exact', head: true })
         .eq('academy_id', academyId);
 
-      // ب) متوسط سلاسل الحفظ الاستمرارية (Streaks) للطلاب
+      // ب) متوسط سلاسل الحفظ الاستمرارية (Streaks) والطلاب العالقين
       const { data: streakData } = await supabase
         .from('student_streaks')
-        .select('current_streak')
+        .select('student_id, current_streak, last_activity_date, students(name)')
         .eq('academy_id', academyId);
 
       let avgStreak = 0;
+      let atRiskStudents = [];
+
       if (streakData && streakData.length > 0) {
         const totalStreak = streakData.reduce((acc, curr) => acc + (curr.current_streak || 0), 0);
         avgStreak = Math.round(totalStreak / streakData.length);
+
+        // تصفية الطلاب الذين توقفوا عن التسميع أو انخفضت استمراريتهم
+        atRiskStudents = streakData
+          .filter(s => (s.current_streak === 0 || !s.last_activity_date || s.last_activity_date < today))
+          .slice(0, 5)
+          .map(s => ({
+            id: s.student_id,
+            name: s.students?.name || null, // كائن JSONB
+            streak: s.current_streak || 0,
+            lastActivity: s.last_activity_date
+          }));
       }
 
       // ج) حساب نسبة الحضور اليومي
@@ -64,12 +79,33 @@ export async function getDashboardStats(supabase, profile) {
         attendanceRate = `${((presentCount / attendanceData.length) * 100).toFixed(1)}%`;
       }
 
-      // د) إجمالي ورد التسميع اليومي (يدعم نظام الآيات ونظام اللوح والراتب)
-      const { count: progressCount } = await supabase
+      // د) إجمالي ورد التسميع اليومي والمتصدرين
+      const { data: progressData, count: progressCount } = await supabase
         .from('daily_progress')
-        .select('*', { count: 'exact', head: true })
+        .select('student_id, grade, students(name)', { count: 'exact' })
         .eq('academy_id', academyId)
         .eq('date', today);
+
+      let topPerformers = [];
+      if (progressData && progressData.length > 0) {
+        // تجميع التسميع اليومي حسب الطالب
+        const studentMap = {};
+        progressData.forEach(p => {
+          if (!p.student_id) return;
+          if (!studentMap[p.student_id]) {
+            studentMap[p.student_id] = {
+              id: p.student_id,
+              name: p.students?.name || null,
+              sessionsCount: 0
+            };
+          }
+          studentMap[p.student_id].sessionsCount += 1;
+        });
+
+        topPerformers = Object.values(studentMap)
+          .sort((a, b) => b.sessionsCount - a.sessionsCount)
+          .slice(0, 5);
+      }
 
       // هـ) الاشتراكات المتأخرة
       const { count: overdueCount } = await supabase
@@ -78,7 +114,7 @@ export async function getDashboardStats(supabase, profile) {
         .eq('academy_id', academyId)
         .eq('status', 'overdue');
 
-      // و) جلب حلقات اليوم النشطة مع دعم الروايات والمعلمين
+      // و) جلب حلقات اليوم النشطة
       const { data: halaqasData, error: halaqasError } = await supabase
         .from('halaqas')
         .select(`
@@ -140,8 +176,8 @@ export async function getDashboardStats(supabase, profile) {
 
           return {
             id: halaqa.id,
-            name: halaqa.name, // كائن JSONB متعدد اللغات
-            teacher_name: halaqa.teachers?.name || null, // كائن JSONB أو اسم نصي للمعلم
+            name: halaqa.name,
+            teacher_name: halaqa.teachers?.name || null,
             time_display_ar: `${startFormatted.ar} - ${endFormatted.ar}`,
             time_display_en: `${startFormatted.en} - ${endFormatted.en}`,
             teaching_type: halaqa.teaching_type || 'حضوري',
@@ -158,14 +194,36 @@ export async function getDashboardStats(supabase, profile) {
         totalSessions: progressCount || 0,
         overdueCount: overdueCount || 0,
         activeHalaqasData,
-        avgStreak
+        avgStreak,
+        atRiskStudents,
+        topPerformers
       }; 
     }
 
-    return { studentsCount: 0, academiesCount: 0, attendanceRate: '0%', totalSessions: 0, overdueCount: 0, activeHalaqasData: [], avgStreak: 0 };
+    return { 
+      studentsCount: 0, 
+      academiesCount: 0, 
+      attendanceRate: '0%', 
+      totalSessions: 0, 
+      overdueCount: 0, 
+      activeHalaqasData: [], 
+      avgStreak: 0,
+      atRiskStudents: [],
+      topPerformers: []
+    };
 
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
-    return { studentsCount: 0, academiesCount: 0, attendanceRate: '0%', totalSessions: 0, overdueCount: 0, activeHalaqasData: [], avgStreak: 0 };
+    return { 
+      studentsCount: 0, 
+      academiesCount: 0, 
+      attendanceRate: '0%', 
+      totalSessions: 0, 
+      overdueCount: 0, 
+      activeHalaqasData: [], 
+      avgStreak: 0,
+      atRiskStudents: [],
+      topPerformers: []
+    };
   }
 }
