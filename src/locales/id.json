@@ -376,6 +376,7 @@
   "dashboard": {
     "academy_strength": "قوة الأكاديمية",
     "actions": {
+      "recordFirstRecitation": "تسجيل أول تسميع اليوم",
       "recordRecitation": "تسجيل التسميع",
       "startHalaqa": "إطلاق حلقة تعليمية",
       "takeAttendance": "تسجيل الحضور"
