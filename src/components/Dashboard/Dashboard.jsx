@@ -257,51 +257,25 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 🟢 شريط الترحيب وتكامل البث الحي والتزامن اللحظي */}
-      <header className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 w-full`}>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className={`${UI.title} text-sm sm:text-base md:text-xl flex items-center gap-1.5 m-0`}>
-              <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
-              <span className="text-semantic-actionPrimary font-black">{displayName}</span>
-            </h1>
-            
-            {/* شارة اسم الأكاديمية لتحديد سياق العمل */}
-            {academyName && (
-              <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-semantic-surfaceInput border border-semantic-borderInput text-semantic-textSecondary font-bold">
-                {academyName}
-              </span>
-            )}
-          </div>
-
-          {/* نص موجه ودقيق حسب دور المستخدم */}
-          <p className={`${UI.subtitle} text-[11px] sm:text-xs mt-1 m-0 leading-relaxed text-semantic-textMuted`}>
-            {userRole === 'teacher' 
-              ? t('dashboard.subtitleTeacher', 'جاهز لبدء حلقات اليوم ورصد مستوى الطلاب؟')
-              : t('dashboard.subtitleAdmin', 'متابعة أداء الأكاديمية والأنشطة المباشرة اليوم.')}
-          </p>
-        </div>
-
-        {/* شارات الحالة المدمجة */}
-        <div className="flex items-center gap-2 flex-wrap self-start sm:self-center shrink-0">
-          {/* شارة البث الحي المدمجة */}
-          <button
-            type="button"
-            onClick={() => setActiveTab && setActiveTab('halaqas')}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary hover:bg-semantic-actionPrimary/20 transition-all cursor-pointer"
-          >
-            <Radio size={12} className="animate-pulse" />
-            <span>{t('dashboard.directMonitor', 'الرصد المباشر')}</span>
-          </button>
-
-          {/* شارة التزامن اللحظي */}
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-semantic-successBg border border-semantic-successBorder text-semantic-success">
-            <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
-            <span className="whitespace-nowrap">{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
-            {lastSyncTime && <span className="text-[10px] text-semantic-textMuted dir-ltr">({lastSyncTime})</span>}
-          </div>
-        </div>
-      </header>
+      {/* 🟢 كارت الترحيب: مبسط وخالٍ من التكرارات */}
+<header className={`${UI.card} flex flex-col justify-center p-4 w-full`}>
+  <div className="flex flex-col gap-1">
+    {/* اسم المستخدم في سطر واحد دون انكسار */}
+    <h1 className={`${UI.title} text-base sm:text-lg md:text-xl flex items-center gap-1.5 m-0 font-bold text-semantic-textPrimary`}>
+      <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
+      <span className="text-semantic-actionPrimary font-black whitespace-nowrap">
+        {displayName}
+      </span>
+    </h1>
+    
+    {/* النص الوصفي التوجيهي */}
+    <p className={`${UI.subtitle} text-[11px] sm:text-xs m-0 leading-relaxed text-semantic-textMuted`}>
+      {userRole === 'teacher' 
+        ? t('dashboard.subtitleTeacher', 'جاهز لبدء حلقات اليوم ورصد مستوى الطلاب؟')
+        : t('dashboard.subtitleAdmin', 'متابعة أداء الأكاديمية والأنشطة المباشرة اليوم.')}
+    </p>
+  </div>
+</header>
 
       {/* 🟢 زر الإجراء الرئيسي الموحد */}
       <section className="w-full pt-1">
