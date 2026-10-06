@@ -4,36 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { getDashboardStats } from '@/lib/dashboardService';
 import { UI } from '@/theme/styles';
-import { 
-  GraduationCap, 
-  TrendingUp, 
-  BookOpen, 
-  AlertTriangle, 
-  Plus, 
-  ClipboardCheck, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  Hourglass, 
-  RefreshCw, 
-  Landmark,
-  Flame,
-  Award,
-  ArrowRight,
-  ArrowLeft,
-  Activity,
-  Sparkles,
-  ShieldCheck,
-  Loader2,
-  Trophy,
-  UserX,
-  ChevronRight,
-  ChevronLeft,
-  BookmarkCheck,
-  Radio,
-  Zap,
-  HelpCircle
-} from 'lucide-react';
+// أيقونات الإحصائيات والإنجاز
+import { GraduationCap, TrendingUp, BookOpen, Flame, Award, Trophy, BookmarkCheck, Zap, Radio } from 'lucide-react';
+// أيقونات الحالة والتنبيهات
+import { AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, Sparkles, ShieldCheck, Loader2, UserX, HelpCircle } from 'lucide-react';
+// أيقونات التحكم والتصفح
+import { Plus, ClipboardCheck, Clock, User, Landmark, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
 
