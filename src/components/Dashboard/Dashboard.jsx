@@ -338,13 +338,14 @@ export default function Dashboard({
         />
 
         <StatCard
-          title={t('dashboard.stats.streakRate', 'معدل الثبات')}
-          value={safeText(stats?.avgStreak, '0')}
-          unit={t('common.dayUnit', 'يوم')}
-          subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
-          icon={Flame}
-          iconColorClass="text-semantic-actionPrimary"
-        />
+  title={t('dashboard.stats.streakRate', 'معدل الثبات')}
+  value={safeText(stats?.avgStreak, '0')}
+  unit={t('common.dayUnit', 'يوم')}
+  subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
+  icon={Flame}
+  iconColorClass="text-semantic-actionPrimary"
+  onClick={() => setActiveTab && setActiveTab('gamification')}
+/>
 
         <StatCard
           title={t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
