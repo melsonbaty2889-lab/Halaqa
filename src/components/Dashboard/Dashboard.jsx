@@ -20,7 +20,7 @@ const StatCard = ({ title, value, unit, subtitle, icon: Icon, iconColorClass, on
     tabIndex={onClick ? 0 : undefined}
     role={onClick ? "button" : undefined}
     aria-label={title}
-    className={`${UI.card} p-2.5 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between w-full relative`}
+    className={`${UI.card} p-2.5 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between w-full relative transition-all`}
   >
     <div className="flex justify-between items-start text-xs font-bold mb-1 text-semantic-textSecondary gap-1">
       <span className="leading-tight block whitespace-normal break-words">{title}</span>
@@ -235,7 +235,6 @@ export default function Dashboard({
   }
 
   return (
-    /* 🟢 جعل الخلفية شفافة تماماً لظهور الخلفية الخضراء والنجوم */
     <div className={`w-full px-2 py-3 sm:p-5 pb-20 space-y-2.5 font-cairo bg-transparent text-semantic-textPrimary min-h-screen ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
       
       {/* 🔴 تنبيه مسؤول النظام */}
@@ -246,6 +245,7 @@ export default function Dashboard({
             <span>{t('dashboard.currentAcademy', 'الأكاديمية الحالية')}: {displayName}</span>
           </span>
           <button
+            type="button"
             onClick={() => setSelectedAdminAcademy(null)}
             aria-label={t('common.back', 'الرجوع')}
             className={`${UI.btnSecondary} min-h-[30px] text-xs py-1 px-2.5 w-auto`}
@@ -259,7 +259,7 @@ export default function Dashboard({
       {/* 🟢 الترحيب وتحديث الشاشة */}
       <header className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 w-full`}>
         <div>
-          <h1 className={`${UI.title} text-base md:text-xl flex items-center gap-2 m-0 flex-wrap`}>
+          <h1 className={`${UI.title} text-sm sm:text-base md:text-xl flex items-center gap-2 m-0 flex-wrap`}>
             <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
             <span className="text-semantic-actionPrimary">{displayName}</span>
             <Sparkles size={16} className="animate-pulse text-semantic-actionPrimary shrink-0" />
@@ -271,42 +271,45 @@ export default function Dashboard({
 
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold self-start sm:self-center bg-semantic-successBg border border-semantic-successBorder text-semantic-success shrink-0">
           <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
-          <span>{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
-          {lastSyncTime && <span className="text-[10px] text-semantic-textMuted">({lastSyncTime})</span>}
+          <span className="whitespace-nowrap">{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
+          {lastSyncTime && <span className="text-[10px] text-semantic-textMuted dir-ltr">({lastSyncTime})</span>}
         </div>
       </header>
 
       {/* 🟢 شريط البث الحي */}
-      <div className="p-2.5 rounded-xl bg-semantic-surfaceInput/80 backdrop-blur-sm border border-semantic-borderInput flex flex-wrap sm:flex-nowrap items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2 w-full">
+      <div className="p-2.5 rounded-xl bg-semantic-surfaceInput/80 backdrop-blur-sm border border-semantic-borderInput flex items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2 w-full">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="p-1 rounded-md bg-semantic-actionPrimary/10 text-semantic-actionPrimary shrink-0">
             <Radio size={14} className="animate-pulse" />
           </span>
-          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight whitespace-normal break-words">
+          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight truncate">
             {t('dashboard.liveFeed', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
           </span>
         </div>
-        <span 
+        <button
+          type="button"
           onClick={() => setActiveTab && setActiveTab('halaqas')}
-          className="text-[11px] text-semantic-actionPrimary font-bold underline shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          className="text-[11px] text-semantic-actionPrimary font-bold underline shrink-0 cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0 whitespace-nowrap"
         >
           {t('dashboard.directMonitor', 'الرصد المباشر')}
-        </span>
+        </button>
       </div>
 
       {/* 🟢 شريط الأزرار الرئيسية */}
       <section className="space-y-2 w-full">
         <button 
+          type="button"
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
           aria-label={t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}
           className={`${UI.btnPrimary} min-h-[42px] py-2 text-xs md:text-sm w-full flex items-center justify-center gap-2`}
         >
-          <Plus size={18} />
-          <span className="font-extrabold">{t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}</span>
+          <Plus size={18} className="shrink-0" />
+          <span className="font-extrabold whitespace-nowrap">{t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}</span>
         </button>
 
         <div className="grid grid-cols-2 gap-2 w-full">
           <button 
+            type="button"
             onClick={() => setActiveTab && setActiveTab('attendance')} 
             aria-label={t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}
             className={`${UI.btnSecondary} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
@@ -316,6 +319,7 @@ export default function Dashboard({
           </button>
 
           <button 
+            type="button"
             onClick={() => setActiveTab && setActiveTab('students')} 
             aria-label={t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}
             className={`${UI.btnEmerald} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
@@ -338,14 +342,14 @@ export default function Dashboard({
         />
 
         <StatCard
-  title={t('dashboard.stats.streakRate', 'معدل الثبات')}
-  value={safeText(stats?.avgStreak, '0')}
-  unit={t('common.dayUnit', 'يوم')}
-  subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
-  icon={Flame}
-  iconColorClass="text-semantic-actionPrimary"
-  onClick={() => setActiveTab && setActiveTab('gamification')}
-/>
+          title={t('dashboard.stats.streakRate', 'معدل الثبات')}
+          value={safeText(stats?.avgStreak, '0')}
+          unit={t('common.dayUnit', 'يوم')}
+          subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
+          icon={Flame}
+          iconColorClass="text-semantic-actionPrimary"
+          onClick={() => setActiveTab && setActiveTab('gamification')}
+        />
 
         <StatCard
           title={t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
@@ -382,201 +386,204 @@ export default function Dashboard({
         <StatCard
           title={t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
           value={safeText(stats?.overdueCount, '0')}
-          subtitle={t('dashboard.stats.requestsNotes', '⚠ طلبات وملاحظات')}
+          subtitle={
+            (stats?.overdueCount || 0) > 0 
+              ? t('dashboard.stats.requestsNotes', '⚠ طلبات وملاحظات متأخرة')
+              : t('dashboard.stats.allPaid', 'إلتزام مالي مكتمل')
+          }
           icon={AlertTriangle}
           iconColorClass={(stats?.overdueCount || 0) > 0 ? 'text-semantic-danger' : 'text-semantic-success'}
-          borderHoverClass="hover:border-semantic-danger/40"
+          borderHoverClass={(stats?.overdueCount || 0) > 0 ? 'hover:border-semantic-danger/40' : 'hover:border-semantic-success/40'}
           onClick={() => setActiveTab && setActiveTab('payments')}
         />
       </section>
 
       {/* 🚀 قسم الأبطال والطلاب */}
-<section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
-  
-  {/* أبطال اليوم */}
-  <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
-    <div>
-      <div className="flex justify-between items-center mb-2.5">
-        <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
-          <Trophy className="text-semantic-actionPrimary shrink-0" size={16} />
-          <span>{t('dashboard.sections.heroesToday', 'أبطال اليوم')}</span>
-        </h2>
-        <button 
-          type="button"
-          onClick={() => setActiveTab && setActiveTab('students')}
-          className="text-xs font-bold text-semantic-actionPrimary hover:underline bg-transparent border-0 cursor-pointer p-0"
-        >
-          {t('common.viewAll', 'عرض الكل')}
-        </button>
-      </div>
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
+        {/* أبطال اليوم */}
+        <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
+          <div>
+            <div className="flex justify-between items-center mb-2.5">
+              <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
+                <Trophy className="text-semantic-actionPrimary shrink-0" size={16} />
+                <span>{t('dashboard.sections.heroesToday', 'أبطال اليوم')}</span>
+              </h2>
+              <button 
+                type="button"
+                onClick={() => setActiveTab && setActiveTab('students')}
+                className="text-xs font-bold text-semantic-actionPrimary hover:underline bg-transparent border-0 cursor-pointer p-0"
+              >
+                {t('common.viewAll', 'عرض الكل')}
+              </button>
+            </div>
 
-      {stats?.topPerformers && stats.topPerformers.length > 0 ? (
-        <div className="space-y-1.5">
-          {stats.topPerformers.map((student, idx) => (
-            <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-5 h-5 rounded-full bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary font-black text-[10px] flex items-center justify-center shrink-0">
-                  {idx + 1}
-                </span>
-                <span className="text-xs font-bold text-semantic-textPrimary break-words">
-                  {safeText(student.name, t('common.student', 'طالب'))}
-                </span>
+            {stats?.topPerformers && stats.topPerformers.length > 0 ? (
+              <div className="space-y-1.5">
+                {stats.topPerformers.map((student, idx) => (
+                  <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary font-black text-[10px] flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="text-xs font-bold text-semantic-textPrimary break-words">
+                        {safeText(student.name, t('common.student', 'طالب'))}
+                      </span>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-semantic-success bg-semantic-successBg px-2 py-0.5 rounded border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
+                      <Zap size={11} />
+                      <span>{student.sessionsCount} {t('common.recitationCount', 'تسميع')}</span>
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className="text-[10px] sm:text-xs font-black text-semantic-success bg-semantic-successBg px-2 py-0.5 rounded border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
-                <Zap size={11} />
-                <span>{student.sessionsCount} {t('common.recitationCount', 'تسميع')}</span>
+            ) : (
+              <div className="text-center py-4 px-2 space-y-2">
+                <p className="text-semantic-textMuted text-xs font-semibold m-0">
+                  {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab && setActiveTab('students')}
+                  className={`${UI.btnEmerald} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer`}
+                >
+                  <BookmarkCheck size={14} />
+                  <span>{t('dashboard.actions.recordFirstRecitation', 'تسجيل أول تسميع اليوم')}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* طلاب يحتاجون متابعة */}
+        <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
+                <UserX className="text-semantic-danger shrink-0" size={16} />
+                <span>{t('dashboard.sections.atRiskStudents', 'طلاب يتطلبون متابعة')}</span>
+              </h2>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
+                {stats?.atRiskStudents?.length || 0} {t('dashboard.needsFollowup', 'يحتاج متابعة')}
               </span>
             </div>
-          ))}
+
+            {stats?.atRiskStudents && stats.atRiskStudents.length > 0 ? (
+              <div className="space-y-1.5">
+                {stats.atRiskStudents.map((student, idx) => (
+                  <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
+                      <span className="text-xs font-bold text-semantic-textPrimary break-words">
+                        {safeText(student.name, t('common.student', 'طالب'))}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab && setActiveTab('students')}
+                      aria-label={t('common.contact', 'تواصل')}
+                      className="text-xs font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2 py-1 rounded transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                    >
+                      <span>{t('common.contact', 'تواصل')}</span>
+                      {isRtl ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-5 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
+                <CheckCircle2 size={15} />
+                <span>{t('dashboard.allStudentsOnTrack', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
+              </div>
+            )}
+          </div>
         </div>
+      </section>
+
+      {/* 🟢 الحلقات النشطة */}
+      {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
+        <section className={`${UI.card} p-3 w-full`}>
+          <div className="flex justify-between items-center mb-2.5">
+            <h2 className="text-xs md:text-sm font-black flex items-center gap-1.5 m-0 text-semantic-textPrimary">
+              <Landmark className="text-semantic-actionPrimary shrink-0" size={16} />
+              <span>{t('dashboard.sections.activeHalaqas', 'الحلقات النشطة')}</span>
+            </h2>
+            <span className="text-xs px-2 py-0.5 rounded-full border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary font-bold shrink-0">
+              {stats.activeHalaqasData.length} {t('common.halaqaUnit', 'حلقة')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 w-full">
+            {stats.activeHalaqasData.map((halaqa, idx) => {
+              const isLive = halaqa.status === 'live';
+              const isFinished = halaqa.status === 'finished';
+              const halaqaName = safeText(halaqa.name, t('common.defaultHalaqaName', 'حلقة قرآنية'));
+              const teacherName = safeText(halaqa.teacher_name, t('common.unspecified', 'غير محدد'));
+              const timeDisplay = safeText(isRtl ? halaqa.time_display_ar : halaqa.time_display_en, '');
+              const teachingType = safeText(halaqa.teaching_type, t('common.inPerson', 'حضوري'));
+
+              return (
+                <div 
+                  key={halaqa.id || idx} 
+                  className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput/70 flex flex-col justify-between space-y-2 w-full"
+                >
+                  <div>
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <h3 className="m-0 text-xs md:text-sm font-bold leading-snug text-semantic-textPrimary break-words">
+                        {halaqaName}
+                      </h3>
+                      <HalaqaStatusBadge isLive={isLive} isFinished={isFinished} t={t} />
+                    </div>
+
+                    <div className="text-xs mb-1 flex items-center gap-1.5 text-semantic-textSecondary">
+                      <User size={13} className="text-semantic-textMuted shrink-0" />
+                      <span className="break-words">{t('common.teacher', 'المعلم')}: {teacherName}</span>
+                    </div>
+
+                    {timeDisplay && (
+                      <div className="text-[11px] mb-1 flex items-center gap-1.5 text-semantic-textMuted">
+                        <Clock size={13} className="shrink-0" />
+                        <span className="break-words">{timeDisplay}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-semantic-borderInput flex justify-between items-center">
+                    <span className="text-[10px] px-2 py-0.5 rounded border border-semantic-actionPrimary/30 bg-semantic-actionPrimary/10 text-semantic-actionPrimary font-bold inline-flex items-center gap-1 shrink-0">
+                      <Award size={11} />
+                      <span>{teachingType}</span>
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={() => setActiveTab && setActiveTab('halaqas')} 
+                      aria-label={t('common.details', 'التفاصيل')}
+                      className="text-xs font-bold text-semantic-actionPrimary bg-transparent border-0 cursor-pointer p-0 hover:underline flex items-center gap-1"
+                    >
+                      <span>{t('common.details', 'التفاصيل')}</span>
+                      {isRtl ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       ) : (
-        <div className="text-center py-4 px-2 space-y-2">
-          <p className="text-semantic-textMuted text-xs font-semibold m-0">
-            {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
+        <section className={`${UI.card} text-center py-6 p-4 w-full space-y-3`}>
+          <Activity size={26} className="mx-auto text-semantic-textMuted" />
+          <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed">
+            {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
           </p>
           <button
             type="button"
-            onClick={() => setActiveTab && setActiveTab('students')}
-            className={`${UI.btnEmerald} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer`}
+            onClick={() => setActiveTab && setActiveTab('halaqas')}
+            className={`${UI.btnSecondary} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer w-auto`}
           >
-            <BookmarkCheck size={14} />
-            <span>{t('dashboard.actions.recordFirstRecitation', 'تسجيل أول تسميع اليوم')}</span>
+            <Clock size={14} />
+            <span>{t('dashboard.actions.viewHalaqasSchedule', 'عرض جدول الحلقات')}</span>
           </button>
-        </div>
+        </section>
       )}
-    </div>
-  </div>
 
-  {/* طلاب يحتاجون متابعة */}
-  <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
-    <div>
-      <div className="flex items-center justify-between gap-2 mb-2.5">
-        <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
-          <UserX className="text-semantic-danger shrink-0" size={16} />
-          <span>{t('dashboard.sections.atRiskStudents', 'طلاب يتطلبون متابعة')}</span>
-        </h2>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
-          {stats?.atRiskStudents?.length || 0} {t('dashboard.needsFollowup', 'يحتاج متابعة')}
-        </span>
-      </div>
-
-      {stats?.atRiskStudents && stats.atRiskStudents.length > 0 ? (
-        <div className="space-y-1.5">
-          {stats.atRiskStudents.map((student, idx) => (
-            <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
-                <span className="text-xs font-bold text-semantic-textPrimary break-words">
-                  {safeText(student.name, t('common.student', 'طالب'))}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab && setActiveTab('students')}
-                aria-label={t('common.contact', 'تواصل')}
-                className="text-xs font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2 py-1 rounded transition-all cursor-pointer flex items-center gap-1 shrink-0"
-              >
-                <span>{t('common.contact', 'تواصل')}</span>
-                {isRtl ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-5 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
-          <CheckCircle2 size={15} />
-          <span>{t('dashboard.allStudentsOnTrack', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
-        </div>
-      )}
-    </div>
-  </div>
-
-</section>
-
-      {/* 🟢 الحلقات النشطة */}
-{stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
-  <section className={`${UI.card} p-3 w-full`}>
-    <div className="flex justify-between items-center mb-2.5">
-      <h2 className="text-xs md:text-sm font-black flex items-center gap-1.5 m-0 text-semantic-textPrimary">
-        <Landmark className="text-semantic-actionPrimary shrink-0" size={16} />
-        <span>{t('dashboard.sections.activeHalaqas', 'الحلقات النشطة')}</span>
-      </h2>
-      <span className="text-xs px-2 py-0.5 rounded-full border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary font-bold shrink-0">
-        {stats.activeHalaqasData.length} {t('common.halaqaUnit', 'حلقة')}
-      </span>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 w-full">
-      {stats.activeHalaqasData.map((halaqa, idx) => {
-        const isLive = halaqa.status === 'live';
-        const isFinished = halaqa.status === 'finished';
-        const halaqaName = safeText(halaqa.name, t('common.defaultHalaqaName', 'حلقة قرآنية'));
-        const teacherName = safeText(halaqa.teacher_name, t('common.unspecified', 'غير محدد'));
-        const timeDisplay = safeText(isRtl ? halaqa.time_display_ar : halaqa.time_display_en, '');
-        const teachingType = safeText(halaqa.teaching_type, t('common.inPerson', 'حضوري'));
-
-        return (
-          <div 
-            key={halaqa.id || idx} 
-            className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput/70 flex flex-col justify-between space-y-2 w-full"
-          >
-            <div>
-              <div className="flex justify-between items-start gap-2 mb-1">
-                <h3 className="m-0 text-xs md:text-sm font-bold leading-snug text-semantic-textPrimary break-words">
-                  {halaqaName}
-                </h3>
-                <HalaqaStatusBadge isLive={isLive} isFinished={isFinished} t={t} />
-              </div>
-
-              <div className="text-xs mb-1 flex items-center gap-1.5 text-semantic-textSecondary">
-                <User size={13} className="text-semantic-textMuted shrink-0" />
-                <span className="break-words">{t('common.teacher', 'المعلم')}: {teacherName}</span>
-              </div>
-
-              {timeDisplay && (
-                <div className="text-[11px] mb-1 flex items-center gap-1.5 text-semantic-textMuted">
-                  <Clock size={13} className="shrink-0" />
-                  <span className="break-words">{timeDisplay}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-2 border-t border-semantic-borderInput flex justify-between items-center">
-              <span className="text-[10px] px-2 py-0.5 rounded border border-semantic-actionPrimary/30 bg-semantic-actionPrimary/10 text-semantic-actionPrimary font-bold inline-flex items-center gap-1 shrink-0">
-                <Award size={11} />
-                <span>{teachingType}</span>
-              </span>
-              <button 
-                type="button"
-                onClick={() => setActiveTab && setActiveTab('halaqas')} 
-                aria-label={t('common.details', 'التفاصيل')}
-                className="text-xs font-bold text-semantic-actionPrimary bg-transparent border-0 cursor-pointer p-0 hover:underline flex items-center gap-1"
-              >
-                <span>{t('common.details', 'التفاصيل')}</span>
-                {isRtl ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  </section>
-) : (
-  <section className={`${UI.card} text-center py-6 p-4 w-full space-y-3`}>
-    <Activity size={26} className="mx-auto text-semantic-textMuted" />
-    <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed">
-      {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
-    </p>
-    <button
-      type="button"
-      onClick={() => setActiveTab && setActiveTab('halaqas')}
-      className={`${UI.btnSecondary} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer w-auto`}
-    >
-      <Clock size={14} />
-      <span>{t('dashboard.actions.viewHalaqasSchedule', 'عرض جدول الحلقات')}</span>
-    </button>
-  </section>
-)}
     </div>
   );
 }
