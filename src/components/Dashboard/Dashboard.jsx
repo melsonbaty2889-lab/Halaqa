@@ -347,15 +347,15 @@ export default function Dashboard({
           onClick={() => setActiveTab && setActiveTab('attendance')}
         />
 
-        <StatCard
+                <StatCard
           title={t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
           value={safeText(stats?.totalSessions, '0')}
           unit={t('common.sessionUnit', 'جلسة')}
           subtitle={t('dashboard.stats.completedToday', '✅ المكتملة اليوم')}
           icon={BookOpen}
           iconColorClass="text-semantic-actionPrimary"
-          onClick={() => setShowProgressTooltip(!showProgressTooltip)}
-        >
+          onClick={() => setActiveTab && setActiveTab('students')}
+        />
           {showProgressTooltip && (
             <div className="absolute top-full right-0 left-0 mt-1.5 p-2 rounded-xl bg-semantic-surfaceSecondary border border-semantic-borderHover shadow-2xl z-20 text-[10px] space-y-1">
               <div className="flex justify-between font-bold text-semantic-textPrimary">
@@ -387,7 +387,7 @@ export default function Dashboard({
 
       {/* 🚀 قسم الأبطال والطلاب */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
-        {/* أبطال اليوم */}
+                {/* أبطال اليوم */}
         <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
           <div>
             <div className="flex justify-between items-center mb-2.5">
@@ -424,18 +424,10 @@ export default function Dashboard({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-4 px-2 space-y-2">
-                <p className="text-semantic-textMuted text-xs font-semibold m-0">
+              <div className="text-center py-6 px-2">
+                <p className="text-semantic-textMuted text-xs font-semibold m-0 leading-relaxed">
                   {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab && setActiveTab('students')}
-                  className={`${UI.btnEmerald} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer`}
-                >
-                  <BookmarkCheck size={14} />
-                  <span>{t('dashboard.actions.recordFirstRecitation', 'تسجيل أول تسميع اليوم')}</span>
-                </button>
               </div>
             )}
           </div>
