@@ -7,7 +7,7 @@ import { UI } from '@/theme/styles';
 
 import { 
   GraduationCap, TrendingUp, BookOpen, Flame, Award, Trophy, BookmarkCheck, Zap, Radio,
-  AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, Sparkles, ShieldCheck, Loader2, UserX,
+  AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, ShieldCheck, Loader2, UserX,
   Plus, Clock, User, Landmark, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft 
 } from 'lucide-react';
 
@@ -76,7 +76,6 @@ export default function Dashboard({
   
   const [loading, setLoading] = useState(true);
   const [selectedAdminAcademy, setSelectedAdminAcademy] = useState(null);
-  const [showProgressTooltip, setShowProgressTooltip] = useState(false);
   const [stats, setStats] = useState({
     studentsCount: 0,
     academiesCount: 0,
@@ -347,7 +346,7 @@ export default function Dashboard({
           onClick={() => setActiveTab && setActiveTab('attendance')}
         />
 
-                <StatCard
+        <StatCard
           title={t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
           value={safeText(stats?.totalSessions, '0')}
           unit={t('common.sessionUnit', 'جلسة')}
@@ -356,19 +355,6 @@ export default function Dashboard({
           iconColorClass="text-semantic-actionPrimary"
           onClick={() => setActiveTab && setActiveTab('students')}
         />
-          {showProgressTooltip && (
-            <div className="absolute top-full right-0 left-0 mt-1.5 p-2 rounded-xl bg-semantic-surfaceSecondary border border-semantic-borderHover shadow-2xl z-20 text-[10px] space-y-1">
-              <div className="flex justify-between font-bold text-semantic-textPrimary">
-                <span>{t('dashboard.tooltip.newMemorization', 'حفظ جديد:')}</span>
-                <span className="text-semantic-success">{t('common.enabled', 'مفعل')}</span>
-              </div>
-              <div className="flex justify-between font-bold text-semantic-textPrimary">
-                <span>{t('dashboard.tooltip.revision', 'مراجعة وتثبيت:')}</span>
-                <span className="text-semantic-actionPrimary">{t('common.enabled', 'مفعل')}</span>
-              </div>
-            </div>
-          )}
-        </StatCard>
 
         <StatCard
           title={t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
@@ -387,7 +373,7 @@ export default function Dashboard({
 
       {/* 🚀 قسم الأبطال والطلاب */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
-                {/* أبطال اليوم */}
+        {/* أبطال اليوم */}
         <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
           <div>
             <div className="flex justify-between items-center mb-2.5">
