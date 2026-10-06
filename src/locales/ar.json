@@ -384,7 +384,8 @@
       "recordFirstRecitation": "تسجيل أول تسميع اليوم",
       "recordRecitation": "تسجيل التسميع",
       "startHalaqa": "إطلاق حلقة تعليمية",
-      "takeAttendance": "تسجيل الحضور"
+      "takeAttendance": "تسجيل الحضور",
+      "viewHalaqasSchedule": "عرض جدول الحلقات"
     },
     "active_halaqas_title": "الحلقات النشطة وحالة التسميع اللحظية",
     "active_streak": "التتابع المستمر",
