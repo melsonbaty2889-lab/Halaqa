@@ -461,6 +461,8 @@
     "status_live": "Live Now",
     "status_scheduled": "Scheduled",
     "subtitle": "Live Halaqas Management & Unified Academic Tracking Platform",
+    "subtitleAdmin": "متابعة أداء الأكاديمية والأنشطة المباشرة اليوم.",
+    "subtitleTeacher": "جاهز لبدء حلقات اليوم ورصد مستوى الطلاب؟",
     "teacher": "Teacher:",
     "tooltip": {
       "newMemorization": "حفظ جديد:",
