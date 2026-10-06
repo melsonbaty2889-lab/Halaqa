@@ -5,38 +5,33 @@ import { supabase } from '@/lib/supabase';
 import { getDashboardStats } from '@/lib/dashboardService';
 import { UI } from '@/theme/styles';
 
-// 🟢 تجميع وتنسيق استيراد الأيقونات
 import { 
-  GraduationCap, TrendingUp, BookOpen, Flame, Award, Trophy, BookmarkCheck, Zap, Radio 
-} from 'lucide-react';
-import { 
-  AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, Sparkles, ShieldCheck, Loader2, UserX 
-} from 'lucide-react';
-import { 
+  GraduationCap, TrendingUp, BookOpen, Flame, Award, Trophy, BookmarkCheck, Zap, Radio,
+  AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, Sparkles, ShieldCheck, Loader2, UserX,
   Plus, ClipboardCheck, Clock, User, Landmark, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft 
 } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
 
-// 🟢 مكون فرعي محمي من الانقطاع لبطاقات الإحصائيات
+// 🟢 بطاقات الإحصائيات (مكون موحد يعتمد على Semantic Tokens)
 const StatCard = ({ title, value, unit, subtitle, icon: Icon, iconColorClass, onClick, borderHoverClass, children }) => (
   <div 
     onClick={onClick}
     tabIndex={onClick ? 0 : undefined}
     role={onClick ? "button" : undefined}
     aria-label={title}
-    className={`${UI.card} p-3 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between min-w-0 relative`}
+    className={`${UI.card} p-2.5 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between min-w-0 relative`}
   >
-    <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold mb-1.5 text-semantic-textSecondary gap-1">
-      <span className="truncate min-w-0 leading-tight">{title}</span>
-      <div className="p-1 rounded-lg bg-semantic-surfaceInput border border-semantic-borderInput shrink-0 flex items-center justify-center">
-        <Icon className={iconColorClass} size={15} />
+    <div className="flex justify-between items-start text-[11px] sm:text-xs font-bold mb-1 text-semantic-textSecondary gap-1">
+      <span className="truncate min-w-0 leading-tight block">{title}</span>
+      <div className="p-1 rounded bg-semantic-surfaceInput border border-semantic-borderInput shrink-0 flex items-center justify-center">
+        <Icon className={iconColorClass} size={14} />
       </div>
     </div>
-    <div className={`text-lg sm:text-2xl font-black ${iconColorClass}`}>
+    <div className={`text-base sm:text-2xl font-black ${iconColorClass} my-0.5`}>
       {value} {unit && <span className="text-[10px] font-normal text-semantic-textSecondary">{unit}</span>}
     </div>
-    <div className={`text-[10px] sm:text-[11px] mt-1 font-semibold flex items-center gap-1 ${iconColorClass}`}>
+    <div className={`text-[10px] sm:text-[11px] font-semibold flex items-center gap-1 ${iconColorClass}`}>
       <span className="truncate">{subtitle}</span>
     </div>
     {children}
@@ -44,7 +39,7 @@ const StatCard = ({ title, value, unit, subtitle, icon: Icon, iconColorClass, on
 );
 
 // 🟢 مكون شارة حالة الحلقة
-const HalaqaStatusBadge = ({ status, isLive, isFinished, t }) => {
+const HalaqaStatusBadge = ({ isLive, isFinished, t }) => {
   const statusClass = isLive 
     ? 'bg-semantic-dangerBg border-semantic-danger/30 text-semantic-danger' 
     : isFinished 
@@ -52,11 +47,11 @@ const HalaqaStatusBadge = ({ status, isLive, isFinished, t }) => {
     : 'bg-semantic-actionPrimary/10 border-semantic-actionPrimary/30 text-semantic-actionPrimary';
 
   const statusLabel = isLive 
-    ? t('dashboard.status_live', 'مباشر') 
+    ? t('dashboard.status.live', 'مباشر') 
     : isFinished 
-    ? t('dashboard.status_finished', 'مكتملة') 
-    : t('dashboard.status_scheduled', 'مجدولة');
-
+    ? t('dashboard.status.finished', 'مكتملة') 
+    : t('dashboard.status.scheduled', 'مجدولة');
+    
   const StatusIcon = isLive ? RefreshCw : isFinished ? CheckCircle2 : Hourglass;
 
   return (
@@ -145,7 +140,7 @@ export default function Dashboard({
     if (parsedAcademyName) return parsedAcademyName;
     const parsedUserName = safeText(rawUserName);
     if (!parsedUserName || parsedUserName === 'Global Platform Admin' || parsedUserName.toLowerCase().includes('admin')) {
-      return t('dashboard.admin_title', 'إدارة المنصة');
+      return t('dashboard.platformAdmin', 'إدارة المنصة');
     }
     return parsedUserName;
   }, [rawAcademyName, rawUserName, safeText, t]);
@@ -214,9 +209,7 @@ export default function Dashboard({
     return (
       <div className="p-4 md:p-6 space-y-6 flex flex-col items-center justify-center min-h-[400px] bg-semantic-bgPage text-semantic-textSecondary">
         <Loader2 className="animate-spin text-semantic-actionPrimary mb-2" size={36} />
-        <p className="text-sm font-semibold">
-          {t('common.loading', 'جاري تحميل البيانات...')}
-        </p>
+        <p className="text-sm font-semibold">{t('common.loadingData', 'جاري تحميل البيانات...')}</p>
       </div>
     );
   }
@@ -226,7 +219,7 @@ export default function Dashboard({
       <Suspense fallback={
         <div className="p-8 text-center font-bold flex items-center justify-center gap-2 text-semantic-textSecondary">
           <Loader2 className="animate-spin text-semantic-actionPrimary" size={20} />
-          <span>{t('dashboard.loading_admin', 'جاري تحميل لوحة التحكم العامة...')}</span>
+          <span>{t('dashboard.loadingSuperAdmin', 'جاري تحميل لوحة التحكم العامة...')}</span>
         </div>
       }>
         <AdminDashboard 
@@ -249,15 +242,15 @@ export default function Dashboard({
         <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border bg-semantic-actionPrimary/10 border-semantic-actionPrimary/30 text-semantic-actionPrimary">
           <span className="text-xs font-bold flex items-center gap-2">
             <ShieldCheck size={16} />
-            <span>{t('dashboard.viewing_academy', 'الأكاديمية الحالية:')} {displayName}</span>
+            <span>{t('dashboard.currentAcademy', 'الأكاديمية الحالية')}: {displayName}</span>
           </span>
           <button
             onClick={() => setSelectedAdminAcademy(null)}
-            aria-label={t('dashboard.back_to_super_admin', 'الرجوع')}
+            aria-label={t('common.back', 'الرجوع')}
             className={`${UI.btnSecondary} min-h-[32px] text-xs py-1 px-2.5 w-auto`}
           >
             {isRtl ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
-            <span>{t('dashboard.back_to_super_admin', 'الرجوع')}</span>
+            <span>{t('common.back', 'الرجوع')}</span>
           </button>
         </div>
       )}
@@ -277,7 +270,7 @@ export default function Dashboard({
 
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold self-start md:self-center bg-semantic-successBg border border-semantic-successBorder text-semantic-success shrink-0">
           <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
-          <span>{t('dashboard.realtime_synced', 'متزامن لحظياً')}</span>
+          <span>{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
           {lastSyncTime && <span className="text-[10px] text-semantic-textMuted">({lastSyncTime})</span>}
         </div>
       </header>
@@ -289,84 +282,84 @@ export default function Dashboard({
             <Radio size={14} className="animate-pulse" />
           </span>
           <span className="truncate text-semantic-textPrimary text-[11px] sm:text-xs">
-            {t('dashboard.live_stream_status', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
+            {t('dashboard.liveFeed', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
           </span>
         </div>
         <span 
           onClick={() => setActiveTab && setActiveTab('halaqas')}
           className="text-[10px] text-semantic-actionPrimary font-bold underline shrink-0 cursor-pointer hover:opacity-80 transition-opacity ms-2"
         >
-          {t('dashboard.live_monitor', 'الرصد المباشر')}
+          {t('dashboard.directMonitor', 'الرصد المباشر')}
         </span>
       </div>
 
-      {/* 🟢 شريط الإجراءات المباشرة (حل مشكلة طول كلمة "توثيق الإنجاز") */}
+      {/* 🟢 شريط الإجراءات المباشرة */}
       <section className="space-y-2">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
-          aria-label={t('dashboard.launch_session', 'إطلاق حلقة تعليمية')}
+          aria-label={t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}
           className={`${UI.btnPrimary} min-h-[40px] py-2 text-xs w-full`}
         >
           <Plus size={16} />
-          <span>{t('dashboard.launch_session', 'إطلاق حلقة تعليمية')}</span>
+          <span>{t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}</span>
         </button>
 
         <div className="grid grid-cols-2 gap-2">
           <button 
             onClick={() => setActiveTab && setActiveTab('attendance')} 
-            aria-label={t('dashboard.record_attendance', 'تسجيل الحضور')}
-            className={`${UI.btnSecondary} min-h-[36px] py-1.5 text-[11px] sm:text-xs`}
+            aria-label={t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}
+            className={`${UI.btnSecondary} min-h-[36px] py-1.5 text-[11px] sm:text-xs px-1`}
           >
             <ClipboardCheck size={14} className="text-semantic-success shrink-0" />
-            <span className="truncate">{t('dashboard.record_attendance', 'تسجيل الحضور')}</span>
+            <span className="truncate">{t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}</span>
           </button>
 
           <button 
             onClick={() => setActiveTab && setActiveTab('students')} 
-            aria-label={t('dashboard.evaluations', 'تسجيل التسميع')}
-            className={`${UI.btnEmerald} min-h-[36px] py-1.5 text-[11px] sm:text-xs`}
+            aria-label={t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}
+            className={`${UI.btnEmerald} min-h-[36px] py-1.5 text-[11px] sm:text-xs px-1`}
           >
             <BookmarkCheck size={14} className="shrink-0" />
-            <span className="truncate">{t('dashboard.evaluations', 'تسجيل التسميع')}</span>
+            <span className="truncate">{t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}</span>
           </button>
         </div>
       </section>
 
-      {/* 🟢 بطاقات الإحصائيات (موزعة ومحميّة من الانقطاع) */}
+      {/* 🟢 بطاقات الإحصائيات مع t() مع fallback عربي */}
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
         
         <StatCard
-          title={t('dashboard.academy_strength', 'قوة الأكاديمية')}
+          title={t('dashboard.stats.academyStrength', 'قوة الأكاديمية')}
           value={safeText(stats?.studentsCount, '0')}
-          subtitle={`● ${t('dashboard.active_students', 'طلاب نشطون')}`}
+          subtitle={t('dashboard.stats.activeStudents', '● طلاب نشطون')}
           icon={GraduationCap}
           iconColorClass="text-semantic-success"
           onClick={() => setActiveTab && setActiveTab('students')}
         />
 
         <StatCard
-          title={t('dashboard.consistency_rate', 'معدل الثبات')}
+          title={t('dashboard.stats.streakRate', 'معدل الثبات')}
           value={safeText(stats?.avgStreak, '0')}
-          unit={t('dashboard.days', 'يوم')}
-          subtitle={`🔥 ${t('dashboard.active_streak', 'التتابع المستمر')}`}
+          unit={t('common.dayUnit', 'يوم')}
+          subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
           icon={Flame}
           iconColorClass="text-semantic-actionPrimary"
         />
 
         <StatCard
-          title={t('dashboard.attendance_rate', 'نسبة الحضور')}
+          title={t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
           value={safeText(stats?.attendanceRate, '0%')}
-          subtitle={`📈 ${t('dashboard.engagement_rate', 'معدل المشاركة')}`}
+          subtitle={t('dashboard.stats.participationRate', '📈 معدل المشاركة')}
           icon={TrendingUp}
           iconColorClass="text-semantic-success"
           onClick={() => setActiveTab && setActiveTab('attendance')}
         />
 
         <StatCard
-          title={t('dashboard.daily_recitation_rate', 'التسميع اليومي')}
+          title={t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
           value={safeText(stats?.totalSessions, '0')}
-          unit={t('dashboard.sessions', 'جلسة')}
-          subtitle={`✅ ${t('dashboard.completed_today', 'المكتملة اليوم')}`}
+          unit={t('common.sessionUnit', 'جلسة')}
+          subtitle={t('dashboard.stats.completedToday', '✅ المكتملة اليوم')}
           icon={BookOpen}
           iconColorClass="text-semantic-actionPrimary"
           onClick={() => setShowProgressTooltip(!showProgressTooltip)}
@@ -374,21 +367,21 @@ export default function Dashboard({
           {showProgressTooltip && (
             <div className="absolute top-full right-0 left-0 mt-1.5 p-2 rounded-xl bg-semantic-surfaceSecondary border border-semantic-borderHover shadow-2xl z-20 text-[10px] space-y-1 animate-fade-in">
               <div className="flex justify-between font-bold text-semantic-textPrimary">
-                <span>{t('dashboard.hifz_new', 'حفظ جديد:')}</span>
-                <span className="text-semantic-success">مفعل</span>
+                <span>{t('dashboard.tooltip.newMemorization', 'حفظ جديد:')}</span>
+                <span className="text-semantic-success">{t('common.enabled', 'مفعل')}</span>
               </div>
               <div className="flex justify-between font-bold text-semantic-textPrimary">
-                <span>{t('dashboard.review', 'مراجعة وتثبيت:')}</span>
-                <span className="text-semantic-actionPrimary">مفعل</span>
+                <span>{t('dashboard.tooltip.revision', 'مراجعة وتثبيت:')}</span>
+                <span className="text-semantic-actionPrimary">{t('common.enabled', 'مفعل')}</span>
               </div>
             </div>
           )}
         </StatCard>
 
         <StatCard
-          title={t('dashboard.financial_alerts', 'التنبيهات المالية')}
+          title={t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
           value={safeText(stats?.overdueCount, '0')}
-          subtitle={`⚠️️ ${t('dashboard.pending_tasks', 'طلبات وملاحظات')}`}
+          subtitle={t('dashboard.stats.requestsNotes', '⚠ طلبات وملاحظات')}
           icon={AlertTriangle}
           iconColorClass={(stats?.overdueCount || 0) > 0 ? 'text-semantic-danger' : 'text-semantic-success'}
           borderHoverClass="hover:border-semantic-danger/40"
@@ -404,13 +397,13 @@ export default function Dashboard({
           <div className="flex justify-between items-center mb-2.5">
             <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
               <Trophy className="text-semantic-actionPrimary shrink-0" size={15} />
-              <span>{t('dashboard.daily_honor_roll', 'أبطال اليوم')}</span>
+              <span>{t('dashboard.sections.heroesToday', 'أبطال اليوم')}</span>
             </h2>
             <button 
               onClick={() => setActiveTab && setActiveTab('students')}
               className="text-[11px] font-bold text-semantic-actionPrimary hover:underline bg-transparent border-0 cursor-pointer p-0"
             >
-              {t('dashboard.view_all', 'عرض الكل')}
+              {t('common.viewAll', 'عرض الكل')}
             </button>
           </div>
 
@@ -423,19 +416,19 @@ export default function Dashboard({
                       {idx + 1}
                     </span>
                     <span className="text-xs font-bold truncate text-semantic-textPrimary">
-                      {safeText(student.name, t('dashboard.unnamed_student', 'طالب'))}
+                      {safeText(student.name, t('common.student', 'طالب'))}
                     </span>
                   </div>
                   <span className="text-[10px] font-black text-semantic-success bg-semantic-successBg px-2 py-0.5 rounded-md border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
                     <Zap size={10} />
-                    <span>{student.sessionsCount} {t('dashboard.session_unit', 'تسميع')}</span>
+                    <span>{student.sessionsCount} {t('common.recitationCount', 'تسميع')}</span>
                   </span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-4 text-semantic-textMuted text-xs font-semibold">
-              {t('dashboard.no_top_performers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
+              {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
             </div>
           )}
         </div>
@@ -445,10 +438,10 @@ export default function Dashboard({
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary truncate">
               <UserX className="text-semantic-danger shrink-0" size={15} />
-              <span className="truncate">{t('dashboard.proactive_radar', 'طلاب يتطلبون متابعة')}</span>
+              <span className="truncate">{t('dashboard.sections.atRiskStudents', 'طلاب يتطلبون متابعة')}</span>
             </h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
-              {stats?.atRiskStudents?.length || 0} {t('dashboard.needs_followup', 'يحتاج متابعة')}
+              {stats?.atRiskStudents?.length || 0} {t('dashboard.needsFollowup', 'يحتاج متابعة')}
             </span>
           </div>
 
@@ -459,15 +452,15 @@ export default function Dashboard({
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-2 h-2 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
                     <span className="text-xs font-bold truncate text-semantic-textPrimary">
-                      {safeText(student.name, t('dashboard.unnamed_student', 'طالب'))}
+                      {safeText(student.name, t('common.student', 'طالب'))}
                     </span>
                   </div>
                   <button
                     onClick={() => setActiveTab && setActiveTab('students')}
-                    aria-label={t('dashboard.follow_up', 'تواصل')}
+                    aria-label={t('common.contact', 'تواصل')}
                     className="text-[10px] font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2 py-0.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
                   >
-                    <span>{t('dashboard.follow_up', 'تواصل')}</span>
+                    <span>{t('common.contact', 'تواصل')}</span>
                     {isRtl ? <ChevronLeft size={10} /> : <ChevronRight size={10} />}
                   </button>
                 </div>
@@ -476,7 +469,7 @@ export default function Dashboard({
           ) : (
             <div className="text-center py-4 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />
-              <span>{t('dashboard.all_students_active', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
+              <span>{t('dashboard.allStudentsOnTrack', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
             </div>
           )}
         </div>
@@ -489,10 +482,10 @@ export default function Dashboard({
           <div className="flex justify-between items-center mb-2.5">
             <h2 className="text-xs md:text-sm font-black flex items-center gap-1.5 m-0 text-semantic-textPrimary">
               <Landmark className="text-semantic-actionPrimary shrink-0" size={16} />
-              <span>{t('dashboard.active_halaqas_title', 'الحلقات النشطة')}</span>
+              <span>{t('dashboard.sections.activeHalaqas', 'الحلقات النشطة')}</span>
             </h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary font-bold shrink-0">
-              {stats.activeHalaqasData.length} {t('dashboard.halaqa_unit', 'حلقة')}
+              {stats.activeHalaqasData.length} {t('common.halaqaUnit', 'حلقة')}
             </span>
           </div>
 
@@ -500,10 +493,10 @@ export default function Dashboard({
             {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
-              const halaqaName = safeText(halaqa.name, t('dashboard.default_halaqa_name', 'حلقة قرآنية'));
-              const teacherName = safeText(halaqa.teacher_name, t('dashboard.unspecified', 'غير محدد'));
+              const halaqaName = safeText(halaqa.name, t('common.defaultHalaqaName', 'حلقة قرآنية'));
+              const teacherName = safeText(halaqa.teacher_name, t('common.unspecified', 'غير محدد'));
               const timeDisplay = safeText(isRtl ? halaqa.time_display_ar : halaqa.time_display_en, '');
-              const teachingType = safeText(halaqa.teaching_type, t('dashboard.in_person', 'حضوري'));
+              const teachingType = safeText(halaqa.teaching_type, t('common.inPerson', 'حضوري'));
 
               return (
                 <div 
@@ -515,12 +508,12 @@ export default function Dashboard({
                       <h3 className="m-0 text-xs md:text-sm font-bold leading-snug text-semantic-textPrimary truncate">
                         {halaqaName}
                       </h3>
-                      <HalaqaStatusBadge status={halaqa.status} isLive={isLive} isFinished={isFinished} t={t} />
+                      <HalaqaStatusBadge isLive={isLive} isFinished={isFinished} t={t} />
                     </div>
 
                     <div className="text-[11px] mb-1 flex items-center gap-1 text-semantic-textSecondary">
                       <User size={12} className="text-semantic-textMuted shrink-0" />
-                      <span className="truncate">{t('dashboard.teacher', 'المعلم:')} {teacherName}</span>
+                      <span className="truncate">{t('common.teacher', 'المعلم')}: {teacherName}</span>
                     </div>
 
                     {timeDisplay && (
@@ -538,10 +531,10 @@ export default function Dashboard({
                     </span>
                     <button 
                       onClick={() => setActiveTab && setActiveTab('halaqas')} 
-                      aria-label={t('dashboard.view_halaqa_details', 'التفاصيل')}
+                      aria-label={t('common.details', 'التفاصيل')}
                       className="text-[11px] font-bold text-semantic-actionPrimary bg-transparent border-0 cursor-pointer p-0 hover:underline flex items-center gap-1"
                     >
-                      <span>{t('dashboard.view_details', 'التفاصيل')}</span>
+                      <span>{t('common.details', 'التفاصيل')}</span>
                       {isRtl ? <ArrowLeft size={10} /> : <ArrowRight size={10} />}
                     </button>
                   </div>
@@ -554,7 +547,7 @@ export default function Dashboard({
         <section className={`${UI.card} text-center py-5 p-3`}>
           <Activity size={20} className="mx-auto mb-1.5 text-semantic-textMuted" />
           <p className="text-xs font-bold m-0 text-semantic-textSecondary">
-            {t('dashboard.no_active_halaqas_improved', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
+            {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
           </p>
         </section>
       )}
