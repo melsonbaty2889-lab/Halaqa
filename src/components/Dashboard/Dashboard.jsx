@@ -13,25 +13,25 @@ import {
 
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
 
-// 🟢 بطاقات الإحصائيات المحسنة (إلغاء اقتطاع الحروف والنصوص)
+// 🟢 بطاقات الإحصائيات (تستغل كامل المساحة وتمنع اقتطاع النص)
 const StatCard = ({ title, value, unit, subtitle, icon: Icon, iconColorClass, onClick, borderHoverClass, children }) => (
   <div 
     onClick={onClick}
     tabIndex={onClick ? 0 : undefined}
     role={onClick ? "button" : undefined}
     aria-label={title}
-    className={`${UI.card} p-3 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between w-full relative`}
+    className={`${UI.card} p-2.5 sm:p-4 ${onClick ? `cursor-pointer ${borderHoverClass || 'hover:border-semantic-actionPrimary/40'}` : ''} flex flex-col justify-between w-full relative`}
   >
-    <div className="flex justify-between items-start text-xs font-bold mb-1 text-semantic-textSecondary gap-1.5">
+    <div className="flex justify-between items-start text-xs font-bold mb-1 text-semantic-textSecondary gap-1">
       <span className="leading-tight block whitespace-normal break-words">{title}</span>
       <div className="p-1 rounded bg-semantic-surfaceInput border border-semantic-borderInput shrink-0 flex items-center justify-center">
         <Icon className={iconColorClass} size={15} />
       </div>
     </div>
-    <div className={`text-lg sm:text-2xl font-black ${iconColorClass} my-1`}>
-      {value} {unit && <span className="text-[11px] font-normal text-semantic-textSecondary">{unit}</span>}
+    <div className={`text-base sm:text-2xl font-black ${iconColorClass} my-0.5`}>
+      {value} {unit && <span className="text-[10px] sm:text-xs font-normal text-semantic-textSecondary">{unit}</span>}
     </div>
-    <div className={`text-[11px] font-semibold flex items-center gap-1 ${iconColorClass} flex-wrap`}>
+    <div className={`text-[10px] sm:text-xs font-semibold flex items-center gap-1 ${iconColorClass} flex-wrap`}>
       <span className="whitespace-normal leading-tight">{subtitle}</span>
     </div>
     {children}
@@ -207,7 +207,7 @@ export default function Dashboard({
 
   if (loading) {
     return (
-      <div className="p-4 md:p-6 space-y-6 flex flex-col items-center justify-center min-h-[400px] bg-semantic-bgPage text-semantic-textSecondary">
+      <div className="p-4 space-y-4 flex flex-col items-center justify-center min-h-[80vh] w-full bg-transparent text-semantic-textSecondary">
         <Loader2 className="animate-spin text-semantic-actionPrimary mb-2" size={36} />
         <p className="text-sm font-semibold">{t('common.loadingData', 'جاري تحميل البيانات...')}</p>
       </div>
@@ -217,7 +217,7 @@ export default function Dashboard({
   if (isSuperAdmin && !selectedAdminAcademy) {
     return (
       <Suspense fallback={
-        <div className="p-8 text-center font-bold flex items-center justify-center gap-2 text-semantic-textSecondary">
+        <div className="p-6 text-center font-bold flex items-center justify-center gap-2 text-semantic-textSecondary bg-transparent min-h-[80vh]">
           <Loader2 className="animate-spin text-semantic-actionPrimary" size={20} />
           <span>{t('dashboard.loadingSuperAdmin', 'جاري تحميل لوحة التحكم العامة...')}</span>
         </div>
@@ -235,11 +235,12 @@ export default function Dashboard({
   }
 
   return (
-    <div className={`p-2.5 sm:p-5 pb-24 space-y-3 font-cairo bg-semantic-bgPage text-semantic-textPrimary ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
+    /* 🟢 جعل الخلفية شفافة تماماً لظهور الخلفية الخضراء والنجوم */
+    <div className={`w-full px-2 py-3 sm:p-5 pb-20 space-y-2.5 font-cairo bg-transparent text-semantic-textPrimary min-h-screen ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
       
-      {/* 🔴 تنبيه وضع المسؤول العام Super Admin */}
+      {/* 🔴 تنبيه مسؤول النظام */}
       {isSuperAdmin && selectedAdminAcademy && (
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border bg-semantic-actionPrimary/10 border-semantic-actionPrimary/30 text-semantic-actionPrimary">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl border bg-semantic-actionPrimary/10 border-semantic-actionPrimary/30 text-semantic-actionPrimary">
           <span className="text-xs font-bold flex items-center gap-2">
             <ShieldCheck size={16} />
             <span>{t('dashboard.currentAcademy', 'الأكاديمية الحالية')}: {displayName}</span>
@@ -247,7 +248,7 @@ export default function Dashboard({
           <button
             onClick={() => setSelectedAdminAcademy(null)}
             aria-label={t('common.back', 'الرجوع')}
-            className={`${UI.btnSecondary} min-h-[32px] text-xs py-1 px-2.5 w-auto`}
+            className={`${UI.btnSecondary} min-h-[30px] text-xs py-1 px-2.5 w-auto`}
           >
             {isRtl ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
             <span>{t('common.back', 'الرجوع')}</span>
@@ -255,33 +256,33 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 🟢 الترحيب ومؤشر التزامن الحي */}
-      <header className={`${UI.card} flex flex-col md:flex-row md:items-center justify-between gap-2.5 p-3.5`}>
+      {/* 🟢 الترحيب وتحديث الشاشة */}
+      <header className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 w-full`}>
         <div>
-          <h1 className={`${UI.title} text-base md:text-2xl flex items-center gap-2 m-0 flex-wrap`}>
+          <h1 className={`${UI.title} text-base md:text-xl flex items-center gap-2 m-0 flex-wrap`}>
             <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
             <span className="text-semantic-actionPrimary">{displayName}</span>
             <Sparkles size={16} className="animate-pulse text-semantic-actionPrimary shrink-0" />
           </h1>
-          <p className={`${UI.subtitle} text-xs mt-1 m-0 leading-relaxed`}>
-            {t('dashboard.subtitle', 'متابعة الحلقات والإنجاز اليومي')}
+          <p className={`${UI.subtitle} text-[11px] sm:text-xs mt-0.5 m-0 leading-relaxed text-semantic-textMuted`}>
+            {t('dashboard.subtitle', 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد')}
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold self-start md:self-center bg-semantic-successBg border border-semantic-successBorder text-semantic-success shrink-0">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold self-start sm:self-center bg-semantic-successBg border border-semantic-successBorder text-semantic-success shrink-0">
           <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
           <span>{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
           {lastSyncTime && <span className="text-[10px] text-semantic-textMuted">({lastSyncTime})</span>}
         </div>
       </header>
 
-      {/* 🟢 شريط حركة التسميع الحية */}
-      <div className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput flex flex-wrap sm:flex-nowrap items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+      {/* 🟢 شريط البث الحي */}
+      <div className="p-2.5 rounded-xl bg-semantic-surfaceInput/80 backdrop-blur-sm border border-semantic-borderInput flex flex-wrap sm:flex-nowrap items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2 w-full">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="p-1 rounded-md bg-semantic-actionPrimary/10 text-semantic-actionPrimary shrink-0">
             <Radio size={14} className="animate-pulse" />
           </span>
-          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-normal">
+          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight whitespace-normal break-words">
             {t('dashboard.liveFeed', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
           </span>
         </div>
@@ -293,8 +294,8 @@ export default function Dashboard({
         </span>
       </div>
 
-      {/* 🟢 شريط الإجراءات المباشرة دون اقتطاع للنصوص */}
-      <section className="space-y-2">
+      {/* 🟢 شريط الأزرار الرئيسية */}
+      <section className="space-y-2 w-full">
         <button 
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
           aria-label={t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}
@@ -304,30 +305,29 @@ export default function Dashboard({
           <span className="font-extrabold">{t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}</span>
         </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 w-full">
           <button 
             onClick={() => setActiveTab && setActiveTab('attendance')} 
             aria-label={t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}
-            className={`${UI.btnSecondary} min-h-[40px] py-2 text-xs px-3 flex items-center justify-center gap-2 w-full`}
+            className={`${UI.btnSecondary} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
           >
-            <ClipboardCheck size={16} className="text-semantic-success shrink-0" />
-            <span className="font-bold whitespace-nowrap">{t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}</span>
+            <ClipboardCheck size={15} className="text-semantic-success shrink-0" />
+            <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">{t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}</span>
           </button>
 
           <button 
             onClick={() => setActiveTab && setActiveTab('students')} 
             aria-label={t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}
-            className={`${UI.btnEmerald} min-h-[40px] py-2 text-xs px-3 flex items-center justify-center gap-2 w-full`}
+            className={`${UI.btnEmerald} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
           >
-            <BookmarkCheck size={16} className="shrink-0" />
-            <span className="font-bold whitespace-nowrap">{t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}</span>
+            <BookmarkCheck size={15} className="shrink-0" />
+            <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">{t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}</span>
           </button>
         </div>
       </section>
 
-      {/* 🟢 بطاقات الإحصائيات بأبعاد واضحة تمنع اقتطاع الكلمات */}
-      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-        
+      {/* 🟢 بطاقات الإحصائيات */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full">
         <StatCard
           title={t('dashboard.stats.academyStrength', 'قوة الأكاديمية')}
           value={safeText(stats?.studentsCount, '0')}
@@ -365,7 +365,7 @@ export default function Dashboard({
           onClick={() => setShowProgressTooltip(!showProgressTooltip)}
         >
           {showProgressTooltip && (
-            <div className="absolute top-full right-0 left-0 mt-1.5 p-2 rounded-xl bg-semantic-surfaceSecondary border border-semantic-borderHover shadow-2xl z-20 text-[10px] space-y-1 animate-fade-in">
+            <div className="absolute top-full right-0 left-0 mt-1.5 p-2 rounded-xl bg-semantic-surfaceSecondary border border-semantic-borderHover shadow-2xl z-20 text-[10px] space-y-1">
               <div className="flex justify-between font-bold text-semantic-textPrimary">
                 <span>{t('dashboard.tooltip.newMemorization', 'حفظ جديد:')}</span>
                 <span className="text-semantic-success">{t('common.enabled', 'مفعل')}</span>
@@ -389,12 +389,12 @@ export default function Dashboard({
         />
       </section>
 
-      {/* 🚀 قسم لوحة الأبطال وطلاب المتابعة */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      {/* 🚀 قسم الأبطال والطلاب */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
         
-        {/* لوحة أبطال اليوم */}
-        <div className={`${UI.card} p-3 sm:p-4`}>
-          <div className="flex justify-between items-center mb-3">
+        {/* أبطال اليوم */}
+        <div className={`${UI.card} p-3 w-full`}>
+          <div className="flex justify-between items-center mb-2.5">
             <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
               <Trophy className="text-semantic-actionPrimary shrink-0" size={16} />
               <span>{t('dashboard.sections.heroesToday', 'أبطال اليوم')}</span>
@@ -408,9 +408,9 @@ export default function Dashboard({
           </div>
 
           {stats?.topPerformers && stats.topPerformers.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {stats.topPerformers.map((student, idx) => (
-                <div key={student.id || idx} className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput gap-2">
+                <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-5 h-5 rounded-full bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary font-black text-[10px] flex items-center justify-center shrink-0">
                       {idx + 1}
@@ -419,7 +419,7 @@ export default function Dashboard({
                       {safeText(student.name, t('common.student', 'طالب'))}
                     </span>
                   </div>
-                  <span className="text-[10px] sm:text-xs font-black text-semantic-success bg-semantic-successBg px-2 py-1 rounded-md border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
+                  <span className="text-[10px] sm:text-xs font-black text-semantic-success bg-semantic-successBg px-2 py-0.5 rounded border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
                     <Zap size={11} />
                     <span>{student.sessionsCount} {t('common.recitationCount', 'تسميع')}</span>
                   </span>
@@ -427,30 +427,30 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 text-semantic-textMuted text-xs font-semibold">
+            <div className="text-center py-5 text-semantic-textMuted text-xs font-semibold">
               {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
             </div>
           )}
         </div>
 
         {/* طلاب يحتاجون متابعة */}
-        <div className={`${UI.card} p-3 sm:p-4`}>
-          <div className="flex items-center justify-between gap-2 mb-3">
+        <div className={`${UI.card} p-3 w-full`}>
+          <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
               <UserX className="text-semantic-danger shrink-0" size={16} />
               <span>{t('dashboard.sections.atRiskStudents', 'طلاب يتطلبون متابعة')}</span>
             </h2>
-            <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
               {stats?.atRiskStudents?.length || 0} {t('dashboard.needsFollowup', 'يحتاج متابعة')}
             </span>
           </div>
 
           {stats?.atRiskStudents && stats.atRiskStudents.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {stats.atRiskStudents.map((student, idx) => (
-                <div key={student.id || idx} className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput gap-2">
+                <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-2.5 h-2.5 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
+                    <span className="w-2 h-2 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
                     <span className="text-xs font-bold text-semantic-textPrimary break-words">
                       {safeText(student.name, t('common.student', 'طالب'))}
                     </span>
@@ -458,7 +458,7 @@ export default function Dashboard({
                   <button
                     onClick={() => setActiveTab && setActiveTab('students')}
                     aria-label={t('common.contact', 'تواصل')}
-                    className="text-xs font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                    className="text-xs font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2 py-1 rounded transition-all cursor-pointer flex items-center gap-1 shrink-0"
                   >
                     <span>{t('common.contact', 'تواصل')}</span>
                     {isRtl ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
@@ -467,8 +467,8 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
-              <CheckCircle2 size={16} />
+            <div className="text-center py-5 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
+              <CheckCircle2 size={15} />
               <span>{t('dashboard.allStudentsOnTrack', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
             </div>
           )}
@@ -476,20 +476,20 @@ export default function Dashboard({
 
       </section>
 
-      {/* 🟢 قائمة الحلقات النشطة */}
+      {/* 🟢 الحلقات النشطة */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
-        <section className={`${UI.card} p-3 sm:p-4`}>
-          <div className="flex justify-between items-center mb-3">
+        <section className={`${UI.card} p-3 w-full`}>
+          <div className="flex justify-between items-center mb-2.5">
             <h2 className="text-xs md:text-sm font-black flex items-center gap-1.5 m-0 text-semantic-textPrimary">
               <Landmark className="text-semantic-actionPrimary shrink-0" size={16} />
               <span>{t('dashboard.sections.activeHalaqas', 'الحلقات النشطة')}</span>
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary font-bold shrink-0">
+            <span className="text-xs px-2 py-0.5 rounded-full border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textSecondary font-bold shrink-0">
               {stats.activeHalaqasData.length} {t('common.halaqaUnit', 'حلقة')}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 w-full">
             {stats.activeHalaqasData.map((halaqa, idx) => {
               const isLive = halaqa.status === 'live';
               const isFinished = halaqa.status === 'finished';
@@ -501,10 +501,10 @@ export default function Dashboard({
               return (
                 <div 
                   key={halaqa.id || idx} 
-                  className="p-3.5 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput flex flex-col justify-between space-y-2"
+                  className="p-3 rounded-xl border border-semantic-borderInput bg-semantic-surfaceInput/70 flex flex-col justify-between space-y-2 w-full"
                 >
                   <div>
-                    <div className="flex justify-between items-start gap-2 mb-1.5">
+                    <div className="flex justify-between items-start gap-2 mb-1">
                       <h3 className="m-0 text-xs md:text-sm font-bold leading-snug text-semantic-textPrimary break-words">
                         {halaqaName}
                       </h3>
@@ -517,7 +517,7 @@ export default function Dashboard({
                     </div>
 
                     {timeDisplay && (
-                      <div className="text-[11px] mb-1.5 flex items-center gap-1.5 text-semantic-textMuted">
+                      <div className="text-[11px] mb-1 flex items-center gap-1.5 text-semantic-textMuted">
                         <Clock size={13} className="shrink-0" />
                         <span className="break-words">{timeDisplay}</span>
                       </div>
@@ -544,9 +544,9 @@ export default function Dashboard({
           </div>
         </section>
       ) : (
-        <section className={`${UI.card} text-center py-6 p-4`}>
-          <Activity size={24} className="mx-auto mb-2 text-semantic-textMuted" />
-          <p className="text-xs md:text-sm font-bold m-0 text-semantic-textSecondary leading-relaxed">
+        <section className={`${UI.card} text-center py-5 p-3 w-full`}>
+          <Activity size={22} className="mx-auto mb-1.5 text-semantic-textMuted" />
+          <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed">
             {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
           </p>
         </section>
