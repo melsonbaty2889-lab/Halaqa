@@ -306,10 +306,10 @@ export default function Dashboard({
 
         {/* الاستمرارية والتتابع */}
         <div className={`${UI.card} p-3.5 md:p-4 flex flex-col justify-between min-w-0`}>
-          <div className="flex justify-between items-center text-xs font-bold mb-2 text-semantic-textSecondary gap-1">
-            <span className="truncate min-w-0">{t('dashboard.consistency', 'مؤشر الاستمرارية')}</span>
-            <div className="p-1.5 md:p-2 rounded-lg bg-semantic-surfaceInput border border-semantic-borderInput shrink-0">
-              <Flame className="text-semantic-actionPrimary" size={18} />
+          <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold mb-2 text-semantic-textSecondary gap-1">
+  <span className="truncate min-w-0 leading-tight">{t('dashboard.consistency', 'مؤشر الاستمرارية')}</span>
+  <div className="p-1.5 md:p-2 rounded-lg bg-semantic-surfaceInput border border-semantic-borderInput shrink-0">
+    <Flame className="text-semantic-actionPrimary" size={16} />
             </div>
           </div>
           <div className="text-2xl md:text-3xl font-black text-semantic-actionPrimary">
