@@ -8,7 +8,7 @@ import { UI } from '@/theme/styles';
 import { 
   GraduationCap, TrendingUp, BookOpen, Flame, Award, Trophy, BookmarkCheck, Zap, Radio,
   AlertTriangle, CheckCircle2, Hourglass, RefreshCw, Activity, Sparkles, ShieldCheck, Loader2, UserX,
-  Plus, ClipboardCheck, Clock, User, Landmark, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft 
+  Plus, Clock, User, Landmark, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft 
 } from 'lucide-react';
 
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
@@ -131,19 +131,21 @@ export default function Dashboard({
 
   const rawAcademyName = selectedAdminAcademy?.name || 
                          preloadedDashboardData?.academyName || 
-                         preloadedDashboardData?.name || "";
+                         preloadedDashboardData?.name || 
+                         session?.user?.user_metadata?.academy_name || "";
                          
-  const rawUserName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
+  const rawUserName = session?.user?.user_metadata?.full_name || 
+                      session?.user?.user_metadata?.name || '';
   
+  const academyName = useMemo(() => safeText(rawAcademyName), [rawAcademyName, safeText]);
+
   const displayName = useMemo(() => {
-    const parsedAcademyName = safeText(rawAcademyName);
-    if (parsedAcademyName) return parsedAcademyName;
     const parsedUserName = safeText(rawUserName);
     if (!parsedUserName || parsedUserName === 'Global Platform Admin' || parsedUserName.toLowerCase().includes('admin')) {
-      return t('dashboard.platformAdmin', 'إدارة المنصة');
+      return t('dashboard.platformAdmin', 'المشرف العام');
     }
     return parsedUserName;
-  }, [rawAcademyName, rawUserName, safeText, t]);
+  }, [rawUserName, safeText, t]);
 
   const fetchDashboardData = useCallback(async (showOverlay = true) => {
     if (showOverlay) setLoading(true);
@@ -256,78 +258,63 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 🟢 الترحيب وتحديث الشاشة */}
-      <header className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 w-full`}>
+      {/* 🟢 شريط الترحيب وتكامل البث الحي والتزامن اللحظي */}
+      <header className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 w-full`}>
         <div>
-          <h1 className={`${UI.title} text-sm sm:text-base md:text-xl flex items-center gap-2 m-0 flex-wrap`}>
-            <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
-            <span className="text-semantic-actionPrimary">{displayName}</span>
-            <Sparkles size={16} className="animate-pulse text-semantic-actionPrimary shrink-0" />
-          </h1>
-          <p className={`${UI.subtitle} text-[11px] sm:text-xs mt-0.5 m-0 leading-relaxed text-semantic-textMuted`}>
-            {t('dashboard.subtitle', 'منصة إدارة الحلقات الحية والرصد الأكاديمي الموحد')}
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className={`${UI.title} text-sm sm:text-base md:text-xl flex items-center gap-1.5 m-0`}>
+              <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
+              <span className="text-semantic-actionPrimary font-black">{displayName}</span>
+            </h1>
+            
+            {/* شارة اسم الأكاديمية لتحديد سياق العمل */}
+            {academyName && (
+              <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-semantic-surfaceInput border border-semantic-borderInput text-semantic-textSecondary font-bold">
+                {academyName}
+              </span>
+            )}
+          </div>
+
+          {/* نص موجه ودقيق حسب دور المستخدم */}
+          <p className={`${UI.subtitle} text-[11px] sm:text-xs mt-1 m-0 leading-relaxed text-semantic-textMuted`}>
+            {userRole === 'teacher' 
+              ? t('dashboard.subtitleTeacher', 'جاهز لبدء حلقات اليوم ورصد مستوى الطلاب؟')
+              : t('dashboard.subtitleAdmin', 'متابعة أداء الأكاديمية والأنشطة المباشرة اليوم.')}
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold self-start sm:self-center bg-semantic-successBg border border-semantic-successBorder text-semantic-success shrink-0">
-          <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
-          <span className="whitespace-nowrap">{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
-          {lastSyncTime && <span className="text-[10px] text-semantic-textMuted dir-ltr">({lastSyncTime})</span>}
+        {/* شارات الحالة المدمجة */}
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-center shrink-0">
+          {/* شارة البث الحي المدمجة */}
+          <button
+            type="button"
+            onClick={() => setActiveTab && setActiveTab('halaqas')}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary hover:bg-semantic-actionPrimary/20 transition-all cursor-pointer"
+          >
+            <Radio size={12} className="animate-pulse" />
+            <span>{t('dashboard.directMonitor', 'الرصد المباشر')}</span>
+          </button>
+
+          {/* شارة التزامن اللحظي */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-semantic-successBg border border-semantic-successBorder text-semantic-success">
+            <span className="w-2 h-2 rounded-full bg-semantic-success animate-pulse"></span>
+            <span className="whitespace-nowrap">{t('dashboard.liveSync', 'متزامن لحظياً')}</span>
+            {lastSyncTime && <span className="text-[10px] text-semantic-textMuted dir-ltr">({lastSyncTime})</span>}
+          </div>
         </div>
       </header>
 
-      {/* 🟢 شريط البث الحي (تم إلغاء الاقتطاع لعرض النص كاملاً) */}
-      <div className="p-2.5 rounded-xl bg-semantic-surfaceInput/80 backdrop-blur-sm border border-semantic-borderInput flex items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2 w-full">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="p-1 rounded-md bg-semantic-actionPrimary/10 text-semantic-actionPrimary shrink-0">
-            <Radio size={14} className="animate-pulse" />
-          </span>
-          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight whitespace-normal break-words">
-            {t('dashboard.liveFeed', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setActiveTab && setActiveTab('halaqas')}
-          className="text-[11px] text-semantic-actionPrimary font-bold underline shrink-0 cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0 whitespace-nowrap"
-        >
-          {t('dashboard.directMonitor', 'الرصد المباشر')}
-        </button>
-      </div>
-
-      {/* 🟢 شريط الأزرار الرئيسية */}
-      <section className="space-y-2 w-full">
+      {/* 🟢 زر الإجراء الرئيسي الموحد */}
+      <section className="w-full pt-1">
         <button 
           type="button"
           onClick={() => setActiveTab && setActiveTab('halaqas')} 
           aria-label={t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}
-          className={`${UI.btnPrimary} min-h-[42px] py-2 text-xs md:text-sm w-full flex items-center justify-center gap-2`}
+          className={`${UI.btnPrimary} min-h-[44px] py-2.5 text-xs md:text-sm w-full flex items-center justify-center gap-2 shadow-sm`}
         >
           <Plus size={18} className="shrink-0" />
           <span className="font-extrabold whitespace-nowrap">{t('dashboard.actions.startHalaqa', 'إطلاق حلقة تعليمية')}</span>
         </button>
-
-        <div className="grid grid-cols-2 gap-2 w-full">
-          <button 
-            type="button"
-            onClick={() => setActiveTab && setActiveTab('attendance')} 
-            aria-label={t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}
-            className={`${UI.btnSecondary} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
-          >
-            <ClipboardCheck size={15} className="text-semantic-success shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">{t('dashboard.actions.takeAttendance', 'تسجيل الحضور')}</span>
-          </button>
-
-          <button 
-            type="button"
-            onClick={() => setActiveTab && setActiveTab('students')} 
-            aria-label={t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}
-            className={`${UI.btnEmerald} min-h-[38px] py-1.5 text-xs px-2 flex items-center justify-center gap-1.5 w-full`}
-          >
-            <BookmarkCheck size={15} className="shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">{t('dashboard.actions.recordRecitation', 'تسجيل التسميع')}</span>
-          </button>
-        </div>
       </section>
 
       {/* 🟢 بطاقات الإحصائيات */}
