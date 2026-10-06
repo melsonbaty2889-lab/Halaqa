@@ -159,7 +159,7 @@ export default function Dashboard({
       setLastSyncTime(new Date().toLocaleTimeString(currentLang, { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error("Error loading dashboard data:", err);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   }, [userRole, academyId, currentLang, selectedAdminAcademy]);
@@ -276,13 +276,13 @@ export default function Dashboard({
         </div>
       </header>
 
-      {/* 🟢 شريط البث الحي */}
+      {/* 🟢 شريط البث الحي (تم إلغاء الاقتطاع لعرض النص كاملاً) */}
       <div className="p-2.5 rounded-xl bg-semantic-surfaceInput/80 backdrop-blur-sm border border-semantic-borderInput flex items-center justify-between text-xs font-semibold text-semantic-textSecondary gap-2 w-full">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="p-1 rounded-md bg-semantic-actionPrimary/10 text-semantic-actionPrimary shrink-0">
             <Radio size={14} className="animate-pulse" />
           </span>
-          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight truncate">
+          <span className="text-semantic-textPrimary text-[11px] sm:text-xs leading-tight whitespace-normal break-words">
             {t('dashboard.liveFeed', 'البث الحي: متابعة الحلقات والتسميع عبر الأكاديمية...')}
           </span>
         </div>
