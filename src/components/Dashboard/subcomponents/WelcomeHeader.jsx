@@ -6,7 +6,6 @@ import { ROLES, sanitizeRole } from '@/constants/roles';
 export const WelcomeHeader = ({ displayName, userRole, t }) => {
   const cleanRole = sanitizeRole(userRole);
 
-  // خريطة تهيئة البيانات المعتمدة على قيم ROLES الموحدة
   const roleConfig = {
     [ROLES.SUPER_ADMIN]: {
       subtitleKey: 'dashboard.subtitleSuperAdmin',
@@ -52,28 +51,29 @@ export const WelcomeHeader = ({ displayName, userRole, t }) => {
     },
   };
 
-  // شبكة الأمان: استخدام دور ADMIN كافتراضي إذا لم يتم التعرف على الدور
   const currentRole = roleConfig[cleanRole] || roleConfig[ROLES.ADMIN];
   const RoleIcon = currentRole.icon;
 
   return (
-    <header className={`${UI.card} p-4 sm:p-5 w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
-      <div className="flex flex-col gap-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className={`${UI.title} text-lg sm:text-xl flex items-center gap-1.5 m-0 font-bold leading-tight`}>
-            <span>{t('dashboard.welcome', 'أهلاً بك،')}</span>
-            <span className="text-semantic-actionPrimary font-black truncate max-w-[200px] sm:max-w-xs">
+    <header className={`${UI.card} p-3.5 sm:p-4 w-full flex flex-col justify-center gap-2`}>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* تم ضبط حجم الخط ليكون text-sm إلى text-base ليصبح متناسباً ومتوازناً */}
+          <h1 className={`${UI.title} text-sm sm:text-base flex items-center gap-1.5 m-0 font-bold leading-snug flex-wrap`}>
+            <span className="shrink-0 text-semantic-textSecondary">{t('dashboard.welcome', 'أهلاً بك،')}</span>
+            <span className="text-semantic-actionPrimary font-bold">
               {displayName}
             </span>
           </h1>
 
-          {/* شارة توضح دور المستخدم وفق الهوية */}
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20 shrink-0">
+          {/* شارة الدور متناسقة الأبعاد */}
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20 shrink-0">
             <RoleIcon size={12} />
-            {t(currentRole.badgeKey, currentRole.defaultBadge)}
+            <span>{t(currentRole.badgeKey, currentRole.defaultBadge)}</span>
           </span>
         </div>
 
+        {/* النص الوصفي */}
         <p className={`${UI.subtitle} text-xs m-0 leading-relaxed text-semantic-textSecondary`}>
           {t(currentRole.subtitleKey, currentRole.defaultSubtitle)}
         </p>
