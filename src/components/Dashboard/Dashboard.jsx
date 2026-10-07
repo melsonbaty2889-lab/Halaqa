@@ -210,7 +210,7 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* 1. كارت الترحيب */}
+      {/* 1. كارت الترحيب المحسن بدون حشو أو شارات مكررة */}
       <WelcomeHeader displayName={displayName} userRole={userRole} t={t} />
 
       {/* 2. زر الإجراء الرئيسي */}
