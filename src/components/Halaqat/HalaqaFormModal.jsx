@@ -1,7 +1,7 @@
 import React from 'react';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { UI } from '@/theme/styles';
+import { UI } from '@/components/UI/UI';
 
 export default function HalaqaFormModal({ 
   formData = {}, 
