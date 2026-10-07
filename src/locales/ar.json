@@ -663,6 +663,8 @@
   "halaqa": {
     "unassigned": "غير معين"
   },
+  "halaqaName": "اسم الحلقة",
+  "halaqaNamePlaceholder": "مثال: حلقة الإمام الشاطبي",
   "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
   "halaqaSub": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "halaqatSubTitle": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
@@ -852,10 +854,12 @@
     "update_error": "حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى",
     "user": "مستخدم"
   },
+  "saving": "جاري الحفظ...",
   "search_placeholder": "ابحث عن طالب بالاسم، الهاتف...",
   "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- اختر المعلم المعتمد --",
+  "selectTrack": "-- اختر المسار --",
   "settings": {
     "advancedRegional": "advancedRegional",
     "calendarType": "calendarType",

@@ -659,6 +659,8 @@
   "halaqa": {
     "unassigned": "Unassigned"
   },
+  "halaqaName": "اسم الحلقة",
+  "halaqaNamePlaceholder": "مثال: حلقة الإمام الشاطبي",
   "halaqasManager": "Quranic & Academic Halaqas Management Platform",
   "halaqaSub": "Manage educational sessions, distribute teachers, and track Quranic paths in the cloud",
   "halaqatSubTitle": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
@@ -848,10 +850,12 @@
     "update_error": "An error occurred while saving role, please try again",
     "user": "User"
   },
+  "saving": "جاري الحفظ...",
   "search_placeholder": "Search for a student by name, phone...",
   "searchPh": "Search by halaqa name or assigned teacher name...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- Select Certified Teacher --",
+  "selectTrack": "-- اختر المسار --",
   "settings": {
     "advancedRegional": "Advanced Regional Settings",
     "calendarType": "Calendar Type",
