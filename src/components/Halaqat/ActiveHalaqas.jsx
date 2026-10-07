@@ -15,7 +15,9 @@ export default function ActiveHalaqas({
   onToggleArchiveHalaqa,
   onCreateHalaqa
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  // حالات التحكم بالصفحة
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [viewMode, setViewMode] = useState('active'); // 'active' | 'archived'
@@ -23,9 +25,9 @@ export default function ActiveHalaqas({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // حالة النموذج بدون تكرار للغات (تعتمد على الكائن name بأسلوب المפתח-قيمة)
   const [formData, setFormData] = useState({
-    name_ar: '',
-    name_en: '',
+    name: {},
     teacher_id: '',
     educational_track: 'hifz',
     start_time: '16:00',
@@ -33,25 +35,31 @@ export default function ActiveHalaqas({
     timezone: 'UTC'
   });
 
-  // تصفية البيانات والبحث
+  // تصفية الجلسات وحساب المطابقة مع لغة النظام الحالية
   const filteredHalaqas = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
     return halaqas.filter(halaqa => {
       const isArchivedMatch = viewMode === 'archived' ? halaqa.is_archived : !halaqa.is_archived;
       const trackMatch = selectedTrack === 'all' || halaqa.educational_track === selectedTrack;
-      const nameMatch = (getLocalizedText(halaqa.name) || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        (getLocalizedText(halaqa.teacher_name || halaqa.teacher) || '').toLowerCase().includes(searchQuery.toLowerCase());
       
-      return isArchivedMatch && trackMatch && nameMatch;
-    });
-  }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
+      if (!isArchivedMatch || !trackMatch) return false;
+      if (!query) return true;
 
-  // إحصائيات سريعة للواجهة
+      const localizedName = (getLocalizedText ? getLocalizedText(halaqa.name) : (halaqa.name?.[i18n.language] || halaqa.name?.ar || '')).toLowerCase();
+      const localizedTeacher = (getLocalizedText ? getLocalizedText(halaqa.teacher_name || halaqa.teacher) : '').toLowerCase();
+
+      return localizedName.includes(query) || localizedTeacher.includes(query);
+    });
+  }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText, i18n.language]);
+
+  // المؤشرات التنفيذية والإحصائية
   const stats = useMemo(() => ({
     totalActive: halaqas.filter(h => !h.is_archived).length,
     totalArchived: halaqas.filter(h => h.is_archived).length,
     unassigned: halaqas.filter(h => !h.teacher_id && !h.is_archived).length
   }), [halaqas]);
 
+  // معالجة إضافة حلقة جديدة
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -59,8 +67,7 @@ export default function ActiveHalaqas({
       await onCreateHalaqa?.(formData);
       setShowFormModal(false);
       setFormData({
-        name_ar: '',
-        name_en: '',
+        name: {},
         teacher_id: '',
         educational_track: 'hifz',
         start_time: '16:00',
@@ -75,15 +82,15 @@ export default function ActiveHalaqas({
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 text-slate-100">
       
-      {/* 1. الترويسة الرئيسية والإجراءات */}
+      {/* 1. الترويسة التنفيذية والإجراءات */}
       <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2.5">
             <Layers className="text-amber-500" size={22} />
-            {t('halaqatTitle', 'منصة إدارة الحلقات القرآنية والأكاديمية')}
+            {t('halaqatTitle', 'إدارة الجلسات التعليمية')}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            {t('halaqatSubTitle', 'إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً')}
+            {t('halaqatSubTitle', 'متابعة الحلقات وتعيين الكادر التعليمي ومراقبة المسارات')}
           </p>
         </div>
 
@@ -100,7 +107,7 @@ export default function ActiveHalaqas({
             <Archive size={15} />
             {viewMode === 'active' 
               ? `${t('archive', 'الأرشيف')} (${stats.totalArchived})` 
-              : t('activeSessions', 'الحلقات النشطة')}
+              : t('activeSessions', 'الجلسات الجارية')}
           </button>
 
           <button
@@ -109,16 +116,16 @@ export default function ActiveHalaqas({
             className="px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-amber-700 text-slate-950 flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer border-none"
           >
             <Plus size={16} />
-            {t('createHalaqa', 'إنشاء حلقة جديدة')}
+            {t('createHalaqa', 'إضافة حلقة')}
           </button>
         </div>
       </div>
 
-      {/* 2. شريط المؤشرات والإحصائيات */}
+      {/* 2. مؤشرات الأداء الحية */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex items-center justify-between">
           <div>
-            <div className="text-[11px] text-slate-400">{t('statActive', 'الحلقات النشطة')}</div>
+            <div className="text-[11px] text-slate-400">{t('statActive', 'الحلقات القائمة')}</div>
             <div className="text-base font-black text-emerald-400">{stats.totalActive}</div>
           </div>
           <CheckCircle2 size={18} className="text-emerald-500/50" />
@@ -126,7 +133,7 @@ export default function ActiveHalaqas({
 
         <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex items-center justify-between">
           <div>
-            <div className="text-[11px] text-slate-400">{t('statUnassigned', 'بانتظار معلم')}</div>
+            <div className="text-[11px] text-slate-400">{t('statUnassigned', 'غير معينة')}</div>
             <div className="text-base font-black text-amber-400">{stats.unassigned}</div>
           </div>
           <Users size={18} className="text-amber-500/50" />
@@ -141,7 +148,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 3. نموذج إضافة حلقة */}
+      {/* 3. نافذة إنشاء حلقة جديدة */}
       {showFormModal && (
         <HalaqaFormModal
           formData={formData}
@@ -153,13 +160,13 @@ export default function ActiveHalaqas({
         />
       )}
 
-      {/* 4. البحث والفلترة ومطابقة طريقة العرض */}
+      {/* 4. أدوات الفلترة والتحكم بالعرض */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/40 p-3 rounded-2xl border border-white/5">
         <div className="relative w-full sm:w-80">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
             type="text"
-            placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو اسم المعلم...')}
+            placeholder={t('searchPlaceholder', 'البحث بالحلقة أو المعلم...')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full pr-9 pl-3 py-2 text-xs rounded-xl bg-slate-800/90 border border-white/10 text-white outline-none focus:border-amber-500 transition-colors"
@@ -172,10 +179,10 @@ export default function ActiveHalaqas({
             onChange={e => setSelectedTrack(e.target.value)}
             className="p-2 text-xs rounded-xl bg-slate-800/90 border border-white/10 text-white outline-none focus:border-amber-500"
           >
-            <option value="all">{t('allTracks', 'جميع المسارات التعليمية')}</option>
-            <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
-            <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
-            <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
+            <option value="all">{t('allTracks', 'كافة المسارات')}</option>
+            <option value="hifz">{t('trackHifz', 'الحفظ المكثف')}</option>
+            <option value="tilawah">{t('trackTilawah', 'التلاوة والتصحيح')}</option>
+            <option value="ijazah">{t('trackIjazah', 'الإجازات والسند')}</option>
           </select>
 
           <div className="flex items-center bg-slate-800 rounded-xl p-1 border border-white/10">
@@ -197,7 +204,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 5. عرض قائمة الحلقات */}
+      {/* 5. عرض الحلقات */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
@@ -219,7 +226,7 @@ export default function ActiveHalaqas({
         <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-dashed border-white/10">
           <Clock className="mx-auto text-slate-600 mb-2" size={30} />
           <p className="text-xs text-slate-400 font-semibold">
-            {t('noHalaqatFound', 'لا توجد حلقات مطابقة لخيارات البحث أو الفلترة الحالية')}
+            {t('noHalaqatFound', 'لا توجد نتائج مطابقة')}
           </p>
         </div>
       )}
