@@ -1,3 +1,10 @@
+// src/lib/dashboardService.js
+
+/**
+ * جلب إحصائيات لوحة التحكم بناءً على صلاحيات المستخدم والأكاديمية
+ * @param {Object} supabase - عميل Supabase
+ * @param {Object} profile - ملف شخصي يحوي role و academy_id
+ */
 export async function getDashboardStats(supabase, profile) {
   try {
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Africa/Cairo' });
@@ -124,9 +131,15 @@ export async function getDashboardStats(supabase, profile) {
         });
 
         const formatTimeDisplay = (timeStr) => {
-          if (!timeStr) return { ar: '', en: '' };
-          const [hourStr, minuteStr] = timeStr.split(':');
+          if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
+            return { ar: '', en: '' };
+          }
+          const parts = timeStr.split(':');
+          const hourStr = parts[0];
+          const minuteStr = parts[1] || '00';
           let hour = parseInt(hourStr, 10);
+          if (isNaN(hour)) return { ar: '', en: '' };
+
           const ampmAr = hour >= 12 ? 'م' : 'ص';
           const ampmEn = hour >= 12 ? 'PM' : 'AM';
           hour = hour % 12 || 12;
