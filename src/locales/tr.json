@@ -293,6 +293,7 @@
     "continue_next_step": "متابعة إلى الخطوة التالية",
     "currentTime": "الوقت الحالي",
     "date": "التاريخ",
+    "days": "يوم",
     "dayUnit": "يوم",
     "defaultHalaqaName": "حلقة قرآنية",
     "delete": "حذف",
@@ -342,6 +343,7 @@
     "searchPlaceholder": "بحث في الملفات...",
     "select": "اختر...",
     "send": "إرسال",
+    "sessions": "جلسة",
     "sessionUnit": "جلسة",
     "student": "طالب",
     "teacher": "المعلم",
@@ -448,8 +450,10 @@
       "continuousStreak": "🔥 التتابع المستمر",
       "dailyRecitation": "التسميع اليومي",
       "financialAlerts": "التنبيهات المالية",
+      "overduePayments": "اشتراكات متاخرة تنظر السداد",
       "participationRate": "📈 معدل المشاركة",
       "requestsNotes": "⚠ طلبات وملاحظات",
+      "stabilityRate": "معدل الثبات",
       "streakRate": "معدل الثبات"
     },
     "status": {
