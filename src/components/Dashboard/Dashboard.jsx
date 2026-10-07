@@ -398,98 +398,78 @@ export default function Dashboard({
   )}
 </section>
       
-      {/* 🚀 قسم الأبطال والطلاب */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
-        {/* أبطال اليوم */}
-        <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
-          <div>
-            <div className="flex justify-between items-center mb-2.5">
-              <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
-                <Trophy className="text-semantic-actionPrimary shrink-0" size={16} />
-                <span>{t('dashboard.sections.heroesToday', 'أبطال اليوم')}</span>
-              </h2>
-              <button 
-                type="button"
-                onClick={() => setActiveTab && setActiveTab('students')}
-                className="text-xs font-bold text-semantic-actionPrimary hover:underline bg-transparent border-0 cursor-pointer p-0"
-              >
-                {t('common.viewAll', 'عرض الكل')}
-              </button>
-            </div>
+      {/* 🏆 قسم أبطال اليوم */}
+<section className={`${UI.card} p-4 w-full`}>
+  {/* الهيدر والعنوان */}
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <div className="p-1.5 rounded-lg bg-semantic-warning/10 text-semantic-warning">
+        <Trophy size={18} />
+      </div>
+      <h3 className={`${UI.title} text-sm sm:text-base font-bold m-0`}>
+        {t('dashboard.topPerformers.title', 'أبطال اليوم')}
+      </h3>
+    </div>
 
-            {stats?.topPerformers && stats.topPerformers.length > 0 ? (
-              <div className="space-y-1.5">
-                {stats.topPerformers.map((student, idx) => (
-                  <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-5 h-5 rounded-full bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 text-semantic-actionPrimary font-black text-[10px] flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </span>
-                      <span className="text-xs font-bold text-semantic-textPrimary break-words">
-                        {safeText(student.name, t('common.student', 'طالب'))}
-                      </span>
-                    </div>
-                    <span className="text-[10px] sm:text-xs font-black text-semantic-success bg-semantic-successBg px-2 py-0.5 rounded border border-semantic-successBorder/50 shrink-0 flex items-center gap-1">
-                      <Zap size={11} />
-                      <span>{student.sessionsCount} {t('common.recitationCount', 'تسميع')}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 px-2">
-                <p className="text-semantic-textMuted text-xs font-semibold m-0 leading-relaxed">
-                  {t('dashboard.emptyPerformers', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
-                </p>
-              </div>
-            )}
+    {/* إظهار زر "عرض الكل" فقط في حال وجود بيانات لتجنب النقر الفارغ */}
+    {stats.topPerformers && stats.topPerformers.length > 0 && (
+      <button
+        type="button"
+        onClick={() => setActiveTab && setActiveTab('students')}
+        className="text-xs text-semantic-actionPrimary font-bold hover:underline cursor-pointer bg-transparent border-0 p-0"
+      >
+        {t('common.viewAll', 'عرض الكل')}
+      </button>
+    )}
+  </div>
+
+  {/* محتوى القائمة أو الحالة الفارغة */}
+  {stats.topPerformers && stats.topPerformers.length > 0 ? (
+    <div className="flex flex-col gap-2">
+      {stats.topPerformers.map((student, index) => (
+        <div 
+          key={student.id || index}
+          className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput"
+        >
+          <div className="flex items-center gap-2.5">
+            {/* وسام الترتيب (1, 2, 3...) */}
+            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+              index === 0 
+                ? 'bg-semantic-warning/20 text-semantic-warning border border-semantic-warning/40' 
+                : index === 1 
+                ? 'bg-slate-300/20 text-slate-300 border border-slate-400/40'
+                : 'bg-amber-700/20 text-amber-600 border border-amber-700/40'
+            }`}>
+              {index + 1}
+            </span>
+            
+            <span className="text-xs sm:text-sm font-bold text-semantic-textPrimary">
+              {student.name || t('common.unnamedStudent', 'طالب بدون اسم')}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-black text-semantic-actionPrimary dir-ltr">
+              {student.sessionsCount || 0}
+            </span>
+            <span className="text-[10px] text-semantic-textMuted font-semibold">
+              {t('common.sessions', 'جلسة')}
+            </span>
           </div>
         </div>
-
-        {/* طلاب يحتاجون متابعة */}
-        <div className={`${UI.card} p-3 w-full flex flex-col justify-between`}>
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-2.5">
-              <h2 className="text-xs md:text-sm font-extrabold flex items-center gap-1.5 m-0 text-semantic-textPrimary">
-                <UserX className="text-semantic-danger shrink-0" size={16} />
-                <span>{t('dashboard.sections.atRiskStudents', 'طلاب يتطلبون متابعة')}</span>
-              </h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger font-bold shrink-0">
-                {stats?.atRiskStudents?.length || 0} {t('dashboard.needsFollowup', 'يحتاج متابعة')}
-              </span>
-            </div>
-
-            {stats?.atRiskStudents && stats.atRiskStudents.length > 0 ? (
-              <div className="space-y-1.5">
-                {stats.atRiskStudents.map((student, idx) => (
-                  <div key={student.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-semantic-surfaceInput/70 border border-semantic-borderInput gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-2 h-2 rounded-full bg-semantic-danger shrink-0 animate-ping"></span>
-                      <span className="text-xs font-bold text-semantic-textPrimary break-words">
-                        {safeText(student.name, t('common.student', 'طالب'))}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab && setActiveTab('students')}
-                      aria-label={t('common.contact', 'تواصل')}
-                      className="text-xs font-bold text-semantic-danger bg-semantic-dangerBg/50 border border-semantic-danger/30 hover:bg-semantic-danger/20 px-2 py-1 rounded transition-all cursor-pointer flex items-center gap-1 shrink-0"
-                    >
-                      <span>{t('common.contact', 'تواصل')}</span>
-                      {isRtl ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-5 text-semantic-success text-xs font-semibold flex items-center justify-center gap-1.5">
-                <CheckCircle2 size={15} />
-                <span>{t('dashboard.allStudentsOnTrack', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      ))}
+    </div>
+  ) : (
+    /* الحالة الفارغة المبسطة */
+    <div className="py-6 text-center text-semantic-textMuted flex flex-col items-center justify-center gap-2">
+      <Award size={28} className="opacity-40 stroke-1" />
+      <p className="text-xs m-0 font-medium">
+        {t('dashboard.topPerformers.empty', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
+      </p>
+    </div>
+  )}
+</section>
+      
 
       {/* 🟢 الحلقات النشطة */}
       {stats?.activeHalaqasData && stats.activeHalaqasData.length > 0 ? (
