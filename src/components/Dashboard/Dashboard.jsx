@@ -269,14 +269,14 @@ export default function Dashboard({
         </button>
       </section>
 
-      {/* 🟢 3. قسم الإحصائيات السريعة */}
+      {/* 🟢 3. قسم الإحصائيات السريعة - ديناميكي من قاعدة البيانات */}
       <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
         
-        {/* أ) قوة الأكاديمية */}
+        {/* أ) إجمالي الطلاب */}
         <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-semantic-textSecondary">
-              {t('dashboard.stats.academyStrength', 'قوة الأكاديمية')}
+              {t('dashboard.stats.totalStudents', 'إجمالي الطلاب')}
             </span>
             <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-actionPrimary">
               <GraduationCap size={16} />
@@ -284,20 +284,20 @@ export default function Dashboard({
           </div>
           <div className="mt-2">
             <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
-              {stats.studentsCount || 0}
+              {stats.studentsCount ?? 0}
             </div>
             <span className="text-[10px] text-semantic-success flex items-center gap-1 font-semibold mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-semantic-success animate-pulse" />
-              {t('dashboard.stats.activeStudents', 'طلاب نشطون')}
+              {t('dashboard.stats.activeStatus', 'نشط حالياً')}
             </span>
           </div>
         </div>
 
-        {/* ب) معدل الثبات */}
+        {/* ب) متوسط الاستمرار */}
         <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-semantic-textSecondary">
-              {t('dashboard.stats.stabilityRate', 'معدل الثبات')}
+              {t('dashboard.stats.avgStreak', 'متوسط الاستمرار')}
             </span>
             <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-warning">
               <Flame size={16} />
@@ -305,19 +305,19 @@ export default function Dashboard({
           </div>
           <div className="mt-2">
             <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
-              {stats.avgStreak || 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.days', 'يوم')}</span>
+              {stats.avgStreak ?? 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.days', 'يوم')}</span>
             </div>
             <span className="text-[10px] text-semantic-warning flex items-center gap-1 font-semibold mt-0.5">
-              {t('dashboard.stats.continuousStreak', 'التتابع المستمر')}
+              {t('dashboard.stats.consecutiveDays', 'أيام متتالية بدون انقطاع')}
             </span>
           </div>
         </div>
 
-        {/* ج) نسبة الحضور */}
+        {/* ج) حضور اليوم */}
         <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-semantic-textSecondary">
-              {t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
+              {t('dashboard.stats.todayAttendance', 'حضور اليوم')}
             </span>
             <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-info">
               <TrendingUp size={16} />
@@ -325,19 +325,19 @@ export default function Dashboard({
           </div>
           <div className="mt-2">
             <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
-              {stats.attendanceRate || '0%'}
+              {stats.attendanceRate ?? '0%'}
             </div>
             <span className="text-[10px] text-semantic-info flex items-center gap-1 font-semibold mt-0.5">
-              {t('dashboard.stats.participationRate', 'معدل المشاركة')}
+              {t('dashboard.stats.ofTotal', 'من إجمالي الطلاب')}
             </span>
           </div>
         </div>
 
-        {/* د) التسميع اليومي */}
+        {/* د) جلسات اليوم */}
         <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-semantic-textSecondary">
-              {t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
+              {t('dashboard.stats.todaySessions', 'جلسات اليوم')}
             </span>
             <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-actionPrimary">
               <BookOpen size={16} />
@@ -345,15 +345,15 @@ export default function Dashboard({
           </div>
           <div className="mt-2">
             <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
-              {stats.totalSessions || 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.sessions', 'جلسة')}</span>
+              {stats.totalSessions ?? 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.sessions', 'جلسة')}</span>
             </div>
             <span className="text-[10px] text-semantic-success flex items-center gap-1 font-semibold mt-0.5">
-              {t('dashboard.stats.completedToday', 'المكتملة اليوم')}
+              {t('dashboard.stats.completedSessions', 'تم تسميعها بنجاح')}
             </span>
           </div>
         </div>
 
-        {/* هـ) التنبيهات المالية */}
+        {/* هـ) الاشتراكات المتأخرة */}
         {userRole !== 'teacher' && (
           <div className={`${UI.card} p-3.5 flex items-center justify-between col-span-2 lg:col-span-4 min-h-[64px]`}>
             <div className="flex items-center gap-3">
@@ -362,26 +362,26 @@ export default function Dashboard({
               </div>
               <div>
                 <span className="text-xs font-bold text-semantic-textSecondary block">
-                  {t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
+                  {t('dashboard.stats.overduePaymentsTitle', 'اشتراكات متأخرة')}
                 </span>
                 <span className="text-[11px] text-semantic-textMuted">
                   {stats.overdueCount > 0 
-                    ? `${stats.overdueCount} ${t('dashboard.stats.overduePayments', 'اشتراكات متاخرة تنتظر السداد')}`
-                    : t('dashboard.stats.allPaid', 'التزام مالي مكتمل ولا توجد متأخرات')}
+                    ? `${stats.overdueCount} ${t('dashboard.stats.pendingPayments', 'طالب يحتاج تجديد الاشتراك')}`
+                    : t('dashboard.stats.noOverdue', 'جميع الاشتراكات مسددة')}
                 </span>
               </div>
             </div>
             <div className="text-lg sm:text-xl font-black text-semantic-textPrimary dir-ltr">
-              {stats.overdueCount || 0}
+              {stats.overdueCount ?? 0}
             </div>
           </div>
         )}
       </section>
       
-      {/* 🟢 4. أبطال اليوم & الطلاب المحتاجون للمتابعة */}
+      {/* 🟢 4. الأكثر تسميعاً والطلاب الغائبون */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
         
-        {/* أ) أبطال اليوم */}
+        {/* أ) الأكثر تسميعاً اليوم */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
           <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5">
             <div className="flex items-center gap-2">
@@ -389,7 +389,7 @@ export default function Dashboard({
                 <Trophy size={18} />
               </div>
               <h3 className={`${UI.title} text-xs sm:text-sm font-bold m-0 whitespace-nowrap`}>
-                {t('dashboard.topPerformers.title', 'أبطال اليوم')}
+                {t('dashboard.topPerformers.title', 'الأكثر تسميعاً اليوم')}
               </h3>
             </div>
 
@@ -423,13 +423,13 @@ export default function Dashboard({
                     </span>
                     
                     <span className="font-bold text-semantic-textPrimary truncate">
-                      {student.name || t('common.unnamedStudent', 'طالب بدون اسم')}
+                      {student.name}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
                     <span className="font-black text-semantic-actionPrimary dir-ltr">
-                      {student.sessionsCount || 0}
+                      {student.sessionsCount ?? 0}
                     </span>
                     <span className="text-[10px] text-semantic-textMuted font-semibold">
                       {t('common.sessions', 'جلسة')}
@@ -450,7 +450,7 @@ export default function Dashboard({
           )}
         </div>
 
-        {/* ب) طلاب يتطلبون متابعة */}
+        {/* ب) طلاب غائبون (يحتاجون متابعة) */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
           <div className="flex flex-wrap items-center justify-between border-b border-semantic-borderInput pb-2.5 gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -458,7 +458,7 @@ export default function Dashboard({
                 <UserX size={18} />
               </div>
               <h3 className={`${UI.title} text-xs sm:text-sm font-bold m-0 whitespace-nowrap`}>
-                {t('dashboard.atRiskStudents.title', 'طلاب يتطلبون متابعة')}
+                {t('dashboard.atRiskStudents.title', 'طلاب غائبون (يحتاجون متابعة)')}
               </h3>
             </div>
 
@@ -483,7 +483,7 @@ export default function Dashboard({
                       {student.name}
                     </span>
                     <span className="text-[10px] text-semantic-danger font-medium truncate">
-                      {student.reason || t('dashboard.atRiskStudents.absentWarning', 'غائب منذ عدة أيام')}
+                      {student.reason}
                     </span>
                   </div>
 
