@@ -376,7 +376,7 @@ export default function Dashboard({
       {/* 🟢 4. الأكثر تسميعاً والطلاب الغائبون */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
         
-        {/* أ) أبطال اليوم (الأكثر تسميعاً) - المطور والتفاعلي */}
+        {/* أ) أبطال اليوم (الأكثر تسميعاً) */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
           
           {/* رأس البطاقة */}
@@ -401,7 +401,7 @@ export default function Dashboard({
             )}
           </div>
 
-          {/* القائمة أو حالة الفراغ المحفزة */}
+          {/* القائمة أو حالة الفراغ المحفزة والمحدثة */}
           {stats.topPerformers && stats.topPerformers.length > 0 ? (
             <div className="flex flex-col gap-2">
               {stats.topPerformers.map((student, index) => (
@@ -440,17 +440,17 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            /* حالة الفراغ التفاعلية والمحفزة (Active Empty State) */
+            /* حالة الفراغ المحدثة بصرياً وتفاعلياً */
             <div className="py-6 px-4 text-center flex flex-col items-center justify-center gap-3 bg-semantic-surfaceInput/40 rounded-xl border border-dashed border-semantic-borderInput">
-              <div className="p-3.5 rounded-full bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20 animate-bounce">
+              <div className="p-3.5 rounded-full bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20">
                 <Trophy size={26} />
               </div>
               
               <div className="space-y-1">
-                <p className="text-xs font-bold text-semantic-textPrimary m-0">
+                <p className="text-xs sm:text-sm font-bold text-semantic-textPrimary m-0">
                   {t('dashboard.topPerformers.emptyTitle', 'قائمة الأبطال بانتظار الأول!')}
                 </p>
-                <p className="text-[11px] text-semantic-textMuted m-0 max-w-xs leading-relaxed">
+                <p className="text-[11px] sm:text-xs text-semantic-textSecondary m-0 max-w-xs leading-relaxed">
                   {t('dashboard.topPerformers.emptySubtitle', 'لم تُسجل جلسات اليوم بعد. ابدأ التسميع الآن لتصدر القائمة.')}
                 </p>
               </div>
@@ -458,10 +458,10 @@ export default function Dashboard({
               <button
                 type="button"
                 onClick={() => setActiveTab && setActiveTab('halaqas')}
-                className={`${UI.btnPrimary} text-xs py-2 px-4 min-h-[36px] w-auto mt-1 flex items-center gap-1.5 shadow-sm`}
+                className={`${UI.btnPrimary} text-xs py-2 px-4 min-h-[36px] w-auto mt-1 flex items-center gap-1.5 shadow-sm font-bold`}
               >
                 <Plus size={14} />
-                <span>{t('dashboard.actions.startHalaqa', 'بدء حلقة جديدة')}</span>
+                <span>{t('dashboard.actions.startRecitation', 'بدء التسميع الآن')}</span>
               </button>
             </div>
           )}
