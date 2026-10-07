@@ -306,6 +306,7 @@
     "edit": "تعديل",
     "enabled": "مفعل",
     "female": "أنثى",
+    "followUp": "متابعة",
     "graduated": "متخرج",
     "halaqaUnit": "حلقة",
     "inactive": "غير نشط",
@@ -394,6 +395,12 @@
     "all_students_active": "جميع الطلاب مستمرون بنجاح هذا اليوم!",
     "allStudentsOnTrack": "جميع الطلاب مستمرون بنجاح هذا اليوم!",
     "at_risk_title": "رادار المتابعة والاستمرارية",
+    "atRiskStudents": {
+      "absentWarning": "غائب منذ عدة أيام",
+      "allGood": "جميع الطلاب مستمرون بنجاح هذا اليوم!",
+      "needsFollowUp": "يحتاج متابعة",
+      "title": "طلاب يتطلبون متابعة"
+    },
     "attendance_rate": "نسبة الحضور",
     "back_to_super_admin": "الرجوع للوحة التحكم الرئيسية",
     "completed_today": "المكتملة اليوم",
