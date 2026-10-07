@@ -11,7 +11,19 @@ import {
   Plus, Clock, User, Landmark, ArrowRight, ArrowLeft
 } from 'lucide-react';
 
-const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
+// 🟢 استيراد أمن مع معالجة فشل التحميل الديناميكي وإعادة التنشيط تلقائياً
+const AdminDashboard = lazy(() =>
+  import('@/components/SuperAdmin/AdminDashboard').catch((error) => {
+    console.error('Failed to load dynamic module:', error);
+    // التحقق مما إذا كنا قمنا بتنشيط الصفحة مسبقاً لمنع Infinite Loop
+    const hasReloaded = sessionStorage.getItem('retry-lazy-refreshed');
+    if (!hasReloaded) {
+      sessionStorage.setItem('retry-lazy-refreshed', 'true');
+      window.location.reload();
+    }
+    throw error;
+  })
+);
 
 // 🟢 مكون شارة حالة الحلقة
 const HalaqaStatusBadge = ({ isLive, isFinished, t }) => {
