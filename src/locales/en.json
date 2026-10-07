@@ -33,6 +33,7 @@
   },
   "activate": "Activate",
   "activeSession": "Active Session",
+  "activeSessions": "الحلقات النشطة",
   "add_new_student": "Add New Student",
   "addHalaqa": "Create New Halaqa",
   "admin": {
@@ -78,6 +79,7 @@
     "whatsapp": "Share via WhatsApp",
     "whatsappShareMessage": "I invite you to try the system and get a special discount via the following link:"
   },
+  "allTracks": "جميع المسارات التعليمية",
   "app": {
     "title": "Smart Halaqa"
   },
@@ -373,6 +375,7 @@
     "typeWordToConfirm": "Type word",
     "warningTitle": "Confirm Action"
   },
+  "createHalaqa": "إنشاء حلقة جديدة",
   "currency": {
     "egp": "",
     "sar": "",
@@ -658,6 +661,8 @@
   },
   "halaqasManager": "Quranic & Academic Halaqas Management Platform",
   "halaqaSub": "Manage educational sessions, distribute teachers, and track Quranic paths in the cloud",
+  "halaqatSubTitle": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
+  "halaqatTitle": "منصة إدارة الحلقات القرآنية والأكاديمية",
   "header": {
     "defaultUser": "Personal Account",
     "editProfile": "Profile",
@@ -716,6 +721,7 @@
   "nameEn": "Halaqa Name (English)",
   "no_search_results": "No results matching your search.",
   "noData": "No educational sessions recorded matching your search currently",
+  "noHalaqatFound": "لا توجد حلقات مطابقة لخيارات البحث أو الفلترة الحالية",
   "notifications": {
     "all": "All",
     "clearAll": "Clear All",
@@ -844,6 +850,7 @@
   },
   "search_placeholder": "Search for a student by name, phone...",
   "searchPh": "Search by halaqa name or assigned teacher name...",
+  "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- Select Certified Teacher --",
   "settings": {
     "advancedRegional": "Advanced Regional Settings",
@@ -887,6 +894,9 @@
     "title": "Smart Halaqa"
   },
   "startTime": "Start Time",
+  "statActive": "الحلقات النشطة",
+  "statArchived": "المؤرشفة",
+  "statUnassigned": "بانتظار معلم",
   "status": {
     "active": "Active Subscription",
     "expired": "Expired",
