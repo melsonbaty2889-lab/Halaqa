@@ -6,7 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
-import { UI } from '../theme/styles';
+import { UI } from '@/components/UI/UI';
 
 export default function ActiveHalaqas({
   halaqas = [],
