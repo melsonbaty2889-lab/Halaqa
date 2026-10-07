@@ -24,7 +24,7 @@ export const WelcomeHeader = ({ displayName, userRole, t }) => {
     },
     [ROLES.STUDENT]: {
       subtitleKey: 'dashboard.subtitleStudent',
-      defaultSubtitle: 'مرحباً بك! جاهز لمتابعة وردك اليومي ورحلة حفظك؟',
+      defaultSubtitle: 'جاهز لمتابعة وردك اليومي ورحلة حفظك؟',
     },
     [ROLES.PARENT]: {
       subtitleKey: 'dashboard.subtitleParent',
@@ -35,23 +35,21 @@ export const WelcomeHeader = ({ displayName, userRole, t }) => {
   const currentRole = roleConfig[cleanRole] || roleConfig[ROLES.ADMIN];
 
   return (
-    <header className={`${UI.card} p-3.5 sm:p-4 w-full flex flex-col justify-center gap-1.5`}>
-      <div className="flex flex-col gap-1 min-w-0">
-        {/* الترحيب والاسم في سطر أفقي انسيابي متناسق */}
-        <h1 className={`${UI.title} text-sm sm:text-base flex items-center gap-1.5 m-0 font-bold leading-snug flex-wrap`}>
-          <span className="text-semantic-textSecondary shrink-0">
-            {t('dashboard.welcome', 'أهلاً بك،')}
-          </span>
-          <span className="text-semantic-actionPrimary font-bold break-words">
-            {displayName}
-          </span>
-        </h1>
+    <header className={`${UI.card} p-3 sm:p-4 w-full flex flex-col justify-center gap-1 min-w-0`}>
+      {/* الترحيب والاسم مجتمعان في سطر واحد بدون UI.title */}
+      <h1 className="text-sm sm:text-base font-bold m-0 p-0 leading-tight inline-flex items-center gap-1.5 flex-wrap min-w-0">
+        <span className="text-semantic-textSecondary shrink-0">
+          {t('dashboard.welcome', 'أهلاً بك،')}
+        </span>
+        <span className="text-semantic-actionPrimary font-extrabold truncate max-w-full">
+          {displayName}
+        </span>
+      </h1>
 
-        {/* الجملة تحت الاسم بتباين واضح وحجم متناسق */}
-        <p className={`${UI.subtitle} text-xs m-0 leading-relaxed text-semantic-textSecondary opacity-90`}>
-          {t(currentRole.subtitleKey, currentRole.defaultSubtitle)}
-        </p>
-      </div>
+      {/* النص الوصفي تحت الاسم مباشرة */}
+      <p className="text-xs m-0 leading-relaxed text-semantic-textSecondary opacity-80 font-normal">
+        {t(currentRole.subtitleKey, currentRole.defaultSubtitle)}
+      </p>
     </header>
   );
 };
