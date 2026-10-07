@@ -6,6 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
+import { UI } from '../theme/styles';
 
 export default function ActiveHalaqas({
   halaqas = [],
@@ -25,7 +26,7 @@ export default function ActiveHalaqas({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // حالة النموذج بدون تكرار للغات (تعتمد على الكائن name بأسلوب المפתח-قيمة)
+  // حالة النموذج مع دعم كائن اسم موحد حسب اللغة
   const [formData, setFormData] = useState({
     name: {},
     teacher_id: '',
@@ -35,7 +36,7 @@ export default function ActiveHalaqas({
     timezone: 'UTC'
   });
 
-  // تصفية الجلسات وحساب المطابقة مع لغة النظام الحالية
+  // تصفية الحلقات مع مراعاة اللغة النشطة
   const filteredHalaqas = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     return halaqas.filter(halaqa => {
@@ -52,14 +53,14 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText, i18n.language]);
 
-  // المؤشرات التنفيذية والإحصائية
+  // إحصائيات سريعة للواجهة
   const stats = useMemo(() => ({
     totalActive: halaqas.filter(h => !h.is_archived).length,
     totalArchived: halaqas.filter(h => h.is_archived).length,
     unassigned: halaqas.filter(h => !h.teacher_id && !h.is_archived).length
   }), [halaqas]);
 
-  // معالجة إضافة حلقة جديدة
+  // حفظ وإرسال البيانات
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -80,16 +81,16 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 text-slate-100">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 text-semantic-textPrimary">
       
-      {/* 1. الترويسة التنفيذية والإجراءات */}
-      <div className="bg-slate-900/90 p-5 rounded-2xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. الترويسة الرئيسية والإجراءات */}
+      <div className={`${UI.card} flex flex-col md:flex-row md:items-center justify-between gap-4 p-5`}>
         <div>
-          <h1 className="text-lg md:text-xl font-extrabold text-white flex items-center gap-2.5">
-            <Layers className="text-amber-500" size={22} />
-            {t('halaqatTitle', 'إدارة الجلسات التعليمية')}
+          <h1 className={`${UI.title} flex items-center gap-2.5`}>
+            <Layers className="text-semantic-actionPrimary" size={22} />
+            {t('halaqatTitle', 'إدارة الحلقات')}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className={`${UI.subtitle} mt-1`}>
             {t('halaqatSubTitle', 'متابعة الحلقات وتعيين الكادر التعليمي ومراقبة المسارات')}
           </p>
         </div>
@@ -98,22 +99,22 @@ export default function ActiveHalaqas({
           <button
             type="button"
             onClick={() => setViewMode(prev => prev === 'active' ? 'archived' : 'active')}
-            className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer border ${
               viewMode === 'archived'
-                ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                : 'bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700'
+                ? 'bg-semantic-actionPrimary/20 text-semantic-actionPrimary border-semantic-actionPrimary/40'
+                : 'bg-semantic-surfaceInput border-semantic-borderCard text-semantic-textSecondary hover:border-semantic-borderHover'
             }`}
           >
             <Archive size={15} />
             {viewMode === 'active' 
               ? `${t('archive', 'الأرشيف')} (${stats.totalArchived})` 
-              : t('activeSessions', 'الجلسات الجارية')}
+              : t('activeSessions', 'الحلقات النشطة')}
           </button>
 
           <button
             type="button"
             onClick={() => setShowFormModal(prev => !prev)}
-            className="px-4 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-amber-700 text-slate-950 flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer border-none"
+            className={`${UI.btnPrimary} w-auto px-4 py-2.5 text-xs font-extrabold`}
           >
             <Plus size={16} />
             {t('createHalaqa', 'إضافة حلقة')}
@@ -121,34 +122,34 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 2. مؤشرات الأداء الحية */}
+      {/* 2. شريط المؤشرات والإحصائيات */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
           <div>
-            <div className="text-[11px] text-slate-400">{t('statActive', 'الحلقات القائمة')}</div>
-            <div className="text-base font-black text-emerald-400">{stats.totalActive}</div>
+            <div className="text-[11px] text-semantic-textMuted">{t('statActive', 'الحلقات القائمة')}</div>
+            <div className="text-base font-extrabold text-semantic-success">{stats.totalActive}</div>
           </div>
-          <CheckCircle2 size={18} className="text-emerald-500/50" />
+          <CheckCircle2 size={18} className="text-semantic-success/60" />
         </div>
 
-        <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
           <div>
-            <div className="text-[11px] text-slate-400">{t('statUnassigned', 'غير معينة')}</div>
-            <div className="text-base font-black text-amber-400">{stats.unassigned}</div>
+            <div className="text-[11px] text-semantic-textMuted">{t('statUnassigned', 'غير معينة')}</div>
+            <div className="text-base font-extrabold text-semantic-actionPrimary">{stats.unassigned}</div>
           </div>
-          <Users size={18} className="text-amber-500/50" />
+          <Users size={18} className="text-semantic-actionPrimary/60" />
         </div>
 
-        <div className="p-3 bg-slate-900/60 border border-white/10 rounded-xl flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
           <div>
-            <div className="text-[11px] text-slate-400">{t('statArchived', 'المؤرشفة')}</div>
-            <div className="text-base font-black text-slate-400">{stats.totalArchived}</div>
+            <div className="text-[11px] text-semantic-textMuted">{t('statArchived', 'المؤرشفة')}</div>
+            <div className="text-base font-extrabold text-semantic-textSecondary">{stats.totalArchived}</div>
           </div>
-          <Archive size={18} className="text-slate-500/50" />
+          <Archive size={18} className="text-semantic-textMuted" />
         </div>
       </div>
 
-      {/* 3. نافذة إنشاء حلقة جديدة */}
+      {/* 3. نموذج إضافة حلقة */}
       {showFormModal && (
         <HalaqaFormModal
           formData={formData}
@@ -160,16 +161,16 @@ export default function ActiveHalaqas({
         />
       )}
 
-      {/* 4. أدوات الفلترة والتحكم بالعرض */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/40 p-3 rounded-2xl border border-white/5">
+      {/* 4. البحث والفلترة ومطابقة طريقة العرض */}
+      <div className={`${UI.card} flex flex-col sm:flex-row items-center justify-between gap-3 p-3`}>
         <div className="relative w-full sm:w-80">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-semantic-textMuted" size={15} />
           <input
             type="text"
             placeholder={t('searchPlaceholder', 'البحث بالحلقة أو المعلم...')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pr-9 pl-3 py-2 text-xs rounded-xl bg-slate-800/90 border border-white/10 text-white outline-none focus:border-amber-500 transition-colors"
+            className={`${UI.input} pr-9 pl-3 text-xs`}
           />
         </div>
 
@@ -177,7 +178,7 @@ export default function ActiveHalaqas({
           <select
             value={selectedTrack}
             onChange={e => setSelectedTrack(e.target.value)}
-            className="p-2 text-xs rounded-xl bg-slate-800/90 border border-white/10 text-white outline-none focus:border-amber-500"
+            className={`${UI.input} w-auto text-xs`}
           >
             <option value="all">{t('allTracks', 'كافة المسارات')}</option>
             <option value="hifz">{t('trackHifz', 'الحفظ المكثف')}</option>
@@ -185,18 +186,22 @@ export default function ActiveHalaqas({
             <option value="ijazah">{t('trackIjazah', 'الإجازات والسند')}</option>
           </select>
 
-          <div className="flex items-center bg-slate-800 rounded-xl p-1 border border-white/10">
+          <div className="flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard">
             <button
               type="button"
               onClick={() => setLayoutMode('grid')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${layoutMode === 'grid' ? 'bg-amber-500 text-slate-950' : 'bg-transparent text-slate-400'}`}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${
+                layoutMode === 'grid' ? 'bg-semantic-actionPrimary text-semantic-textPrimary' : 'bg-transparent text-semantic-textMuted'
+              }`}
             >
               <Grid size={14} />
             </button>
             <button
               type="button"
               onClick={() => setLayoutMode('list')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${layoutMode === 'list' ? 'bg-amber-500 text-slate-950' : 'bg-transparent text-slate-400'}`}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${
+                layoutMode === 'list' ? 'bg-semantic-actionPrimary text-semantic-textPrimary' : 'bg-transparent text-semantic-textMuted'
+              }`}
             >
               <List size={14} />
             </button>
@@ -204,7 +209,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 5. عرض الحلقات */}
+      {/* 5. عرض قائمة الحلقات */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
@@ -223,9 +228,9 @@ export default function ActiveHalaqas({
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-dashed border-white/10">
-          <Clock className="mx-auto text-slate-600 mb-2" size={30} />
-          <p className="text-xs text-slate-400 font-semibold">
+        <div className={`${UI.card} text-center py-12 border-dashed`}>
+          <Clock className="mx-auto text-semantic-textMuted mb-2" size={30} />
+          <p className="text-xs text-semantic-textSecondary font-semibold">
             {t('noHalaqatFound', 'لا توجد نتائج مطابقة')}
           </p>
         </div>
