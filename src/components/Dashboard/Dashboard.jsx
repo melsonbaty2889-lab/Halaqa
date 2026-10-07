@@ -112,11 +112,6 @@ export default function Dashboard({
                     preloadedDashboardData?.id || 
                     session?.user?.user_metadata?.academy_id;
 
-  const rawAcademyName = selectedAdminAcademy?.name || 
-                         preloadedDashboardData?.academyName || 
-                         preloadedDashboardData?.name || 
-                         session?.user?.user_metadata?.academy_name || "";
-                         
   const rawUserName = session?.user?.user_metadata?.full_name || 
                       session?.user?.user_metadata?.name || '';
 
@@ -269,7 +264,7 @@ export default function Dashboard({
         </button>
       </section>
 
-      {/* 🟢 3. قسم الإحصائيات السريعة - ديناميكي من قاعدة البيانات */}
+      {/* 🟢 3. قسم الإحصائيات السريعة */}
       <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
         
         {/* أ) إجمالي الطلاب */}
@@ -381,15 +376,17 @@ export default function Dashboard({
       {/* 🟢 4. الأكثر تسميعاً والطلاب الغائبون */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
         
-        {/* أ) الأكثر تسميعاً اليوم */}
+        {/* أ) أبطال اليوم (الأكثر تسميعاً) - المطور والتفاعلي */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
+          
+          {/* رأس البطاقة */}
           <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-semantic-warning/10 text-semantic-warning shrink-0">
                 <Trophy size={18} />
               </div>
               <h3 className={`${UI.title} text-xs sm:text-sm font-bold m-0 whitespace-nowrap`}>
-                {t('dashboard.topPerformers.title', 'الأكثر تسميعاً اليوم')}
+                {t('dashboard.topPerformers.title', 'أبطال اليوم')}
               </h3>
             </div>
 
@@ -404,20 +401,24 @@ export default function Dashboard({
             )}
           </div>
 
+          {/* القائمة أو حالة الفراغ المحفزة */}
           {stats.topPerformers && stats.topPerformers.length > 0 ? (
             <div className="flex flex-col gap-2">
               {stats.topPerformers.map((student, index) => (
                 <div 
                   key={student.id || index}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput text-xs"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput text-xs hover:border-semantic-actionPrimary/40 transition-all"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                    {/* أوسمة المراكز الثلاثة الأولى */}
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-sm ${
                       index === 0 
-                        ? 'bg-semantic-warning/20 text-semantic-warning border border-semantic-warning/40' 
+                        ? 'bg-amber-400 text-slate-950 border border-amber-300' 
                         : index === 1 
-                        ? 'bg-slate-300/20 text-slate-300 border border-slate-400/40'
-                        : 'bg-amber-700/20 text-amber-600 border border-amber-700/40'
+                        ? 'bg-slate-300 text-slate-950 border border-slate-200'
+                        : index === 2
+                        ? 'bg-amber-700 text-white border border-amber-600'
+                        : 'bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput'
                     }`}>
                       {index + 1}
                     </span>
@@ -427,11 +428,11 @@ export default function Dashboard({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 bg-semantic-actionPrimary/10 px-2.5 py-1 rounded-lg">
                     <span className="font-black text-semantic-actionPrimary dir-ltr">
                       {student.sessionsCount ?? 0}
                     </span>
-                    <span className="text-[10px] text-semantic-textMuted font-semibold">
+                    <span className="text-[10px] text-semantic-actionPrimary font-semibold">
                       {t('common.sessions', 'جلسة')}
                     </span>
                   </div>
@@ -439,13 +440,29 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="py-5 px-3 text-center flex flex-col items-center justify-center gap-2">
-              <div className="p-3 rounded-full bg-semantic-surfaceInput text-semantic-actionPrimary/80 border border-semantic-borderInput">
-                <Trophy size={24} />
+            /* حالة الفراغ التفاعلية والمحفزة (Active Empty State) */
+            <div className="py-6 px-4 text-center flex flex-col items-center justify-center gap-3 bg-semantic-surfaceInput/40 rounded-xl border border-dashed border-semantic-borderInput">
+              <div className="p-3.5 rounded-full bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20 animate-bounce">
+                <Trophy size={26} />
               </div>
-              <p className="text-xs m-0 font-bold text-semantic-textSecondary">
-                {t('dashboard.topPerformers.empty', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
-              </p>
+              
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-semantic-textPrimary m-0">
+                  {t('dashboard.topPerformers.emptyTitle', 'قائمة الأبطال بانتظار الأول!')}
+                </p>
+                <p className="text-[11px] text-semantic-textMuted m-0 max-w-xs leading-relaxed">
+                  {t('dashboard.topPerformers.emptySubtitle', 'لم تُسجل جلسات اليوم بعد. ابدأ التسميع الآن لتصدر القائمة.')}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab && setActiveTab('halaqas')}
+                className={`${UI.btnPrimary} text-xs py-2 px-4 min-h-[36px] w-auto mt-1 flex items-center gap-1.5 shadow-sm`}
+              >
+                <Plus size={14} />
+                <span>{t('dashboard.actions.startHalaqa', 'بدء حلقة جديدة')}</span>
+              </button>
             </div>
           )}
         </div>
