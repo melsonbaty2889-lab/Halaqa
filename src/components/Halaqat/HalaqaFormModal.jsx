@@ -1,38 +1,28 @@
 import React from 'react';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { UI } from '@/components/UI/UI';
+import { UI } from '../../theme/styles';
 
 export default function HalaqaFormModal({ 
   formData = {}, 
   setFormData, 
   handleSubmit, 
   teachers = [], 
-  getLocalizedText,
   isSubmitting = false
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
 
-  const handleNameChange = (value) => {
-    setFormData({
-      ...formData,
+  // تحديث اسم الحلقة باللغة الحالية للمستخدم
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
       name: {
-        ...(formData.name || {}),
+        ...(prev?.name || {}),
         [currentLang]: value
       }
-    });
-  };
-
-  // دالة احتياطية لتفادي خطأ TypeError في حال عدم تمرير getLocalizedText من الأب
-  const resolveTeacherName = (teacher) => {
-    if (typeof getLocalizedText === 'function') {
-      return getLocalizedText(teacher.name || teacher.full_name);
-    }
-    if (typeof teacher.name === 'object' && teacher.name !== null) {
-      return teacher.name[currentLang] || teacher.name.ar || '';
-    }
-    return teacher.name || teacher.full_name || '';
+    }));
   };
 
   return (
@@ -49,8 +39,8 @@ export default function HalaqaFormModal({
           type="text" 
           required 
           placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام الشاطبي')} 
-          value={formData.name?.[currentLang] || formData.name?.ar || ''} 
-          onChange={e => handleNameChange(e.target.value)} 
+          value={formData?.name?.[currentLang] || formData?.name?.ar || ''} 
+          onChange={handleNameChange} 
           className={`${UI.input} text-xs`} 
         />
       </div>
@@ -62,16 +52,23 @@ export default function HalaqaFormModal({
         </label>
         <select 
           required 
-          value={formData.teacher_id || ''} 
-          onChange={e => setFormData({ ...formData, teacher_id: e.target.value })} 
+          value={formData?.teacher_id || ''} 
+          onChange={e => setFormData(prev => ({ ...prev, teacher_id: e.target.value }))} 
           className={`${UI.input} text-xs`}
         >
           <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
-          {teachers.map(teacher => (
-            <option key={teacher.id} value={teacher.id}>
-              {resolveTeacherName(teacher)}
-            </option>
-          ))}
+          {Array.isArray(teachers) && teachers.map(teacher => {
+            // استخراج اسم المعلم بناءً على اللغة الحالية بدون استدعاء دوال خارجية
+            const teacherName = typeof teacher?.name === 'object' 
+              ? (teacher.name[currentLang] || teacher.name.ar || '')
+              : (teacher?.name || teacher?.full_name || '');
+
+            return (
+              <option key={teacher.id} value={teacher.id}>
+                {teacherName}
+              </option>
+            );
+          })}
         </select>
       </div>
 
@@ -82,8 +79,8 @@ export default function HalaqaFormModal({
         </label>
         <select 
           required
-          value={formData.educational_track || ''} 
-          onChange={e => setFormData({ ...formData, educational_track: e.target.value })} 
+          value={formData?.educational_track || ''} 
+          onChange={e => setFormData(prev => ({ ...prev, educational_track: e.target.value }))} 
           className={`${UI.input} text-xs`}
         >
           <option value="">{t('selectTrack', '-- اختر المسار --')}</option>
@@ -102,8 +99,8 @@ export default function HalaqaFormModal({
           <input 
             type="time" 
             required
-            value={formData.start_time || ''} 
-            onChange={e => setFormData({ ...formData, start_time: e.target.value })} 
+            value={formData?.start_time || ''} 
+            onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))} 
             className={`${UI.input} text-xs text-center`} 
           />
         </div>
@@ -114,8 +111,8 @@ export default function HalaqaFormModal({
           <input 
             type="time" 
             required
-            value={formData.end_time || ''} 
-            onChange={e => setFormData({ ...formData, end_time: e.target.value })} 
+            value={formData?.end_time || ''} 
+            onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))} 
             className={`${UI.input} text-xs text-center`} 
           />
         </div>
@@ -128,7 +125,7 @@ export default function HalaqaFormModal({
         </label>
         <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
           <Globe size={15} className="text-semantic-actionPrimary" />
-          <span>{formData.timezone || 'UTC'}</span>
+          <span>{formData?.timezone || 'UTC'}</span>
         </div>
       </div>
 
