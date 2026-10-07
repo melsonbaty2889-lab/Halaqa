@@ -217,7 +217,7 @@ export default function Dashboard({
   }
 
   return (
-    <div className={`w-full px-2 py-3 sm:p-5 pb-20 space-y-3 bg-transparent text-semantic-textPrimary min-h-screen ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
+    <div className={`w-full px-2.5 py-3 sm:p-5 pb-20 space-y-3 bg-transparent text-semantic-textPrimary min-h-screen ${isRtl ? 'rtl text-start' : 'ltr text-start'}`}>
       
       {/* 🔴 تنبيه مسؤول النظام */}
       {isSuperAdmin && selectedAdminAcademy && (
@@ -269,7 +269,7 @@ export default function Dashboard({
         </button>
       </section>
 
-      {/* 🟢 3. قسم الإحصائيات السريعة (شبكة موحدة ومصممة بدقة) */}
+      {/* 🟢 3. قسم الإحصائيات السريعة */}
       <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
         
         {/* أ) قوة الأكاديمية */}
@@ -366,7 +366,7 @@ export default function Dashboard({
                 </span>
                 <span className="text-[11px] text-semantic-textMuted">
                   {stats.overdueCount > 0 
-                    ? `${stats.overdueCount} ${t('dashboard.stats.overduePayments', 'اشتراكات متاخرة تنظر السداد')}`
+                    ? `${stats.overdueCount} ${t('dashboard.stats.overduePayments', 'اشتراكات متاخرة تنتظر السداد')}`
                     : t('dashboard.stats.allPaid', 'التزام مالي مكتمل ولا توجد متأخرات')}
                 </span>
               </div>
@@ -377,8 +377,8 @@ export default function Dashboard({
           </div>
         )}
       </section>
-             
-                    {/* 🟢 4. أبطال اليوم & الطلاب المحتاجون للمتابعة */}
+      
+      {/* 🟢 4. أبطال اليوم & الطلاب المحتاجون للمتابعة */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
         
         {/* أ) أبطال اليوم */}
@@ -439,9 +439,11 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="py-5 px-3 text-center text-semantic-textSecondary flex flex-col items-center justify-center gap-2">
-              <Trophy size={32} className="text-semantic-textMuted opacity-40" />
-              <p className="text-xs m-0 font-medium text-semantic-textMuted">
+            <div className="py-6 px-3 text-center flex flex-col items-center justify-center gap-2">
+              <div className="p-3 rounded-full bg-semantic-surfaceInput text-semantic-textMuted/60">
+                <Trophy size={28} />
+              </div>
+              <p className="text-xs m-0 font-medium text-semantic-textSecondary">
                 {t('dashboard.topPerformers.empty', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
               </p>
             </div>
@@ -451,11 +453,11 @@ export default function Dashboard({
         {/* ب) طلاب يتطلبون متابعة */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
           <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5 gap-2">
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="p-1.5 rounded-lg bg-semantic-danger/10 text-semantic-danger">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1.5 rounded-lg bg-semantic-danger/10 text-semantic-danger shrink-0">
                 <UserX size={18} />
               </div>
-              <h3 className={`${UI.title} text-sm sm:text-base font-bold m-0`}>
+              <h3 className={`${UI.title} text-sm sm:text-base font-bold m-0 truncate`}>
                 {t('dashboard.atRiskStudents.title', 'طلاب يتطلبون متابعة')}
               </h3>
             </div>
@@ -496,8 +498,8 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="py-4 px-3 text-center flex items-center justify-center gap-2 text-semantic-success bg-semantic-success/10 rounded-xl border border-semantic-success/20">
-              <CheckCircle2 size={18} className="shrink-0" />
+            <div className="py-3.5 px-3 text-center flex items-center justify-center gap-2 text-semantic-success bg-semantic-success/10 rounded-xl border border-semantic-success/20">
+              <CheckCircle2 size={16} className="shrink-0" />
               <span className="text-xs font-bold">
                 {t('dashboard.atRiskStudents.allGood', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}
               </span>
@@ -572,7 +574,7 @@ export default function Dashboard({
         </section>
       ) : (
         <section className={`${UI.card} text-center py-6 p-4 w-full space-y-3`}>
-          <Activity size={30} className="mx-auto text-semantic-actionPrimary opacity-75" />
+          <Activity size={28} className="mx-auto text-semantic-actionPrimary opacity-80" />
           <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed max-w-sm mx-auto">
             {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
           </p>
