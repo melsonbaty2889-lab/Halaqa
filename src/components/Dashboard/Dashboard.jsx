@@ -290,61 +290,114 @@ export default function Dashboard({
         </button>
       </section>
 
-      {/* 🟢 بطاقات الإحصائيات */}
-      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 w-full">
-        <StatCard
-          title={t('dashboard.stats.academyStrength', 'قوة الأكاديمية')}
-          value={safeText(stats?.studentsCount, '0')}
-          subtitle={t('dashboard.stats.activeStudents', '● طلاب نشطون')}
-          icon={GraduationCap}
-          iconColorClass="text-semantic-success"
-          onClick={() => setActiveTab && setActiveTab('students')}
-        />
+      {/* 🟢 قسم الإحصائيات السريعة بتنسيق شبكي متناسق */}
+<section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+  {/* 1. قوة الأكاديمية */}
+  <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-semantic-textSecondary">
+        {t('dashboard.stats.academyStrength', 'قوة الأكاديمية')}
+      </span>
+      <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-actionPrimary">
+        <GraduationCap size={16} />
+      </div>
+    </div>
+    <div className="mt-2">
+      <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
+        {stats.studentsCount || 0}
+      </div>
+      <span className="text-[10px] text-semantic-success flex items-center gap-1 font-semibold mt-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>
+        {t('dashboard.stats.activeStudents', 'طلاب نشطون')}
+      </span>
+    </div>
+  </div>
 
-        <StatCard
-          title={t('dashboard.stats.streakRate', 'معدل الثبات')}
-          value={safeText(stats?.avgStreak, '0')}
-          unit={t('common.dayUnit', 'يوم')}
-          subtitle={t('dashboard.stats.continuousStreak', '🔥 التتابع المستمر')}
-          icon={Flame}
-          iconColorClass="text-semantic-actionPrimary"
-          onClick={() => setActiveTab && setActiveTab('gamification')}
-        />
+  {/* 2. معدل الثبات */}
+  <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-semantic-textSecondary">
+        {t('dashboard.stats.stabilityRate', 'معدل الثبات')}
+      </span>
+      <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-warning">
+        <Flame size={16} />
+      </div>
+    </div>
+    <div className="mt-2">
+      <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
+        {stats.avgStreak || 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.days', 'يوم')}</span>
+      </div>
+      <span className="text-[10px] text-semantic-warning flex items-center gap-1 font-semibold mt-0.5">
+        🔥 {t('dashboard.stats.continuousStreak', 'التتابع المستمر')}
+      </span>
+    </div>
+  </div>
 
-        <StatCard
-          title={t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
-          value={safeText(stats?.attendanceRate, '0%')}
-          subtitle={t('dashboard.stats.participationRate', '📈 معدل المشاركة')}
-          icon={TrendingUp}
-          iconColorClass="text-semantic-success"
-          onClick={() => setActiveTab && setActiveTab('attendance')}
-        />
+  {/* 3. نسبة الحضور */}
+  <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-semantic-textSecondary">
+        {t('dashboard.stats.attendanceRate', 'نسبة الحضور')}
+      </span>
+      <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-info">
+        <TrendingUp size={16} />
+      </div>
+    </div>
+    <div className="mt-2">
+      <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
+        {stats.attendanceRate || '0%'}
+      </div>
+      <span className="text-[10px] text-semantic-info flex items-center gap-1 font-semibold mt-0.5">
+        📈 {t('dashboard.stats.participationRate', 'معدل المشاركة')}
+      </span>
+    </div>
+  </div>
 
-        <StatCard
-          title={t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
-          value={safeText(stats?.totalSessions, '0')}
-          unit={t('common.sessionUnit', 'جلسة')}
-          subtitle={t('dashboard.stats.completedToday', '✅ المكتملة اليوم')}
-          icon={BookOpen}
-          iconColorClass="text-semantic-actionPrimary"
-          onClick={() => setActiveTab && setActiveTab('students')}
-        />
+  {/* 4. التسميع اليومي */}
+  <div className={`${UI.card} p-3.5 flex flex-col justify-between min-h-[100px]`}>
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-semantic-textSecondary">
+        {t('dashboard.stats.dailyRecitation', 'التسميع اليومي')}
+      </span>
+      <div className="p-1.5 rounded-lg bg-semantic-surfaceInput text-semantic-actionPrimary">
+        <BookOpen size={16} />
+      </div>
+    </div>
+    <div className="mt-2">
+      <div className="text-lg sm:text-xl font-black text-semantic-textPrimary">
+        {stats.totalSessions || 0} <span className="text-xs font-normal text-semantic-textMuted">{t('common.sessions', 'جلسة')}</span>
+      </div>
+      <span className="text-[10px] text-semantic-success flex items-center gap-1 font-semibold mt-0.5">
+        ✅ {t('dashboard.stats.completedToday', 'المكتملة اليوم')}
+      </span>
+    </div>
+  </div>
 
-        <StatCard
-          title={t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
-          value={safeText(stats?.overdueCount, '0')}
-          subtitle={
-            (stats?.overdueCount || 0) > 0 
-              ? t('dashboard.stats.requestsNotes', '⚠ طلبات وملاحظات متأخرة')
-              : t('dashboard.stats.allPaid', 'إلتزام مالي مكتمل')
-          }
-          icon={AlertTriangle}
-          iconColorClass={(stats?.overdueCount || 0) > 0 ? 'text-semantic-danger' : 'text-semantic-success'}
-          borderHoverClass={(stats?.overdueCount || 0) > 0 ? 'hover:border-semantic-danger/40' : 'hover:border-semantic-success/40'}
-          onClick={() => setActiveTab && setActiveTab('payments')}
-        />
-      </section>
-
+  {/* 5. التنبيهات المالية (تظهر للأدمن فقط وتمتد بشكل متناسق) */}
+  {userRole !== 'teacher' && (
+    <div className={`${UI.card} p-3.5 flex items-center justify-between col-span-2 lg:col-span-4 min-h-[70px]`}>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20">
+          <AlertTriangle size={18} />
+        </div>
+        <div>
+          <span className="text-xs font-bold text-semantic-textSecondary block">
+            {t('dashboard.stats.financialAlerts', 'التنبيهات المالية')}
+          </span>
+          <span className="text-[11px] text-semantic-textMuted">
+            {stats.overdueCount > 0 
+              ? `${stats.overdueCount} ${t('dashboard.stats.overduePayments', 'اشتراكات متاخرة تنظر السداد')}`
+              : t('dashboard.stats.allPaid', 'التزام مالي مكتمل ولا توجد متأخرات')}
+          </span>
+        </div>
+      </div>
+      <div className="text-lg sm:text-xl font-black text-semantic-textPrimary dir-ltr">
+        {stats.overdueCount || 0}
+      </div>
+    </div>
+  )}
+</section>
+      
       {/* 🚀 قسم الأبطال والطلاب */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 w-full">
         {/* أبطال اليوم */}
