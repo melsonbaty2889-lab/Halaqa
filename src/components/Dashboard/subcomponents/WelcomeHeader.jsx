@@ -24,7 +24,7 @@ export const WelcomeHeader = ({ displayName, userRole, t }) => {
     },
     [ROLES.STUDENT]: {
       subtitleKey: 'dashboard.subtitleStudent',
-      defaultSubtitle: 'جاهز لمتابعة وردك اليومي ورحلة حفظك؟',
+      defaultSubtitle: 'مرحباً بك! جاهز لمتابعة وردك اليومي ورحلة حفظك؟',
     },
     [ROLES.PARENT]: {
       subtitleKey: 'dashboard.subtitleParent',
