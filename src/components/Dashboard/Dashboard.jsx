@@ -377,8 +377,8 @@ export default function Dashboard({
           </div>
         )}
       </section>
-      
-      {/* 🟢 4. أبطال اليوم & الطلاب المحتاجون للمتابعة */}
+             
+                    {/* 🟢 4. أبطال اليوم & الطلاب المحتاجون للمتابعة */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
         
         {/* أ) أبطال اليوم */}
@@ -439,9 +439,9 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="py-6 text-center text-semantic-textMuted flex flex-col items-center justify-center gap-1.5">
-              <Trophy size={26} className="opacity-30 stroke-1" />
-              <p className="text-xs m-0 font-medium">
+            <div className="py-5 px-3 text-center text-semantic-textSecondary flex flex-col items-center justify-center gap-2">
+              <Trophy size={32} className="text-semantic-textMuted opacity-40" />
+              <p className="text-xs m-0 font-medium text-semantic-textMuted">
                 {t('dashboard.topPerformers.empty', 'لم يتم تسجيل جلسات تسميع حتى الآن اليوم.')}
               </p>
             </div>
@@ -450,8 +450,8 @@ export default function Dashboard({
 
         {/* ب) طلاب يتطلبون متابعة */}
         <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
-          <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5 gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <div className="p-1.5 rounded-lg bg-semantic-danger/10 text-semantic-danger">
                 <UserX size={18} />
               </div>
@@ -460,7 +460,7 @@ export default function Dashboard({
               </h3>
             </div>
 
-            <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+            <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
               (stats.atRiskStudents?.length || 0) > 0
                 ? 'bg-semantic-danger/10 text-semantic-danger border-semantic-danger/30'
                 : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderInput'
@@ -496,8 +496,8 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="py-6 px-3 text-center flex items-center justify-center gap-2 text-semantic-success bg-semantic-success/5 rounded-xl border border-semantic-success/15">
-              <CheckCircle2 size={16} />
+            <div className="py-4 px-3 text-center flex items-center justify-center gap-2 text-semantic-success bg-semantic-success/10 rounded-xl border border-semantic-success/20">
+              <CheckCircle2 size={18} className="shrink-0" />
               <span className="text-xs font-bold">
                 {t('dashboard.atRiskStudents.allGood', 'جميع الطلاب مستمرون بنجاح هذا اليوم!')}
               </span>
@@ -572,16 +572,16 @@ export default function Dashboard({
         </section>
       ) : (
         <section className={`${UI.card} text-center py-6 p-4 w-full space-y-3`}>
-          <Activity size={26} className="mx-auto text-semantic-textMuted opacity-50" />
-          <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed">
+          <Activity size={30} className="mx-auto text-semantic-actionPrimary opacity-75" />
+          <p className="text-xs font-bold m-0 text-semantic-textSecondary leading-relaxed max-w-sm mx-auto">
             {t('dashboard.emptyHalaqas', 'جميع الحلقات الحية حالياً مكتملة. يمكنك بدء حلقة جديدة أو مراجعة جدول اليوم.')}
           </p>
           <button
             type="button"
             onClick={() => setActiveTab && setActiveTab('halaqas')}
-            className={`${UI.btnSecondary} py-1.5 px-3 text-xs mx-auto flex items-center gap-1.5 cursor-pointer w-auto`}
+            className={`${UI.btnSecondary} min-h-[40px] py-2 px-4 text-xs mx-auto flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto font-bold`}
           >
-            <Calendar size={14} />
+            <Calendar size={16} />
             <span>{t('dashboard.actions.viewHalaqasSchedule', 'عرض جدول الحلقات')}</span>
           </button>
         </section>
