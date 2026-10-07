@@ -349,6 +349,7 @@
     "typeHere": "اكتب هنا...",
     "unarchive": "إلغاء الأرشفة",
     "unknown": "غير معروف",
+    "unnamedStudent": "طالب بدون اسم",
     "unspecified": "غير محدد",
     "upgrade": "ترقية",
     "upgradeAccount": "ترقية الحساب",
@@ -472,6 +473,10 @@
       "revision": "مراجعة وتثبيت:"
     },
     "top_performers_title": "أبطال التسميع اليوم",
+    "topPerformers": {
+      "empty": "لم يتم تسجيل جلسات تسميع حتى الآن اليوم.",
+      "title": "أبطال اليوم"
+    },
     "total_students": "إجمالي الطلاب",
     "unnamed_student": "طالب",
     "unspecified": "غير محدد",
