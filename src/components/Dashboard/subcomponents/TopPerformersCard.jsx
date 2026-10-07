@@ -3,11 +3,14 @@ import { Trophy, Plus } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
 export const TopPerformersCard = ({ topPerformers, setActiveTab, t }) => {
+  const hasPerformers = topPerformers && topPerformers.length > 0;
+
   return (
     <div className={`${UI.card} p-4 w-full flex flex-col justify-between space-y-3`}>
-      <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5">
+      {/* الهيدر */}
+      <div className="flex items-center justify-between border-b border-semantic-borderInput pb-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-semantic-warning/10 text-semantic-warning shrink-0">
+          <div className="p-1.5 rounded-lg bg-semantic-warning/10 text-semantic-warning shrink-0 flex items-center justify-center">
             <Trophy size={18} />
           </div>
           <h3 className={`${UI.title} text-xs sm:text-sm font-bold m-0 whitespace-nowrap`}>
@@ -15,7 +18,7 @@ export const TopPerformersCard = ({ topPerformers, setActiveTab, t }) => {
           </h3>
         </div>
 
-        {topPerformers && topPerformers.length > 0 && (
+        {hasPerformers && (
           <button
             type="button"
             onClick={() => setActiveTab && setActiveTab('students')}
@@ -26,7 +29,8 @@ export const TopPerformersCard = ({ topPerformers, setActiveTab, t }) => {
         )}
       </div>
 
-      {topPerformers && topPerformers.length > 0 ? (
+      {/* قائمة الأبطال */}
+      {hasPerformers ? (
         <div className="flex flex-col gap-2">
           {topPerformers.map((student, index) => (
             <div 
@@ -34,14 +38,14 @@ export const TopPerformersCard = ({ topPerformers, setActiveTab, t }) => {
               className="flex items-center justify-between p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput text-xs hover:border-semantic-actionPrimary/40 transition-all"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 shadow-sm ${
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 border ${
                   index === 0 
-                    ? 'bg-amber-400 text-slate-950 border border-amber-300' 
+                    ? 'bg-semantic-warning/20 text-semantic-warning border-semantic-warning/40' 
                     : index === 1 
-                    ? 'bg-slate-300 text-slate-950 border border-slate-200'
+                    ? 'bg-semantic-surfaceInput text-semantic-textPrimary border-semantic-borderInput'
                     : index === 2
-                    ? 'bg-amber-700 text-white border border-amber-600'
-                    : 'bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderInput'
+                    ? 'bg-semantic-warning/10 text-semantic-textSecondary border-semantic-borderInput'
+                    : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderInput'
                 }`}>
                   {index + 1}
                 </span>
@@ -63,8 +67,9 @@ export const TopPerformersCard = ({ topPerformers, setActiveTab, t }) => {
           ))}
         </div>
       ) : (
-        <div className="py-6 px-4 text-center flex flex-col items-center justify-center gap-3 bg-semantic-surfaceInput/40 rounded-xl border border-dashed border-semantic-borderInput">
-          <div className="p-3.5 rounded-full bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20">
+        /* الحالة الفارغة */
+        <div className="py-6 px-4 text-center flex flex-col items-center justify-center gap-3 bg-semantic-surfaceInput/40 rounded-xl border border-dashed border-semantic-borderInput my-auto">
+          <div className="p-3.5 rounded-full bg-semantic-warning/10 text-semantic-warning border border-semantic-warning/20 shrink-0 flex items-center justify-center">
             <Trophy size={26} />
           </div>
           
