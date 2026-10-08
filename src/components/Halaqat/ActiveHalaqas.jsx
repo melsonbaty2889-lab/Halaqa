@@ -23,8 +23,8 @@ export default function ActiveHalaqas({
   // حالات البحث والفلترة والعرض
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
-  const [viewMode, setViewMode] = useState('active'); // 'active' | 'unassigned' | 'archived'
-  const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'list'
+  const [viewMode, setViewMode] = useState('active');
+  const [layoutMode, setLayoutMode] = useState('grid');
 
   // حالة النافذة المنبثقة ورسائل النموذج
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function ActiveHalaqas({
     end_time: ''
   });
 
-  // 1. حساب الإحصائيات
+  // حساب الإحصائيات
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
@@ -59,10 +59,9 @@ export default function ActiveHalaqas({
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
-  // 2. تصفية الحلقات بناءً على البحث والتبويب والمسار
+  // تصفية الحلقات
   const filteredHalaqas = useMemo(() => {
     return halaqas.filter((halaqa) => {
-      // الفلترة حسب حالة التبويب
       if (viewMode === 'archived' && !halaqa.is_archived) return false;
       if (viewMode === 'active' && halaqa.is_archived) return false;
       if (viewMode === 'unassigned') {
@@ -71,13 +70,11 @@ export default function ActiveHalaqas({
         if (hasTeacher) return false;
       }
 
-      // الفلترة حسب المسار التعليمي
       const trackVal = halaqa.educational_track || halaqa.track;
       if (selectedTrack !== 'all' && trackVal !== selectedTrack) {
         return false;
       }
 
-      // الفلترة حسب نص البحث (اسم الحلقة أو المعلم)
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
         const nameStr = String(getLocalizedText(halaqa.name) || halaqa.name_text || '').toLowerCase();
@@ -123,7 +120,7 @@ export default function ActiveHalaqas({
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ (إما إنشاء جديد أو تعديل)
+  // معالجة الحفظ
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
@@ -141,19 +138,17 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-4">
-      {/* رأس الصفحة العلوي المطور والمحاذى بأسلوب نظيف */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-semantic-borderCard">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-semantic-textMuted m-0 leading-relaxed truncate sm:whitespace-normal">
-            {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
-          </p>
-        </div>
+    <div className="space-y-4 pt-1">
+      {/* رأس الصفحة: متناسق تماماً في الموبايل وسطح المكتب */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-semantic-borderCard">
+        <p className="text-xs text-semantic-textMuted m-0 leading-normal">
+          {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
+        </p>
 
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} w-full sm:w-auto py-2 px-4 text-xs font-extrabold flex items-center justify-center gap-1.5 shrink-0 shadow-none hover:shadow-md transition-all`}
+          className={`${UI.btnPrimary} w-full sm:w-auto py-2 px-4 text-xs font-bold flex items-center justify-center gap-1.5 shrink-0 shadow-none hover:opacity-95 transition-all`}
         >
           <Plus size={16} />
           <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
@@ -208,10 +203,11 @@ export default function ActiveHalaqas({
         </div>
       )}
 
-      {/* النافذة المنبثقة لإنشاء وتعديل الحلقة */}
+      {/* النافذة المنبثقة: يمرر كلاً من onSubmit و handleSubmit لضمان عمل كلا الاسمين */}
       <HalaqaFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSubmit={handleFormSubmit}
         handleSubmit={handleFormSubmit}
         formData={formData}
         setFormData={setFormData}
