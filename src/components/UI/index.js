@@ -6,6 +6,7 @@ export { default as Card } from './Card';
 export { default as ConfirmModal } from './ConfirmModal';
 export { default as CountrySelect } from './CountrySelect';
 export { default as CustomDatePicker } from './CustomDatePicker';
+export { default as CustomTimePicker } from './CustomTimePicker';
 export { default as DatePickerDaysGrid } from './DatePickerDaysGrid';
 export { default as DatePickerHeader } from './DatePickerHeader';
 export { default as EmptyState } from './EmptyState';
