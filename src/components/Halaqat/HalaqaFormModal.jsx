@@ -54,16 +54,29 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // تحويل الوقت المنسق HH:mm إلى دقائق إجمالية بدقة
+  // تحويل الوقت المحتوي على ص/م إلى دقائق إجمالية
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr || typeof timeStr !== 'string') return null;
-    const parts = timeStr.trim().split(':');
-    if (parts.length < 2) return null;
     
-    const hours = parseInt(parts[0], 10);
+    const str = timeStr.trim();
+    const isPM = str.includes('م') || str.toUpperCase().includes('PM');
+    const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
+
+    const cleanTime = str.replace(/[^\d:]/g, '');
+    const parts = cleanTime.split(':');
+    
+    if (parts.length < 2) return null;
+
+    let hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
 
     if (isNaN(hours) || isNaN(minutes)) return null;
+
+    if (isPM || isAM) {
+      if (isPM && hours < 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+    }
+
     return hours * 60 + minutes;
   };
 
