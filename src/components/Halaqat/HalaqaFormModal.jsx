@@ -3,7 +3,7 @@ import { Save, Plus, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
-import { Input, Select } from '@/components/UI';
+import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 
 export default function HalaqaFormModal({ 
@@ -21,7 +21,7 @@ export default function HalaqaFormModal({
   const currentLang = i18n?.language || 'ar';
   const [timeError, setTimeError] = useState('');
 
-  // تحديد المنطقة الزمنية تلقائياً دون الحاجة لعرض حقل إدخال لها
+  // تحديد المنطقة الزمنية تلقائياً
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   useEffect(() => {
@@ -192,29 +192,19 @@ export default function HalaqaFormModal({
 
           {/* توقيت الحلقة والحد الأقصى */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('startTimeLabel', 'وقت البدء')} <span className="text-semantic-actionPrimary">*</span>
-              </label>
-              <Input
-                type="time"
-                required
-                value={formData?.start_time || ''}
-                onChange={(v) => handleChange('start_time', v)}
-              />
-            </div>
+            <CustomTimePicker
+              label={t('startTimeLabel', 'وقت البدء')}
+              required
+              value={formData?.start_time || ''}
+              onChange={(val) => handleChange('start_time', val)}
+            />
 
-            <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('endTimeLabel', 'وقت الانتهاء')} <span className="text-semantic-actionPrimary">*</span>
-              </label>
-              <Input
-                type="time"
-                required
-                value={formData?.end_time || ''}
-                onChange={(v) => handleChange('end_time', v)}
-              />
-            </div>
+            <CustomTimePicker
+              label={t('endTimeLabel', 'وقت الانتهاء')}
+              required
+              value={formData?.end_time || ''}
+              onChange={(val) => handleChange('end_time', val)}
+            />
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
