@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Users } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -15,9 +15,7 @@ export default function ActiveHalaqas({
   onUpdateHalaqa,
   onToggleArchiveHalaqa,
   onNavigateToAttendance,
-  isLoading = false,
-  isCreateModalOpen,
-  setIsCreateModalOpen
+  isLoading = false
 }) {
   const { t } = useTranslation();
   const { getLocalizedText } = useAcademySettings();
@@ -28,19 +26,9 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
-  // حالة النافذة المنبثقة للنموذج المحلية
-  const [localModalOpen, setLocalModalOpen] = useState(false);
+  // حالة النافذة المنبثقة ورسائل النموذج
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // تحديد حالة فتح المودال سواء عبر Props أو التحكم المحلي
-  const isModalOpen = isCreateModalOpen !== undefined ? isCreateModalOpen : localModalOpen;
-  const setModalOpen = (isOpen) => {
-    if (setIsCreateModalOpen) {
-      setIsCreateModalOpen(isOpen);
-    }
-    setLocalModalOpen(isOpen);
-  };
-
   const [formData, setFormData] = useState({
     name: '',
     educational_track: 'hifz',
@@ -100,8 +88,26 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
+  // فتح النافذة بوضع الإنشاء
+  const handleOpenCreateModal = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setFormData({
+      name: '',
+      educational_track: 'hifz',
+      teacher_id: '',
+      target_audience: 'kids',
+      teaching_type: 'online',
+      start_time: '',
+      end_time: ''
+    });
+    setIsModalOpen(true);
+  };
+
   // فتح النافذة بوضع التعديل
-  const handleOpenEditModal = useCallback((halaqa) => {
+  const handleOpenEditModal = (halaqa) => {
     setFormData({
       id: halaqa.id,
       name: halaqa.name,
@@ -115,8 +121,8 @@ export default function ActiveHalaqas({
       max_students: halaqa.max_students || 10,
       timezone: halaqa.timezone || 'Africa/Cairo'
     });
-    setModalOpen(true);
-  }, []);
+    setIsModalOpen(true);
+  };
 
   // معالجة الحفظ الموحدة
   const handleFormSubmit = async (payload) => {
@@ -128,7 +134,7 @@ export default function ActiveHalaqas({
       } else {
         await onCreateHalaqa?.(dataToSave);
       }
-      setModalOpen(false);
+      setIsModalOpen(false);
     } catch (error) {
       console.error('Failed to save halaqa:', error);
     } finally {
@@ -138,6 +144,18 @@ export default function ActiveHalaqas({
 
   return (
     <div className="space-y-4 pt-1 pb-8 bg-app-layout">
+      {/* زر إضافة حلقة جديدة الموحد بارز في الأعلى دون تكرار الهيدر */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleOpenCreateModal}
+          className={`${UI.btnPrimary} w-full sm:w-auto px-5 py-2.5 font-extrabold flex items-center justify-center gap-2`}
+        >
+          <Plus size={18} />
+          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
+        </button>
+      </div>
+
       {/* شريط الفلترة والبحث والتبويبات */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
@@ -191,7 +209,7 @@ export default function ActiveHalaqas({
       {/* النافذة المنبثقة */}
       <HalaqaFormModal
         isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => setIsModalOpen(false)}
         onSubmit={handleFormSubmit}
         handleSubmit={handleFormSubmit}
         formData={formData}
