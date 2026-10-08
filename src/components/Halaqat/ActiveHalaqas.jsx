@@ -19,15 +19,13 @@ export default function ActiveHalaqas({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   
-  // حالات التحكم بالصفحة
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
-  const [viewMode, setViewMode] = useState('active'); // 'active' | 'archived'
+  const [viewMode, setViewMode] = useState('active'); // 'active' | 'archived' | 'unassigned'
   const [layoutMode, setLayoutMode] = useState('grid'); // 'grid' | 'list'
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // حالة النموذج مع دعم كائن اسم موحد حسب اللغة
   const [formData, setFormData] = useState({
     name: {},
     teacher_id: '',
@@ -37,7 +35,6 @@ export default function ActiveHalaqas({
     timezone: 'UTC'
   });
 
-  // دالة مساعدة آمنة لاستخراج النصوص وتجنب (TypeError: a is not a function)
   const resolveText = (value) => {
     if (!value) return '';
     if (typeof getLocalizedText === 'function') {
@@ -53,15 +50,23 @@ export default function ActiveHalaqas({
     return typeof value === 'string' ? value : '';
   };
 
-  // تصفية الحلقات مع مراعاة اللغة النشطة بشكل آمن
   const filteredHalaqas = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     return (Array.isArray(halaqas) ? halaqas : []).filter(halaqa => {
       if (!halaqa) return false;
-      const isArchivedMatch = viewMode === 'archived' ? Boolean(halaqa.is_archived) : !halaqa.is_archived;
+      
+      let viewMatch = true;
+      if (viewMode === 'archived') {
+        viewMatch = Boolean(halaqa.is_archived);
+      } else if (viewMode === 'unassigned') {
+        viewMatch = !halaqa.is_archived && !halaqa.teacher_id && !halaqa.teacher_name && !halaqa.teacher;
+      } else {
+        viewMatch = !halaqa.is_archived;
+      }
+
       const trackMatch = selectedTrack === 'all' || halaqa.educational_track === selectedTrack;
       
-      if (!isArchivedMatch || !trackMatch) return false;
+      if (!viewMatch || !trackMatch) return false;
       if (!query) return true;
 
       const localizedName = resolveText(halaqa.name).toLowerCase();
@@ -71,17 +76,15 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText, currentLang]);
 
-  // إحصائيات سريعة للواجهة
   const stats = useMemo(() => {
     const list = Array.isArray(halaqas) ? halaqas : [];
     return {
       totalActive: list.filter(h => !h?.is_archived).length,
       totalArchived: list.filter(h => h?.is_archived).length,
-      unassigned: list.filter(h => !h?.teacher_id && !h?.is_archived).length
+      unassigned: list.filter(h => !h?.teacher_id && !h?.teacher_name && !h?.teacher && !h?.is_archived).length
     };
   }, [halaqas]);
 
-  // حفظ وإرسال البيانات
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -109,17 +112,17 @@ export default function ActiveHalaqas({
         <div>
           <h1 className={`${UI.title} flex items-center gap-2.5`}>
             <Layers className="text-semantic-actionPrimary" size={22} />
-            {t('halaqatTitle', 'إدارة الحلقات')}
+            {t('halaqatTitle', 'إدارة الحلقات والفصول')}
           </h1>
           <p className={`${UI.subtitle} mt-1`}>
-            {t('halaqatSubTitle', 'متابعة الحلقات وتعيين الكادر التعليمي ومراقبة المسارات')}
+            {t('halaqatSubTitle', 'متابعة الجلسات التعليمية وتوزيع المعلمين ومراقبة المسارات')}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setViewMode(prev => prev === 'active' ? 'archived' : 'active')}
+            onClick={() => setViewMode(prev => prev === 'archived' ? 'active' : 'archived')}
             className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer border ${
               viewMode === 'archived'
                 ? 'bg-semantic-actionPrimary/20 text-semantic-actionPrimary border-semantic-actionPrimary/40'
@@ -127,60 +130,77 @@ export default function ActiveHalaqas({
             }`}
           >
             <Archive size={15} />
-            {viewMode === 'active' 
-              ? `${t('archive', 'الأرشيف')} (${stats.totalArchived})` 
-              : t('activeSessions', 'الحلقات النشطة')}
+            {viewMode === 'archived' 
+              ? t('activeSessions', 'الحلقات النشطة')
+              : `${t('archive', 'الأرشيف')} (${stats.totalArchived})`}
           </button>
 
           <button
             type="button"
-            onClick={() => setShowFormModal(prev => !prev)}
+            onClick={() => setShowFormModal(true)}
             className={`${UI.btnPrimary} w-auto px-4 py-2.5 text-xs font-extrabold`}
           >
             <Plus size={16} />
-            {t('createHalaqa', 'إضافة حلقة')}
+            {t('createHalaqa', 'إنشاء حلقة جديدة')}
           </button>
         </div>
       </div>
 
-      {/* 2. شريط المؤشرات والإحصائيات */}
+      {/* 2. شريط المؤشرات والإحصائيات كأزرار تصفية سريعة */}
       <div className="grid grid-cols-3 gap-3">
-        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
+        <button
+          type="button"
+          onClick={() => setViewMode('active')}
+          className={`${UI.card} text-right flex items-center justify-between p-3.5 cursor-pointer transition-all ${
+            viewMode === 'active' ? 'border-semantic-success ring-1 ring-semantic-success/30' : 'hover:border-semantic-borderHover'
+          }`}
+        >
           <div>
-            <div className="text-[11px] text-semantic-textMuted">{t('statActive', 'الحلقات القائمة')}</div>
-            <div className="text-base font-extrabold text-semantic-success">{stats.totalActive}</div>
+            <div className="text-[11px] text-semantic-textMuted">{t('statActive', 'الحلقات النشطة')}</div>
+            <div className="text-base md:text-lg font-extrabold text-semantic-success">{stats.totalActive}</div>
           </div>
-          <CheckCircle2 size={18} className="text-semantic-success/60" />
-        </div>
+          <CheckCircle2 size={20} className="text-semantic-success/70" />
+        </button>
 
-        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
+        <button
+          type="button"
+          onClick={() => setViewMode('unassigned')}
+          className={`${UI.card} text-right flex items-center justify-between p-3.5 cursor-pointer transition-all ${
+            viewMode === 'unassigned' ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary/30' : 'hover:border-semantic-borderHover'
+          }`}
+        >
           <div>
-            <div className="text-[11px] text-semantic-textMuted">{t('statUnassigned', 'غير معينة')}</div>
-            <div className="text-base font-extrabold text-semantic-actionPrimary">{stats.unassigned}</div>
+            <div className="text-[11px] text-semantic-textMuted">{t('statUnassigned', 'بانتظار معلم')}</div>
+            <div className="text-base md:text-lg font-extrabold text-semantic-actionPrimary">{stats.unassigned}</div>
           </div>
-          <Users size={18} className="text-semantic-actionPrimary/60" />
-        </div>
+          <Users size={20} className="text-semantic-actionPrimary/70" />
+        </button>
 
-        <div className={`${UI.card} flex items-center justify-between p-3.5`}>
+        <button
+          type="button"
+          onClick={() => setViewMode('archived')}
+          className={`${UI.card} text-right flex items-center justify-between p-3.5 cursor-pointer transition-all ${
+            viewMode === 'archived' ? 'border-semantic-borderHover bg-semantic-surfaceInput' : 'hover:border-semantic-borderHover'
+          }`}
+        >
           <div>
             <div className="text-[11px] text-semantic-textMuted">{t('statArchived', 'المؤرشفة')}</div>
-            <div className="text-base font-extrabold text-semantic-textSecondary">{stats.totalArchived}</div>
+            <div className="text-base md:text-lg font-extrabold text-semantic-textSecondary">{stats.totalArchived}</div>
           </div>
-          <Archive size={18} className="text-semantic-textMuted" />
-        </div>
+          <Archive size={20} className="text-semantic-textMuted" />
+        </button>
       </div>
 
-      {/* 3. نموذج إضافة حلقة */}
-      {showFormModal && (
-        <HalaqaFormModal
-          formData={formData}
-          setFormData={setFormData}
-          handleSubmit={handleSubmit}
-          teachers={teachers}
-          getLocalizedText={getLocalizedText}
-          isSubmitting={isSubmitting}
-        />
-      )}
+      {/* 3. نافذة إضافة حلقة (Modal) */}
+      <HalaqaFormModal
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+        teachers={teachers}
+        isSubmitting={isSubmitting}
+      />
 
       {/* 4. البحث والفلترة ومطابقة طريقة العرض */}
       <div className={`${UI.card} flex flex-col sm:flex-row items-center justify-between gap-3 p-3`}>
@@ -188,7 +208,7 @@ export default function ActiveHalaqas({
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-semantic-textMuted" size={15} />
           <input
             type="text"
-            placeholder={t('searchPlaceholder', 'البحث بالحلقة أو المعلم...')}
+            placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو المعلم...')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className={`${UI.input} pr-9 pl-3 text-xs`}
@@ -201,10 +221,10 @@ export default function ActiveHalaqas({
             onChange={e => setSelectedTrack(e.target.value)}
             className={`${UI.input} w-auto text-xs`}
           >
-            <option value="all">{t('allTracks', 'كافة المسارات')}</option>
-            <option value="hifz">{t('trackHifz', 'الحفظ المكثف')}</option>
-            <option value="tilawah">{t('trackTilawah', 'التلاوة والتصحيح')}</option>
-            <option value="ijazah">{t('trackIjazah', 'الإجازات والسند')}</option>
+            <option value="all">{t('allTracks', 'جميع المسارات التعليمية')}</option>
+            <option value="hifz">{t('trackHifz', 'الحفظ والتجويد المكثف')}</option>
+            <option value="tilawah">{t('trackTilawah', 'التلاوة وتصحيح الأداء')}</option>
+            <option value="ijazah">{t('trackIjazah', 'الإجازات بالسند المتصل')}</option>
           </select>
 
           <div className="flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard">
