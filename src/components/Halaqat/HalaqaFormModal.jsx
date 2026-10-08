@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 import { Input, Select } from '@/components/UI';
-import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './halaqaConstants';
+import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 
 export default function HalaqaFormModal({ 
   isOpen,
