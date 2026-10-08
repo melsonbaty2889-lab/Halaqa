@@ -82,6 +82,7 @@
     "whatsappShareMessage": "أدعوك لتجربة المنظومة مع الحصول على خصم خاص عبر الرابط التالي:"
   },
   "allTracks": "جميع المسارات التعليمية",
+  "am": "ص",
   "app": {
     "title": "الحلقة الذكية"
   },
@@ -226,6 +227,7 @@
     "verificationCode": "",
     "verified": ""
   },
+  "clear": "مسح",
   "close": "إغلاق",
   "comm": {
     "academy_default": "مجمع الحلقة الذكية",
@@ -755,6 +757,7 @@
     "title": "التنبيهات",
     "unread": "غير مقروء"
   },
+  "pm": "م",
   "profile": {
     "changePasswordSection": "تغيير كلمة المرور (اختياري)",
     "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
@@ -880,8 +883,10 @@
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- اختر المعلم المعتمد --",
   "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)",
+  "selectTime": "اختر الوقت",
   "selectTrack": "-- اختر المسار --",
   "selectTrackTitle": "المسار التعليمي",
+  "set": "تعيين",
   "settings": {
     "advancedRegional": "",
     "calendarType": "نوع التقويم",

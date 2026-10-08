@@ -82,6 +82,7 @@
     "whatsappShareMessage": "I invite you to try the system and get a special discount via the following link:"
   },
   "allTracks": "جميع المسارات التعليمية",
+  "am": "ص",
   "app": {
     "title": "Smart Halaqa"
   },
@@ -227,6 +228,7 @@
     "verificationCode": "Verification Code",
     "verified": "Verified Certificate"
   },
+  "clear": "مسح",
   "close": "Close",
   "comm": {
     "academy_default": "Smart Halaqa Complex",
@@ -756,6 +758,7 @@
     "title": "Notifications",
     "unread": "Unread"
   },
+  "pm": "م",
   "profile": {
     "changePasswordSection": "Change Password (Optional)",
     "confirmPasswordLabel": "Confirm New Password",
@@ -881,8 +884,10 @@
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- Select Certified Teacher --",
   "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)",
+  "selectTime": "اختر الوقت",
   "selectTrack": "-- اختر المسار --",
   "selectTrackTitle": "المسار التعليمي",
+  "set": "تعيين",
   "settings": {
     "advancedRegional": "Advanced Regional Settings",
     "calendarType": "Calendar Type",
