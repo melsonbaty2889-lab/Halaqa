@@ -50,7 +50,7 @@ export default function HalaqasFilterBar({
           <CheckCircle2 size={13} />
           <span>{t('statActive', 'النشطة')}</span>
           <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px]">
-            {stats.totalActive}
+            {stats.totalActive || 0}
           </span>
         </button>
 
@@ -66,7 +66,7 @@ export default function HalaqasFilterBar({
           <Users size={13} />
           <span>{t('statUnassigned', 'بلا معلم')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
-            {stats.unassigned}
+            {stats.unassigned || 0}
           </span>
         </button>
 
@@ -82,7 +82,7 @@ export default function HalaqasFilterBar({
           <Archive size={13} />
           <span>{t('statArchived', 'المؤرشفة')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
-            {stats.totalArchived}
+            {stats.totalArchived || 0}
           </span>
         </button>
       </div>
