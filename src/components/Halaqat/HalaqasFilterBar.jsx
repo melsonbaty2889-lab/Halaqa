@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input, Select } from '@/components/UI';
-import { getTrackOptions } from '@/constants/halaqaConstants';
+import { getTrackOptions } from './HalaqaConstants';
 
 export default function HalaqasFilterBar({
   searchQuery = '',
