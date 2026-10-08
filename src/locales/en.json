@@ -382,6 +382,8 @@
     "warningTitle": "Confirm Action"
   },
   "createHalaqa": "إنشاء حلقة جديدة",
+  "createHalaqaTitle": "إنشاء حلقة جديدة",
+  "createNewHalaqa": "إنشاء الحلقة",
   "currency": {
     "egp": "",
     "sar": "",
@@ -576,7 +578,9 @@
     "upload_btn": "Upload New Document",
     "upload_title": "Upload New File"
   },
+  "editHalaqaTitle": "تعديل بيانات الحلقة",
   "endTime": "End Time",
+  "endTimeLabel": "وقت الانتهاء",
   "errors": {
     "generic": "An unexpected error occurred while processing request",
     "network_error": "Server connection failed, check your internet connection.",
@@ -666,11 +670,13 @@
     "unassigned": "Unassigned"
   },
   "halaqaName": "اسم الحلقة",
+  "halaqaNameLabel": "اسم الحلقة",
   "halaqaNamePlaceholder": "مثال: حلقة الإمام الشاطبي",
   "halaqasManager": "Quranic & Academic Halaqas Management Platform",
   "halaqaSub": "Manage educational sessions, distribute teachers, and track Quranic paths in the cloud",
   "halaqatSubTitle": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "halaqatTitle": "منصة إدارة الحلقات القرآنية والأكاديمية",
+  "halaqaTypeLabel": "نمط انعقاد الحلقة",
   "header": {
     "defaultUser": "Personal Account",
     "editProfile": "Profile",
@@ -858,11 +864,13 @@
     "update_error": "An error occurred while saving role, please try again",
     "user": "User"
   },
+  "saveChanges": "حفظ التعديلات",
   "saving": "جاري الحفظ...",
   "search_placeholder": "Search for a student by name, phone...",
   "searchPh": "Search by halaqa name or assigned teacher name...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- Select Certified Teacher --",
+  "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)",
   "selectTrack": "-- اختر المسار --",
   "selectTrackTitle": "المسار التعليمي",
   "settings": {
@@ -909,6 +917,7 @@
     "title": "Smart Halaqa"
   },
   "startTime": "Start Time",
+  "startTimeLabel": "وقت البدء",
   "statActive": "الحلقات النشطة",
   "statArchived": "المؤرشفة",
   "statUnassigned": "بانتظار معلم",
@@ -1058,9 +1067,11 @@
     "txIdPlaceholder": "Enter transaction number or sender's name"
   },
   "targetAudience": "الفئة المستهدفة",
+  "targetAudienceLabel": "الفئة المستهدفة",
   "teacher": {
     "name": "Teacher"
   },
+  "teacherLabel": "المعلم المسؤول",
   "termsModal": {
     "acceptBtn": "Accept & Continue",
     "agreeCheckbox": "I have read all terms and agree to abide by them",
@@ -1093,6 +1104,7 @@
   "track": "Educational Track",
   "trackHifz": "Intensive Memorization & Tajweed Track",
   "trackIjazah": "Connected Sanad Ijazah Track",
+  "trackLabel": "المسار التعليمي",
   "trackMutun": "المتون العلمية والتجويد النظرى",
   "trackReview": "المراجعة والتثبيت",
   "trackTilawah": "Recitation & Performance Correction Track",
@@ -1102,6 +1114,7 @@
   "unassigned": "Awaiting Certified Assignment",
   "unnamed_student": "Unnamed Student",
   "unnamedHalaqa": "حلقة بدون اسم",
+  "unnamedTeacher": "معلم بدون اسم",
   "user": {
     "role": "مستخدم"
   },

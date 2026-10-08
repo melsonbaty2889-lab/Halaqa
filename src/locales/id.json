@@ -381,6 +381,8 @@
     "warningTitle": "تأكيد الإجراء"
   },
   "createHalaqa": "إنشاء حلقة جديدة",
+  "createHalaqaTitle": "إنشاء حلقة جديدة",
+  "createNewHalaqa": "إنشاء الحلقة",
   "currency": {
     "egp": "",
     "sar": "",
@@ -575,7 +577,9 @@
     "upload_btn": "رفع مستند جديد",
     "upload_title": "رفع ملف جديد"
   },
+  "editHalaqaTitle": "تعديل بيانات الحلقة",
   "endTime": "وقت الانتهاء",
+  "endTimeLabel": "وقت الانتهاء",
   "errors": {
     "generic": "حدث خطأ غير متوقع أثناء معالجة الطلب",
     "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
@@ -665,11 +669,13 @@
     "unassigned": "غير معين"
   },
   "halaqaName": "اسم الحلقة",
+  "halaqaNameLabel": "اسم الحلقة",
   "halaqaNamePlaceholder": "مثال: حلقة الإمام الشاطبي",
   "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
   "halaqaSub": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "halaqatSubTitle": "إدارة الجلسات التعليمية، توزيع المعلمين، ومتابعة المسارات القرآنية سحابياً",
   "halaqatTitle": "منصة إدارة الحلقات القرآنية والأكاديمية",
+  "halaqaTypeLabel": "نمط انعقاد الحلقة",
   "header": {
     "defaultUser": "الحساب الشخصي",
     "editProfile": "الملف الشخصي",
@@ -857,11 +863,13 @@
     "update_error": "حدث خطأ أثناء حفظ الصفة، يرجى المحاولة مرة أخرى",
     "user": "مستخدم"
   },
+  "saveChanges": "حفظ التعديلات",
   "saving": "جاري الحفظ...",
   "search_placeholder": "ابحث عن طالب بالاسم، الهاتف...",
   "searchPh": "ابحث باسم الحلقة أو اسم المعلم المكلف...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- اختر المعلم المعتمد --",
+  "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)",
   "selectTrack": "-- اختر المسار --",
   "selectTrackTitle": "المسار التعليمي",
   "settings": {
@@ -907,6 +915,7 @@
     "title": "الحلقة الذكية"
   },
   "startTime": "وقت البدء",
+  "startTimeLabel": "وقت البدء",
   "statActive": "الحلقات النشطة",
   "statArchived": "المؤرشفة",
   "statUnassigned": "بانتظار معلم",
@@ -1051,9 +1060,11 @@
     "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
   "targetAudience": "الفئة المستهدفة",
+  "targetAudienceLabel": "الفئة المستهدفة",
   "teacher": {
     "name": "المعلم"
   },
+  "teacherLabel": "المعلم المسؤول",
   "termsModal": {
     "acceptBtn": "موافقة ومتابعة",
     "agreeCheckbox": "قرأت جميع الشروط وأوافق على الالتزام بها",
@@ -1086,6 +1097,7 @@
   "track": "المسار التعليمي",
   "trackHifz": "مسار الحفظ والتجويد المكثف",
   "trackIjazah": "مسار الإجازات بالسند المتصل",
+  "trackLabel": "المسار التعليمي",
   "trackMutun": "المتون العلمية والتجويد النظرى",
   "trackReview": "المراجعة والتثبيت",
   "trackTilawah": "مسار التلاوة وتصحيح الأداء",
@@ -1095,6 +1107,7 @@
   "unassigned": "بانتظار تعيين معتمد",
   "unnamed_student": "طالب بدون اسم",
   "unnamedHalaqa": "حلقة بدون اسم",
+  "unnamedTeacher": "معلم بدون اسم",
   "user": {
     "role": "مستخدم"
   },
