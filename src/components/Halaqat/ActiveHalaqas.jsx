@@ -141,22 +141,23 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-4">
-      {/* تم إلغاء تكرار عنوان الصفحة المكتوب في Navbar وتوفير مساحة رأسية هادئة */}
-      <div className="flex items-center justify-between gap-3 pb-2 border-b border-semantic-borderCard">
-        <p className="text-xs text-semantic-textMuted m-0">
-          {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
-        </p>
+    {/* رأس الصفحة العلوي المطور والمحاذى بأسلوب نظيف */}
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-semantic-borderCard">
+  <div className="flex-1 min-w-0">
+    <p className="text-xs text-semantic-textMuted m-0 leading-relaxed truncate sm:whitespace-normal">
+      {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
+    </p>
+  </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} py-2 px-4 text-xs font-extrabold flex items-center justify-center gap-1.5 shrink-0`}
-        >
-          <Plus size={16} />
-          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
-        </button>
-      </div>
+  <button
+    type="button"
+    onClick={handleOpenCreateModal}
+    className={`${UI.btnPrimary} w-full sm:w-auto py-2 px-4 text-xs font-extrabold flex items-center justify-center gap-1.5 shrink-0 shadow-none hover:shadow-md transition-all`}
+  >
+    <Plus size={16} />
+    <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
+  </button>
+</div>
 
       {/* شريط الفلترة والبحث والتبويبات */}
       <HalaqasFilterBar
