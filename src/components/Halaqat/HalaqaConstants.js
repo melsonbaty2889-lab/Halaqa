@@ -15,12 +15,12 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
 };
 
 /**
- * خيارات المسارات التعليمية المعتمدة
+ * خيارات المسارات التعليمية المعتمدة (مربوطة بقاعدة البيانات)
  */
 export const getTrackOptions = (t) => [
   { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
   { value: 'hifz', label: t('trackHifz', 'حفظ القرآن الكريم وتجويده') },
-  { value: 'review', label: t('trackReview', 'المراجعة والتثبيت') },
+  { value: 'muraja', label: t('trackMuraja', 'المراجعة والتثبيت') },
   { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
   { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') },
   { value: 'mutun', label: t('trackMutun', 'المتون العلمية والتجويد النظرى') }
