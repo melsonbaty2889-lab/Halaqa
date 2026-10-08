@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Save, Plus, AlertCircle } from 'lucide-react';
+import { Save, Plus, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -21,7 +21,7 @@ export default function HalaqaFormModal({
   const currentLang = i18n?.language || 'ar';
   const [timeError, setTimeError] = useState('');
 
-  // تحديد المنطقة الزمنية التلقائية للنظام أو المستخدم
+  // تحديد المنطقة الزمنية تلقائياً دون الحاجة لعرض حقل إدخال لها
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   useEffect(() => {
@@ -123,10 +123,10 @@ export default function HalaqaFormModal({
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         
-        {/* منطقة الحقول ذات التمرير */}
-        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-4">
+        {/* منطقة الحقول */}
+        <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
           
-          {/* اسم الحلقة بدون أمثلة تجريبية */}
+          {/* اسم الحلقة */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -190,8 +190,8 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* توقيت الحلقة */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* توقيت الحلقة والحد الأقصى */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('startTimeLabel', 'وقت البدء')} <span className="text-semantic-actionPrimary">*</span>
@@ -215,18 +215,7 @@ export default function HalaqaFormModal({
                 onChange={(v) => handleChange('end_time', v)}
               />
             </div>
-          </div>
 
-          {/* تنبيه الخطأ لترتيب الأوقات */}
-          {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{timeError}</span>
-            </div>
-          )}
-
-          {/* السعة القصوى والمنطقة الزمنية */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
@@ -235,25 +224,24 @@ export default function HalaqaFormModal({
                 type="number"
                 min="1"
                 max="500"
-                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة القصوى')}
+                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
                 value={formData?.max_students ?? ''}
                 onChange={(v) => handleChange('max_students', extractValue(v))}
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-bold text-semantic-textMuted mb-1">
-                {t('timezone', 'المنطقة الزمنية النظامية')}
-              </label>
-              <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-1.5 h-[40px]">
-                <Globe size={13} className="text-semantic-actionPrimary shrink-0" />
-                <span className="truncate">{formData?.timezone || defaultTimezone}</span>
-              </div>
-            </div>
           </div>
+
+          {/* تنبيه أخطاء التوقيت */}
+          {timeError && (
+            <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30">
+              <AlertCircle size={15} className="shrink-0" />
+              <span>{timeError}</span>
+            </div>
+          )}
+
         </div>
 
-        {/* أزرار الإجراءات */}
+        {/* أزرار التحكم في الأسفل */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
