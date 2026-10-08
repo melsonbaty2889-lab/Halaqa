@@ -114,9 +114,9 @@ export default function HalaqaFormModal({
 
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
+       open={isOpen || open}
+  onClose={onClose}
+  title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إضافة حلقة جديدة')}
       maxWidth="max-w-lg"
     >
       <form onSubmit={onSubmitForm} className="flex flex-col max-h-[80vh] overflow-hidden text-right">
