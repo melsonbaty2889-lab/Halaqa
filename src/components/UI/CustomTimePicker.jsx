@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, X, Check } from 'lucide-react';
+import { Clock, X, Check, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function CustomTimePicker({
@@ -15,6 +15,9 @@ export default function CustomTimePicker({
   const [hours, setHours] = useState('12');
   const [minutes, setMinutes] = useState('00');
   const [period, setPeriod] = useState('AM');
+
+  // التحكم في فتح القوائم المنسدلة الداخليّة
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'hours' | 'minutes' | null
 
   useEffect(() => {
     if (value) {
@@ -38,11 +41,13 @@ export default function CustomTimePicker({
     const formattedTime = `${hourNum.toString().padStart(2, '0')}:${minutes}`;
     onChange(formattedTime);
     setIsOpen(false);
+    setActiveDropdown(null);
   };
 
   const handleClear = () => {
     onChange('');
     setIsOpen(false);
+    setActiveDropdown(null);
   };
 
   const formatDisplayTime = () => {
@@ -55,11 +60,14 @@ export default function CustomTimePicker({
     return `${hourNum.toString().padStart(2, '0')}:${m} ${p}`;
   };
 
+  const hoursList = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const minutesList = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+
   return (
     <div className="w-full relative">
       {label && (
         <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-          {label} {required && <span className="text-semantic-actionDanger">*</span>}
+          {label} {required && <span className="text-semantic-actionPrimary">*</span>}
         </label>
       )}
 
@@ -79,62 +87,102 @@ export default function CustomTimePicker({
         <Clock size={16} className="text-semantic-textMuted shrink-0" />
       </button>
 
-      {error && <p className="text-[11px] text-semantic-actionDanger mt-1">{error}</p>}
-
       {/* النافذة المنبثقة لاختيار الوقت */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-xs bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl shadow-xl overflow-hidden text-semantic-textPrimary">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-xs bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl shadow-2xl overflow-hidden text-semantic-textPrimary flex flex-col">
             
             {/* الهيدر */}
-            <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderCard bg-semantic-surfaceInput">
+            <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderCard bg-semantic-surfaceInput/40">
               <span className="text-xs font-bold">{t('selectTime', 'اختر الوقت')}</span>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={() => { setIsOpen(false); setActiveDropdown(null); }}
                 className="p-1 rounded-lg hover:bg-semantic-borderCard/40 text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* عناصر اختيار الساعة والدقيقة والتوقيت */}
-            <div className="p-4 flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center gap-2 dir-ltr">
-                <select
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
-                  className="bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textPrimary text-xl font-bold p-2.5 rounded-xl text-center outline-none focus:border-semantic-actionPrimary cursor-pointer"
-                >
-                  {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map((h) => (
-                    <option key={h} value={h} className="bg-semantic-surfaceCard text-sm">
-                      {h}
-                    </option>
-                  ))}
-                </select>
+            {/* محتوى اختيار الوقت */}
+            <div className="p-4 flex flex-col items-center gap-4 relative">
+              <div className="flex items-center justify-center gap-2 dir-ltr w-full">
+                
+                {/* منتقي الساعات المخصص */}
+                <div className="relative flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveDropdown(activeDropdown === 'hours' ? null : 'hours')}
+                    className="w-full flex items-center justify-between gap-1 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textPrimary text-lg font-bold p-2.5 rounded-xl text-center outline-none hover:border-semantic-actionPrimary transition-all cursor-pointer"
+                  >
+                    <span>{hours}</span>
+                    <ChevronDown size={14} className="text-semantic-textMuted shrink-0" />
+                  </button>
+
+                  {/* قائمة الساعات المنسدلة */}
+                  {activeDropdown === 'hours' && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto p-1 space-y-0.5">
+                      {hoursList.map((h) => (
+                        <button
+                          key={h}
+                          type="button"
+                          onClick={() => { setHours(h); setActiveDropdown(null); }}
+                          className={`w-full text-center py-1.5 text-sm rounded-lg font-bold transition-all ${
+                            hours === h 
+                              ? 'bg-semantic-actionPrimary text-semantic-textPrimary' 
+                              : 'hover:bg-semantic-surfaceInput text-semantic-textPrimary'
+                          }`}
+                        >
+                          {h}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <span className="text-xl font-bold text-semantic-actionPrimary">:</span>
 
-                <select
-                  value={minutes}
-                  onChange={(e) => setMinutes(e.target.value)}
-                  className="bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textPrimary text-xl font-bold p-2.5 rounded-xl text-center outline-none focus:border-semantic-actionPrimary cursor-pointer"
-                >
-                  {['00', '15', '30', '45'].map((m) => (
-                    <option key={m} value={m} className="bg-semantic-surfaceCard text-sm">
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                {/* منتقي الدقائق المخصص */}
+                <div className="relative flex-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveDropdown(activeDropdown === 'minutes' ? null : 'minutes')}
+                    className="w-full flex items-center justify-between gap-1 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textPrimary text-lg font-bold p-2.5 rounded-xl text-center outline-none hover:border-semantic-actionPrimary transition-all cursor-pointer"
+                  >
+                    <span>{minutes}</span>
+                    <ChevronDown size={14} className="text-semantic-textMuted shrink-0" />
+                  </button>
 
-                <div className="flex flex-col gap-1 ml-1">
+                  {/* قائمة الدقائق المنسدلة */}
+                  {activeDropdown === 'minutes' && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto p-1 space-y-0.5">
+                      {minutesList.map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => { setMinutes(m); setActiveDropdown(null); }}
+                          className={`w-full text-center py-1.5 text-sm rounded-lg font-bold transition-all ${
+                            minutes === m 
+                              ? 'bg-semantic-actionPrimary text-semantic-textPrimary' 
+                              : 'hover:bg-semantic-surfaceInput text-semantic-textPrimary'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* زر ص / م */}
+                <div className="flex flex-col gap-1 ml-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => setPeriod('AM')}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                       period === 'AM'
-                        ? 'bg-semantic-actionPrimary text-semantic-textPrimary border-semantic-actionPrimary'
-                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
+                        ? 'bg-semantic-actionPrimary text-semantic-textPrimary border-semantic-actionPrimary shadow-xs'
+                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:text-semantic-textPrimary'
                     }`}
                   >
                     {t('am', 'ص')}
@@ -142,24 +190,25 @@ export default function CustomTimePicker({
                   <button
                     type="button"
                     onClick={() => setPeriod('PM')}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                       period === 'PM'
-                        ? 'bg-semantic-actionPrimary text-semantic-textPrimary border-semantic-actionPrimary'
-                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
+                        ? 'bg-semantic-actionPrimary text-semantic-textPrimary border-semantic-actionPrimary shadow-xs'
+                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:text-semantic-textPrimary'
                     }`}
                   >
                     {t('pm', 'م')}
                   </button>
                 </div>
+
               </div>
             </div>
 
-            {/* الأزرار المعربة */}
-            <div className="flex items-center gap-2 p-3 bg-semantic-surfaceInput border-t border-semantic-borderCard">
+            {/* الأزرار السفلية */}
+            <div className="flex items-center gap-2 p-3 bg-semantic-surfaceInput/40 border-t border-semantic-borderCard mt-auto">
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="flex-1 py-2 px-3 bg-semantic-actionPrimary text-semantic-textPrimary rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:opacity-90 cursor-pointer border-none"
+                className="flex-1 py-2 px-3 bg-semantic-actionPrimary text-semantic-textPrimary rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:opacity-90 cursor-pointer border-none shadow-xs"
               >
                 <Check size={14} />
                 <span>{t('set', 'تعيين')}</span>
@@ -175,7 +224,7 @@ export default function CustomTimePicker({
 
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={() => { setIsOpen(false); setActiveDropdown(null); }}
                 className="py-2 px-3 bg-transparent text-semantic-textMuted rounded-xl text-xs font-bold hover:text-semantic-textPrimary transition-all cursor-pointer border-none"
               >
                 {t('cancel', 'إلغاء')}
