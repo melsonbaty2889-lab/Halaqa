@@ -135,10 +135,10 @@ export default function ActiveHalaqas({
   const hasActiveFilters = searchQuery.trim() !== '' || selectedTrack !== 'all';
 
   return (
-    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3.5 text-semantic-textPrimary">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3 text-semantic-textPrimary">
       
-      {/* 1. الترويسة الأنيقة المقتضبة */}
-      <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/40 pb-2">
+      {/* 1. السطر الأول: عنوان الصفحة المقتضب + زر الإضافة المنظم */}
+      <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/30 pb-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
             <Layers size={18} />
@@ -151,19 +151,19 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={handleOpenModal}
-          className={`${UI.btnPrimary} px-3 py-1.5 text-xs font-bold flex items-center gap-1 shadow-md shrink-0 rounded-xl`}
+          className={`${UI.btnPrimary} px-3 py-1.5 text-xs font-bold flex items-center gap-1 shadow-sm shrink-0 rounded-xl`}
         >
           <Plus size={15} />
           <span>{t('createHalaqa', 'حلقة جديدة')}</span>
         </button>
       </div>
 
-      {/* 2. أزرار التصفية الرئيسية (Tabs متناسقة ومتوازنة) */}
+      {/* 2. التبويبات الثلاثة (Grid متوازن 100% يمنع الخروج خارج الشاشة) */}
       <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
           onClick={() => setViewMode('active')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'active'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
@@ -179,7 +179,7 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={() => setViewMode('unassigned')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
@@ -195,7 +195,7 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={() => setViewMode('archived')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
@@ -209,7 +209,7 @@ export default function ActiveHalaqas({
         </button>
       </div>
 
-      {/* 3. شريط البحث والمسارات */}
+      {/* 3. عناصر البحث والفلترة */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="flex-1">
           <Input
@@ -265,14 +265,14 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 4. إعدادات العداد الحلقات الحالية */}
+      {/* 4. عداد النتائج */}
       <div className="flex items-center justify-between text-[11px] text-semantic-textMuted px-1">
         <span>
           {t('showingResults', 'عرض {{count}} حلقة', { count: filteredHalaqas.length })}
         </span>
       </div>
 
-      {/* 5. نافذة إنشاء الحلقة */}
+      {/* 5. النافذة المنبثقة للإنشاء */}
       <HalaqaFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -283,7 +283,7 @@ export default function ActiveHalaqas({
         isSubmitting={isSubmitting}
       />
 
-      {/* 6. عرض قائمة الحلقات أو حالة الفراغ */}
+      {/* 6. عرض الكروت أو الحالة الفارغة */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
