@@ -84,11 +84,11 @@ export default function HalaqaCardItem({
 
       {/* أزرار الإجراءات */}
       <div className="flex items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1">
-        {/* زر التسميع/الجلسة */}
+        {/* زر التسميع/الجلسة المباشرة المعتمد كـ UI.btnEmerald */}
         <button 
           type="button"
           onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-          className={`${UI.btnPrimary} flex-1 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1`}
+          className={`${UI.btnEmerald} flex-1 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1`}
           title={t('goToAttendance', 'الانضمام للجلسة المباشرة')}
         >
           <Video size={14} />
