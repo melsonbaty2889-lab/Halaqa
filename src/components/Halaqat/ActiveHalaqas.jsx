@@ -132,12 +132,12 @@ export default function ActiveHalaqas({
   return (
     <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3.5 text-semantic-textPrimary">
       
-      {/* 1. الترويسة */}
+      {/* 1. الترويسة الموحدة والمبسطة للموبايل والشاشات الكبيرة */}
       <div className="flex items-center justify-between gap-2 py-1">
         <div>
-          <h1 className="text-base sm:text-xl font-black text-semantic-textPrimary flex items-center gap-2 m-0">
-            <Layers className="text-semantic-actionPrimary shrink-0" size={20} />
-            {t('halaqatTitle', 'إدارة الحلقات والفصول')}
+          <h1 className="text-sm sm:text-xl font-black text-semantic-textPrimary flex items-center gap-2 m-0">
+            <Layers className="text-semantic-actionPrimary shrink-0" size={18} />
+            <span>{t('halaqatTitle', 'إدارة الحلقات والفصول')}</span>
           </h1>
           <p className="text-[11px] text-semantic-textMuted m-0 mt-0.5 hidden sm:block">
             {t('halaqatSubTitle', 'متابعة الجلسات التعليمية وتوزيع المعلمين ومراقبة المسارات')}
@@ -147,9 +147,9 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={handleOpenModal}
-          className={`${UI.btnPrimary} w-auto px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0`}
+          className={`${UI.btnPrimary} w-auto px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0`}
         >
-          <Plus size={16} />
+          <Plus size={15} />
           <span>{t('createHalaqa', 'حلقة جديدة')}</span>
         </button>
       </div>
@@ -219,6 +219,7 @@ export default function ActiveHalaqas({
 
         <div className="w-full sm:w-auto shrink-0">
           <Select
+            title={t('selectTrackTitle', 'المسار التعليمي')}
             value={selectedTrack}
             onChange={(v) => setSelectedTrack(extractValue(v))}
             options={trackOptions}
