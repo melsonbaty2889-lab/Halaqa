@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Globe, Save, Plus, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { Input, Select } from '@/components/UI';
@@ -8,14 +8,15 @@ import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from 
 export default function HalaqaFormModal({
   isOpen,
   onClose,
-  onSubmit,
-  formData,
+  handleSubmit,
+  formData = {},
   setFormData,
   teachers = [],
   isSubmitting = false
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
+  const [timeError, setTimeError] = useState('');
 
   if (!isOpen) return null;
 
@@ -26,11 +27,23 @@ export default function HalaqaFormModal({
     return val;
   };
 
-  const handleChange = (field, value) => {
-    const extracted = extractValue(value);
+  const handleChange = (field, val) => {
+    const value = extractValue(val);
     setFormData((prev) => ({
       ...prev,
-      [field]: extracted
+      [field]: value
+    }));
+  };
+
+  const handleNameChange = (val) => {
+    const value = extractValue(val);
+    setFormData((prev) => ({
+      ...prev,
+      name_text: value,
+      name: {
+        ...(typeof prev?.name === 'object' ? prev?.name : {}),
+        [currentLang]: value
+      }
     }));
   };
 
@@ -46,65 +59,79 @@ export default function HalaqaFormModal({
     }))
   ];
 
-  const handleSubmitForm = (e) => {
+  const onSubmitForm = (e) => {
     e.preventDefault();
+    setTimeError('');
 
-    // تجهيز كائن Name المعتمد لـ jsonb مع ربط المسميات بدقة مع قاعدة البيانات
-    const rawName = formData?.name_text || formData?.name || '';
-    const formattedName = typeof rawName === 'object' ? rawName : { [currentLang]: rawName, ar: rawName };
+    const startTime = formData?.start_time;
+    const endTime = formData?.end_time;
+
+    if (startTime && endTime && startTime >= endTime) {
+      setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
+      return;
+    }
+
+    const rawName = formData?.name_text || (typeof formData?.name === 'string' ? formData?.name : formData?.name?.[currentLang] || formData?.name?.ar || '');
+    const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
+      ? { ...formData.name, [currentLang]: rawName }
+      : { [currentLang]: rawName, ar: rawName };
 
     const payload = {
       ...formData,
       name: formattedName,
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
-      teacher_id: formData?.teacher_id || null
+      teacher_id: formData?.teacher_id || null,
+      max_students: parseInt(formData?.max_students) || 25,
+      timezone: formData?.timezone || 'Africa/Cairo'
     };
 
     delete payload.name_text;
     delete payload.track;
     delete payload.type;
 
-    onSubmit?.(payload);
+    handleSubmit?.(payload);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-semantic-bgMain border border-semantic-borderCard w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* الهيدر */}
-        <div className="flex items-center justify-between p-4 border-b border-semantic-borderCard bg-semantic-surfaceInput/50">
-          <h3 className="text-base font-extrabold text-semantic-textPrimary m-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+      <div className="bg-semantic-bgMain border border-semantic-borderCard w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        
+        {/* الهيدر الموحد */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-semantic-borderCard bg-semantic-surfaceInput/40 shrink-0">
+          <h3 className="text-sm sm:text-base font-black text-semantic-textPrimary m-0">
             {formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput transition-colors border-none cursor-pointer"
+            className="p-1 rounded-lg text-semantic-textMuted hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput transition-colors border-none cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* جسم النموذج */}
-        <form onSubmit={handleSubmitForm} className="p-4 space-y-4 overflow-y-auto flex-1">
+        {/* جسم النموذج المنظم */}
+        <form onSubmit={onSubmitForm} className="p-4 space-y-3.5 overflow-y-auto flex-1 text-right">
+          
           {/* اسم الحلقة */}
           <div>
-            <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-              {t('halaqaNameLabel', 'اسم الحلقة')} *
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
             </label>
             <Input
               type="text"
               required
               placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام عاصم لحفظ الجزء الثلاثين')}
               value={formData?.name_text ?? (typeof formData?.name === 'string' ? formData?.name : formData?.name?.[currentLang] || formData?.name?.ar || '')}
-              onChange={(v) => handleChange('name_text', v)}
+              onChange={handleNameChange}
             />
           </div>
 
           {/* المسار التعليمي والمعلم */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
@@ -115,7 +142,7 @@ export default function HalaqaFormModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('teacherLabel', 'المعلم المسؤول')}
               </label>
               <Select
@@ -126,21 +153,21 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* الفئة والمكان (أونلاين / حضوري) */}
+          {/* الفئة والمكان */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
-                value={formData?.target_audience || 'kids'}
+                value={formData?.target_audience || 'all'}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
@@ -151,11 +178,11 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* توقيت الحلقة (مطابق للشروط الشرطية start_time < end_time) */}
+          {/* توقيت الحلقة */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-                {t('startTimeLabel', 'وقت البدء')} *
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('startTimeLabel', 'وقت البدء')} <span className="text-semantic-actionPrimary">*</span>
               </label>
               <Input
                 type="time"
@@ -166,8 +193,8 @@ export default function HalaqaFormModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-                {t('endTimeLabel', 'وقت الانتهاء')} *
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('endTimeLabel', 'وقت الانتهاء')} <span className="text-semantic-actionPrimary">*</span>
               </label>
               <Input
                 type="time"
@@ -178,19 +205,53 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* أزرار الحفظ والإلغاء */}
-          <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-4 mt-2">
+          {/* تنبيه الخطأ الزمني */}
+          {timeError && (
+            <div className="p-2 rounded-lg bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-1.5 border border-semantic-errorBorder/30">
+              <AlertCircle size={14} className="shrink-0" />
+              <span>{timeError}</span>
+            </div>
+          )}
+
+          {/* العدد الأقصى والمنطقة الزمنية المقتضبة */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={formData?.max_students || 25}
+                onChange={(v) => handleChange('max_students', parseInt(extractValue(v)) || 25)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-semantic-textMuted mb-1">
+                {t('timezone', 'المنطقة الزمنية')}
+              </label>
+              <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-1.5 h-[38px]">
+                <Globe size={13} className="text-semantic-actionPrimary shrink-0" />
+                <span className="truncate">{formData?.timezone || 'Africa/Cairo'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* أزرار الحفظ والإلغاء المظبوطة في الأسفل */}
+          <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className={`${UI.btnSecondary} text-xs py-2 px-4`}
+              className={`${UI.btnSecondary} text-xs py-2 px-4 rounded-xl font-bold`}
             >
               {t('cancel', 'إلغاء')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${UI.btnPrimary} text-xs py-2 px-5 flex items-center gap-1.5`}
+              className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5`}
             >
               {formData?.id ? <Save size={14} /> : <Plus size={14} />}
               <span>
