@@ -711,6 +711,7 @@
   "loading": "جاري تحميل البيانات...",
   "maxStudents": "السعة الأقصى للطلاب",
   "maxStudentsLabel": "الحد الأقصى للطلاب",
+  "maxStudentsPlaceholder": "أدخل السعة القصوى",
   "menu": {
     "items": {
       "attendance": "التسميع والحضور",

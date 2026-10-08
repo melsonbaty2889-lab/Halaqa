@@ -712,6 +712,7 @@
   "loading": "Loading data...",
   "maxStudents": "السعة الأقصى للطلاب",
   "maxStudentsLabel": "الحد الأقصى للطلاب",
+  "maxStudentsPlaceholder": "أدخل السعة القصوى",
   "menu": {
     "items": {
       "attendance": "Recitation & Attendance",
