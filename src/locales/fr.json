@@ -32,6 +32,8 @@
     "whatsapp_chat": "تواصل مباشر عبر الواتساب"
   },
   "activate": "تنشيط",
+  "activeHalaqasSub": "متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين",
+  "activeHalaqasTitle": "إدارة الحلقات والفصول",
   "activeSession": "جلسة نشطة",
   "activeSessions": "الحلقات النشطة",
   "add_new_student": "إضافة طالب جديد",
@@ -385,6 +387,7 @@
   "createHalaqa": "إنشاء حلقة جديدة",
   "createHalaqaTitle": "إنشاء حلقة جديدة",
   "createNewHalaqa": "إنشاء الحلقة",
+  "createNewHalaqaBtn": "إضافة حلقة جديدة",
   "currency": {
     "egp": "",
     "sar": "",
@@ -737,7 +740,10 @@
   "nameEn": "اسم الحلقة (بالإنجليزية)",
   "no_search_results": "لم يتم العثور على نتائج تطابق بحثك.",
   "noData": "لا توجد جلسات تعليمية مسجلة طابق بحثك حالياً",
+  "noHalaqasFound": "لا توجد حلقات للعرض",
+  "noHalaqasInView": "لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.",
   "noHalaqatFound": "لا توجد حلقات مطابقة لخيارات البحث أو الفلترة الحالية",
+  "noSearchResults": "لم نجد أي حلقات تطابق بحثك الحالي.",
   "notifications": {
     "all": "الكل",
     "clearAll": "حذف الكل",
