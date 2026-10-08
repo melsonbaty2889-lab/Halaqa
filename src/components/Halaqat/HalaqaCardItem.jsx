@@ -10,8 +10,28 @@ export default function HalaqaCardItem({
   onNavigateToAttendance, 
   onToggleArchiveHalaqa 
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || 'ar';
   const hasTeacher = Boolean(halaqa?.teacher_id || halaqa?.teacher_name || halaqa?.teacher);
+
+  // دالة آمنة لاستخراج الاسم سواء كان كائناً أو نصاً
+  const renderHalaqaName = () => {
+    if (getLocalizedText) return getLocalizedText(halaqa?.name);
+    if (typeof halaqa?.name === 'object' && halaqa?.name !== null) {
+      return halaqa?.name[currentLang] || halaqa?.name?.ar || halaqa?.name?.en || '';
+    }
+    return halaqa?.name || '';
+  };
+
+  // دالة آمنة لاستخراج اسم المعلم
+  const renderTeacherName = () => {
+    const teacherData = halaqa?.teacher_name || halaqa?.teacher;
+    if (getLocalizedText) return getLocalizedText(teacherData);
+    if (typeof teacherData === 'object' && teacherData !== null) {
+      return teacherData[currentLang] || teacherData?.ar || teacherData?.en || '';
+    }
+    return teacherData || '';
+  };
 
   return (
     <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover`}>
@@ -19,7 +39,7 @@ export default function HalaqaCardItem({
         {/* عنوان الحلقة وحالتها */}
         <div className="flex justify-between items-start gap-2 mb-2.5">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
-            {getLocalizedText ? getLocalizedText(halaqa?.name) : halaqa?.name}
+            {renderHalaqaName()}
           </h4>
           
           {halaqa?.is_archived ? (
@@ -39,9 +59,7 @@ export default function HalaqaCardItem({
             <>
               <User size={14} className="text-semantic-actionPrimary shrink-0" />
               <span className="truncate">
-                {getLocalizedText 
-                  ? getLocalizedText(halaqa?.teacher_name || halaqa?.teacher)
-                  : (halaqa?.teacher_name || halaqa?.teacher)}
+                {renderTeacherName()}
               </span>
             </>
           ) : (
