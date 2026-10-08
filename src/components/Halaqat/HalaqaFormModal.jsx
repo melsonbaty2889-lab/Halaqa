@@ -54,6 +54,25 @@ export default function HalaqaFormModal({
     }));
   };
 
+  // دالة التحقق الفوري من صحة التوقيت
+  const validateTimes = (startTime, endTime) => {
+    if (startTime && endTime && startTime >= endTime) {
+      setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
+      return false;
+    }
+    setTimeError('');
+    return true;
+  };
+
+  // معالجة تغيير الأوقات مع الفحص المباشر
+  const handleTimeChange = (field, val) => {
+    const newStartTime = field === 'start_time' ? val : formData?.start_time;
+    const newEndTime = field === 'end_time' ? val : formData?.end_time;
+
+    handleChange(field, val);
+    validateTimes(newStartTime, newEndTime);
+  };
+
   const handleNameChange = (val) => {
     const value = extractValue(val);
     setFormData((prev) => ({
@@ -80,13 +99,11 @@ export default function HalaqaFormModal({
 
   const onSubmitForm = (e) => {
     e.preventDefault();
-    setTimeError('');
 
     const startTime = formData?.start_time;
     const endTime = formData?.end_time;
 
-    if (startTime && endTime && startTime >= endTime) {
-      setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
+    if (!validateTimes(startTime, endTime)) {
       return;
     }
 
@@ -191,45 +208,45 @@ export default function HalaqaFormModal({
           </div>
 
           {/* توقيت الحلقة والحد الأقصى */}
-<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-  <CustomTimePicker
-    label={t('startTimeLabel', 'وقت البدء')}
-    required
-    value={formData?.start_time || ''}
-    onChange={(val) => handleTimeChange('start_time', val)}
-    error={timeError ? true : false}
-  />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <CustomTimePicker
+              label={t('startTimeLabel', 'وقت البدء')}
+              required
+              value={formData?.start_time || ''}
+              onChange={(val) => handleTimeChange('start_time', val)}
+              error={timeError ? true : false}
+            />
 
-  <CustomTimePicker
-    label={t('endTimeLabel', 'وقت الانتهاء')}
-    required
-    value={formData?.end_time || ''}
-    onChange={(val) => handleTimeChange('end_time', val)}
-    error={timeError ? true : false}
-  />
+            <CustomTimePicker
+              label={t('endTimeLabel', 'وقت الانتهاء')}
+              required
+              value={formData?.end_time || ''}
+              onChange={(val) => handleTimeChange('end_time', val)}
+              error={timeError ? true : false}
+            />
 
-  <div>
-    <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-      {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
-    </label>
-    <Input
-      type="number"
-      min="1"
-      max="500"
-      placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
-      value={formData?.max_students ?? ''}
-      onChange={(v) => handleChange('max_students', extractValue(v))}
-    />
-  </div>
-</div>
+            <div>
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="500"
+                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
+                value={formData?.max_students ?? ''}
+                onChange={(v) => handleChange('max_students', extractValue(v))}
+              />
+            </div>
+          </div>
 
-{/* تنبيه أخطاء التوقيت الفوري */}
-{timeError && (
-  <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30 animate-in fade-in duration-150">
-    <AlertCircle size={15} className="shrink-0" />
-    <span>{timeError}</span>
-  </div>
-)}
+          {/* تنبيه أخطاء التوقيت الفوري */}
+          {timeError && (
+            <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30 animate-in fade-in duration-150">
+              <AlertCircle size={15} className="shrink-0" />
+              <span>{timeError}</span>
+            </div>
+          )}
 
         </div>
 
