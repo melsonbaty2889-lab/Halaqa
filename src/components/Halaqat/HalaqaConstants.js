@@ -15,7 +15,7 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
 };
 
 /**
- * خيارات المسارات التعليمية المعتمدة للحلقات
+ * خيارات المسارات التعليمية المعتمدة
  */
 export const getTrackOptions = (t) => [
   { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
@@ -37,9 +37,9 @@ export const getTargetAudienceOptions = (t) => [
 ];
 
 /**
- * نمط انعقاد الحلقة (أونلاين / حضوري)
+ * نمط انعقاد الحلقة (مطابق لشرط halaqas_teaching_type_check في قاعدة البيانات)
  */
 export const getHalaqaTypeOptions = (t) => [
   { value: 'online', label: t('typeOnline', 'عن بُعد (أونلاين)') },
-  { value: 'onsite', label: t('typeOnsite', 'حضوري (في المقر / المسجد)') }
+  { value: 'offline', label: t('typeOffline', 'حضوري (في المقر / المسجد)') }
 ];
