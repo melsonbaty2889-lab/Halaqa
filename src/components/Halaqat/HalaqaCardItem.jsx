@@ -2,44 +2,32 @@ import React from 'react';
 import { User, Clock, Video, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
+import { getLocalizedContent } from './halaqaConstants';
 
 export default function HalaqaCardItem({ 
   halaqa, 
-  viewMode, 
+  viewMode = 'active', 
   getLocalizedText, 
   onNavigateToAttendance, 
   onToggleArchiveHalaqa 
 }) {
   const { t, i18n } = useTranslation();
-  const currentLang = i18n.language || 'ar';
+  const currentLang = i18n?.language || 'ar';
+
   const hasTeacher = Boolean(halaqa?.teacher_id || halaqa?.teacher_name || halaqa?.teacher);
 
-  // دالة آمنة لاستخراج الاسم سواء كان كائناً أو نصاً
-  const renderHalaqaName = () => {
-    if (getLocalizedText) return getLocalizedText(halaqa?.name);
-    if (typeof halaqa?.name === 'object' && halaqa?.name !== null) {
-      return halaqa?.name[currentLang] || halaqa?.name?.ar || halaqa?.name?.en || '';
-    }
-    return halaqa?.name || '';
-  };
-
-  // دالة آمنة لاستخراج اسم المعلم
-  const renderTeacherName = () => {
-    const teacherData = halaqa?.teacher_name || halaqa?.teacher;
-    if (getLocalizedText) return getLocalizedText(teacherData);
-    if (typeof teacherData === 'object' && teacherData !== null) {
-      return teacherData[currentLang] || teacherData?.ar || teacherData?.en || '';
-    }
-    return teacherData || '';
-  };
+  // استخراج اسم الحلقة واسم المعلم باستخدام الدالة الموحدة
+  const halaqaName = getLocalizedContent(halaqa?.name, currentLang, getLocalizedText);
+  const teacherData = halaqa?.teacher_name || halaqa?.teacher;
+  const teacherName = getLocalizedContent(teacherData, currentLang, getLocalizedText);
 
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover`}>
+    <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover transition-all`}>
       <div>
         {/* عنوان الحلقة وحالتها */}
         <div className="flex justify-between items-start gap-2 mb-2.5">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
-            {renderHalaqaName()}
+            {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
           </h4>
           
           {halaqa?.is_archived ? (
@@ -59,7 +47,7 @@ export default function HalaqaCardItem({
             <>
               <User size={14} className="text-semantic-actionPrimary shrink-0" />
               <span className="truncate">
-                {renderTeacherName()}
+                {teacherName}
               </span>
             </>
           ) : (
