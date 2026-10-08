@@ -837,6 +837,7 @@
     "template_preview": "",
     "title": ""
   },
+  "resetFilters": "إعادة ضبط",
   "roles": {
     "admin": "مدير النظام",
     "admin_desc": "لإدارة المؤسسة القرآنية بالكامل والمعلمين والحلقات",
@@ -883,6 +884,7 @@
     "website": "",
     "weekendDays": ""
   },
+  "showingResults_other": "عرض {{count}} حلقة",
   "sidebar": {
     "academyLogo": "شعار الأكاديمية",
     "badgeActive": "اشتراك المنظومة",

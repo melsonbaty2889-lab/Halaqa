@@ -838,6 +838,7 @@
     "template_preview": "Template Preview",
     "title": "Smart Reports"
   },
+  "resetFilters": "إعادة ضبط",
   "roles": {
     "admin": "System Admin",
     "admin_desc": "To manage the entire Quranic institution, teachers, and halaqas",
@@ -884,6 +885,8 @@
     "website": "Website",
     "weekendDays": "Weekend Days"
   },
+  "showingResults_one": "عرض {{count}} حلقة",
+  "showingResults_other": "عرض {{count}} حلقة",
   "sidebar": {
     "academyLogo": "Academy Logo",
     "badgeActive": "System Subscription",
