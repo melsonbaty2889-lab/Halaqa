@@ -8,11 +8,12 @@ import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from 
 
 export default function HalaqaFormModal({ 
   isOpen,
+  open,
   onClose,
   formData = {}, 
   setFormData, 
   handleSubmit, 
-  onSubmit, // دعم الإسمين لضمان عدم حدوث تعارض
+  onSubmit, 
   teachers = [], 
   isSubmitting = false
 }) {
@@ -20,14 +21,15 @@ export default function HalaqaFormModal({
   const currentLang = i18n?.language || 'ar';
   const [timeError, setTimeError] = useState('');
 
-  // إعادة تعيين الأخطاء عند فتح/إغلاق النافذة
+  // تحديد المنطقة الزمنية التلقائية للنظام أو المستخدم
+  const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || open) {
       setTimeError('');
     }
-  }, [isOpen]);
+  }, [isOpen, open]);
 
-  // استخراج اسم الحلقة الحالي بأسلوب آمن
   const getCurrentName = () => {
     if (typeof formData?.name_text === 'string') return formData.name_text;
     if (typeof formData?.name === 'string') return formData.name;
@@ -99,32 +101,32 @@ export default function HalaqaFormModal({
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
       teacher_id: formData?.teacher_id || null,
-      max_students: parseInt(formData?.max_students) || 10,
-      timezone: formData?.timezone || 'Africa/Cairo'
+      max_students: formData?.max_students ? parseInt(formData.max_students) : null,
+      timezone: formData?.timezone || defaultTimezone
     };
 
     delete payload.name_text;
     delete payload.track;
     delete payload.type;
 
-    // استدعاء الدالة المتاحة سواء handleSubmit أو onSubmit
     const submitCallback = handleSubmit || onSubmit;
     submitCallback?.(payload);
   };
 
+  const isModalVisible = Boolean(isOpen || open);
+
   return (
     <Modal
-       open={isOpen || open}
-  onClose={onClose}
-  title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إضافة حلقة جديدة')}
-      maxWidth="max-w-lg"
+      open={isModalVisible}
+      onClose={onClose}
+      title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
-      <form onSubmit={onSubmitForm} className="flex flex-col max-h-[80vh] overflow-hidden text-right">
+      <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         
-        {/* منطقة الحقول مع شريط التمرير */}
-        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pr-1">
+        {/* منطقة الحقول ذات التمرير */}
+        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-4">
           
-          {/* اسم الحلقة */}
+          {/* اسم الحلقة بدون أمثلة تجريبية */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -132,7 +134,7 @@ export default function HalaqaFormModal({
             <Input
               type="text"
               required
-              placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام عاصم لحفظ الجزء الثلاثين')}
+              placeholder={t('halaqaNamePlaceholder', 'أدخل اسم الحلقة')}
               value={getCurrentName()}
               onChange={handleNameChange}
             />
@@ -232,26 +234,27 @@ export default function HalaqaFormModal({
               <Input
                 type="number"
                 min="1"
-                max="100"
-                value={formData?.max_students ?? 10}
-                onChange={(v) => handleChange('max_students', parseInt(extractValue(v)) || 10)}
+                max="500"
+                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة القصوى')}
+                value={formData?.max_students ?? ''}
+                onChange={(v) => handleChange('max_students', extractValue(v))}
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-semantic-textMuted mb-1">
-                {t('timezone', 'المنطقة الزمنية')}
+                {t('timezone', 'المنطقة الزمنية النظامية')}
               </label>
-              <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-1.5 h-[38px]">
+              <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-1.5 h-[40px]">
                 <Globe size={13} className="text-semantic-actionPrimary shrink-0" />
-                <span className="truncate">{formData?.timezone || 'Africa/Cairo'}</span>
+                <span className="truncate">{formData?.timezone || defaultTimezone}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* أزرار الإجراءات مثبتة دائماً في أسفل النموذج */}
-        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-2 shrink-0 bg-semantic-surfaceCard sticky bottom-0">
+        {/* أزرار الإجراءات */}
+        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
             onClick={onClose}
