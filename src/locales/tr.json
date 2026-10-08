@@ -863,6 +863,7 @@
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectTeacher": "-- اختر المعلم المعتمد --",
   "selectTrack": "-- اختر المسار --",
+  "selectTrackTitle": "المسار التعليمي",
   "settings": {
     "advancedRegional": "",
     "calendarType": "نوع التقويم",
