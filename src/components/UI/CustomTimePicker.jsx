@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, X, Check, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,7 +17,7 @@ export default function CustomTimePicker({
   const [minutes, setMinutes] = useState('00');
   const [period, setPeriod] = useState('AM');
 
-  // التحكم في فتح القوائم المنسدلة الداخليّة
+  // التحكم في فتح القوائم المنسدلة الداخلية
   const [activeDropdown, setActiveDropdown] = useState(null); // 'hours' | 'minutes' | null
 
   useEffect(() => {
@@ -87,13 +88,13 @@ export default function CustomTimePicker({
         <Clock size={16} className="text-semantic-textMuted shrink-0" />
       </button>
 
-      {/* النافذة المنبثقة لاختيار الوقت */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+      {/* النافذة المنبثقة لاختيار الوقت باستخدام Portal */}
+      {isOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="w-full max-w-xs bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl shadow-2xl overflow-hidden text-semantic-textPrimary flex flex-col">
             
             {/* الهيدر */}
-            <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderCard bg-semantic-surfaceInput/40">
+            <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderCard bg-semantic-surfaceInput/40 shrink-0">
               <span className="text-xs font-bold">{t('selectTime', 'اختر الوقت')}</span>
               <button
                 type="button"
@@ -105,7 +106,7 @@ export default function CustomTimePicker({
             </div>
 
             {/* محتوى اختيار الوقت */}
-            <div className="p-4 flex flex-col items-center gap-4 relative">
+            <div className="p-4 flex flex-col items-center gap-4 relative min-h-[160px] justify-center">
               <div className="flex items-center justify-center gap-2 dir-ltr w-full">
                 
                 {/* منتقي الساعات المخصص */}
@@ -121,7 +122,7 @@ export default function CustomTimePicker({
 
                   {/* قائمة الساعات المنسدلة */}
                   {activeDropdown === 'hours' && (
-                    <div className="absolute top-full left-0 w-full mt-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto p-1 space-y-0.5">
+                    <div className="absolute bottom-full left-0 w-full mb-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-2xl z-[10000] max-h-36 overflow-y-auto p-1 space-y-0.5">
                       {hoursList.map((h) => (
                         <button
                           key={h}
@@ -155,7 +156,7 @@ export default function CustomTimePicker({
 
                   {/* قائمة الدقائق المنسدلة */}
                   {activeDropdown === 'minutes' && (
-                    <div className="absolute top-full left-0 w-full mt-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto p-1 space-y-0.5">
+                    <div className="absolute bottom-full left-0 w-full mb-1 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-2xl z-[10000] max-h-36 overflow-y-auto p-1 space-y-0.5">
                       {minutesList.map((m) => (
                         <button
                           key={m}
@@ -204,7 +205,7 @@ export default function CustomTimePicker({
             </div>
 
             {/* الأزرار السفلية */}
-            <div className="flex items-center gap-2 p-3 bg-semantic-surfaceInput/40 border-t border-semantic-borderCard mt-auto">
+            <div className="flex items-center gap-2 p-3 bg-semantic-surfaceInput/40 border-t border-semantic-borderCard mt-auto shrink-0">
               <button
                 type="button"
                 onClick={handleConfirm}
@@ -232,7 +233,8 @@ export default function CustomTimePicker({
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
