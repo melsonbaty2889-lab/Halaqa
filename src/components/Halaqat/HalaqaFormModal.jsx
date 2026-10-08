@@ -1,9 +1,12 @@
 import React from 'react';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 
 export default function HalaqaFormModal({ 
+  isOpen,
+  onClose,
   formData = {}, 
   setFormData, 
   handleSubmit, 
@@ -13,7 +16,6 @@ export default function HalaqaFormModal({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
 
-  // تحديث اسم الحلقة باللغة الحالية للمستخدم
   const handleNameChange = (e) => {
     const value = e.target.value;
     setFormData(prev => ({
@@ -26,121 +28,131 @@ export default function HalaqaFormModal({
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      className={`${UI.card} p-5 mb-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-semantic-actionPrimary/30`}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('createHalaqa', 'إنشاء حلقة جديدة')}
+      maxWidth="max-w-2xl"
     >
-      {/* اسم الحلقة */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-semantic-textSecondary">
-          {t('halaqaName', 'اسم الحلقة')}
-        </label>
-        <input 
-          type="text" 
-          required 
-          placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام الشاطبي')} 
-          value={formData?.name?.[currentLang] || formData?.name?.ar || ''} 
-          onChange={handleNameChange} 
-          className={`${UI.input} text-xs`} 
-        />
-      </div>
-
-      {/* تعيين المعلم */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-semantic-textSecondary">
-          {t('assignTeacher', 'تعيين المعلم المسؤول')}
-        </label>
-        <select 
-          required 
-          value={formData?.teacher_id || ''} 
-          onChange={e => setFormData(prev => ({ ...prev, teacher_id: e.target.value }))} 
-          className={`${UI.input} text-xs`}
-        >
-          <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
-          {Array.isArray(teachers) && teachers.map(teacher => {
-            // استخراج اسم المعلم بناءً على اللغة الحالية بدون استدعاء دوال خارجية
-            const teacherName = typeof teacher?.name === 'object' 
-              ? (teacher.name[currentLang] || teacher.name.ar || '')
-              : (teacher?.name || teacher?.full_name || '');
-
-            return (
-              <option key={teacher.id} value={teacher.id}>
-                {teacherName}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-
-      {/* المسار التعليمي */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-semantic-textSecondary">
-          {t('track', 'المسار التعليمي')}
-        </label>
-        <select 
-          required
-          value={formData?.educational_track || ''} 
-          onChange={e => setFormData(prev => ({ ...prev, educational_track: e.target.value }))} 
-          className={`${UI.input} text-xs`}
-        >
-          <option value="">{t('selectTrack', '-- اختر المسار --')}</option>
-          <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
-          <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
-          <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
-        </select>
-      </div>
-
-      {/* أوقات البدء والانتهاء */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1.5">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* اسم الحلقة */}
+        <div className="flex flex-col gap-1.5 md:col-span-2">
           <label className="text-xs font-bold text-semantic-textSecondary">
-            {t('startTime', 'وقت البدء')}
+            {t('halaqaName', 'اسم الحلقة')}
           </label>
           <input 
-            type="time" 
-            required
-            value={formData?.start_time || ''} 
-            onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))} 
-            className={`${UI.input} text-xs text-center`} 
+            type="text" 
+            required 
+            placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام الشاطبي')} 
+            value={formData?.name?.[currentLang] || formData?.name?.ar || ''} 
+            onChange={handleNameChange} 
+            className={`${UI.input} text-xs`} 
           />
         </div>
+
+        {/* تعيين المعلم */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-semantic-textSecondary">
-            {t('endTime', 'وقت الانتهاء')}
+            {t('assignTeacher', 'تعيين المعلم المسؤول')}
           </label>
-          <input 
-            type="time" 
+          <select 
+            required 
+            value={formData?.teacher_id || ''} 
+            onChange={e => setFormData(prev => ({ ...prev, teacher_id: e.target.value }))} 
+            className={`${UI.input} text-xs`}
+          >
+            <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
+            {Array.isArray(teachers) && teachers.map(teacher => {
+              const teacherName = typeof teacher?.name === 'object' 
+                ? (teacher.name[currentLang] || teacher.name.ar || '')
+                : (teacher?.name || teacher?.full_name || '');
+
+              return (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacherName}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* المسار التعليمي */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-semantic-textSecondary">
+            {t('track', 'المسار التعليمي')}
+          </label>
+          <select 
             required
-            value={formData?.end_time || ''} 
-            onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))} 
-            className={`${UI.input} text-xs text-center`} 
-          />
+            value={formData?.educational_track || ''} 
+            onChange={e => setFormData(prev => ({ ...prev, educational_track: e.target.value }))} 
+            className={`${UI.input} text-xs`}
+          >
+            <option value="">{t('selectTrack', '-- اختر المسار --')}</option>
+            <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
+            <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
+            <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
+          </select>
         </div>
-      </div>
 
-      {/* المنطقة الزمنية */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-semantic-textSecondary">
-          {t('timezone', 'المنطقة الزمنية النظامية')}
-        </label>
-        <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
-          <Globe size={15} className="text-semantic-actionPrimary" />
-          <span>{formData?.timezone || 'UTC'}</span>
+        {/* أوقات البدء والانتهاء */}
+        <div className="grid grid-cols-2 gap-2 md:col-span-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-semantic-textSecondary">
+              {t('startTime', 'وقت البدء')}
+            </label>
+            <input 
+              type="time" 
+              required
+              value={formData?.start_time || ''} 
+              onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))} 
+              className={`${UI.input} text-xs text-center`} 
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-semantic-textSecondary">
+              {t('endTime', 'وقت الانتهاء')}
+            </label>
+            <input 
+              type="time" 
+              required
+              value={formData?.end_time || ''} 
+              onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))} 
+              className={`${UI.input} text-xs text-center`} 
+            />
+          </div>
         </div>
-      </div>
 
-      {/* زر الاعتماد */}
-      <div className="col-span-full pt-2">
-        <button 
-          type="submit" 
-          disabled={isSubmitting}
-          className={`${UI.btnPrimary} w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2`}
-        >
-          {isSubmitting 
-            ? t('saving', 'جاري الحفظ...') 
-            : t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
-        </button>
-      </div>
-    </form>
+        {/* المنطقة الزمنية */}
+        <div className="flex flex-col gap-1.5 md:col-span-2">
+          <label className="text-xs font-bold text-semantic-textSecondary">
+            {t('timezone', 'المنطقة الزمنية النظامية')}
+          </label>
+          <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
+            <Globe size={15} className="text-semantic-actionPrimary" />
+            <span>{formData?.timezone || 'UTC'}</span>
+          </div>
+        </div>
+
+        {/* زر الاعتماد */}
+        <div className="md:col-span-2 pt-3 flex gap-2">
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            className={`${UI.btnPrimary} flex-1 py-3 text-xs font-extrabold`}
+          >
+            {isSubmitting 
+              ? t('saving', 'جاري الحفظ...') 
+              : t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
+          </button>
+          <button 
+            type="button" 
+            onClick={onClose}
+            className={`${UI.btnSecondary} w-auto px-5 py-3 text-xs font-bold`}
+          >
+            {t('cancel', 'إلغاء')}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
