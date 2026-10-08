@@ -135,46 +135,41 @@ export default function ActiveHalaqas({
   const hasActiveFilters = searchQuery.trim() !== '' || selectedTrack !== 'all';
 
   return (
-    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4 text-semantic-textPrimary">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3.5 text-semantic-textPrimary">
       
-      {/* --- السطر الأول: العنوان المختصر وزر الإنشاء --- */}
-      <div className="flex items-center justify-between gap-3 border-b border-semantic-borderCard/50 pb-2.5">
+      {/* 1. الترويسة الأنيقة المقتضبة */}
+      <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/40 pb-2">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
-            <Layers size={20} />
+          <div className="p-1.5 rounded-lg bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
+            <Layers size={18} />
           </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-black text-semantic-textPrimary m-0">
-              {t('halaqatTitle', 'الحلقات والفصول')}
-            </h1>
-            <p className="text-[11px] text-semantic-textMuted m-0 hidden sm:block">
-              {t('halaqatSubTitle', 'متابعة وإدارة الجلسات التعليمية وتوزيع الطلاب')}
-            </p>
-          </div>
+          <h1 className="text-sm sm:text-base font-black text-semantic-textPrimary m-0">
+            {t('halaqatTitle', 'الحلقات والفصول')}
+          </h1>
         </div>
 
         <button
           type="button"
           onClick={handleOpenModal}
-          className={`${UI.btnPrimary} px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0 rounded-xl`}
+          className={`${UI.btnPrimary} px-3 py-1.5 text-xs font-bold flex items-center gap-1 shadow-md shrink-0 rounded-xl`}
         >
-          <Plus size={16} />
+          <Plus size={15} />
           <span>{t('createHalaqa', 'حلقة جديدة')}</span>
         </button>
       </div>
 
-      {/* --- السطر الثاني: أزرار التصفية الرئيسية (Tabs) --- */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-semantic-surfaceInput rounded-2xl border border-semantic-borderCard">
+      {/* 2. أزرار التصفية الرئيسية (Tabs متناسقة ومتوازنة) */}
+      <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
           onClick={() => setViewMode('active')}
-          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'active'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <CheckCircle2 size={14} />
+          <CheckCircle2 size={13} />
           <span>{t('statActive', 'النشطة')}</span>
           <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px]">
             {stats.totalActive}
@@ -184,13 +179,13 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={() => setViewMode('unassigned')}
-          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Users size={14} />
+          <Users size={13} />
           <span>{t('statUnassigned', 'بلا معلم')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
             {stats.unassigned}
@@ -200,13 +195,13 @@ export default function ActiveHalaqas({
         <button
           type="button"
           onClick={() => setViewMode('archived')}
-          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
               ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Archive size={14} />
+          <Archive size={13} />
           <span>{t('statArchived', 'المؤرشفة')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
             {stats.totalArchived}
@@ -214,8 +209,8 @@ export default function ActiveHalaqas({
         </button>
       </div>
 
-      {/* --- عناصر التصفية الثانوية: البحث والمسارات وزر العرض --- */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+      {/* 3. شريط البحث والمسارات */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="flex-1">
           <Input
             type="text"
@@ -248,7 +243,6 @@ export default function ActiveHalaqas({
           )}
         </div>
 
-        {/* زر تبديل العرض للكمبيوتر فقط */}
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard">
           <button
             type="button"
@@ -271,14 +265,14 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* --- شريط حالة النتائج الصغيرة --- */}
+      {/* 4. إعدادات العداد الحلقات الحالية */}
       <div className="flex items-center justify-between text-[11px] text-semantic-textMuted px-1">
         <span>
           {t('showingResults', 'عرض {{count}} حلقة', { count: filteredHalaqas.length })}
         </span>
       </div>
 
-      {/* --- نافذة إنشاء الحلقة --- */}
+      {/* 5. نافذة إنشاء الحلقة */}
       <HalaqaFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -289,7 +283,7 @@ export default function ActiveHalaqas({
         isSubmitting={isSubmitting}
       />
 
-      {/* --- عرض المحتوى --- */}
+      {/* 6. عرض قائمة الحلقات أو حالة الفراغ */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
