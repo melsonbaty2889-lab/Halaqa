@@ -202,6 +202,7 @@
     "gregorian": "Gregorian",
     "hijri": "Hijri"
   },
+  "cancel": "إلغاء",
   "cert": {
     "certBody1": "Certificate Body 1",
     "certBody2": "Certificate Body 2",
