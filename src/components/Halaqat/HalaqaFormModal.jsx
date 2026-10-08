@@ -12,12 +12,20 @@ export default function HalaqaFormModal({
   formData = {}, 
   setFormData, 
   handleSubmit, 
+  onSubmit, // دعم الإسمين لضمان عدم حدوث تعارض
   teachers = [], 
   isSubmitting = false
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   const [timeError, setTimeError] = useState('');
+
+  // إعادة تعيين الأخطاء عند فتح/إغلاق النافذة
+  useEffect(() => {
+    if (isOpen) {
+      setTimeError('');
+    }
+  }, [isOpen]);
 
   // استخراج اسم الحلقة الحالي بأسلوب آمن
   const getCurrentName = () => {
@@ -99,7 +107,9 @@ export default function HalaqaFormModal({
     delete payload.track;
     delete payload.type;
 
-    handleSubmit?.(payload);
+    // استدعاء الدالة المتاحة سواء handleSubmit أو onSubmit
+    const submitCallback = handleSubmit || onSubmit;
+    submitCallback?.(payload);
   };
 
   return (
@@ -109,7 +119,7 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
       maxWidth="max-w-lg"
     >
-      <form onSubmit={onSubmitForm} className="flex flex-col max-h-[75vh] overflow-hidden text-right">
+      <form onSubmit={onSubmitForm} className="flex flex-col max-h-[80vh] overflow-hidden text-right">
         
         {/* منطقة الحقول مع شريط التمرير */}
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pr-1">
@@ -160,7 +170,7 @@ export default function HalaqaFormModal({
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
-                value={formData?.target_audience || 'all'}
+                value={formData?.target_audience || 'kids'}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
               />
