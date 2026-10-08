@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Clock, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { UI } from '@/components/UI/UI';
+import { UI } from '@/theme/styles';
 
 export default function HalaqaCardItem({ 
   halaqa, 
