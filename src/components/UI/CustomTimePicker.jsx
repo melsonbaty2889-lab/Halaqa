@@ -17,7 +17,8 @@ export default function CustomTimePicker({
   const [minutes, setMinutes] = useState('00');
   const [period, setPeriod] = useState('AM');
 
-  useEffect(() => {
+  // مزامنة حالة المودال الداخلي عند فتحه أو تغير القيمة
+  const syncInternalState = () => {
     if (value) {
       const [h, m] = value.split(':');
       if (h && m) {
@@ -27,15 +28,25 @@ export default function CustomTimePicker({
         setHours(hourNum.toString().padStart(2, '0'));
         setMinutes(m.padStart(2, '0'));
         setPeriod(p);
+        return;
       }
     }
-  }, [value]);
+    // القيم الافتراضية عند عدم وجود قيمة
+    setHours('12');
+    setMinutes('00');
+    setPeriod('AM');
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      syncInternalState();
+    }
+  }, [isOpen, value]);
 
   const handleConfirm = () => {
     let hourNum = parseInt(hours || '12', 10);
     let minNum = parseInt(minutes || '00', 10);
 
-    // ضبط الحدود المقبولة
     if (isNaN(hourNum) || hourNum < 1) hourNum = 12;
     if (hourNum > 12) hourNum = 12;
     if (isNaN(minNum) || minNum < 0) minNum = 0;
@@ -49,8 +60,16 @@ export default function CustomTimePicker({
     setIsOpen(false);
   };
 
+  // زر مسح: يمسح قيمة الحقل الرئيسي ويعيد تعيين القيم داخل المودال بدون إغلاقه
   const handleClear = () => {
     onChange('');
+    setHours('12');
+    setMinutes('00');
+    setPeriod('AM');
+  };
+
+  // زر إلغاء: يغلق المودال فقط دون حفظ أي تعديلات
+  const handleCancel = () => {
     setIsOpen(false);
   };
 
@@ -64,7 +83,6 @@ export default function CustomTimePicker({
     return `${hourNum.toString().padStart(2, '0')}:${m} ${p}`;
   };
 
-  // التحكم بالساعات (كتابة + أسهم)
   const handleHoursChange = (e) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 2);
     setHours(val);
@@ -89,7 +107,6 @@ export default function CustomTimePicker({
     setHours(h.toString().padStart(2, '0'));
   };
 
-  // التحكم بالدقائق (كتابة + أسهم)
   const handleMinutesChange = (e) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 2);
     setMinutes(val);
@@ -148,7 +165,7 @@ export default function CustomTimePicker({
               <span className="text-xs font-bold">{t('selectTime', 'اختر الوقت')}</span>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleCancel}
                 className="p-1 rounded-lg hover:bg-semantic-borderCard/40 text-semantic-textMuted hover:text-semantic-textPrimary transition-colors cursor-pointer"
               >
                 <X size={16} />
@@ -263,7 +280,7 @@ export default function CustomTimePicker({
 
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleCancel}
                 className="py-2 px-3 bg-transparent text-semantic-textMuted rounded-xl text-xs font-bold hover:text-semantic-textPrimary transition-all cursor-pointer border-none"
               >
                 {t('cancel', 'إلغاء')}
