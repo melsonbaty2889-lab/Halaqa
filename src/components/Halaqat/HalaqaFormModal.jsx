@@ -32,11 +32,11 @@ export default function HalaqaFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={t('createHalaqa', 'إنشاء حلقة جديدة')}
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-lg"
     >
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         {/* اسم الحلقة */}
-        <div className="flex flex-col gap-1.5 md:col-span-2">
+        <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-semantic-textSecondary">
             {t('halaqaName', 'اسم الحلقة')}
           </label>
@@ -46,22 +46,22 @@ export default function HalaqaFormModal({
             placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام الشاطبي')} 
             value={formData?.name?.[currentLang] || formData?.name?.ar || ''} 
             onChange={handleNameChange} 
-            className={`${UI.input} text-xs`} 
+            className={`${UI.input} text-xs py-2.5`} 
           />
         </div>
 
         {/* تعيين المعلم */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-semantic-textSecondary">
-            {t('assignTeacher', 'تعيين المعلم المسؤول')}
+            {t('assignTeacher', 'المعلم المسؤول')}
           </label>
           <select 
             required 
             value={formData?.teacher_id || ''} 
             onChange={e => setFormData(prev => ({ ...prev, teacher_id: e.target.value }))} 
-            className={`${UI.input} text-xs`}
+            className={`${UI.input} text-xs py-2.5`}
           >
-            <option value="">{t('selectTeacher', '-- اختر المعلم المعتمد --')}</option>
+            <option value="">{t('selectTeacher', '-- اختر المعلم --')}</option>
             {Array.isArray(teachers) && teachers.map(teacher => {
               const teacherName = typeof teacher?.name === 'object' 
                 ? (teacher.name[currentLang] || teacher.name.ar || '')
@@ -77,7 +77,7 @@ export default function HalaqaFormModal({
         </div>
 
         {/* المسار التعليمي */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-semantic-textSecondary">
             {t('track', 'المسار التعليمي')}
           </label>
@@ -85,9 +85,8 @@ export default function HalaqaFormModal({
             required
             value={formData?.educational_track || ''} 
             onChange={e => setFormData(prev => ({ ...prev, educational_track: e.target.value }))} 
-            className={`${UI.input} text-xs`}
+            className={`${UI.input} text-xs py-2.5`}
           >
-            <option value="">{t('selectTrack', '-- اختر المسار --')}</option>
             <option value="hifz">{t('trackHifz', 'مسار الحفظ والتجويد المكثف')}</option>
             <option value="tilawah">{t('trackTilawah', 'مسار التلاوة وتصحيح الأداء')}</option>
             <option value="ijazah">{t('trackIjazah', 'مسار الإجازات بالسند المتصل')}</option>
@@ -95,8 +94,8 @@ export default function HalaqaFormModal({
         </div>
 
         {/* أوقات البدء والانتهاء */}
-        <div className="grid grid-cols-2 gap-2 md:col-span-2">
-          <div className="flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-semantic-textSecondary">
               {t('startTime', 'وقت البدء')}
             </label>
@@ -105,10 +104,10 @@ export default function HalaqaFormModal({
               required
               value={formData?.start_time || ''} 
               onChange={e => setFormData(prev => ({ ...prev, start_time: e.target.value }))} 
-              className={`${UI.input} text-xs text-center`} 
+              className={`${UI.input} text-xs py-2 text-center`} 
             />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-semantic-textSecondary">
               {t('endTime', 'وقت الانتهاء')}
             </label>
@@ -117,37 +116,35 @@ export default function HalaqaFormModal({
               required
               value={formData?.end_time || ''} 
               onChange={e => setFormData(prev => ({ ...prev, end_time: e.target.value }))} 
-              className={`${UI.input} text-xs text-center`} 
+              className={`${UI.input} text-xs py-2 text-center`} 
             />
           </div>
         </div>
 
         {/* المنطقة الزمنية */}
-        <div className="flex flex-col gap-1.5 md:col-span-2">
+        <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-semantic-textSecondary">
-            {t('timezone', 'المنطقة الزمنية النظامية')}
+            {t('timezone', 'المنطقة الزمنية')}
           </label>
-          <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
-            <Globe size={15} className="text-semantic-actionPrimary" />
+          <div className="p-2 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
+            <Globe size={14} className="text-semantic-actionPrimary shrink-0" />
             <span>{formData?.timezone || 'UTC'}</span>
           </div>
         </div>
 
-        {/* زر الاعتماد */}
-        <div className="md:col-span-2 pt-3 flex gap-2">
+        {/* زر الإرسال والإلغاء */}
+        <div className="pt-2 flex gap-2">
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className={`${UI.btnPrimary} flex-1 py-3 text-xs font-extrabold`}
+            className={`${UI.btnPrimary} flex-1 py-2.5 text-xs font-black`}
           >
-            {isSubmitting 
-              ? t('saving', 'جاري الحفظ...') 
-              : t('btnSave', 'اعتماد الحلقة وتأكيد الجدولة')}
+            {isSubmitting ? t('saving', 'جاري الحفظ...') : t('btnSave', 'حفظ الحلقة')}
           </button>
           <button 
             type="button" 
             onClick={onClose}
-            className={`${UI.btnSecondary} w-auto px-5 py-3 text-xs font-bold`}
+            className={`${UI.btnSecondary} px-4 py-2.5 text-xs font-bold`}
           >
             {t('cancel', 'إلغاء')}
           </button>
