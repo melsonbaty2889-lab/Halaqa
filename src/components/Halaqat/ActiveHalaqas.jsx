@@ -213,15 +213,15 @@ export default function ActiveHalaqas({
       )}
 
       {/* النافذة المنبثقة لإنشاء وتعديل الحلقة */}
-      <HalaqaFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        handleSubmit={handleFormSubmit}
-        formData={formData}
-        setFormData={setFormData}
-        teachers={teachers}
-        isSubmitting={isSubmitting}
-      />
+<HalaqaFormModal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  onSubmit={handleFormSubmit}
+  formData={formData}
+  setFormData={setFormData}
+  teachers={teachers}
+  isSubmitting={isSubmitting}
+/>
     </div>
   );
 }
