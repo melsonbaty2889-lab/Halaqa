@@ -191,43 +191,45 @@ export default function HalaqaFormModal({
           </div>
 
           {/* توقيت الحلقة والحد الأقصى */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <CustomTimePicker
-              label={t('startTimeLabel', 'وقت البدء')}
-              required
-              value={formData?.start_time || ''}
-              onChange={(val) => handleChange('start_time', val)}
-            />
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <CustomTimePicker
+    label={t('startTimeLabel', 'وقت البدء')}
+    required
+    value={formData?.start_time || ''}
+    onChange={(val) => handleTimeChange('start_time', val)}
+    error={timeError ? true : false}
+  />
 
-            <CustomTimePicker
-              label={t('endTimeLabel', 'وقت الانتهاء')}
-              required
-              value={formData?.end_time || ''}
-              onChange={(val) => handleChange('end_time', val)}
-            />
+  <CustomTimePicker
+    label={t('endTimeLabel', 'وقت الانتهاء')}
+    required
+    value={formData?.end_time || ''}
+    onChange={(val) => handleTimeChange('end_time', val)}
+    error={timeError ? true : false}
+  />
 
-            <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
-              </label>
-              <Input
-                type="number"
-                min="1"
-                max="500"
-                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
-                value={formData?.max_students ?? ''}
-                onChange={(v) => handleChange('max_students', extractValue(v))}
-              />
-            </div>
-          </div>
+  <div>
+    <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+      {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
+    </label>
+    <Input
+      type="number"
+      min="1"
+      max="500"
+      placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
+      value={formData?.max_students ?? ''}
+      onChange={(v) => handleChange('max_students', extractValue(v))}
+    />
+  </div>
+</div>
 
-          {/* تنبيه أخطاء التوقيت */}
-          {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{timeError}</span>
-            </div>
-          )}
+{/* تنبيه أخطاء التوقيت الفوري */}
+{timeError && (
+  <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30 animate-in fade-in duration-150">
+    <AlertCircle size={15} className="shrink-0" />
+    <span>{timeError}</span>
+  </div>
+)}
 
         </div>
 
