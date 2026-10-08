@@ -143,9 +143,9 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-5 pt-2 pb-8">
+    <div className="space-y-5 pt-2 pb-8 bg-app-layout">
       {/* رأس الصفحة الاحترافي الموحد متوافق مع كافة الشاشات */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-semantic-borderCard">
+      <div className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:p-5`}>
         <div className="flex items-center gap-3">
           <div className={UI.logoWrapper}>
             <BookOpen className="w-6 h-6 text-semantic-success" />
@@ -160,10 +160,11 @@ export default function ActiveHalaqas({
           </div>
         </div>
 
+        {/* توحيد نوع الزر الرئيسي ليكون UI.btnPrimary بدلاً من btnEmerald */}
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className={`${UI.btnEmerald} w-full sm:w-auto shrink-0 shadow-lg`}
+          className={`${UI.btnPrimary} w-full sm:w-auto shrink-0`}
         >
           <Plus size={18} />
           <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
@@ -205,8 +206,8 @@ export default function ActiveHalaqas({
           ))}
         </div>
       ) : (
-        <div className={`${UI.card} text-center py-12 px-4 border-dashed border-semantic-borderCard/80 flex flex-col items-center justify-center`}>
-          <div className="p-4 rounded-full bg-semantic-surfaceInput/60 mb-3 border border-semantic-borderCard">
+        <div className={`${UI.card} text-center py-12 px-4 flex flex-col items-center justify-center`}>
+          <div className="p-4 rounded-2xl bg-semantic-surfaceInput/80 mb-3 border border-semantic-borderCard">
             <Users size={32} className="text-semantic-textMuted opacity-70" />
           </div>
           <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
@@ -220,7 +221,7 @@ export default function ActiveHalaqas({
         </div>
       )}
 
-      {/* النافذة المنبثقة: دعم شامل لكافة مسميات الـ Handlers لضمان عمل الفتح والحفظ */}
+      {/* النافذة المنبثقة */}
       <HalaqaFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
