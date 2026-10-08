@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Clock, Video, AlertCircle } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
@@ -9,17 +9,25 @@ export default function HalaqaCardItem({
   viewMode = 'active', 
   getLocalizedText, 
   onNavigateToAttendance, 
-  onToggleArchiveHalaqa 
+  onToggleArchiveHalaqa,
+  onEditHalaqa
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
 
-  const hasTeacher = Boolean(halaqa?.teacher_id || halaqa?.teacher_name || halaqa?.teacher);
+  // استخراج بيانات المعلم واسم الحلقة بصورة آمنة وموحدة
+  const halaqaName = getLocalizedContent(halaqa?.name, currentLang, getLocalizedText) || halaqa?.name_text;
+  
+  const rawTeacher = halaqa?.teacher || halaqa?.teacher_name || halaqa?.teacher_id;
+  let teacherName = '';
 
-  // استخراج اسم الحلقة واسم المعلم باستخدام الدالة الموحدة
-  const halaqaName = getLocalizedContent(halaqa?.name, currentLang, getLocalizedText);
-  const teacherData = halaqa?.teacher_name || halaqa?.teacher;
-  const teacherName = getLocalizedContent(teacherData, currentLang, getLocalizedText);
+  if (typeof rawTeacher === 'object' && rawTeacher !== null) {
+    teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, currentLang, getLocalizedText) || rawTeacher.email;
+  } else if (typeof rawTeacher === 'string') {
+    teacherName = rawTeacher;
+  }
+
+  const hasTeacher = Boolean(teacherName || halaqa?.teacher_id);
 
   return (
     <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover transition-all`}>
@@ -36,7 +44,7 @@ export default function HalaqaCardItem({
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded-full text-[11px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold shrink-0">
-              {t('activeSession', 'جلسة نشطة')}
+              {t('activeSession', 'نشطة')}
             </span>
           )}
         </div>
@@ -46,8 +54,8 @@ export default function HalaqaCardItem({
           {hasTeacher ? (
             <>
               <User size={14} className="text-semantic-actionPrimary shrink-0" />
-              <span className="truncate">
-                {teacherName}
+              <span className="truncate font-semibold">
+                {teacherName || t('unnamedTeacher', 'معلم غير محدد')}
               </span>
             </>
           ) : (
@@ -62,11 +70,11 @@ export default function HalaqaCardItem({
         {(halaqa?.start_time || halaqa?.end_time) && (
           <div className="flex items-center gap-2 text-[12px] text-semantic-textSecondary">
             <Clock size={13} className="text-semantic-textMuted shrink-0" />
-            <span>
+            <span className="dir-ltr font-mono">
               {halaqa?.start_time} {halaqa?.end_time && `- ${halaqa?.end_time}`}
             </span>
             {halaqa?.timezone && (
-              <span className="text-[11px] bg-semantic-surfaceInput px-1.5 py-0.5 rounded text-semantic-textMuted border border-semantic-borderCard">
+              <span className="text-[10px] bg-semantic-surfaceInput px-1.5 py-0.5 rounded text-semantic-textMuted border border-semantic-borderCard">
                 {halaqa.timezone}
               </span>
             )}
@@ -75,20 +83,35 @@ export default function HalaqaCardItem({
       </div>
 
       {/* أزرار الإجراءات */}
-      <div className="flex items-center gap-2 border-t border-semantic-borderCard pt-3 mt-1">
+      <div className="flex items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1">
+        {/* زر التسميع/الجلسة */}
         <button 
           type="button"
           onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-          className={`${UI.btnPrimary} flex-1 py-2 text-xs font-extrabold flex items-center justify-center gap-1.5`}
+          className={`${UI.btnPrimary} flex-1 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1`}
+          title={t('goToAttendance', 'الانضمام للجلسة المباشرة')}
         >
           <Video size={14} />
-          {t('goToAttendance', 'الانضمام للجلسة المباشرة')}
+          <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
         </button>
 
+        {/* زر التعديل */}
+        {onEditHalaqa && (
+          <button
+            type="button"
+            onClick={() => onEditHalaqa(halaqa)}
+            className={`${UI.btnSecondary} p-2 text-xs font-bold shrink-0`}
+            title={t('edit', 'تعديل')}
+          >
+            <Edit3 size={14} />
+          </button>
+        )}
+
+        {/* زر الأرشفة / التنشيط */}
         <button 
           type="button"
           onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, halaqa?.is_archived)} 
-          className={`${UI.btnSecondary} w-auto px-3.5 py-2 text-xs font-bold shrink-0`}
+          className={`${UI.btnSecondary} px-2.5 py-2 text-xs font-bold shrink-0`}
         >
           {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
         </button>
