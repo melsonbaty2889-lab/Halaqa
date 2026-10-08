@@ -9,7 +9,7 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
     }
   }
   if (typeof value === 'object' && value !== null) {
-    return value[currentLang] || value.ar || value.en || '';
+    return value[currentLang] || value.ar || value.en || value.fr || value.tr || value.ur || value.id || '';
   }
   return typeof value === 'string' ? value : '';
 };
