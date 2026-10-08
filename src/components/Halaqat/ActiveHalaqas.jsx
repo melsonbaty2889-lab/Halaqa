@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Plus, Search, Users, 
-  Grid, List, CheckCircle2, Archive, Clock 
+  Plus, Search, Layers, Users, 
+  Grid, List, CheckCircle2, Archive, Clock, X 
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import HalaqaCardItem from './HalaqaCardItem';
@@ -112,6 +112,11 @@ export default function ActiveHalaqas({
     }
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedTrack('all');
+  };
+
   const trackOptions = [
     { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
     { value: 'hifz', label: t('trackHifz', 'الحفظ الجديد والتجويد المكثف') },
@@ -127,73 +132,90 @@ export default function ActiveHalaqas({
     return val;
   };
 
+  const hasActiveFilters = searchQuery.trim() !== '' || selectedTrack !== 'all';
+
   return (
-    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3 text-semantic-textPrimary">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4 text-semantic-textPrimary">
       
-      {/* 1. أزرار التصفية وإجراء إنشاء حلقة (شريط علوي مباشر) */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setViewMode('active')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 whitespace-nowrap transition-all border cursor-pointer ${
-              viewMode === 'active'
-                ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary text-semantic-actionPrimary'
-                : 'bg-semantic-surfaceInput border-semantic-borderCard text-semantic-textSecondary hover:border-semantic-borderHover'
-            }`}
-          >
-            <CheckCircle2 size={13} />
-            <span>{t('statActive', 'النشطة')}</span>
-            <span className="bg-semantic-actionPrimary text-semantic-bgMain px-1.5 py-0.2 rounded-full text-[10px] font-black">
-              {stats.totalActive}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode('unassigned')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 whitespace-nowrap transition-all border cursor-pointer ${
-              viewMode === 'unassigned'
-                ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary text-semantic-actionPrimary'
-                : 'bg-semantic-surfaceInput border-semantic-borderCard text-semantic-textSecondary hover:border-semantic-borderHover'
-            }`}
-          >
-            <Users size={13} />
-            <span>{t('statUnassigned', 'بانتظار معلم')}</span>
-            <span className="bg-semantic-surfaceInput text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-bold border border-semantic-borderCard">
-              {stats.unassigned}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode('archived')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 whitespace-nowrap transition-all border cursor-pointer ${
-              viewMode === 'archived'
-                ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary text-semantic-actionPrimary'
-                : 'bg-semantic-surfaceInput border-semantic-borderCard text-semantic-textSecondary hover:border-semantic-borderHover'
-            }`}
-          >
-            <Archive size={13} />
-            <span>{t('statArchived', 'المؤرشفة')}</span>
-            <span className="bg-semantic-surfaceInput text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-bold border border-semantic-borderCard">
-              {stats.totalArchived}
-            </span>
-          </button>
+      {/* --- السطر الأول: العنوان المختصر وزر الإنشاء --- */}
+      <div className="flex items-center justify-between gap-3 border-b border-semantic-borderCard/50 pb-2.5">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
+            <Layers size={20} />
+          </div>
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-semantic-textPrimary m-0">
+              {t('halaqatTitle', 'الحلقات والفصول')}
+            </h1>
+            <p className="text-[11px] text-semantic-textMuted m-0 hidden sm:block">
+              {t('halaqatSubTitle', 'متابعة وإدارة الجلسات التعليمية وتوزيع الطلاب')}
+            </p>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={handleOpenModal}
-          className={`${UI.btnPrimary} px-3 py-1.5 text-xs font-bold flex items-center gap-1 shrink-0 shadow-md`}
+          className={`${UI.btnPrimary} px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0 rounded-xl`}
         >
-          <Plus size={15} />
-          <span>{t('createHalaqa', 'إنشاء حلقة جديدة')}</span>
+          <Plus size={16} />
+          <span>{t('createHalaqa', 'حلقة جديدة')}</span>
         </button>
       </div>
 
-      {/* 2. شريط البحث والمسارات */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      {/* --- السطر الثاني: أزرار التصفية الرئيسية (Tabs) --- */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 bg-semantic-surfaceInput rounded-2xl border border-semantic-borderCard">
+        <button
+          type="button"
+          onClick={() => setViewMode('active')}
+          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+            viewMode === 'active'
+              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
+          }`}
+        >
+          <CheckCircle2 size={14} />
+          <span>{t('statActive', 'النشطة')}</span>
+          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px]">
+            {stats.totalActive}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('unassigned')}
+          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+            viewMode === 'unassigned'
+              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
+          }`}
+        >
+          <Users size={14} />
+          <span>{t('statUnassigned', 'بلا معلم')}</span>
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
+            {stats.unassigned}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('archived')}
+          className={`py-2 px-1 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+            viewMode === 'archived'
+              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
+          }`}
+        >
+          <Archive size={14} />
+          <span>{t('statArchived', 'المؤرشفة')}</span>
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
+            {stats.totalArchived}
+          </span>
+        </button>
+      </div>
+
+      {/* --- عناصر التصفية الثانوية: البحث والمسارات وزر العرض --- */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
         <div className="flex-1">
           <Input
             type="text"
@@ -204,15 +226,29 @@ export default function ActiveHalaqas({
           />
         </div>
 
-        <div className="w-full sm:w-auto shrink-0">
-          <Select
-            title={t('selectTrackTitle', 'المسار التعليمي')}
-            value={selectedTrack}
-            onChange={(v) => setSelectedTrack(extractValue(v))}
-            options={trackOptions}
-          />
+        <div className="w-full sm:w-64 shrink-0 flex items-center gap-1.5">
+          <div className="flex-1">
+            <Select
+              title={t('selectTrackTitle', 'المسار التعليمي')}
+              value={selectedTrack}
+              onChange={(v) => setSelectedTrack(extractValue(v))}
+              options={trackOptions}
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              title={t('resetFilters', 'إعادة ضبط')}
+              className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer shrink-0"
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
 
+        {/* زر تبديل العرض للكمبيوتر فقط */}
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard">
           <button
             type="button"
@@ -235,7 +271,14 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 3. نافذة إنشاء الحلقة */}
+      {/* --- شريط حالة النتائج الصغيرة --- */}
+      <div className="flex items-center justify-between text-[11px] text-semantic-textMuted px-1">
+        <span>
+          {t('showingResults', 'عرض {{count}} حلقة', { count: filteredHalaqas.length })}
+        </span>
+      </div>
+
+      {/* --- نافذة إنشاء الحلقة --- */}
       <HalaqaFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -246,7 +289,7 @@ export default function ActiveHalaqas({
         isSubmitting={isSubmitting}
       />
 
-      {/* 4. عرض قائمة الحلقات أو حالة الفراغ */}
+      {/* --- عرض المحتوى --- */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
