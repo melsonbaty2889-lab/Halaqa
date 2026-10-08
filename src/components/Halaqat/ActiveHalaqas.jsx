@@ -27,7 +27,7 @@ export default function ActiveHalaqas({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // إزالة القيم الافتراضية الثابتة والاعتماد الشفاف على البيانات القادمة
+  // نموذج بيانات محايد وبدون قيم افتراضية مضمنة ثابتاً
   const [formData, setFormData] = useState({
     name: {},
     teacher_id: '',
@@ -107,16 +107,24 @@ export default function ActiveHalaqas({
   };
 
   const trackOptions = [
-    { value: 'all', label: t('allTracks', 'جميع المسارات') },
-    { value: 'hifz', label: t('trackHifz', 'الحفظ والتجويد') },
-    { value: 'tilawah', label: t('trackTilawah', 'التلاوة والأداء') },
-    { value: 'ijazah', label: t('trackIjazah', 'الإجازات بالسند') }
+    { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
+    { value: 'hifz', label: t('trackHifz', 'مسار الحفظ والتجويد المكثف') },
+    { value: 'tilawah', label: t('trackTilawah', 'مسار التلاوة وتصحيح الأداء') },
+    { value: 'ijazah', label: t('trackIjazah', 'مسار الإجازات بالسند المتصل') }
   ];
+
+  // دالة آمنة لاستخراج القيمة سواء جاءت كحدث (Event) أو كقيمة مباشرة (Value)
+  const extractValue = (val) => {
+    if (val && typeof val === 'object' && 'target' in val) {
+      return val.target.value;
+    }
+    return val;
+  };
 
   return (
     <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3.5 text-semantic-textPrimary">
       
-      {/* 1. ترويسة الصفحة */}
+      {/* 1. الترويسة */}
       <div className="flex items-center justify-between gap-2 py-1">
         <div>
           <h1 className="text-base sm:text-xl font-black text-semantic-textPrimary flex items-center gap-2 m-0">
@@ -189,14 +197,14 @@ export default function ActiveHalaqas({
         </button>
       </div>
 
-      {/* 3. شريط البحث والمسارات بالمكونات الموحدة */}
+      {/* 3. شريط البحث والمسارات */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="flex-1">
           <Input
             type="text"
             placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو المعلم...')}
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(v) => setSearchQuery(extractValue(v))}
             icon={<Search size={14} className="text-semantic-textMuted" />}
           />
         </div>
@@ -204,7 +212,7 @@ export default function ActiveHalaqas({
         <div className="w-full sm:w-auto shrink-0">
           <Select
             value={selectedTrack}
-            onChange={e => setSelectedTrack(e.target.value)}
+            onChange={(v) => setSelectedTrack(extractValue(v))}
             options={trackOptions}
           />
         </div>
@@ -231,7 +239,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 4. نافذة النموذج (Modal) */}
+      {/* 4. نافذة إنشاء الحلقة */}
       <HalaqaFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -242,7 +250,7 @@ export default function ActiveHalaqas({
         isSubmitting={isSubmitting}
       />
 
-      {/* 5. عرض قائمة الحلقات أو حالة الفراغ الموحدة */}
+      {/* 5. عرض قائمة الحلقات أو حالة الفراغ */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
