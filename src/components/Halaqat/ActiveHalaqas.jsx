@@ -26,7 +26,7 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
-  // حالة النافذة المنبثقة ورسائل النموذج
+  // حالة النافذة المنبثقة
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -89,11 +89,7 @@ export default function ActiveHalaqas({
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
   // فتح النافذة بوضع الإنشاء
-  const handleOpenCreateModal = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleOpenCreateModal = () => {
     setFormData({
       name: '',
       educational_track: 'hifz',
@@ -144,17 +140,15 @@ export default function ActiveHalaqas({
 
   return (
     <div className="space-y-4 pt-1 pb-8 bg-app-layout">
-      {/* زر إضافة حلقة جديدة الموحد بارز في الأعلى دون تكرار الهيدر */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} w-full sm:w-auto px-5 py-2.5 font-extrabold flex items-center justify-center gap-2`}
-        >
-          <Plus size={18} />
-          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
-        </button>
-      </div>
+      {/* زر إضافة حلقة جديدة */}
+      <button
+        type="button"
+        onClick={handleOpenCreateModal}
+        className={`${UI.btnPrimary} w-full py-3 font-extrabold flex items-center justify-center gap-2 relative z-10`}
+      >
+        <Plus size={18} />
+        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
+      </button>
 
       {/* شريط الفلترة والبحث والتبويبات */}
       <HalaqasFilterBar
