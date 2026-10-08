@@ -14,7 +14,8 @@ export default function HalaqaFormModal({
   teachers = [],
   isSubmitting = false
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
 
   if (!isOpen) return null;
 
@@ -47,7 +48,24 @@ export default function HalaqaFormModal({
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
-    onSubmit?.(formData);
+
+    // تجهيز كائن Name المعتمد لـ jsonb مع ربط المسميات بدقة مع قاعدة البيانات
+    const rawName = formData?.name_text || formData?.name || '';
+    const formattedName = typeof rawName === 'object' ? rawName : { [currentLang]: rawName, ar: rawName };
+
+    const payload = {
+      ...formData,
+      name: formattedName,
+      educational_track: formData?.educational_track || formData?.track || 'hifz',
+      teaching_type: formData?.teaching_type || formData?.type || 'online',
+      teacher_id: formData?.teacher_id || null
+    };
+
+    delete payload.name_text;
+    delete payload.track;
+    delete payload.type;
+
+    onSubmit?.(payload);
   };
 
   return (
@@ -78,8 +96,8 @@ export default function HalaqaFormModal({
               type="text"
               required
               placeholder={t('halaqaNamePlaceholder', 'مثال: حلقة الإمام عاصم لحفظ الجزء الثلاثين')}
-              value={formData?.name || ''}
-              onChange={(v) => handleChange('name', v)}
+              value={formData?.name_text ?? (typeof formData?.name === 'string' ? formData?.name : formData?.name?.[currentLang] || formData?.name?.ar || '')}
+              onChange={(v) => handleChange('name_text', v)}
             />
           </div>
 
@@ -90,8 +108,8 @@ export default function HalaqaFormModal({
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
-                value={formData?.track || 'hifz'}
-                onChange={(v) => handleChange('track', v)}
+                value={formData?.educational_track || formData?.track || 'hifz'}
+                onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
               />
             </div>
@@ -126,21 +144,22 @@ export default function HalaqaFormModal({
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
-                value={formData?.type || 'online'}
-                onChange={(v) => handleChange('type', v)}
+                value={formData?.teaching_type || formData?.type || 'online'}
+                onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
               />
             </div>
           </div>
 
-          {/* توقيت الحلقة */}
+          {/* توقيت الحلقة (مطابق للشروط الشرطية start_time < end_time) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-                {t('startTimeLabel', 'وقت البدء')}
+                {t('startTimeLabel', 'وقت البدء')} *
               </label>
               <Input
                 type="time"
+                required
                 value={formData?.start_time || ''}
                 onChange={(v) => handleChange('start_time', v)}
               />
@@ -148,10 +167,11 @@ export default function HalaqaFormModal({
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5">
-                {t('endTimeLabel', 'وقت الانتهاء')}
+                {t('endTimeLabel', 'وقت الانتهاء')} *
               </label>
               <Input
                 type="time"
+                required
                 value={formData?.end_time || ''}
                 onChange={(v) => handleChange('end_time', v)}
               />
