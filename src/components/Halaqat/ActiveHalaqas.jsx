@@ -8,8 +8,10 @@ import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 import { UI } from '@/theme/styles';
 import { Input, Select, EmptyState } from '@/components/UI';
+import { useAcademySettings } from '@/hooks/useAcademySettings';
 
 export default function ActiveHalaqas({
+  currentAcademyId,
   halaqas = [],
   teachers = [],
   getLocalizedText,
@@ -19,7 +21,11 @@ export default function ActiveHalaqas({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
-  
+  const isRtl = i18n?.dir?.() === 'rtl' || currentLang === 'ar';
+
+  // جلب إعدادات الأكاديمية لاستخراج المنطقة الزمنية والسعة الاستيعابية التلقائية
+  const { formData: academySettings } = useAcademySettings(currentAcademyId, isRtl);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [viewMode, setViewMode] = useState('active'); // 'active' | 'archived' | 'unassigned'
@@ -27,15 +33,24 @@ export default function ActiveHalaqas({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // نموذج بيانات محايد وبدون قيم افتراضية مضمنة ثابتاً
-  const [formData, setFormData] = useState({
+  // تعيين القيم الافتراضية المستمدة من إعدادات الأكاديمية
+  const getInitialFormData = () => ({
     name: {},
     teacher_id: '',
     educational_track: 'hifz',
+    target_audience: 'all',
     start_time: '',
     end_time: '',
-    timezone: ''
+    max_students: academySettings?.max_students_per_group || 25,
+    timezone: academySettings?.timezone || 'Africa/Cairo'
   });
+
+  const [formData, setFormData] = useState(getInitialFormData());
+
+  const handleOpenModal = () => {
+    setFormData(getInitialFormData());
+    setShowFormModal(true);
+  };
 
   const resolveText = (value) => {
     if (!value) return '';
@@ -93,14 +108,7 @@ export default function ActiveHalaqas({
     try {
       await onCreateHalaqa?.(formData);
       setShowFormModal(false);
-      setFormData({
-        name: {},
-        teacher_id: '',
-        educational_track: 'hifz',
-        start_time: '',
-        end_time: '',
-        timezone: ''
-      });
+      setFormData(getInitialFormData());
     } finally {
       setIsSubmitting(false);
     }
@@ -108,12 +116,12 @@ export default function ActiveHalaqas({
 
   const trackOptions = [
     { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
-    { value: 'hifz', label: t('trackHifz', 'مسار الحفظ والتجويد المكثف') },
-    { value: 'tilawah', label: t('trackTilawah', 'مسار التلاوة وتصحيح الأداء') },
-    { value: 'ijazah', label: t('trackIjazah', 'مسار الإجازات بالسند المتصل') }
+    { value: 'hifz', label: t('trackHifz', 'الحفظ الجديد والتجويد المكثف') },
+    { value: 'review', label: t('trackReview', 'المراجعة والتثبيت') },
+    { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
+    { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') }
   ];
 
-  // دالة آمنة لاستخراج القيمة سواء جاءت كحدث (Event) أو كقيمة مباشرة (Value)
   const extractValue = (val) => {
     if (val && typeof val === 'object' && 'target' in val) {
       return val.target.value;
@@ -138,7 +146,7 @@ export default function ActiveHalaqas({
 
         <button
           type="button"
-          onClick={() => setShowFormModal(true)}
+          onClick={handleOpenModal}
           className={`${UI.btnPrimary} w-auto px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md shrink-0`}
         >
           <Plus size={16} />
