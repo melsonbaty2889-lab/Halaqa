@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Users, BookOpen } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -15,7 +15,9 @@ export default function ActiveHalaqas({
   onUpdateHalaqa,
   onToggleArchiveHalaqa,
   onNavigateToAttendance,
-  isLoading = false
+  isLoading = false,
+  isCreateModalOpen,
+  setIsCreateModalOpen
 }) {
   const { t } = useTranslation();
   const { getLocalizedText } = useAcademySettings();
@@ -26,9 +28,19 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
-  // حالة النافذة المنبثقة ورسائل النموذج
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // حالة النافذة المنبثقة للنموذج المحلية
+  const [localModalOpen, setLocalModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // تحديد حالة فتح المودال سواء عبر Props أو التحكم المحلي
+  const isModalOpen = isCreateModalOpen !== undefined ? isCreateModalOpen : localModalOpen;
+  const setModalOpen = (isOpen) => {
+    if (setIsCreateModalOpen) {
+      setIsCreateModalOpen(isOpen);
+    }
+    setLocalModalOpen(isOpen);
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     educational_track: 'hifz',
@@ -88,26 +100,8 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
-  // فتح النافذة بوضع الإنشاء
-  const handleOpenCreateModal = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setFormData({
-      name: '',
-      educational_track: 'hifz',
-      teacher_id: '',
-      target_audience: 'kids',
-      teaching_type: 'online',
-      start_time: '',
-      end_time: ''
-    });
-    setIsModalOpen(true);
-  };
-
   // فتح النافذة بوضع التعديل
-  const handleOpenEditModal = (halaqa) => {
+  const handleOpenEditModal = useCallback((halaqa) => {
     setFormData({
       id: halaqa.id,
       name: halaqa.name,
@@ -121,8 +115,8 @@ export default function ActiveHalaqas({
       max_students: halaqa.max_students || 10,
       timezone: halaqa.timezone || 'Africa/Cairo'
     });
-    setIsModalOpen(true);
-  };
+    setModalOpen(true);
+  }, []);
 
   // معالجة الحفظ الموحدة
   const handleFormSubmit = async (payload) => {
@@ -134,7 +128,7 @@ export default function ActiveHalaqas({
       } else {
         await onCreateHalaqa?.(dataToSave);
       }
-      setIsModalOpen(false);
+      setModalOpen(false);
     } catch (error) {
       console.error('Failed to save halaqa:', error);
     } finally {
@@ -143,34 +137,7 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-5 pt-2 pb-8 bg-app-layout">
-      {/* رأس الصفحة الاحترافي الموحد متوافق مع كافة الشاشات */}
-      <div className={`${UI.card} flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 md:p-5`}>
-        <div className="flex items-center gap-3">
-          <div className={UI.logoWrapper}>
-            <BookOpen className="w-6 h-6 text-semantic-success" />
-          </div>
-          <div>
-            <h1 className={UI.title}>
-              {t('halaqasManagementTitle', 'إدارة الحلقات والفصول')}
-            </h1>
-            <p className={UI.subtitle}>
-              {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
-            </p>
-          </div>
-        </div>
-
-        {/* توحيد نوع الزر الرئيسي ليكون UI.btnPrimary بدلاً من btnEmerald */}
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} w-full sm:w-auto shrink-0`}
-        >
-          <Plus size={18} />
-          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
-        </button>
-      </div>
-
+    <div className="space-y-4 pt-1 pb-8 bg-app-layout">
       {/* شريط الفلترة والبحث والتبويبات */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
@@ -224,10 +191,9 @@ export default function ActiveHalaqas({
       {/* النافذة المنبثقة */}
       <HalaqaFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => setModalOpen(false)}
         onSubmit={handleFormSubmit}
         handleSubmit={handleFormSubmit}
-        onSave={handleFormSubmit}
         formData={formData}
         setFormData={setFormData}
         teachers={teachers}
