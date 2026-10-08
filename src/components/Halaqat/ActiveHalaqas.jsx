@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Plus, Search, Layers, Users, 
-  Grid, List, CheckCircle2, Archive, Clock, Sparkles 
+  Grid, List, CheckCircle2, Archive, Clock 
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 import { UI } from '@/theme/styles';
+import { Input, Select, EmptyState } from '@/components/UI';
 
 export default function ActiveHalaqas({
   halaqas = [],
@@ -26,13 +27,14 @@ export default function ActiveHalaqas({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // إزالة القيم الافتراضية الثابتة والاعتماد الشفاف على البيانات القادمة
   const [formData, setFormData] = useState({
     name: {},
     teacher_id: '',
     educational_track: 'hifz',
-    start_time: '16:00',
-    end_time: '17:15',
-    timezone: 'UTC'
+    start_time: '',
+    end_time: '',
+    timezone: ''
   });
 
   const resolveText = (value) => {
@@ -95,19 +97,26 @@ export default function ActiveHalaqas({
         name: {},
         teacher_id: '',
         educational_track: 'hifz',
-        start_time: '16:00',
-        end_time: '17:15',
-        timezone: 'UTC'
+        start_time: '',
+        end_time: '',
+        timezone: ''
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const trackOptions = [
+    { value: 'all', label: t('allTracks', 'جميع المسارات') },
+    { value: 'hifz', label: t('trackHifz', 'الحفظ والتجويد') },
+    { value: 'tilawah', label: t('trackTilawah', 'التلاوة والأداء') },
+    { value: 'ijazah', label: t('trackIjazah', 'الإجازات بالسند') }
+  ];
+
   return (
     <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-3.5 text-semantic-textPrimary">
       
-      {/* 1. الترويسة المدمجة والأنيقة (توفير مساحة الموبايل) */}
+      {/* 1. ترويسة الصفحة */}
       <div className="flex items-center justify-between gap-2 py-1">
         <div>
           <h1 className="text-base sm:text-xl font-black text-semantic-textPrimary flex items-center gap-2 m-0">
@@ -129,7 +138,7 @@ export default function ActiveHalaqas({
         </button>
       </div>
 
-      {/* 2. أزرار التصفية التفاعلية المدمجة (Chips Tabs) */}
+      {/* 2. أزرار التصفية التفاعلية */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         <button
           type="button"
@@ -180,29 +189,25 @@ export default function ActiveHalaqas({
         </button>
       </div>
 
-      {/* 3. شريط البحث والمسارات الحديث بدون حشو */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-semantic-textMuted pointer-events-none" size={14} />
-          <input
+      {/* 3. شريط البحث والمسارات بالمكونات الموحدة */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div className="flex-1">
+          <Input
             type="text"
             placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو المعلم...')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className={`${UI.input} pr-8 pl-3 py-2 text-xs w-full bg-semantic-surfaceInput`}
+            icon={<Search size={14} className="text-semantic-textMuted" />}
           />
         </div>
 
-        <select
-          value={selectedTrack}
-          onChange={e => setSelectedTrack(e.target.value)}
-          className={`${UI.input} w-auto text-xs py-2 bg-semantic-surfaceInput shrink-0`}
-        >
-          <option value="all">{t('allTracks', 'جميع المسارات')}</option>
-          <option value="hifz">{t('trackHifz', 'الحفظ والتجويد')}</option>
-          <option value="tilawah">{t('trackTilawah', 'التلاوة والأداء')}</option>
-          <option value="ijazah">{t('trackIjazah', 'الإجازات بالسند')}</option>
-        </select>
+        <div className="w-full sm:w-auto shrink-0">
+          <Select
+            value={selectedTrack}
+            onChange={e => setSelectedTrack(e.target.value)}
+            options={trackOptions}
+          />
+        </div>
 
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard">
           <button
@@ -226,7 +231,7 @@ export default function ActiveHalaqas({
         </div>
       </div>
 
-      {/* 4. نافذة الإضافة المضمونة (Modal) */}
+      {/* 4. نافذة النموذج (Modal) */}
       <HalaqaFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -237,7 +242,7 @@ export default function ActiveHalaqas({
         isSubmitting={isSubmitting}
       />
 
-      {/* 5. عرض قائمة الحلقات بكروت سريعة الاستجابة */}
+      {/* 5. عرض قائمة الحلقات أو حالة الفراغ الموحدة */}
       {filteredHalaqas.length > 0 ? (
         <div className={
           layoutMode === 'grid' 
@@ -256,12 +261,11 @@ export default function ActiveHalaqas({
           ))}
         </div>
       ) : (
-        <div className={`${UI.card} text-center py-10 border-dashed my-4`}>
-          <Clock className="mx-auto text-semantic-textMuted mb-2 opacity-60" size={28} />
-          <p className="text-xs text-semantic-textSecondary font-bold m-0">
-            {t('noHalaqatFound', 'لا توجد حلقات مطابقة للبحث')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Clock}
+          title={t('noHalaqatFound', 'لا توجد حلقات مطابقة للبحث أو الفلترة')}
+          description={t('tryChangingFilters', 'جرّب تغيير كلمات البحث أو إعادة ضبط خيارات التصفية')}
+        />
       )}
     </div>
   );
