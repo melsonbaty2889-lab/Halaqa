@@ -2,7 +2,7 @@ import React from 'react';
 import { User, Clock, Video, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
-import { getLocalizedContent } from './halaqaConstants';
+import { getLocalizedContent } from './HalaqaConstants';
 
 export default function HalaqaCardItem({ 
   halaqa, 
