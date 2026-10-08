@@ -17,6 +17,7 @@ export default function ActiveHalaqas({
   onCreateHalaqa
 }) {
   const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
   
   // حالات التحكم بالصفحة
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,29 +37,49 @@ export default function ActiveHalaqas({
     timezone: 'UTC'
   });
 
-  // تصفية الحلقات مع مراعاة اللغة النشطة
+  // دالة مساعدة آمنة لاستخراج النصوص وتجنب (TypeError: a is not a function)
+  const resolveText = (value) => {
+    if (!value) return '';
+    if (typeof getLocalizedText === 'function') {
+      try {
+        return getLocalizedText(value) || '';
+      } catch (e) {
+        console.warn('Error executing getLocalizedText:', e);
+      }
+    }
+    if (typeof value === 'object' && value !== null) {
+      return value[currentLang] || value.ar || value.en || '';
+    }
+    return typeof value === 'string' ? value : '';
+  };
+
+  // تصفية الحلقات مع مراعاة اللغة النشطة بشكل آمن
   const filteredHalaqas = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    return halaqas.filter(halaqa => {
-      const isArchivedMatch = viewMode === 'archived' ? halaqa.is_archived : !halaqa.is_archived;
+    return (Array.isArray(halaqas) ? halaqas : []).filter(halaqa => {
+      if (!halaqa) return false;
+      const isArchivedMatch = viewMode === 'archived' ? Boolean(halaqa.is_archived) : !halaqa.is_archived;
       const trackMatch = selectedTrack === 'all' || halaqa.educational_track === selectedTrack;
       
       if (!isArchivedMatch || !trackMatch) return false;
       if (!query) return true;
 
-      const localizedName = (getLocalizedText ? getLocalizedText(halaqa.name) : (halaqa.name?.[i18n.language] || halaqa.name?.ar || '')).toLowerCase();
-      const localizedTeacher = (getLocalizedText ? getLocalizedText(halaqa.teacher_name || halaqa.teacher) : '').toLowerCase();
+      const localizedName = resolveText(halaqa.name).toLowerCase();
+      const localizedTeacher = resolveText(halaqa.teacher_name || halaqa.teacher).toLowerCase();
 
       return localizedName.includes(query) || localizedTeacher.includes(query);
     });
-  }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText, i18n.language]);
+  }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText, currentLang]);
 
   // إحصائيات سريعة للواجهة
-  const stats = useMemo(() => ({
-    totalActive: halaqas.filter(h => !h.is_archived).length,
-    totalArchived: halaqas.filter(h => h.is_archived).length,
-    unassigned: halaqas.filter(h => !h.teacher_id && !h.is_archived).length
-  }), [halaqas]);
+  const stats = useMemo(() => {
+    const list = Array.isArray(halaqas) ? halaqas : [];
+    return {
+      totalActive: list.filter(h => !h?.is_archived).length,
+      totalArchived: list.filter(h => h?.is_archived).length,
+      unassigned: list.filter(h => !h?.teacher_id && !h?.is_archived).length
+    };
+  }, [halaqas]);
 
   // حفظ وإرسال البيانات
   const handleSubmit = async (e) => {
