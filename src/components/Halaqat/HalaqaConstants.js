@@ -1,0 +1,45 @@
+export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText = null) => {
+  if (!value) return '';
+  if (typeof getLocalizedText === 'function') {
+    try {
+      const result = getLocalizedText(value);
+      if (result) return result;
+    } catch (e) {
+      console.warn('Error in getLocalizedText:', e);
+    }
+  }
+  if (typeof value === 'object' && value !== null) {
+    return value[currentLang] || value.ar || value.en || '';
+  }
+  return typeof value === 'string' ? value : '';
+};
+
+/**
+ * خيارات المسارات التعليمية المعتمدة للحلقات
+ */
+export const getTrackOptions = (t) => [
+  { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
+  { value: 'hifz', label: t('trackHifz', 'حفظ القرآن الكريم وتجويده') },
+  { value: 'review', label: t('trackReview', 'المراجعة والتثبيت') },
+  { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
+  { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') },
+  { value: 'mutun', label: t('trackMutun', 'المتون العلمية والتجويد النظرى') }
+];
+
+/**
+ * خيارات الفئات المستهدفة
+ */
+export const getTargetAudienceOptions = (t) => [
+  { value: 'all', label: t('audienceAll', 'جميع الفئات') },
+  { value: 'kids', label: t('audienceKids', 'الأطفال') },
+  { value: 'males', label: t('audienceMales', 'الرجال / الذكور') },
+  { value: 'females', label: t('audienceFemales', 'النساء / الإناث') }
+];
+
+/**
+ * نمط انعقاد الحلقة (أونلاين / حضوري)
+ */
+export const getHalaqaTypeOptions = (t) => [
+  { value: 'online', label: t('typeOnline', 'عن بُعد (أونلاين)') },
+  { value: 'onsite', label: t('typeOnsite', 'حضوري (في المقر / المسجد)') }
+];
