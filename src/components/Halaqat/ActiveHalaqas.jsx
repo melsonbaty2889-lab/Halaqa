@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -89,7 +89,11 @@ export default function ActiveHalaqas({
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
   // فتح النافذة بوضع الإنشاء
-  const handleOpenCreateModal = () => {
+  const handleOpenCreateModal = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setFormData({
       name: '',
       educational_track: 'hifz',
@@ -120,14 +124,15 @@ export default function ActiveHalaqas({
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ
+  // معالجة الحفظ الموحدة
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
-      if (payload.id) {
-        await onUpdateHalaqa?.(payload);
+      const dataToSave = payload || formData;
+      if (dataToSave.id) {
+        await onUpdateHalaqa?.(dataToSave);
       } else {
-        await onCreateHalaqa?.(payload);
+        await onCreateHalaqa?.(dataToSave);
       }
       setIsModalOpen(false);
     } catch (error) {
@@ -138,19 +143,29 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-4 pt-1">
-      {/* رأس الصفحة: متناسق تماماً في الموبايل وسطح المكتب */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-semantic-borderCard">
-        <p className="text-xs text-semantic-textMuted m-0 leading-normal">
-          {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
-        </p>
+    <div className="space-y-5 pt-2 pb-8">
+      {/* رأس الصفحة الاحترافي الموحد متوافق مع كافة الشاشات */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-semantic-borderCard">
+        <div className="flex items-center gap-3">
+          <div className={UI.logoWrapper}>
+            <BookOpen className="w-6 h-6 text-semantic-success" />
+          </div>
+          <div>
+            <h1 className={UI.title}>
+              {t('halaqasManagementTitle', 'إدارة الحلقات والفصول')}
+            </h1>
+            <p className={UI.subtitle}>
+              {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
+            </p>
+          </div>
+        </div>
 
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} w-full sm:w-auto py-2 px-4 text-xs font-bold flex items-center justify-center gap-1.5 shrink-0 shadow-none hover:opacity-95 transition-all`}
+          className={`${UI.btnEmerald} w-full sm:w-auto shrink-0 shadow-lg`}
         >
-          <Plus size={16} />
+          <Plus size={18} />
           <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
         </button>
       </div>
@@ -190,12 +205,14 @@ export default function ActiveHalaqas({
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 px-4 bg-semantic-surfaceInput/30 rounded-2xl border border-dashed border-semantic-borderCard">
-          <Users size={36} className="mx-auto text-semantic-textMuted mb-2 opacity-50" />
-          <h3 className="text-sm font-bold text-semantic-textPrimary mb-1">
+        <div className={`${UI.card} text-center py-12 px-4 border-dashed border-semantic-borderCard/80 flex flex-col items-center justify-center`}>
+          <div className="p-4 rounded-full bg-semantic-surfaceInput/60 mb-3 border border-semantic-borderCard">
+            <Users size={32} className="text-semantic-textMuted opacity-70" />
+          </div>
+          <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
             {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
           </h3>
-          <p className="text-xs text-semantic-textMuted max-w-sm mx-auto">
+          <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
             {searchQuery
               ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي.')
               : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
@@ -203,12 +220,13 @@ export default function ActiveHalaqas({
         </div>
       )}
 
-      {/* النافذة المنبثقة: يمرر كلاً من onSubmit و handleSubmit لضمان عمل كلا الاسمين */}
+      {/* النافذة المنبثقة: دعم شامل لكافة مسميات الـ Handlers لضمان عمل الفتح والحفظ */}
       <HalaqaFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleFormSubmit}
         handleSubmit={handleFormSubmit}
+        onSave={handleFormSubmit}
         formData={formData}
         setFormData={setFormData}
         teachers={teachers}
