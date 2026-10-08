@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Users, BookOpen } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -141,18 +141,12 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-5">
-      {/* رأس الصفحة وزر إنشاء حلقة جديدة */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-semantic-borderCard">
-        <div>
-          <h2 className="text-lg font-black text-semantic-textPrimary flex items-center gap-2 m-0">
-            <BookOpen className="text-semantic-actionPrimary" size={20} />
-            {t('activeHalaqasTitle', 'إدارة الحلقات والفصول')}
-          </h2>
-          <p className="text-xs text-semantic-textMuted mt-1 mb-0">
-            {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
-          </p>
-        </div>
+    <div className="space-y-4">
+      {/* تم إلغاء تكرار عنوان الصفحة المكتوب في Navbar وتوفير مساحة رأسية هادئة */}
+      <div className="flex items-center justify-between gap-3 pb-2 border-b border-semantic-borderCard">
+        <p className="text-xs text-semantic-textMuted m-0">
+          {t('activeHalaqasSub', 'متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين')}
+        </p>
 
         <button
           type="button"
@@ -213,15 +207,15 @@ export default function ActiveHalaqas({
       )}
 
       {/* النافذة المنبثقة لإنشاء وتعديل الحلقة */}
-<HalaqaFormModal
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  onSubmit={handleFormSubmit}
-  formData={formData}
-  setFormData={setFormData}
-  teachers={teachers}
-  isSubmitting={isSubmitting}
-/>
+      <HalaqaFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        handleSubmit={handleFormSubmit}
+        formData={formData}
+        setFormData={setFormData}
+        teachers={teachers}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }
