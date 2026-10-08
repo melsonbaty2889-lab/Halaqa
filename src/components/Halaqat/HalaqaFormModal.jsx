@@ -54,9 +54,25 @@ export default function HalaqaFormModal({
     }));
   };
 
+  // تحويل الوقت المنسق HH:mm إلى دقائق إجمالية بدقة
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr || typeof timeStr !== 'string') return null;
+    const parts = timeStr.trim().split(':');
+    if (parts.length < 2) return null;
+    
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+  };
+
   // دالة التحقق الفوري من صحة التوقيت
   const validateTimes = (startTime, endTime) => {
-    if (startTime && endTime && startTime >= endTime) {
+    const startMins = parseTimeToMinutes(startTime);
+    const endMins = parseTimeToMinutes(endTime);
+
+    if (startMins !== null && endMins !== null && startMins >= endMins) {
       setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
       return false;
     }
@@ -214,7 +230,7 @@ export default function HalaqaFormModal({
               required
               value={formData?.start_time || ''}
               onChange={(val) => handleTimeChange('start_time', val)}
-              error={timeError ? true : false}
+              error={Boolean(timeError)}
             />
 
             <CustomTimePicker
@@ -222,7 +238,7 @@ export default function HalaqaFormModal({
               required
               value={formData?.end_time || ''}
               onChange={(val) => handleTimeChange('end_time', val)}
-              error={timeError ? true : false}
+              error={Boolean(timeError)}
             />
 
             <div>
@@ -242,7 +258,7 @@ export default function HalaqaFormModal({
 
           {/* تنبيه أخطاء التوقيت الفوري */}
           {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-errorBg text-semantic-error text-xs flex items-center gap-2 border border-semantic-errorBorder/30 animate-in fade-in duration-150">
+            <div className="p-2.5 rounded-xl bg-semantic-actionDanger/10 text-semantic-actionDanger text-xs flex items-center gap-2 border border-semantic-actionDanger/30 animate-in fade-in duration-150">
               <AlertCircle size={15} className="shrink-0" />
               <span>{timeError}</span>
             </div>
@@ -261,8 +277,10 @@ export default function HalaqaFormModal({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
-            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5`}
+            disabled={isSubmitting || Boolean(timeError)}
+            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 ${
+              timeError ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {formData?.id ? <Save size={14} /> : <Plus size={14} />}
             <span>
