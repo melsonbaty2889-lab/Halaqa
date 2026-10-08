@@ -251,7 +251,7 @@ export default function HalaqaFormModal({
         </div>
 
         {/* أزرار الإجراءات مثبتة دائماً في أسفل النموذج */}
-        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-2 shrink-0 bg-semantic-bgMain sticky bottom-0">
+        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-2 shrink-0 bg-semantic-surfaceCard sticky bottom-0">
           <button
             type="button"
             onClick={onClose}
