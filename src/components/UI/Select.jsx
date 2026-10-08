@@ -54,7 +54,7 @@ export const Select = forwardRef(({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // حساب موضع القائمة المنبثقة لسطح المكتب مع مراعاة الحدود
+  // حساب موضع القائمة المنبثقة لسطح المكتب
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
@@ -62,7 +62,6 @@ export const Select = forwardRef(({
       const computedWidth = Math.max(rect.width, minWidth);
       
       let leftPos = rect.left;
-      // ضبط الموضع لتجنب خروج القائمة خارج حدود الشاشة من اليمين
       if (leftPos + computedWidth > window.innerWidth) {
         leftPos = window.innerWidth - computedWidth - 12;
       }
@@ -76,7 +75,7 @@ export const Select = forwardRef(({
     }
   }, []);
 
-  // تحديث الموضع عند التمرير أو إعادة التشكيل
+  // تحديث الموضع عند التمرير أو تغيير حجم النافذة
   useEffect(() => {
     if (isOpen && !isMobile) {
       updatePosition();
@@ -89,7 +88,7 @@ export const Select = forwardRef(({
     }
   }, [isOpen, isMobile, updatePosition]);
 
-  // قفل تمرير الصفحة فقط أثناء فتح نافذة الجوال
+  // قفل تمرير الخلفية عند فتح القائمة المنبثقة في الهاتف
   useEffect(() => {
     if (isOpen && isMobile) {
       const originalOverflow = document.body.style.overflow;
@@ -101,6 +100,7 @@ export const Select = forwardRef(({
     }
   }, [isOpen, isMobile]);
 
+  // تصفية الخيارات بناءً على نص البحث
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return options;
     const query = searchTerm.toLowerCase().trim();
@@ -111,6 +111,9 @@ export const Select = forwardRef(({
       return labelMatch || subLabelMatch || valueMatch;
     });
   }, [options, searchTerm]);
+
+  // شرط إظهار شريط البحث: فقط عندما تكون خاصية searchable مفعّلة والخيارات أكثر من 5
+  const shouldShowSearch = searchable && options.length > 5;
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
@@ -238,7 +241,7 @@ export const Select = forwardRef(({
         isMobile ? (
           /* وضع الهواتف المحمولة (Select Modal) */
           <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
             onClick={() => setIsOpen(false)}
             dir={dir}
           >
@@ -263,8 +266,8 @@ export const Select = forwardRef(({
                 </button>
               </div>
 
-              {/* حقل البحث */}
-              {(searchable || options.length > 5) && (
+              {/* حقل البحث يظهر فقط إذا كان مفعلاً وكانت الخيارات أكثر من 5 */}
+              {shouldShowSearch && (
                 <div className="p-3 border-b border-semantic-borderInput shrink-0">
                   <div className="relative">
                     <input
@@ -354,7 +357,7 @@ export const Select = forwardRef(({
                 backdropFilter: "blur(12px)"
               }}
             >
-              {(searchable || options.length > 5) && (
+              {shouldShowSearch && (
                 <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
                   <input
                     type="text"
