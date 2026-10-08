@@ -41,15 +41,15 @@ export default function HalaqasFilterBar({
         <button
           type="button"
           onClick={() => setViewMode('active')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'active'
-              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <CheckCircle2 size={13} />
+          <CheckCircle2 size={14} />
           <span>{t('statActive', 'النشطة')}</span>
-          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px]">
+          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-2 py-0.5 rounded-full text-[10px] font-extrabold">
             {stats.totalActive || 0}
           </span>
         </button>
@@ -57,15 +57,15 @@ export default function HalaqasFilterBar({
         <button
           type="button"
           onClick={() => setViewMode('unassigned')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
-              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Users size={13} />
+          <Users size={14} />
           <span>{t('statUnassigned', 'بلا معلم')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold">
             {stats.unassigned || 0}
           </span>
         </button>
@@ -73,15 +73,15 @@ export default function HalaqasFilterBar({
         <button
           type="button"
           onClick={() => setViewMode('archived')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
-              ? 'bg-semantic-bgMain text-semantic-actionPrimary shadow-sm'
+              ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Archive size={13} />
+          <Archive size={14} />
           <span>{t('statArchived', 'المؤرشفة')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px]">
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold">
             {stats.totalArchived || 0}
           </span>
         </button>
@@ -114,7 +114,7 @@ export default function HalaqasFilterBar({
               type="button"
               onClick={handleResetFilters}
               title={t('resetFilters', 'إعادة ضبط')}
-              className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer shrink-0"
+              className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer shrink-0 transition-colors"
             >
               <X size={15} />
             </button>
@@ -125,20 +125,24 @@ export default function HalaqasFilterBar({
           <button
             type="button"
             onClick={() => setLayoutMode('grid')}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${
-              layoutMode === 'grid' ? 'bg-semantic-actionPrimary text-semantic-bgMain' : 'bg-transparent text-semantic-textMuted'
+            className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
+              layoutMode === 'grid' 
+                ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
+                : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
             }`}
           >
-            <Grid size={14} />
+            <Grid size={15} />
           </button>
           <button
             type="button"
             onClick={() => setLayoutMode('list')}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer border-none ${
-              layoutMode === 'list' ? 'bg-semantic-actionPrimary text-semantic-bgMain' : 'bg-transparent text-semantic-textMuted'
+            className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
+              layoutMode === 'list' 
+                ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
+                : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
             }`}
           >
-            <List size={14} />
+            <List size={15} />
           </button>
         </div>
       </div>
