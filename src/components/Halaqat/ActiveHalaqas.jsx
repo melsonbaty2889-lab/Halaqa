@@ -12,6 +12,7 @@ export default function ActiveHalaqas({
   halaqas = [],
   teachers = [],
   onCreateHalaqa,
+  onUpdateHalaqa,
   onToggleArchiveHalaqa,
   onNavigateToAttendance,
   isLoading = false
@@ -30,15 +31,15 @@ export default function ActiveHalaqas({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    track: 'hifz',
+    educational_track: 'hifz',
     teacher_id: '',
     target_audience: 'kids',
-    type: 'online',
+    teaching_type: 'online',
     start_time: '',
     end_time: ''
   });
 
-  // 1. حساب الإحصائيات سريعا
+  // 1. حساب الإحصائيات
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
@@ -71,14 +72,15 @@ export default function ActiveHalaqas({
       }
 
       // الفلترة حسب المسار التعليمي
-      if (selectedTrack !== 'all' && halaqa.track !== selectedTrack) {
+      const trackVal = halaqa.educational_track || halaqa.track;
+      if (selectedTrack !== 'all' && trackVal !== selectedTrack) {
         return false;
       }
 
       // الفلترة حسب نص البحث (اسم الحلقة أو المعلم)
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
-        const nameStr = String(getLocalizedText(halaqa.name) || '').toLowerCase();
+        const nameStr = String(getLocalizedText(halaqa.name) || halaqa.name_text || '').toLowerCase();
         const teacherData = halaqa.teacher_name || halaqa.teacher;
         const teacherStr = String(getLocalizedText(teacherData) || '').toLowerCase();
 
@@ -89,24 +91,47 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
-  // فتح وإغلاق النافذة المنبثقة
+  // فتح النافذة بوضع الإنشاء
   const handleOpenCreateModal = () => {
     setFormData({
       name: '',
-      track: 'hifz',
+      educational_track: 'hifz',
       teacher_id: '',
       target_audience: 'kids',
-      type: 'online',
+      teaching_type: 'online',
       start_time: '',
       end_time: ''
     });
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = async (data) => {
+  // فتح النافذة بوضع التعديل
+  const handleOpenEditModal = (halaqa) => {
+    setFormData({
+      id: halaqa.id,
+      name: halaqa.name,
+      name_text: typeof halaqa.name === 'string' ? halaqa.name : '',
+      educational_track: halaqa.educational_track || halaqa.track || 'hifz',
+      teacher_id: halaqa.teacher_id || '',
+      target_audience: halaqa.target_audience || 'kids',
+      teaching_type: halaqa.teaching_type || halaqa.type || 'online',
+      start_time: halaqa.start_time || '',
+      end_time: halaqa.end_time || '',
+      max_students: halaqa.max_students || 10,
+      timezone: halaqa.timezone || 'Africa/Cairo'
+    });
+    setIsModalOpen(true);
+  };
+
+  // معالجة الحفظ (إما إنشاء جديد أو تعديل)
+  const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
-      await onCreateHalaqa?.(data);
+      if (payload.id) {
+        await onUpdateHalaqa?.(payload);
+      } else {
+        await onCreateHalaqa?.(payload);
+      }
       setIsModalOpen(false);
     } catch (error) {
       console.error('Failed to save halaqa:', error);
@@ -169,6 +194,7 @@ export default function ActiveHalaqas({
               getLocalizedText={getLocalizedText}
               onNavigateToAttendance={onNavigateToAttendance}
               onToggleArchiveHalaqa={onToggleArchiveHalaqa}
+              onEditHalaqa={handleOpenEditModal}
             />
           ))}
         </div>
@@ -190,7 +216,7 @@ export default function ActiveHalaqas({
       <HalaqaFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
+        handleSubmit={handleFormSubmit}
         formData={formData}
         setFormData={setFormData}
         teachers={teachers}
