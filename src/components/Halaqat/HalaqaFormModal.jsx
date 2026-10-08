@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, Clock, Users, Target } from 'lucide-react';
+import { Globe, Users, Target, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -40,7 +40,6 @@ export default function HalaqaFormModal({
     e.preventDefault();
     setTimeError('');
 
-    // التحقق من شرط التوقيت (start_time < end_time) المباشر من قاعدة البيانات
     if (formData?.start_time && formData?.end_time) {
       if (formData.start_time >= formData.end_time) {
         setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
@@ -51,7 +50,6 @@ export default function HalaqaFormModal({
     handleSubmit?.(e);
   };
 
-  // إعداد قائمة المعلمين للمكون الموحد Select
   const teacherOptions = [
     { value: '', label: t('selectTeacher', '-- بدون معلم (بانتظار معلم) --') },
     ...(Array.isArray(teachers) ? teachers.map(teacher => {
@@ -66,7 +64,6 @@ export default function HalaqaFormModal({
     }) : [])
   ];
 
-  // إعداد مصفوفة المسارات بدون تكرار وحشو لفظي
   const trackOptions = [
     { value: 'hifz', label: t('trackHifz', 'الحفظ الجديد والتجويد المكثف') },
     { value: 'review', label: t('trackReview', 'المراجعة والتثبيت') },
@@ -74,7 +71,6 @@ export default function HalaqaFormModal({
     { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') }
   ];
 
-  // إعداد خيارات الفئة المستهدفة
   const targetAudienceOptions = [
     { value: 'all', label: t('audienceAll', 'جميع الفئات') },
     { value: 'kids', label: t('audienceKids', 'الأطفال') },
@@ -175,7 +171,7 @@ export default function HalaqaFormModal({
           )}
         </div>
 
-        {/* الحد الأقصى للطلاب والمنطقة الزمنية */}
+        {/* السعة والاستفادة التلقائية من إعدادات الأكاديمية */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-semantic-textSecondary flex items-center gap-1">
@@ -186,19 +182,19 @@ export default function HalaqaFormModal({
               type="number" 
               min="1"
               max="100"
-              value={formData?.max_students || 10} 
-              onChange={(v) => setFormData(prev => ({ ...prev, max_students: parseInt(extractValue(v)) || 10 }))} 
+              value={formData?.max_students || 25} 
+              onChange={(v) => setFormData(prev => ({ ...prev, max_students: parseInt(extractValue(v)) || 25 }))} 
             />
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-semantic-textSecondary flex items-center gap-1">
               <Globe size={13} />
-              <span>{t('timezone', 'المنطقة الزمنية')}</span>
+              <span>{t('timezone', 'المنطقة الزمنية (افتراضي الأكاديمية)')}</span>
             </label>
             <div className="p-2.5 text-xs rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted flex items-center gap-2">
               <Globe size={14} className="text-semantic-actionPrimary shrink-0" />
-              <span>{formData?.timezone || 'UTC'}</span>
+              <span>{formData?.timezone || 'Africa/Cairo'}</span>
             </div>
           </div>
         </div>
