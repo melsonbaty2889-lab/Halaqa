@@ -25,18 +25,26 @@ export default function CustomTimePicker({
         const p = hourNum >= 12 ? 'PM' : 'AM';
         hourNum = hourNum % 12 || 12;
         setHours(hourNum.toString().padStart(2, '0'));
-        setMinutes(m);
+        setMinutes(m.padStart(2, '0'));
         setPeriod(p);
       }
     }
   }, [value]);
 
   const handleConfirm = () => {
-    let hourNum = parseInt(hours, 10);
+    let hourNum = parseInt(hours || '12', 10);
+    let minNum = parseInt(minutes || '00', 10);
+
+    // ضبط الحدود المقبولة
+    if (isNaN(hourNum) || hourNum < 1) hourNum = 12;
+    if (hourNum > 12) hourNum = 12;
+    if (isNaN(minNum) || minNum < 0) minNum = 0;
+    if (minNum > 59) minNum = 59;
+
     if (period === 'PM' && hourNum < 12) hourNum += 12;
     if (period === 'AM' && hourNum === 12) hourNum = 0;
 
-    const formattedTime = `${hourNum.toString().padStart(2, '0')}:${minutes}`;
+    const formattedTime = `${hourNum.toString().padStart(2, '0')}:${minNum.toString().padStart(2, '0')}`;
     onChange(formattedTime);
     setIsOpen(false);
   };
@@ -56,26 +64,52 @@ export default function CustomTimePicker({
     return `${hourNum.toString().padStart(2, '0')}:${m} ${p}`;
   };
 
-  const incrementHours = () => {
+  // التحكم بالساعات (كتابة + أسهم)
+  const handleHoursChange = (e) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setHours(val);
+  };
+
+  const handleHoursBlur = () => {
     let h = parseInt(hours, 10);
+    if (isNaN(h) || h < 1) h = 12;
+    if (h > 12) h = 12;
+    setHours(h.toString().padStart(2, '0'));
+  };
+
+  const incrementHours = () => {
+    let h = parseInt(hours || '12', 10);
     h = h >= 12 ? 1 : h + 1;
     setHours(h.toString().padStart(2, '0'));
   };
 
   const decrementHours = () => {
-    let h = parseInt(hours, 10);
+    let h = parseInt(hours || '12', 10);
     h = h <= 1 ? 12 : h - 1;
     setHours(h.toString().padStart(2, '0'));
   };
 
-  const incrementMinutes = () => {
+  // التحكم بالدقائق (كتابة + أسهم)
+  const handleMinutesChange = (e) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setMinutes(val);
+  };
+
+  const handleMinutesBlur = () => {
     let m = parseInt(minutes, 10);
+    if (isNaN(m) || m < 0) m = 0;
+    if (m > 59) m = 59;
+    setMinutes(m.toString().padStart(2, '0'));
+  };
+
+  const incrementMinutes = () => {
+    let m = parseInt(minutes || '00', 10);
     m = (m + 5) % 60;
     setMinutes(m.toString().padStart(2, '0'));
   };
 
   const decrementMinutes = () => {
-    let m = parseInt(minutes, 10);
+    let m = parseInt(minutes || '00', 10);
     m = (m - 5 + 60) % 60;
     setMinutes(m.toString().padStart(2, '0'));
   };
@@ -104,7 +138,7 @@ export default function CustomTimePicker({
         <Clock size={16} className="text-semantic-textMuted shrink-0" />
       </button>
 
-      {/* النافذة المنبثقة لاختيار الوقت باستخدام Portal */}
+      {/* النافذة المنبثقة لاختيار الوقت */}
       {isOpen && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="w-full max-w-xs bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl shadow-2xl overflow-hidden text-semantic-textPrimary flex flex-col">
@@ -121,10 +155,10 @@ export default function CustomTimePicker({
               </button>
             </div>
 
-            {/* محتوى اختيار الوقت بتصميم العجلات والأزرار */}
-            <div className="p-5 flex items-center justify-center gap-3 dir-ltr">
+            {/* محتوى اختيار الوقت LTR */}
+            <div className="p-5 flex items-center justify-center gap-3 [direction:ltr]">
               
-              {/* منتقي الساعات */}
+              {/* حقل الساعات */}
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
@@ -133,9 +167,15 @@ export default function CustomTimePicker({
                 >
                   <ChevronUp size={16} />
                 </button>
-                <div className="w-16 h-12 flex items-center justify-center bg-semantic-surfaceInput border border-semantic-borderCard rounded-xl text-xl font-bold text-semantic-textPrimary">
-                  {hours}
-                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={hours}
+                  onChange={handleHoursChange}
+                  onBlur={handleHoursBlur}
+                  onFocus={(e) => e.target.select()}
+                  className="w-16 h-12 text-center bg-semantic-surfaceInput border border-semantic-borderCard rounded-xl text-xl font-bold text-semantic-textPrimary focus:border-semantic-actionPrimary focus:outline-none transition-colors"
+                />
                 <button
                   type="button"
                   onClick={decrementHours}
@@ -147,7 +187,7 @@ export default function CustomTimePicker({
 
               <span className="text-2xl font-bold text-semantic-actionPrimary pb-1">:</span>
 
-              {/* منتقي الدقائق */}
+              {/* حقل الدقائق */}
               <div className="flex flex-col items-center gap-1">
                 <button
                   type="button"
@@ -156,9 +196,15 @@ export default function CustomTimePicker({
                 >
                   <ChevronUp size={16} />
                 </button>
-                <div className="w-16 h-12 flex items-center justify-center bg-semantic-surfaceInput border border-semantic-borderCard rounded-xl text-xl font-bold text-semantic-textPrimary">
-                  {minutes}
-                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={minutes}
+                  onChange={handleMinutesChange}
+                  onBlur={handleMinutesBlur}
+                  onFocus={(e) => e.target.select()}
+                  className="w-16 h-12 text-center bg-semantic-surfaceInput border border-semantic-borderCard rounded-xl text-xl font-bold text-semantic-textPrimary focus:border-semantic-actionPrimary focus:outline-none transition-colors"
+                />
                 <button
                   type="button"
                   onClick={decrementMinutes}
@@ -169,7 +215,7 @@ export default function CustomTimePicker({
               </div>
 
               {/* أزرار ص / م */}
-              <div className="flex flex-col gap-1.5 ml-2">
+              <div className="flex flex-col gap-1.5 ml-2 [direction:rtl]">
                 <button
                   type="button"
                   onClick={() => setPeriod('AM')}
