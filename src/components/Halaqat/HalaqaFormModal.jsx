@@ -54,7 +54,7 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // التحقق الموحد باستخدام دالة dateUtils
+  // التحقق الموحد مع مسح الخطأ بمجرد تصحيح الأوقات
   const validateTimes = (startTime, endTime) => {
     if (!startTime || !endTime) {
       setTimeError(t('timeRequiredError', 'يرجى تحديد وقت البدء ووقت الانتهاء للحلقة'));
@@ -73,7 +73,11 @@ export default function HalaqaFormModal({
     const newEndTime = field === 'end_time' ? val : formData?.end_time;
 
     handleChange(field, val);
-    validateTimes(newStartTime, newEndTime);
+    if (newStartTime && newEndTime) {
+      validateTimes(newStartTime, newEndTime);
+    } else {
+      setTimeError('');
+    }
   };
 
   const handleNameChange = (val) => {
@@ -101,21 +105,21 @@ export default function HalaqaFormModal({
   ];
 
   const onSubmitForm = async (e) => {
-    e.preventDefault();
-
-    const startTime = formData?.start_time;
-    const endTime = formData?.end_time;
-
-    // 1. التحقق من التوقيت
-    if (!validateTimes(startTime, endTime)) {
-      console.warn('توقف الإرسال: وجود مشكلة أو نقص في أوقات الحلقة.');
-      return;
+    if (e && e.preventDefault) {
+      e.preventDefault();
     }
 
-    // 2. التحقق من اسم الحلقة
+    // 1. التحقق من اسم الحلقة أولاً
     const rawName = getCurrentName();
     if (!rawName || !rawName.trim()) {
       alert(t('nameRequiredError', 'يرجى إدخال اسم الحلقة'));
+      return;
+    }
+
+    // 2. التحقق من التوقيت
+    const startTime = formData?.start_time;
+    const endTime = formData?.end_time;
+    if (!validateTimes(startTime, endTime)) {
       return;
     }
 
@@ -138,13 +142,11 @@ export default function HalaqaFormModal({
     delete payload.track;
     delete payload.type;
 
-    console.log('بيانات الحلقة المرسلة للإنشاء/التعديل:', payload);
-
     const submitCallback = handleSubmit || onSubmit;
     if (submitCallback) {
       await submitCallback(payload);
     } else {
-      console.error('خطأ: لم يتم العثور على دالة الحفظ handleSubmit أو onSubmit!');
+      alert('خطأ: لم يتم ربط دالة الحفظ بالمودال!');
     }
   };
 
@@ -277,10 +279,8 @@ export default function HalaqaFormModal({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || Boolean(timeError)}
-            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 transition-opacity ${
-              timeError ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            disabled={isSubmitting}
+            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 transition-opacity`}
           >
             {formData?.id ? <Save size={14} /> : <Plus size={14} />}
             <span>
