@@ -56,6 +56,10 @@ export default function HalaqaFormModal({
 
   // التحقق الموحد باستخدام دالة dateUtils
   const validateTimes = (startTime, endTime) => {
+    if (!startTime || !endTime) {
+      setTimeError(t('timeRequiredError', 'يرجى تحديد وقت البدء ووقت الانتهاء للحلقة'));
+      return false;
+    }
     if (!isStartTimeBeforeEndTime(startTime, endTime)) {
       setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
       return false;
@@ -96,15 +100,26 @@ export default function HalaqaFormModal({
     }))
   ];
 
-  const onSubmitForm = (e) => {
+  const onSubmitForm = async (e) => {
     e.preventDefault();
 
     const startTime = formData?.start_time;
     const endTime = formData?.end_time;
 
-    if (!validateTimes(startTime, endTime)) return;
+    // 1. التحقق من التوقيت
+    if (!validateTimes(startTime, endTime)) {
+      console.warn('توقف الإرسال: وجود مشكلة أو نقص في أوقات الحلقة.');
+      return;
+    }
 
+    // 2. التحقق من اسم الحلقة
     const rawName = getCurrentName();
+    if (!rawName || !rawName.trim()) {
+      alert(t('nameRequiredError', 'يرجى إدخال اسم الحلقة'));
+      return;
+    }
+
+    // 3. تجهيز كائن البيانات
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
       ? { ...formData.name, [currentLang]: rawName }
       : { [currentLang]: rawName, ar: rawName };
@@ -115,7 +130,7 @@ export default function HalaqaFormModal({
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
       teacher_id: formData?.teacher_id || null,
-      max_students: formData?.max_students ? parseInt(formData.max_students) : null,
+      max_students: formData?.max_students ? parseInt(formData.max_students, 10) : null,
       timezone: formData?.timezone || defaultTimezone
     };
 
@@ -123,8 +138,14 @@ export default function HalaqaFormModal({
     delete payload.track;
     delete payload.type;
 
+    console.log('بيانات الحلقة المرسلة للإنشاء/التعديل:', payload);
+
     const submitCallback = handleSubmit || onSubmit;
-    submitCallback?.(payload);
+    if (submitCallback) {
+      await submitCallback(payload);
+    } else {
+      console.error('خطأ: لم يتم العثور على دالة الحفظ handleSubmit أو onSubmit!');
+    }
   };
 
   const isModalVisible = Boolean(isOpen || open);
