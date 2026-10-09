@@ -8,16 +8,16 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-// وضع أوقات افتراضية صالحة لمنع رفض قاعدة البيانات والنموذج
+// حالة أولية فارغة تماماً بدون أوقات افتراضية مسبقة
 const INITIAL_FORM_DATA = {
   name: '',
   educational_track: 'hifz',
   teacher_id: '',
   target_audience: 'kids',
   teaching_type: 'online',
-  start_time: '16:00',
-  end_time: '17:00',
-  max_students: 10
+  start_time: '',
+  end_time: '',
+  max_students: ''
 };
 
 export default function ActiveHalaqas({
@@ -108,10 +108,10 @@ export default function ActiveHalaqas({
       teacher_id: halaqa.teacher_id || '',
       target_audience: halaqa.target_audience || 'kids',
       teaching_type: halaqa.teaching_type || halaqa.type || 'online',
-      start_time: halaqa.start_time || '16:00',
-      end_time: halaqa.end_time || '17:00',
-      max_students: halaqa.max_students || 10,
-      timezone: halaqa.timezone || 'Africa/Cairo'
+      start_time: halaqa.start_time || '',
+      end_time: halaqa.end_time || '',
+      max_students: halaqa.max_students || '',
+      timezone: halaqa.timezone || ''
     });
     setIsModalOpen(true);
   };
@@ -134,7 +134,6 @@ export default function ActiveHalaqas({
         res = await onCreateHalaqa?.(dataToSave);
       }
 
-      // إذا عادت النتيجة بـ failure نُظهر السبب صراحة
       if (res && res.success === false) {
         alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة: ') + (res.error || t('unknownError', 'خطأ غير معروف')));
       } else {
