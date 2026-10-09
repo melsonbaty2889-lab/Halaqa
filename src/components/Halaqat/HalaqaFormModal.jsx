@@ -92,18 +92,15 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // الخيارات الحقيقية فقط بدون إقحام خيار "اختر..." داخل القائمة
+  // المصفوفات الحقيقية فقط بدون عناصر إضافية
   const trackOptions = getTrackOptions(t).filter((o) => o.value !== 'all');
   const audienceOptions = getTargetAudienceOptions(t).filter((o) => o.value !== 'all');
   const typeOptions = getHalaqaTypeOptions(t);
 
-  const teacherSelectOptions = [
-    { value: '', label: 'اختيار معلم لاحقاً (اختياري)' },
-    ...teachers.map((tch) => ({
-      value: tch.id || tch.teacher_id,
-      label: tch.name || tch.full_name || tch.email || t('unnamedTeacher', 'معلم بدون اسم')
-    }))
-  ];
+  const teacherSelectOptions = teachers.map((tch) => ({
+    value: tch.id || tch.teacher_id,
+    label: tch.name || tch.full_name || tch.email || t('unnamedTeacher', 'معلم بدون اسم')
+  }));
 
   const onSubmitForm = async (e) => {
     if (e && e.preventDefault) {
@@ -162,7 +159,7 @@ export default function HalaqaFormModal({
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
           
-          {/* اسم الحلقة المباشر بدون أمثلة */}
+          {/* اسم الحلقة */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -183,10 +180,10 @@ export default function HalaqaFormModal({
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
+                title="المسار التعليمي"
                 value={formData?.educational_track || formData?.track || 'hifz'}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
-                placeholder="اختر المسار"
               />
             </div>
 
@@ -195,10 +192,11 @@ export default function HalaqaFormModal({
                 {t('teacherLabel', 'المعلم المسؤول')}
               </label>
               <Select
+                title="المعلم المسؤول"
+                placeholder="اختر معلماً للحلقة (اختياري)..."
                 value={formData?.teacher_id || ''}
                 onChange={(v) => handleChange('teacher_id', v)}
                 options={teacherSelectOptions}
-                placeholder="اختر المعلم"
               />
             </div>
           </div>
@@ -210,10 +208,10 @@ export default function HalaqaFormModal({
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
+                title="الفئة المستهدفة"
                 value={formData?.target_audience || 'kids'}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
-                placeholder="اختر الفئة"
               />
             </div>
 
@@ -222,10 +220,10 @@ export default function HalaqaFormModal({
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
+                title="نمط انعقاد الحلقة"
                 value={formData?.teaching_type || formData?.type || 'online'}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
-                placeholder="اختر النمط"
               />
             </div>
           </div>
