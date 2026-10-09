@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, AlertCircle } from 'lucide-react';
+import { Save, Plus, AlertCircle, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -54,7 +54,6 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // التحقق الموحد مع مسح الخطأ بمجرد تصحيح الأوقات
   const validateTimes = (startTime, endTime) => {
     if (!startTime || !endTime) {
       setTimeError(t('timeRequiredError', 'يرجى تحديد وقت البدء ووقت الانتهاء للحلقة'));
@@ -93,12 +92,24 @@ export default function HalaqaFormModal({
     }));
   };
 
-  const trackOptions = getTrackOptions(t).filter((o) => o.value !== 'all');
-  const audienceOptions = getTargetAudienceOptions(t).filter((o) => o.value !== 'all');
-  const typeOptions = getHalaqaTypeOptions(t);
+  // خيارات القوائم مع خيار التوجيه الأول "اختر..."
+  const trackOptions = [
+    { value: '', label: t('selectTrackPlaceholder', 'اختر المسار التعليمي...') },
+    ...getTrackOptions(t).filter((o) => o.value !== 'all')
+  ];
+
+  const audienceOptions = [
+    { value: '', label: t('selectAudiencePlaceholder', 'اختر الفئة المستهدفة...') },
+    ...getTargetAudienceOptions(t).filter((o) => o.value !== 'all')
+  ];
+
+  const typeOptions = [
+    { value: '', label: t('selectTypePlaceholder', 'اختر نمط الانعقاد...') },
+    ...getHalaqaTypeOptions(t)
+  ];
 
   const teacherSelectOptions = [
-    { value: '', label: t('selectTeacherPlaceholder', 'اختر معلماً للحلقة (اختياري)') },
+    { value: '', label: t('selectTeacherPlaceholder', 'اختر معلماً للحلقة (اختياري)...') },
     ...teachers.map((tch) => ({
       value: tch.id || tch.teacher_id,
       label: tch.name || tch.full_name || tch.email || t('unnamedTeacher', 'معلم بدون اسم')
@@ -110,21 +121,18 @@ export default function HalaqaFormModal({
       e.preventDefault();
     }
 
-    // 1. التحقق من اسم الحلقة أولاً
     const rawName = getCurrentName();
     if (!rawName || !rawName.trim()) {
       alert(t('nameRequiredError', 'يرجى إدخال اسم الحلقة'));
       return;
     }
 
-    // 2. التحقق من التوقيت
     const startTime = formData?.start_time;
     const endTime = formData?.end_time;
     if (!validateTimes(startTime, endTime)) {
       return;
     }
 
-    // 3. تجهيز كائن البيانات بالحفاظ على معرف الأكاديمية الموجود مسبقاً
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
       ? { ...formData.name, [currentLang]: rawName }
       : { [currentLang]: rawName, ar: rawName };
@@ -134,8 +142,9 @@ export default function HalaqaFormModal({
       ...(formData?.academy_id ? { academy_id: formData.academy_id } : {}),
       ...(formData?.academyId ? { academyId: formData.academyId } : {}),
       name: formattedName,
-      educational_track: formData?.educational_track || formData?.track || 'hifz',
-      teaching_type: formData?.teaching_type || formData?.type || 'online',
+      educational_track: formData?.educational_track || 'hifz',
+      teaching_type: formData?.teaching_type || 'online',
+      target_audience: formData?.target_audience || 'kids',
       teacher_id: formData?.teacher_id || null,
       max_students: formData?.max_students ? parseInt(formData.max_students, 10) : null,
       timezone: formData?.timezone || defaultTimezone
@@ -164,7 +173,7 @@ export default function HalaqaFormModal({
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
           
-          {/* اسم الحلقة */}
+          {/* اسم الحلقة بدون أمثلة توضيحية */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -185,7 +194,7 @@ export default function HalaqaFormModal({
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
-                value={formData?.educational_track || formData?.track || 'hifz'}
+                value={formData?.educational_track || formData?.track || ''}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
               />
@@ -210,7 +219,7 @@ export default function HalaqaFormModal({
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
-                value={formData?.target_audience || 'kids'}
+                value={formData?.target_audience || ''}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
               />
@@ -221,7 +230,7 @@ export default function HalaqaFormModal({
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
-                value={formData?.teaching_type || formData?.type || 'online'}
+                value={formData?.teaching_type || formData?.type || ''}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
               />
@@ -254,7 +263,7 @@ export default function HalaqaFormModal({
                 type="number"
                 min="1"
                 max="500"
-                placeholder={t('maxStudentsPlaceholder', 'أدخل السعة')}
+                placeholder={t('maxStudentsPlaceholder', 'أدخل العدد')}
                 value={formData?.max_students ?? ''}
                 onChange={(v) => handleChange('max_students', extractValue(v))}
               />
