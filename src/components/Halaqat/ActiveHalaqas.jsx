@@ -8,6 +8,17 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
+// القيم الأولية الافتراضية لمنع تكرار الهيكل في أكثر من مكان
+const INITIAL_FORM_DATA = {
+  name: '',
+  educational_track: 'hifz',
+  teacher_id: '',
+  target_audience: 'kids',
+  teaching_type: 'online',
+  start_time: '',
+  end_time: ''
+};
+
 export default function ActiveHalaqas({
   halaqas = [],
   teachers = [],
@@ -26,18 +37,10 @@ export default function ActiveHalaqas({
   const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
-  // حالة النافذة المنبثقة
+  // حالة النافذة المنبثقة والنموذج
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    educational_track: 'hifz',
-    teacher_id: '',
-    target_audience: 'kids',
-    teaching_type: 'online',
-    start_time: '',
-    end_time: ''
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   // حساب الإحصائيات
   const stats = useMemo(() => {
@@ -90,15 +93,7 @@ export default function ActiveHalaqas({
 
   // فتح النافذة بوضع الإنشاء
   const handleOpenCreateModal = () => {
-    setFormData({
-      name: '',
-      educational_track: 'hifz',
-      teacher_id: '',
-      target_audience: 'kids',
-      teaching_type: 'online',
-      start_time: '',
-      end_time: ''
-    });
+    setFormData(INITIAL_FORM_DATA);
     setIsModalOpen(true);
   };
 
@@ -125,12 +120,17 @@ export default function ActiveHalaqas({
     setIsSubmitting(true);
     try {
       const dataToSave = payload || formData;
+      let res;
       if (dataToSave.id) {
-        await onUpdateHalaqa?.(dataToSave);
+        res = await onUpdateHalaqa?.(dataToSave);
       } else {
-        await onCreateHalaqa?.(dataToSave);
+        res = await onCreateHalaqa?.(dataToSave);
       }
-      setIsModalOpen(false);
+
+      // إغلاق المودال في حال النجاح
+      if (res?.success !== false) {
+        setIsModalOpen(false);
+      }
     } catch (error) {
       console.error('Failed to save halaqa:', error);
     } finally {
@@ -201,17 +201,15 @@ export default function ActiveHalaqas({
       )}
 
       {/* النافذة المنبثقة */}
-<HalaqaFormModal
-  open={isModalOpen}
-  isOpen={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  onSubmit={handleFormSubmit}
-  handleSubmit={handleFormSubmit}
-  formData={formData}
-  setFormData={setFormData}
-  teachers={teachers}
-  isSubmitting={isSubmitting}
-/>
+      <HalaqaFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        handleSubmit={handleFormSubmit}
+        formData={formData}
+        setFormData={setFormData}
+        teachers={teachers}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }
