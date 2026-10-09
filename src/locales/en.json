@@ -743,6 +743,7 @@
   },
   "nameAr": "Halaqa Name (Arabic)",
   "nameEn": "Halaqa Name (English)",
+  "nameRequiredError": "يرجى إدخال اسم الحلقة",
   "no_search_results": "No results matching your search.",
   "noData": "No educational sessions recorded matching your search currently",
   "noHalaqasFound": "لا توجد حلقات للعرض",
@@ -1105,6 +1106,7 @@
     "termsWelcome": "Welcome to Smart Halaqa platform. By using the platform, you agree to comply with the following terms:"
   },
   "timeCheckError": "وقت البدء يجب أن يكون قبل وقت الانتهاء",
+  "timeRequiredError": "يرجى تحديد وقت البدء ووقت الانتهاء للحلقة",
   "timezone": "System Timezone",
   "timezones": {
     "berlin": "Berlin (UTC+1/+2)",
