@@ -92,24 +92,13 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // خيارات القوائم المنسدلة مع الخيار الإرشادي الأول
-  const trackOptions = [
-    { value: '', label: 'اختر المسار التعليمي...' },
-    ...getTrackOptions(t).filter((o) => o.value !== 'all')
-  ];
-
-  const audienceOptions = [
-    { value: '', label: 'اختر الفئة المستهدفة...' },
-    ...getTargetAudienceOptions(t).filter((o) => o.value !== 'all')
-  ];
-
-  const typeOptions = [
-    { value: '', label: 'اختر نمط الانعقاد...' },
-    ...getHalaqaTypeOptions(t)
-  ];
+  // الخيارات الحقيقية فقط بدون إقحام خيار "اختر..." داخل القائمة
+  const trackOptions = getTrackOptions(t).filter((o) => o.value !== 'all');
+  const audienceOptions = getTargetAudienceOptions(t).filter((o) => o.value !== 'all');
+  const typeOptions = getHalaqaTypeOptions(t);
 
   const teacherSelectOptions = [
-    { value: '', label: 'اختر معلماً للحلقة (اختياري)...' },
+    { value: '', label: 'اختيار معلم لاحقاً (اختياري)' },
     ...teachers.map((tch) => ({
       value: tch.id || tch.teacher_id,
       label: tch.name || tch.full_name || tch.email || t('unnamedTeacher', 'معلم بدون اسم')
@@ -173,7 +162,7 @@ export default function HalaqaFormModal({
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
           
-          {/* اسم الحلقة */}
+          {/* اسم الحلقة المباشر بدون أمثلة */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -194,9 +183,10 @@ export default function HalaqaFormModal({
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
-                value={formData?.educational_track || formData?.track || ''}
+                value={formData?.educational_track || formData?.track || 'hifz'}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
+                placeholder="اختر المسار"
               />
             </div>
 
@@ -208,6 +198,7 @@ export default function HalaqaFormModal({
                 value={formData?.teacher_id || ''}
                 onChange={(v) => handleChange('teacher_id', v)}
                 options={teacherSelectOptions}
+                placeholder="اختر المعلم"
               />
             </div>
           </div>
@@ -219,9 +210,10 @@ export default function HalaqaFormModal({
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
-                value={formData?.target_audience || ''}
+                value={formData?.target_audience || 'kids'}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
+                placeholder="اختر الفئة"
               />
             </div>
 
@@ -230,9 +222,10 @@ export default function HalaqaFormModal({
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
-                value={formData?.teaching_type || formData?.type || ''}
+                value={formData?.teaching_type || formData?.type || 'online'}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
+                placeholder="اختر النمط"
               />
             </div>
           </div>
