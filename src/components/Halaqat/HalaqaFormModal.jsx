@@ -92,7 +92,6 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // المصفوفات الحقيقية فقط بدون عناصر إضافية
   const trackOptions = getTrackOptions(t).filter((o) => o.value !== 'all');
   const audienceOptions = getTargetAudienceOptions(t).filter((o) => o.value !== 'all');
   const typeOptions = getHalaqaTypeOptions(t);
@@ -181,7 +180,8 @@ export default function HalaqaFormModal({
               </label>
               <Select
                 title="المسار التعليمي"
-                value={formData?.educational_track || formData?.track || 'hifz'}
+                placeholder="اختر المسار التعليمي"
+                value={formData?.educational_track || formData?.track || ''}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
               />
@@ -209,7 +209,8 @@ export default function HalaqaFormModal({
               </label>
               <Select
                 title="الفئة المستهدفة"
-                value={formData?.target_audience || 'kids'}
+                placeholder="اختر الفئة المستهدفة"
+                value={formData?.target_audience || ''}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
               />
@@ -221,7 +222,8 @@ export default function HalaqaFormModal({
               </label>
               <Select
                 title="نمط انعقاد الحلقة"
-                value={formData?.teaching_type || formData?.type || 'online'}
+                placeholder="اختر نمط الانعقاد"
+                value={formData?.teaching_type || formData?.type || ''}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
               />
