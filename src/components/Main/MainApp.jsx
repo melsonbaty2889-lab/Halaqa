@@ -171,12 +171,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy, academiesList, setAcademy } = useAcademy();
   const isMobile = useIsMobile(1024);
 
-  // 1️⃣ الخطوة الأولى: تعريف academyId أولاً هنا
+  // 1️⃣ تعريف المعرف
   const academyId = academy?.id || null;
 
-  // 2️⃣ الخطوة الثانية: استدعاء useHalaqas بعد تعريف academyId
+  // 2️⃣ استدعاء الـ Hook مرة واحدة فقط
   const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
-
 
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
@@ -215,18 +214,15 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
-
-  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
-
   const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
   const [currency, setCurrency] = useState(academy?.currency || (isPlatformAdmin ? "EGP" : "USD"));         
   const [timezone, setTimezone] = useState(academy?.timezone || (isPlatformAdmin ? "Africa/Cairo" : "UTC"));         
   const [countryCode, setCountryCode] = useState(academy?.country_code || (isPlatformAdmin ? "EG" : "US"));   
   const [academyTime, setAcademyTime] = useState("");
 
-  const academyId = academy?.id || null;
+
   const isAcademyActive = academy?.is_active ?? true;
 
   const fetchedAcademyIdRef = useRef(null);
