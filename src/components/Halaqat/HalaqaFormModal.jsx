@@ -57,6 +57,8 @@ export default function HalaqaFormModal({
     if (!timeStr || typeof timeStr !== 'string') return null;
     
     const str = timeStr.trim();
+    if (!str) return null;
+
     const isPM = str.includes('م') || str.toUpperCase().includes('PM');
     const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
 
@@ -78,7 +80,13 @@ export default function HalaqaFormModal({
     return hours * 60 + minutes;
   };
 
+  // التحقق يتم فقط عند وجود قيمتين للبدء والانتهاء
   const validateTimes = (startTime, endTime) => {
+    if (!startTime || !endTime) {
+      setTimeError('');
+      return true;
+    }
+
     const startMins = parseTimeToMinutes(startTime);
     const endMins = parseTimeToMinutes(endTime);
 
@@ -86,6 +94,7 @@ export default function HalaqaFormModal({
       setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
       return false;
     }
+
     setTimeError('');
     return true;
   };
@@ -265,7 +274,7 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* تنبيه أخطاء التوقيت الملتزم بـ Semantic Danger Tokens */}
+          {/* تنبيه أخطاء التوقيت */}
           {timeError && (
             <div className="p-2.5 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
               <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
