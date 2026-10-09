@@ -24,6 +24,23 @@ export default function HalaqaFormModal({
 
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
+  // جلب معرف الأكاديمية الحالي من التخزين المحلي لضمان عدم فقده مطلقاً
+  const getStoredAcademyId = () => {
+    try {
+      const activeAcademy = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+      if (activeAcademy) return activeAcademy;
+
+      const userSession = localStorage.getItem('supabase.auth.token') || localStorage.getItem('sb-access-token');
+      if (userSession) {
+        const parsed = JSON.parse(userSession);
+        return parsed?.user?.user_metadata?.academy_id || parsed?.user?.academy_id || null;
+      }
+    } catch (e) {
+      console.warn('Could not retrieve academy_id from storage', e);
+    }
+    return null;
+  };
+
   useEffect(() => {
     if (isOpen || open) {
       setTimeError('');
@@ -118,14 +135,16 @@ export default function HalaqaFormModal({
       return;
     }
 
+    // تحديد معرف الأكاديمية المضمون
+    const resolvedAcademyId = formData?.academy_id || formData?.academyId || getStoredAcademyId();
+
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
       ? { ...formData.name, [currentLang]: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
     const payload = {
       ...formData,
-      ...(formData?.academy_id ? { academy_id: formData.academy_id } : {}),
-      ...(formData?.academyId ? { academyId: formData.academyId } : {}),
+      ...(resolvedAcademyId ? { academy_id: resolvedAcademyId, academyId: resolvedAcademyId } : {}),
       name: formattedName,
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
