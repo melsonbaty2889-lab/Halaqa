@@ -23,6 +23,7 @@ const INITIAL_FORM_DATA = {
 export default function ActiveHalaqas({
   halaqas = [],
   teachers = [],
+  academyId = null,
   onCreateHalaqa,
   onUpdateHalaqa,
   onToggleArchiveHalaqa,
@@ -116,11 +117,15 @@ export default function ActiveHalaqas({
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ الموحدة الصريحة مع التنبيه المباشر
+  // معالجة الحفظ الموحدة مع حقن academy_id صراحة
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
-      const dataToSave = payload || formData;
+      const baseData = payload || formData;
+      const dataToSave = {
+        ...baseData,
+        academy_id: baseData.academy_id || baseData.academyId || academyId
+      };
 
       if (!dataToSave.id && !onCreateHalaqa) {
         alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
