@@ -9,6 +9,32 @@ export interface UseHalaqasOptions {
   enabled?: boolean;
 }
 
+// دالة تحويل التوقيت المحذوف منها الرموز العربية إلى صيغة 24 ساعة متوافقة مع Postgres
+const formatTimeForDb = (timeStr?: string): string => {
+  if (!timeStr || typeof timeStr !== 'string') return '00:00:00';
+
+  const str = timeStr.trim();
+  const isPM = str.includes('م') || str.toUpperCase().includes('PM');
+  const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
+
+  const cleanTime = str.replace(/[^\d:]/g, '');
+  const parts = cleanTime.split(':');
+
+  if (parts.length < 2) return '00:00:00';
+
+  let hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+
+  if (isNaN(hours) || isNaN(minutes)) return '00:00:00';
+
+  if (isPM || isAM) {
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+};
+
 export const useHalaqas = ({
   academyId,
   initialFilters,
@@ -34,7 +60,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy', filters];
 
-  // 1. جلب بيانات الحلقات بأمان
+  // 1. جلب بيانات الحلقات
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -76,10 +102,8 @@ export const useHalaqas = ({
           query = query.eq('teaching_type', filters.teaching_type);
         }
 
-        // 💡 البحث الشامل والذكي داخل جميع لغات الـ JSONB وبدلالة الكود
         if (filters.searchTerm && filters.searchTerm.trim() !== '') {
           const term = `%${filters.searchTerm.trim()}%`;
-          // التعديل: البحث عبر كافة اللغات (ar, en, tr, fr, ur, id) بحسب القيمة النصية لـ JSONB
           query = query.or(
             `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},code.ilike.${term}`
           );
@@ -98,7 +122,69 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 2. Mutation لإسناد / تغيير المعلم للحلقة
+  // 2. Mutation لإنشاء حلقة جديدة
+  const createHalaqaMutation = useMutation({
+    mutationFn: async (halaqaData: Partial<Halaqa>) => {
+      if (!isValidAcademyId) {
+        throw new Error('معرف الأكاديمية غير صالح');
+      }
+
+      const payload = {
+        ...halaqaData,
+        academy_id: academyId,
+        start_time: formatTimeForDb(halaqaData.start_time),
+        end_time: formatTimeForDb(halaqaData.end_time),
+      };
+
+      const { data, error } = await supabase
+        .from('halaqas')
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      if (isValidAcademyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      }
+    },
+  });
+
+  // 3. Mutation لتعديل حلقة موجودة
+  const updateHalaqaMutation = useMutation({
+    mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
+      const payload: any = {
+        ...halaqaData,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (halaqaData.start_time) {
+        payload.start_time = formatTimeForDb(halaqaData.start_time);
+      }
+      if (halaqaData.end_time) {
+        payload.end_time = formatTimeForDb(halaqaData.end_time);
+      }
+
+      const { data, error } = await supabase
+        .from('halaqas')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      if (isValidAcademyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      }
+    },
+  });
+
+  // 4. Mutation لإسناد / تغيير المعلم
   const assignTeacherMutation = useMutation({
     mutationFn: async ({ halaqaId, teacherId }: { halaqaId: string; teacherId: string | null }) => {
       const { error } = await supabase
@@ -118,7 +204,7 @@ export const useHalaqas = ({
     },
   });
 
-  // 3. Mutation للأرشفة
+  // 5. Mutation للأرشفة
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
@@ -137,6 +223,34 @@ export const useHalaqas = ({
       }
     },
   });
+
+  // دالة إنشاء حلقة جديدة
+  const createHalaqa = useCallback(
+    async (data: Partial<Halaqa>) => {
+      try {
+        const result = await createHalaqaMutation.mutateAsync(data);
+        return { success: true, data: result };
+      } catch (err: any) {
+        console.error('Create Halaqa Error:', err);
+        return { success: false, error: err?.message || 'فشلت عملية إنشاء الحلقة' };
+      }
+    },
+    [createHalaqaMutation]
+  );
+
+  // دالة تعديل حلقة
+  const updateHalaqa = useCallback(
+    async (data: Partial<Halaqa> & { id: string }) => {
+      try {
+        const result = await updateHalaqaMutation.mutateAsync(data);
+        return { success: true, data: result };
+      } catch (err: any) {
+        console.error('Update Halaqa Error:', err);
+        return { success: false, error: err?.message || 'فشلت عملية تعديل الحلقة' };
+      }
+    },
+    [updateHalaqaMutation]
+  );
 
   // دالة إسناد المعلم
   const assignTeacherToHalaqa = useCallback(
@@ -171,8 +285,12 @@ export const useHalaqas = ({
     filters,
     setFilters,
     refetch,
+    createHalaqa,
+    updateHalaqa,
     assignTeacherToHalaqa,
     toggleArchiveHalaqa,
+    isCreating: createHalaqaMutation.isPending,
+    isUpdating: updateHalaqaMutation.isPending,
   };
 };
 
