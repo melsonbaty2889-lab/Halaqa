@@ -1,5 +1,6 @@
 export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText = null) => {
   if (!value) return '';
+  
   if (typeof getLocalizedText === 'function') {
     try {
       const result = getLocalizedText(value);
@@ -8,10 +9,16 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
       console.warn('Error in getLocalizedText:', e);
     }
   }
+
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
   if (typeof value === 'object' && value !== null) {
     return value[currentLang] || value.ar || value.en || value.fr || value.tr || value.ur || value.id || '';
   }
-  return typeof value === 'string' ? value : '';
+
+  return '';
 };
 
 /**
