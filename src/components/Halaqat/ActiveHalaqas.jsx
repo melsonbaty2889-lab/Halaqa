@@ -8,15 +8,16 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-// القيم الأولية الافتراضية لمنع تكرار الهيكل في أكثر من مكان
+// وضع أوقات افتراضية صالحة لمنع رفض قاعدة البيانات والنموذج
 const INITIAL_FORM_DATA = {
   name: '',
   educational_track: 'hifz',
   teacher_id: '',
   target_audience: 'kids',
   teaching_type: 'online',
-  start_time: '',
-  end_time: ''
+  start_time: '16:00',
+  end_time: '17:00',
+  max_students: 10
 };
 
 export default function ActiveHalaqas({
@@ -107,19 +108,25 @@ export default function ActiveHalaqas({
       teacher_id: halaqa.teacher_id || '',
       target_audience: halaqa.target_audience || 'kids',
       teaching_type: halaqa.teaching_type || halaqa.type || 'online',
-      start_time: halaqa.start_time || '',
-      end_time: halaqa.end_time || '',
+      start_time: halaqa.start_time || '16:00',
+      end_time: halaqa.end_time || '17:00',
       max_students: halaqa.max_students || 10,
       timezone: halaqa.timezone || 'Africa/Cairo'
     });
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ الموحدة
+  // معالجة الحفظ الموحدة الصريحة مع التنبيه المباشر
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
       const dataToSave = payload || formData;
+
+      if (!dataToSave.id && !onCreateHalaqa) {
+        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
+        return;
+      }
+
       let res;
       if (dataToSave.id) {
         res = await onUpdateHalaqa?.(dataToSave);
@@ -127,12 +134,15 @@ export default function ActiveHalaqas({
         res = await onCreateHalaqa?.(dataToSave);
       }
 
-      // إغلاق المودال في حال النجاح
-      if (res?.success !== false) {
+      // إذا عادت النتيجة بـ failure نُظهر السبب صراحة
+      if (res && res.success === false) {
+        alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة: ') + (res.error || t('unknownError', 'خطأ غير معروف')));
+      } else {
         setIsModalOpen(false);
       }
     } catch (error) {
       console.error('Failed to save halaqa:', error);
+      alert(t('errorOccurred', 'حدث خطأ أثناء الحفظ: ') + (error?.message || error));
     } finally {
       setIsSubmitting(false);
     }
