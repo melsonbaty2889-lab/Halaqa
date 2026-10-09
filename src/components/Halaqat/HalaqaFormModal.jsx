@@ -5,6 +5,7 @@ import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
+import { isStartTimeBeforeEndTime } from '@/utils/dateUtils';
 
 export default function HalaqaFormModal({ 
   isOpen,
@@ -53,48 +54,12 @@ export default function HalaqaFormModal({
     }));
   };
 
-  const parseTimeToMinutes = (timeStr) => {
-    if (!timeStr || typeof timeStr !== 'string') return null;
-    
-    const str = timeStr.trim();
-    if (!str) return null;
-
-    const isPM = str.includes('م') || str.toUpperCase().includes('PM');
-    const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
-
-    const cleanTime = str.replace(/[^\d:]/g, '');
-    const parts = cleanTime.split(':');
-    
-    if (parts.length < 2) return null;
-
-    let hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-
-    if (isNaN(hours) || isNaN(minutes)) return null;
-
-    if (isPM || isAM) {
-      if (isPM && hours < 12) hours += 12;
-      if (isAM && hours === 12) hours = 0;
-    }
-
-    return hours * 60 + minutes;
-  };
-
-  // التحقق يتم فقط عند وجود قيمتين للبدء والانتهاء
+  // التحقق الموحد باستخدام دالة dateUtils
   const validateTimes = (startTime, endTime) => {
-    if (!startTime || !endTime) {
-      setTimeError('');
-      return true;
-    }
-
-    const startMins = parseTimeToMinutes(startTime);
-    const endMins = parseTimeToMinutes(endTime);
-
-    if (startMins !== null && endMins !== null && startMins >= endMins) {
+    if (!isStartTimeBeforeEndTime(startTime, endTime)) {
       setTimeError(t('timeCheckError', 'وقت البدء يجب أن يكون قبل وقت الانتهاء'));
       return false;
     }
-
     setTimeError('');
     return true;
   };
@@ -137,9 +102,7 @@ export default function HalaqaFormModal({
     const startTime = formData?.start_time;
     const endTime = formData?.end_time;
 
-    if (!validateTimes(startTime, endTime)) {
-      return;
-    }
+    if (!validateTimes(startTime, endTime)) return;
 
     const rawName = getCurrentName();
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
@@ -173,8 +136,6 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
-        
-        {/* منطقة الحقول */}
         <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
           
           {/* اسم الحلقة */}
@@ -191,7 +152,7 @@ export default function HalaqaFormModal({
             />
           </div>
 
-          {/* المسار التعليمي والمعلم */}
+          {/* المسار والمعلم */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -241,7 +202,7 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* توقيت الحلقة والحد الأقصى */}
+          {/* أوقات الحلقة والحد الأقصى */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <CustomTimePicker
               label={t('startTimeLabel', 'وقت البدء')}
@@ -274,7 +235,7 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* تنبيه أخطاء التوقيت */}
+          {/* صندوق أخطاء التوقيت */}
           {timeError && (
             <div className="p-2.5 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
               <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
@@ -284,7 +245,7 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار التحكم في الأسفل */}
+        {/* أزرار التحكم */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
