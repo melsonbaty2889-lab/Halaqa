@@ -171,11 +171,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy, academiesList, setAcademy } = useAcademy();
   const isMobile = useIsMobile(1024);
 
-  // 1️⃣ تعريف المعرف
-  const academyId = academy?.id || null;
+  // نستخدم المعرف المباشر من الـ hook أو الجلسة
+const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
 
-  // 2️⃣ استدعاء الـ Hook مرة واحدة فقط
-  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
+const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
 
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
