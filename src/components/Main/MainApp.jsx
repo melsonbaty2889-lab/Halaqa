@@ -171,6 +171,13 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy, academiesList, setAcademy } = useAcademy();
   const isMobile = useIsMobile(1024);
 
+  // 1️⃣ الخطوة الأولى: تعريف academyId أولاً هنا
+  const academyId = academy?.id || null;
+
+  // 2️⃣ الخطوة الثانية: استدعاء useHalaqas بعد تعريف academyId
+  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
+
+
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
     switch (r) {
