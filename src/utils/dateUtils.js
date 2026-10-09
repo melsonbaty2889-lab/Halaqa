@@ -14,7 +14,7 @@ export const toEngNums = (str) => {
   if (!str && str !== 0) return '';
   return String(str)
     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶٧٨٩'.indexOf(d));
 };
 
 export const toArNums = (str) => {
@@ -24,7 +24,7 @@ export const toArNums = (str) => {
 
 export const toUrNums = (str) => {
   if (!str && str !== 0) return '';
-  return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶٧٨٩'[d]);
 };
 
 export const getSavedHijriOffset = () => {
@@ -182,13 +182,14 @@ export const formatHijriDate = (dateObj, lang = 'ar') => {
 export const parseTimeToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== 'string') return null;
 
-  const str = toEngNums(timeStr).trim();
-  if (!str) return null;
+  const rawStr = toEngNums(timeStr).trim();
+  if (!rawStr) return null;
 
-  const isPM = str.includes('م') || str.toUpperCase().includes('PM');
-  const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
+  // التحقق من المؤشرات الصريحة للمساء والصباح قبل التنظيف
+  const isPM = rawStr.includes('م') || /PM/i.test(rawStr);
+  const isAM = rawStr.includes('ص') || /AM/i.test(rawStr);
 
-  const cleanTime = str.replace(/[^\d:]/g, '');
+  const cleanTime = rawStr.replace(/[^\d:]/g, '');
   const parts = cleanTime.split(':');
 
   if (parts.length < 2) return null;
@@ -207,17 +208,22 @@ export const parseTimeToMinutes = (timeStr) => {
 };
 
 /**
- * التحقق من أن وقت البدء أسبق من وقت الانتهاء
+ * التحقق من أن وقت البدء أسبق من وقت الانتهاء (مع دعم الحلقات المسائية التي تنتهي عند منتصف الليل 12:00 ص)
  */
 export const isStartTimeBeforeEndTime = (startTime, endTime) => {
   if (!startTime || !endTime) return true;
-  const startMins = parseTimeToMinutes(startTime);
-  const endMins = parseTimeToMinutes(endTime);
 
-  if (startMins !== null && endMins !== null) {
-    return startMins < endMins;
+  let startMins = parseTimeToMinutes(startTime);
+  let endMins = parseTimeToMinutes(endTime);
+
+  if (startMins === null || endMins === null) return true;
+
+  // إذا انتهت الحلقة الساعة 12:00 ص (منتصف الليل 00:00) وكان البدء مساءً، فإن وقت الانتهاء يعتبر 24:00 (1440 دقيقة)
+  if (endMins === 0 && startMins > 0) {
+    endMins = 1440;
   }
-  return true;
+
+  return startMins < endMins;
 };
 
 /**
@@ -227,7 +233,7 @@ export const formatTimeForDb = (timeStr) => {
   const totalMins = parseTimeToMinutes(timeStr);
   if (totalMins === null) return '00:00:00';
 
-  const hours = Math.floor(totalMins / 60);
+  const hours = Math.floor(totalMins / 60) % 24;
   const minutes = totalMins % 60;
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
