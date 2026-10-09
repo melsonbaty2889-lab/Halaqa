@@ -171,3 +171,64 @@ export const formatHijriDate = (dateObj, lang = 'ar') => {
 
   return `${dayStr} ${monthName} ${yearStr} ${suffix}`;
 };
+
+// ==========================================
+// معالجة وتحويل أوقات الحلقات والتوقيت (Postgres / UI)
+// ==========================================
+
+/**
+ * تحويل نص الوقت (سواء 12-ساعة بصيغة ص/م أو 24-ساعة) إلى دقائق إجمالية للمقارنة
+ */
+export const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+
+  const str = toEngNums(timeStr).trim();
+  if (!str) return null;
+
+  const isPM = str.includes('م') || str.toUpperCase().includes('PM');
+  const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
+
+  const cleanTime = str.replace(/[^\d:]/g, '');
+  const parts = cleanTime.split(':');
+
+  if (parts.length < 2) return null;
+
+  let hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+
+  if (isNaN(hours) || isNaN(minutes)) return null;
+
+  if (isPM || isAM) {
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+  }
+
+  return hours * 60 + minutes;
+};
+
+/**
+ * التحقق من أن وقت البدء أسبق من وقت الانتهاء
+ */
+export const isStartTimeBeforeEndTime = (startTime, endTime) => {
+  if (!startTime || !endTime) return true;
+  const startMins = parseTimeToMinutes(startTime);
+  const endMins = parseTimeToMinutes(endTime);
+
+  if (startMins !== null && endMins !== null) {
+    return startMins < endMins;
+  }
+  return true;
+};
+
+/**
+ * تحويل الوقت إلى صيغة HH:mm:ss القياسية المعتمدة في Postgres/Supabase
+ */
+export const formatTimeForDb = (timeStr) => {
+  const totalMins = parseTimeToMinutes(timeStr);
+  if (totalMins === null) return '00:00:00';
+
+  const hours = Math.floor(totalMins / 60);
+  const minutes = totalMins % 60;
+
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+};
