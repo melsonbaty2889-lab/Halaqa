@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
+import { useHalaqas } from '@/hooks/useHalaqas';
 import useIsMobile from '@/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
@@ -460,6 +461,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             error={null} 
             isRtl={isRtl} 
             isMobile={isMobile} 
+            onCreateHalaqa={createHalaqa}           
+            onUpdateHalaqa={updateHalaqa}           
+            onToggleArchiveHalaqa={toggleArchiveHalaqa}
             onNavigateToAttendance={(halaqaId) => {
               setSelectedHalaqaId(halaqaId);
               handleTabChange('attendance');
