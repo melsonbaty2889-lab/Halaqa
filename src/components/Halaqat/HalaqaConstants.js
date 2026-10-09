@@ -30,7 +30,7 @@ export const getTrackOptions = (t) => [
   { value: 'muraja', label: t('trackMuraja', 'المراجعة والتثبيت') },
   { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
   { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') },
-  { value: 'mutun', label: t('trackMutun', 'المتون العلمية والتجويد النظرى') }
+  { value: 'mutun', label: t('trackMutun', 'المتون العلمية والتجويد النظري') }
 ];
 
 /**
