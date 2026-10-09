@@ -265,10 +265,10 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* تنبيه أخطاء التوقيت المحسن من ناحية التناسق والتأثير */}
+          {/* تنبيه أخطاء التوقيت الملتزم بـ Semantic Danger Tokens */}
           {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-actionDanger/15 text-semantic-actionDanger text-xs flex items-center justify-start gap-2 border border-semantic-actionDanger/40 animate-in fade-in duration-150">
-              <AlertCircle size={16} className="shrink-0 text-semantic-actionDanger" />
+            <div className="p-2.5 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
+              <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
               <span className="font-semibold">{timeError}</span>
             </div>
           )}
