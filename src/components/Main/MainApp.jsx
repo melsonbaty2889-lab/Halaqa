@@ -454,11 +454,24 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             halaqas={enrichedHalaqas} 
             teachers={teachers} 
             students={students} 
+            academyId={academyId}
             isLoading={loadingData} 
             error={null} 
             isRtl={isRtl} 
             isMobile={isMobile} 
-            onCreateHalaqa={(data) => createHalaqa({ ...data, academy_id: data?.academy_id || academyId })}
+            onCreateHalaqa={async (data) => {
+              const resolvedAcademyId = data?.academy_id || academyId || session?.user?.user_metadata?.academy_id;
+              
+              if (!resolvedAcademyId) {
+                alert('خطأ: لم يتم العثور على معرف الأكاديمية. يرجى إعادة تنشيط الصفحة.');
+                return { success: false, error: 'معرف الأكاديمية غير صالح' };
+              }
+
+              return await createHalaqa({
+                ...data,
+                academy_id: resolvedAcademyId
+              });
+            }}
             onUpdateHalaqa={updateHalaqa}
             onToggleArchiveHalaqa={toggleArchiveHalaqa}
             onNavigateToAttendance={(halaqaId) => {
