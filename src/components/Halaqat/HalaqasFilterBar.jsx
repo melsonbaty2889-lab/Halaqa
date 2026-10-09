@@ -119,6 +119,31 @@ export default function HalaqasFilterBar({
               <X size={15} />
             </button>
           )}
+
+          <div className="flex sm:hidden items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
+            <button
+              type="button"
+              onClick={() => setLayoutMode('grid')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
+                layoutMode === 'grid' 
+                  ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
+                  : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
+              }`}
+            >
+              <Grid size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLayoutMode('list')}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
+                layoutMode === 'list' 
+                  ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
+                  : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
+              }`}
+            >
+              <List size={15} />
+            </button>
+          </div>
         </div>
 
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
