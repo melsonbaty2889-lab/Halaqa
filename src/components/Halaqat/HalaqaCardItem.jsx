@@ -3,6 +3,7 @@ import { User, Clock, Video, AlertCircle, Edit3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
+import { formatTimeString } from '@/utils/dateUtils';
 
 export default function HalaqaCardItem({ 
   halaqa, 
@@ -28,6 +29,24 @@ export default function HalaqaCardItem({
   }
 
   const hasTeacher = Boolean(teacherName || halaqa?.teacher_id);
+
+  // دالة تحويل التوقيت القادم من قاعدة البيانات للعرض المنسق
+  const renderFormattedTime = (timeStr) => {
+    if (!timeStr) return '';
+    if (timeStr.includes('ص') || timeStr.includes('م') || timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
+      return timeStr;
+    }
+    const [hours, minutes] = timeStr.split(':');
+    if (hours !== undefined && minutes !== undefined) {
+      const dummyDate = new Date();
+      dummyDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
+      return formatTimeString(dummyDate, currentLang);
+    }
+    return timeStr;
+  };
+
+  const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
+  const endTimeFormatted = renderFormattedTime(halaqa?.end_time);
 
   return (
     <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover transition-all`}>
@@ -66,15 +85,15 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* توقيت الحلقة */}
-        {(halaqa?.start_time || halaqa?.end_time) && (
+        {/* توقيت الحلقة المنسق */}
+        {(startTimeFormatted || endTimeFormatted) && (
           <div className="flex items-center gap-2 text-[12px] text-semantic-textSecondary">
             <Clock size={13} className="text-semantic-textMuted shrink-0" />
-            <span className="dir-ltr font-mono">
-              {halaqa?.start_time} {halaqa?.end_time && `- ${halaqa?.end_time}`}
+            <span className="font-semibold">
+              {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
             </span>
             {halaqa?.timezone && (
-              <span className="text-[10px] bg-semantic-surfaceInput px-1.5 py-0.5 rounded text-semantic-textMuted border border-semantic-borderCard">
+              <span className="text-[10px] bg-semantic-surfaceInput px-1.5 py-0.5 rounded text-semantic-textMuted border border-semantic-borderCard font-mono">
                 {halaqa.timezone}
               </span>
             )}
@@ -84,7 +103,6 @@ export default function HalaqaCardItem({
 
       {/* أزرار الإجراءات */}
       <div className="flex items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1">
-        {/* زر التسميع/الجلسة المباشرة المعتمد كـ UI.btnEmerald */}
         <button 
           type="button"
           onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
@@ -95,7 +113,6 @@ export default function HalaqaCardItem({
           <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
         </button>
 
-        {/* زر التعديل */}
         {onEditHalaqa && (
           <button
             type="button"
@@ -107,7 +124,6 @@ export default function HalaqaCardItem({
           </button>
         )}
 
-        {/* زر الأرشفة / التنشيط */}
         <button 
           type="button"
           onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, halaqa?.is_archived)} 
