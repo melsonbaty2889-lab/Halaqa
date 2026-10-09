@@ -587,6 +587,9 @@
   "editHalaqaTitle": "تعديل بيانات الحلقة",
   "endTime": "وقت الانتهاء",
   "endTimeLabel": "وقت الانتهاء",
+  "errorCreateFailed": "فشلت عملية حفظ الحلقة: ",
+  "errorNoCreateFunc": "خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!",
+  "errorOccurred": "حدث خطأ أثناء الحفظ: ",
   "errors": {
     "generic": "حدث خطأ غير متوقع أثناء معالجة الطلب",
     "network_error": "فشل الاتصال بالخادم، تحقق من الاتصال بالإنترنت.",
@@ -1127,6 +1130,7 @@
   "typeOnline": "عن بُعد (أونلاين)",
   "typeOnsite": "حضوري (في المقر / المسجد)",
   "unassigned": "بانتظار تعيين معتمد",
+  "unknownError": "خطأ غير معروف",
   "unnamed_student": "طالب بدون اسم",
   "unnamedHalaqa": "حلقة بدون اسم",
   "unnamedTeacher": "معلم بدون اسم",
