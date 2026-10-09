@@ -2,38 +2,13 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Halaqa, HalaqaFilters } from '@/types/halaqa';
+import { formatTimeForDb } from '@/utils/dateUtils';
 
 export interface UseHalaqasOptions {
   academyId?: string | null;
   initialFilters?: Partial<HalaqaFilters>;
   enabled?: boolean;
 }
-
-// دالة تحويل التوقيت المحذوف منها الرموز العربية إلى صيغة 24 ساعة متوافقة مع Postgres
-const formatTimeForDb = (timeStr?: string): string => {
-  if (!timeStr || typeof timeStr !== 'string') return '00:00:00';
-
-  const str = timeStr.trim();
-  const isPM = str.includes('م') || str.toUpperCase().includes('PM');
-  const isAM = str.includes('ص') || str.toUpperCase().includes('AM');
-
-  const cleanTime = str.replace(/[^\d:]/g, '');
-  const parts = cleanTime.split(':');
-
-  if (parts.length < 2) return '00:00:00';
-
-  let hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-
-  if (isNaN(hours) || isNaN(minutes)) return '00:00:00';
-
-  if (isPM || isAM) {
-    if (isPM && hours < 12) hours += 12;
-    if (isAM && hours === 12) hours = 0;
-  }
-
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
-};
 
 export const useHalaqas = ({
   academyId,
@@ -152,7 +127,7 @@ export const useHalaqas = ({
     },
   });
 
-  // 3. Mutation لتعديل حلقة موجودة
+  // 3. Mutation لتعديل حلقة
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const payload: any = {
@@ -184,7 +159,7 @@ export const useHalaqas = ({
     },
   });
 
-  // 4. Mutation لإسناد / تغيير المعلم
+  // 4. Mutation لإسناد / تغيير المعلم للحلقة
   const assignTeacherMutation = useMutation({
     mutationFn: async ({ halaqaId, teacherId }: { halaqaId: string; teacherId: string | null }) => {
       const { error } = await supabase
