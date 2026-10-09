@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -24,7 +24,6 @@ export default function HalaqaFormModal({
 
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-  // جلب معرف الأكاديمية الحالي من التخزين المحلي لضمان عدم فقده مطلقاً
   const getStoredAcademyId = () => {
     try {
       const activeAcademy = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -42,8 +41,19 @@ export default function HalaqaFormModal({
   };
 
   useEffect(() => {
-    if (isOpen || open) {
+    const isVisible = Boolean(isOpen || open);
+    if (isVisible) {
       setTimeError('');
+      if (!formData?.id) {
+        setFormData((prev) => ({
+          ...prev,
+          educational_track: prev?.educational_track === 'hifz' ? '' : (prev?.educational_track || ''),
+          target_audience: prev?.target_audience === 'kids' ? '' : (prev?.target_audience || ''),
+          teaching_type: prev?.teaching_type === 'online' ? '' : (prev?.teaching_type || ''),
+          track: '',
+          type: ''
+        }));
+      }
     }
   }, [isOpen, open]);
 
@@ -135,7 +145,6 @@ export default function HalaqaFormModal({
       return;
     }
 
-    // تحديد معرف الأكاديمية المضمون
     const resolvedAcademyId = formData?.academy_id || formData?.academyId || getStoredAcademyId();
 
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
@@ -146,8 +155,8 @@ export default function HalaqaFormModal({
       ...formData,
       ...(resolvedAcademyId ? { academy_id: resolvedAcademyId, academyId: resolvedAcademyId } : {}),
       name: formattedName,
-      educational_track: formData?.educational_track || formData?.track || 'hifz',
-      teaching_type: formData?.teaching_type || formData?.type || 'online',
+      educational_track: formData?.educational_track || 'hifz',
+      teaching_type: formData?.teaching_type || 'online',
       target_audience: formData?.target_audience || 'kids',
       teacher_id: formData?.teacher_id || null,
       max_students: formData?.max_students ? parseInt(formData.max_students, 10) : null,
@@ -175,7 +184,8 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
-        <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-3">
+        {/* تقليل الهوامش لتحسين تجربة التمرير على الجوال */}
+        <div className="space-y-2.5 p-1 overflow-y-auto flex-1 pb-2">
           
           {/* اسم الحلقة */}
           <div>
@@ -192,15 +202,15 @@ export default function HalaqaFormModal({
           </div>
 
           {/* المسار والمعلم */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
                 title="المسار التعليمي"
-                placeholder="اختر المسار التعليمي"
-                value={formData?.educational_track || formData?.track || ''}
+                placeholder="اختر..."
+                value={formData?.educational_track || ''}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
               />
@@ -212,7 +222,7 @@ export default function HalaqaFormModal({
               </label>
               <Select
                 title="المعلم المسؤول"
-                placeholder="اختر معلماً للحلقة (اختياري)..."
+                placeholder="اختياري..."
                 value={formData?.teacher_id || ''}
                 onChange={(v) => handleChange('teacher_id', v)}
                 options={teacherSelectOptions}
@@ -221,14 +231,14 @@ export default function HalaqaFormModal({
           </div>
 
           {/* الفئة ونمط الانعقاد */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
                 title="الفئة المستهدفة"
-                placeholder="اختر الفئة المستهدفة"
+                placeholder="اختر..."
                 value={formData?.target_audience || ''}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
@@ -241,8 +251,8 @@ export default function HalaqaFormModal({
               </label>
               <Select
                 title="نمط انعقاد الحلقة"
-                placeholder="اختر نمط الانعقاد"
-                value={formData?.teaching_type || formData?.type || ''}
+                placeholder="اختر..."
+                value={formData?.teaching_type || ''}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
               />
@@ -250,7 +260,7 @@ export default function HalaqaFormModal({
           </div>
 
           {/* أوقات الحلقة والحد الأقصى */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <CustomTimePicker
               label={t('startTimeLabel', 'وقت البدء')}
               required
@@ -284,7 +294,7 @@ export default function HalaqaFormModal({
 
           {/* صندوق أخطاء التوقيت */}
           {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
+            <div className="p-2 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
               <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
               <span className="font-semibold">{timeError}</span>
             </div>
@@ -292,8 +302,8 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار التحكم */}
-        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
+        {/* أزرار التحكم بدون حشو أيقونات */}
+        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-2.5 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
             onClick={onClose}
@@ -304,16 +314,16 @@ export default function HalaqaFormModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 transition-opacity`}
+            className={`${UI.btnPrimary} text-xs py-2 px-6 rounded-xl font-extrabold transition-opacity flex items-center justify-center`}
           >
-            {formData?.id ? <Save size={14} /> : <Plus size={14} />}
-            <span>
-              {isSubmitting
-                ? t('saving', 'جاري الحفظ...')
-                : formData?.id
-                ? t('saveChanges', 'حفظ التعديلات')
-                : t('createNewHalaqa', 'إنشاء الحلقة')}
-            </span>
+            {formData?.id ? (
+              <span className="flex items-center gap-1.5">
+                <Save size={14} />
+                <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : t('saveChanges', 'حفظ التعديلات')}</span>
+              </span>
+            ) : (
+              <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : t('createNewHalaqa', 'إنشاء الحلقة')}</span>
+            )}
           </button>
         </div>
       </form>
