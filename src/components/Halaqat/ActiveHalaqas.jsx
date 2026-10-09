@@ -8,17 +8,19 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-// حالة أولية فارغة تماماً بدون أوقات افتراضية مسبقة
-const INITIAL_FORM_DATA = {
+// حالة أولية فارغة تماماً بدون أي قيم افتراضية مسبقة
+const getEmptyFormData = (academyId) => ({
   name: '',
-  educational_track: 'hifz',
+  educational_track: '',
   teacher_id: '',
-  target_audience: 'kids',
-  teaching_type: 'online',
+  target_audience: '',
+  teaching_type: '',
   start_time: '',
   end_time: '',
-  max_students: ''
-};
+  max_students: '',
+  academy_id: academyId || null,
+  academyId: academyId || null
+});
 
 export default function ActiveHalaqas({
   halaqas = [],
@@ -42,7 +44,7 @@ export default function ActiveHalaqas({
   // حالة النافذة المنبثقة والنموذج
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState(() => getEmptyFormData(academyId));
 
   // حساب الإحصائيات
   const stats = useMemo(() => {
@@ -93,9 +95,9 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
-  // فتح النافذة بوضع الإنشاء
+  // فتح النافذة بوضع الإنشاء بحالة فارغة ومعرف الأكاديمية الصحيح
   const handleOpenCreateModal = () => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData(getEmptyFormData(academyId));
     setIsModalOpen(true);
   };
 
@@ -112,19 +114,27 @@ export default function ActiveHalaqas({
       start_time: halaqa.start_time || '',
       end_time: halaqa.end_time || '',
       max_students: halaqa.max_students || '',
-      timezone: halaqa.timezone || ''
+      timezone: halaqa.timezone || '',
+      academy_id: halaqa.academy_id || halaqa.academyId || academyId,
+      academyId: halaqa.academy_id || halaqa.academyId || academyId
     });
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ الموحدة مع حقن academy_id صراحة
+  // معالجة الحفظ الموحدة مع إجبار وجود academy_id
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
       const baseData = payload || formData;
+      const resolvedAcademyId = baseData.academy_id || baseData.academyId || academyId;
+
       const dataToSave = {
         ...baseData,
-        academy_id: baseData.academy_id || baseData.academyId || academyId
+        educational_track: baseData.educational_track || 'hifz',
+        target_audience: baseData.target_audience || 'kids',
+        teaching_type: baseData.teaching_type || 'online',
+        academy_id: resolvedAcademyId,
+        academyId: resolvedAcademyId
       };
 
       if (!dataToSave.id && !onCreateHalaqa) {
