@@ -209,7 +209,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const [teachers, setTeachers] = useState([]);
   const [halaqas, setHalaqas] = useState([]);
 
-  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas();
+  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
 
