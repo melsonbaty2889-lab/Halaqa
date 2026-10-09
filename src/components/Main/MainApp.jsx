@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react"; 
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, AlertOctagon, MessageCircle, LogOut } from 'lucide-react';
-import { useHalaqas } from '@/hooks/useHalaqas';
 import useIsMobile from '@/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext'; 
+import { useHalaqas } from '@/hooks/useHalaqas';
 import { ROLES } from '@/constants/roles';
 import { UI } from '@/theme/styles.js';
 import { PageSkeleton } from '@/components/UI/Skeleton';
@@ -15,13 +15,9 @@ import Dashboard from '@/components/Dashboard/Dashboard';
 import SubscriptionPage from '@/components/SaaS/SubscriptionPage';
 import AffiliateRewards from '@/components/SaaS/AffiliateRewards';
 
-// خلفية موحدة شفافة تضمن ظهور التوهج الزمردي والشبكة بشكل واضح
 const OriginalEmeraldBackground = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-    {/* طبقة تدرج شبه شفافة تسمح بمرور التوهج وشبكة النقاط */}
     <div className="absolute inset-0 bg-gradient-to-br from-dark-bg/80 via-dark-card/60 to-dark-bg/90 backdrop-blur-[2px]" />
-    
-    {/* دوائر التوهج الزمردي الدائرية */}
     <div className="absolute -top-[10%] -right-[10%] w-[650px] h-[650px] bg-brandEmerald-bg/25 rounded-full blur-[140px] animate-pulse" />
     <div className="absolute top-[25%] -left-[10%] w-[550px] h-[550px] bg-brandEmerald-bg/20 rounded-full blur-[130px]" />
     <div className="absolute -bottom-[10%] right-[15%] w-[650px] h-[650px] bg-brandEmerald-bg/15 rounded-full blur-[160px]" />
@@ -108,7 +104,6 @@ const safeLazy = (importFn) => {
   );
 };
 
-// الاستدعاء الموزع للمكونات
 const Students = safeLazy(() => import('@/components/Student/StudentsList.jsx'));
 const Teachers = safeLazy(() => import('@/components/Teachers/Teachers.jsx')); 
 const Attendance = safeLazy(() => import('@/components/Attendance/Attendance.jsx'));
@@ -171,10 +166,10 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy, academiesList, setAcademy } = useAcademy();
   const isMobile = useIsMobile(1024);
 
-  // نستخدم المعرف المباشر من الـ hook أو الجلسة
-const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
+  const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
+  const isAcademyActive = academy?.is_active ?? true;
 
-const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
+  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
 
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
@@ -215,14 +210,12 @@ const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId
   const [halaqas, setHalaqas] = useState([]);
   const [completedExamsCount, setCompletedExamsCount] = useState(0); 
   const [loadingData, setLoadingData] = useState(true);
+
   const isPlatformAdmin = userRole === ROLES.SUPER_ADMIN || userRole === 'super_admin';
   const [currency, setCurrency] = useState(academy?.currency || (isPlatformAdmin ? "EGP" : "USD"));         
   const [timezone, setTimezone] = useState(academy?.timezone || (isPlatformAdmin ? "Africa/Cairo" : "UTC"));         
   const [countryCode, setCountryCode] = useState(academy?.country_code || (isPlatformAdmin ? "EG" : "US"));   
   const [academyTime, setAcademyTime] = useState("");
-
-
-  const isAcademyActive = academy?.is_active ?? true;
 
   const fetchedAcademyIdRef = useRef(null);
   const isFetchingRef = useRef(false);
@@ -465,8 +458,8 @@ const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId
             error={null} 
             isRtl={isRtl} 
             isMobile={isMobile} 
-            onCreateHalaqa={createHalaqa}           
-            onUpdateHalaqa={updateHalaqa}           
+            onCreateHalaqa={(data) => createHalaqa({ ...data, academy_id: data?.academy_id || academyId })}
+            onUpdateHalaqa={updateHalaqa}
             onToggleArchiveHalaqa={toggleArchiveHalaqa}
             onNavigateToAttendance={(halaqaId) => {
               setSelectedHalaqaId(halaqaId);
