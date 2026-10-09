@@ -21,7 +21,6 @@ export default function HalaqaFormModal({
   const currentLang = i18n?.language || 'ar';
   const [timeError, setTimeError] = useState('');
 
-  // تحديد المنطقة الزمنية تلقائياً
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // تحويل الوقت المحتوي على ص/م إلى دقائق إجمالية
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr || typeof timeStr !== 'string') return null;
     
@@ -80,7 +78,6 @@ export default function HalaqaFormModal({
     return hours * 60 + minutes;
   };
 
-  // دالة التحقق الفوري من صحة التوقيت
   const validateTimes = (startTime, endTime) => {
     const startMins = parseTimeToMinutes(startTime);
     const endMins = parseTimeToMinutes(endTime);
@@ -93,7 +90,6 @@ export default function HalaqaFormModal({
     return true;
   };
 
-  // معالجة تغيير الأوقات مع الفحص المباشر
   const handleTimeChange = (field, val) => {
     const newStartTime = field === 'start_time' ? val : formData?.start_time;
     const newEndTime = field === 'end_time' ? val : formData?.end_time;
@@ -269,11 +265,11 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* تنبيه أخطاء التوقيت الفوري */}
+          {/* تنبيه أخطاء التوقيت المحسن من ناحية التناسق والتأثير */}
           {timeError && (
-            <div className="p-2.5 rounded-xl bg-semantic-actionDanger/10 text-semantic-actionDanger text-xs flex items-center gap-2 border border-semantic-actionDanger/30 animate-in fade-in duration-150">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{timeError}</span>
+            <div className="p-2.5 rounded-xl bg-semantic-actionDanger/15 text-semantic-actionDanger text-xs flex items-center justify-start gap-2 border border-semantic-actionDanger/40 animate-in fade-in duration-150">
+              <AlertCircle size={16} className="shrink-0 text-semantic-actionDanger" />
+              <span className="font-semibold">{timeError}</span>
             </div>
           )}
 
@@ -291,7 +287,7 @@ export default function HalaqaFormModal({
           <button
             type="submit"
             disabled={isSubmitting || Boolean(timeError)}
-            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 ${
+            className={`${UI.btnPrimary} text-xs py-2 px-5 rounded-xl font-extrabold flex items-center gap-1.5 transition-opacity ${
               timeError ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
