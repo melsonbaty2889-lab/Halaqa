@@ -130,6 +130,7 @@ export default function HalaqaFormModal({
 
     const payload = {
       ...formData,
+      academy_id: formData?.academy_id || formData?.academyId || null,
       name: formattedName,
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
