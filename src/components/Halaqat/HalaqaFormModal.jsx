@@ -68,7 +68,8 @@ export default function HalaqaFormModal({
     return true;
   };
 
-  const handleTimeChange = (field, val) => {
+  const handleTimeChange = (field, rawVal) => {
+    const val = extractValue(rawVal);
     const newStartTime = field === 'start_time' ? val : formData?.start_time;
     const newEndTime = field === 'end_time' ? val : formData?.end_time;
 
@@ -123,14 +124,15 @@ export default function HalaqaFormModal({
       return;
     }
 
-    // 3. تجهيز كائن البيانات
+    // 3. تجهيز كائن البيانات بالحفاظ على معرف الأكاديمية الموجود مسبقاً
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
       ? { ...formData.name, [currentLang]: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
     const payload = {
       ...formData,
-      academy_id: formData?.academy_id || formData?.academyId || null,
+      ...(formData?.academy_id ? { academy_id: formData.academy_id } : {}),
+      ...(formData?.academyId ? { academyId: formData.academyId } : {}),
       name: formattedName,
       educational_track: formData?.educational_track || formData?.track || 'hifz',
       teaching_type: formData?.teaching_type || formData?.type || 'online',
