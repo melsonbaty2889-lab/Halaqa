@@ -97,7 +97,7 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 2. Mutation لإنشاء حلقة جديدة (مع دعم الاسترجاع الاحتياطي الآمن لمعرف الأكاديمية)
+  // 2. Mutation لإنشاء حلقة جديدة المتوافقة مع سياسات RLS
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -110,7 +110,7 @@ export const useHalaqas = ({
       );
 
       if (!isCurrentValid) {
-        throw new Error('معرف الأكاديمية غير صالح');
+        throw new Error('معرف الأكاديمية غير صالح أو غير موجود في الجلسة');
       }
 
       const payload = {
@@ -126,7 +126,10 @@ export const useHalaqas = ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase RLS/Insert Error:', error);
+        throw new Error(error.message || 'فشلت قاعدة البيانات في قبول بيانات الحلقة');
+      }
       return data;
     },
     onSuccess: () => {
@@ -137,7 +140,7 @@ export const useHalaqas = ({
     },
   });
 
-  // 3. Mutation لتعديل حلقة (مع دعم التحقق والربط الآمن للأكاديمية)
+  // 3. Mutation لتعديل حلقة
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
