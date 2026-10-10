@@ -1,5 +1,4 @@
 /* src/context/AcademyContext.jsx */
-
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
@@ -54,10 +53,17 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  // تحديث بيانات الأكاديمية الحالية وقائمة الأكاديميات لحظياً في الـ Context
+  // تحديث بيانات الأكاديمية الحالية وقائمة الأكاديميات لحظياً في الـ Context وتخزين المعرف محلياً
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
-      setAcademy((prev) => (prev ? { ...prev, ...newAcademyData } : newAcademyData));
+      setAcademy((prev) => {
+        const updated = prev ? { ...prev, ...newAcademyData } : newAcademyData;
+        if (updated?.id) {
+          localStorage.setItem('active_academy_id', updated.id);
+          localStorage.setItem('academy_id', updated.id);
+        }
+        return updated;
+      });
 
       setAcademiesList((prevList) => 
         prevList.map((item) => {
@@ -85,6 +91,8 @@ export const AcademyProvider = ({ children }) => {
   const clearAuthState = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('current_academy_slug');
+      localStorage.removeItem('active_academy_id');
+      localStorage.removeItem('academy_id');
       sessionStorage.clear();
     }
     if (isMounted.current) {
@@ -224,6 +232,12 @@ export const AcademyProvider = ({ children }) => {
 
         if (currentAcademy) {
           setAcademy(currentAcademy);
+          
+          // ✅ التعديل الأهم: تخزين معرف الأكاديمية النشطة في التخزين المحلي فور جلبها
+          if (currentAcademy.id) {
+            localStorage.setItem('active_academy_id', currentAcademy.id);
+            localStorage.setItem('academy_id', currentAcademy.id);
+          }
           if (currentAcademy.slug) {
             localStorage.setItem('current_academy_slug', currentAcademy.slug);
           }
@@ -235,6 +249,8 @@ export const AcademyProvider = ({ children }) => {
           }
         } else {
           setAcademy(null);
+          localStorage.removeItem('active_academy_id');
+          localStorage.removeItem('academy_id');
           if (detectedRole === 'admin') {
             setAppState('NO_ACADEMY');
           } else {
@@ -325,7 +341,7 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus, clearAuthState]);
 
-  // 🔄 الاستماع للتغييرات اللحظية للبروفايل بأمان مع ترتيب الاشتراكات
+  // الاستماع للتغييرات اللحظية للبروفايل
   useEffect(() => {
     if (!user?.id || !supabase) return;
 
@@ -334,7 +350,6 @@ export const AcademyProvider = ({ children }) => {
       if (typeof supabase.channel === 'function') {
         const channelName = `profile_changes_${user.id}_${Date.now()}`;
         
-        // ✅ ربط الأحداث أولاً ثم الاشتراك في النهاية تماماً
         channel = supabase
           .channel(channelName)
           .on(
@@ -380,7 +395,13 @@ export const AcademyProvider = ({ children }) => {
         academiesList,
         userRole,
         appState,
-        setAcademy,
+        setAcademy: (newAcademy) => {
+          if (newAcademy?.id) {
+            localStorage.setItem('active_academy_id', newAcademy.id);
+            localStorage.setItem('academy_id', newAcademy.id);
+          }
+          setAcademy(newAcademy);
+        },
         updateAcademyState,
         getAcademyName,
         logout,
