@@ -193,6 +193,7 @@ export default function ActiveHalaqas({
               key={halaqa.id}
               halaqa={halaqa}
               viewMode={viewMode}
+              layoutMode={layoutMode}
               getLocalizedText={getLocalizedText}
               onNavigateToAttendance={onNavigateToAttendance}
               onToggleArchiveHalaqa={onToggleArchiveHalaqa}
