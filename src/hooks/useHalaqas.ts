@@ -97,7 +97,7 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 2. Mutation لإنشاء حلقة جديدة المتوافقة مع سياسات RLS
+  // 2. Mutation لإنشاء حلقة جديدة مع تنظيف البيانات وإزالة الحقول غير الموجودة بقاعدة البيانات
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -113,8 +113,14 @@ export const useHalaqas = ({
         throw new Error('معرف الأكاديمية غير صالح أو غير موجود في الجلسة');
       }
 
+      // تنظيف البيانات وحذف أي حقول وهمية قد تسبب خطأ في Schema Cache
+      const cleanedData = { ...halaqaData };
+      delete cleanedData.academyId;
+      delete cleanedData.track;
+      delete cleanedData.type;
+
       const payload = {
-        ...halaqaData,
+        ...cleanedData,
         academy_id: currentAcademyId,
         start_time: formatTimeForDb(halaqaData.start_time),
         end_time: formatTimeForDb(halaqaData.end_time),
@@ -145,8 +151,13 @@ export const useHalaqas = ({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
 
+      const cleanedData = { ...halaqaData };
+      delete cleanedData.academyId;
+      delete cleanedData.track;
+      delete cleanedData.type;
+
       const payload: any = {
-        ...halaqaData,
+        ...cleanedData,
         updated_at: new Date().toISOString(),
       };
 
