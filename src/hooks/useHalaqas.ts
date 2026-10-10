@@ -1,3 +1,5 @@
+/* src/hooks/useHalaqas.ts */
+
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -148,7 +150,7 @@ export const useHalaqas = ({
     onSuccess: () => {
       // ✅ تحديث فوري لكافة استعلامات الحلقات لتظهر الحلقة دون تحديث الصفحة
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-      // ✅ إشعار نجاح واضح للمستخدم
+      queryClient.refetchQueries({ queryKey: ['halaqas'] });
       alert('تم إنشاء الحلقة بنجاح وتم تحديث القائمة.');
     },
   });
@@ -188,6 +190,7 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
+      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -206,10 +209,11 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
+      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
-  // 5. Mutation للأرشفة
+  // 5. Mutation للأرشفة مع التحديث الفوري المباشر
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
@@ -224,6 +228,7 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
+      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -268,7 +273,7 @@ export const useHalaqas = ({
     [assignTeacherMutation]
   );
 
-  // دالة الأرشفة
+  // دالة الأرشفة والتنشيط
   const toggleArchiveHalaqa = useCallback(
     async (halaqaId: string, currentArchived: boolean) => {
       try {
