@@ -97,10 +97,9 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // دوال تنظيف البيانات وحذف الحقول الزائدة غير الموجودة في جدول halaqas
+  // دالة تنظيف البيانات وحذف الحقول الزائدة غير الموجودة في جدول halaqas
   const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
     const cleaned = { ...data };
-    // حذف أي حقول وهمية قد تأتي من الواجهة الأمامية ولا تطابق أعمدة الجدول الفعلي
     delete cleaned.academyId;
     delete cleaned.track;
     delete cleaned.type;
@@ -109,7 +108,7 @@ export const useHalaqas = ({
     return cleaned;
   };
 
-  // 2. Mutation لإنشاء حلقة جديدة
+  // 2. Mutation لإنشاء حلقة جديدة مع تحديث فوري وإشعار نجاح
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -147,10 +146,10 @@ export const useHalaqas = ({
       return data;
     },
     onSuccess: () => {
-      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
-      if (currentAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', currentAcademyId] });
-      }
+      // ✅ تحديث فوري لكافة استعلامات الحلقات لتظهر الحلقة دون تحديث الصفحة
+      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
+      // ✅ إشعار نجاح واضح للمستخدم
+      alert('تم إنشاء الحلقة بنجاح وتم تحديث القائمة.');
     },
   });
 
@@ -188,10 +187,7 @@ export const useHalaqas = ({
       return data;
     },
     onSuccess: () => {
-      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
-      if (currentAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', currentAcademyId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -209,9 +205,7 @@ export const useHalaqas = ({
       if (error) throw error;
     },
     onSuccess: () => {
-      if (isValidAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -229,9 +223,7 @@ export const useHalaqas = ({
       if (error) throw error;
     },
     onSuccess: () => {
-      if (isValidAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
     },
   });
 
