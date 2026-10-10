@@ -8,7 +8,7 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-// حالة أولية فارغة تماماً بدون أي قيم افتراضية مسبقة
+// حالة أولية فارغة تماماً مع ربط معرف الأكاديمية الصحيح
 const getEmptyFormData = (academyId) => ({
   name: '',
   educational_track: '',
@@ -35,18 +35,15 @@ export default function ActiveHalaqas({
   const { t } = useTranslation();
   const { getLocalizedText } = useAcademySettings();
 
-  // حالات البحث والفلترة والعرض
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
-  // حالة النافذة المنبثقة والنموذج
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(() => getEmptyFormData(academyId));
 
-  // حساب الإحصائيات
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
@@ -66,7 +63,6 @@ export default function ActiveHalaqas({
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
-  // تصفية الحلقات
   const filteredHalaqas = useMemo(() => {
     return halaqas.filter((halaqa) => {
       if (viewMode === 'archived' && !halaqa.is_archived) return false;
@@ -95,13 +91,11 @@ export default function ActiveHalaqas({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
 
-  // فتح النافذة بوضع الإنشاء بحالة فارغة ومعرف الأكاديمية الصحيح
   const handleOpenCreateModal = () => {
     setFormData(getEmptyFormData(academyId));
     setIsModalOpen(true);
   };
 
-  // فتح النافذة بوضع التعديل
   const handleOpenEditModal = (halaqa) => {
     setFormData({
       id: halaqa.id,
@@ -121,7 +115,6 @@ export default function ActiveHalaqas({
     setIsModalOpen(true);
   };
 
-  // معالجة الحفظ الموحدة مع إجبار وجود academy_id
   const handleFormSubmit = async (payload) => {
     setIsSubmitting(true);
     try {
@@ -164,7 +157,6 @@ export default function ActiveHalaqas({
 
   return (
     <div className="space-y-4 pt-1 pb-8 bg-app-layout">
-      {/* زر إضافة حلقة جديدة */}
       <button
         type="button"
         onClick={handleOpenCreateModal}
@@ -174,7 +166,6 @@ export default function ActiveHalaqas({
         <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
       </button>
 
-      {/* شريط الفلترة والبحث والتبويبات */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -187,7 +178,6 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
-      {/* عرض الحلقات أو القائمة الفارغة */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
@@ -224,7 +214,6 @@ export default function ActiveHalaqas({
         </div>
       )}
 
-      {/* النافذة المنبثقة */}
       <HalaqaFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
