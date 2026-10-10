@@ -1,3 +1,5 @@
+/* src/components/Halaqat/HalaqaCardItem.jsx */
+
 import React from 'react';
 import { User, Clock, Video, AlertCircle, Edit3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -47,86 +49,18 @@ export default function HalaqaCardItem({
   const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
   const endTimeFormatted = renderFormattedTime(halaqa?.end_time);
 
-  // وضع القائمة المنسق (List Mode)
-  if (layoutMode === 'list') {
-    return (
-      <div className={`${UI.card} flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all`}>
-        <div className="flex-1 min-w-0 w-full">
-          <div className="flex items-center gap-2 mb-1.5">
-            <h4 className="text-base font-extrabold text-semantic-textPrimary m-0 truncate">
-              {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
-            </h4>
-            {halaqa?.is_archived ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold shrink-0">
-                {t('archived', 'مؤرشفة')}
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold shrink-0">
-                {t('activeSession', 'نشطة')}
-              </span>
-            )}
-          </div>
+  const isArchived = Boolean(halaqa?.is_archived);
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-semantic-textSecondary">
-            <div className="flex items-center gap-1.5">
-              <User size={14} className="text-semantic-actionPrimary shrink-0" />
-              <span className="font-semibold truncate">
-                {hasTeacher ? (teacherName || t('unnamedTeacher', 'معلم غير محدد')) : t('unassigned', 'بلا معلم')}
-              </span>
-            </div>
-            {(startTimeFormatted || endTimeFormatted) && (
-              <div className="flex items-center gap-1.5">
-                <Clock size={14} className="text-semantic-textMuted shrink-0" />
-                <span className="font-semibold">{startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* أزرار الإجراءات المنتظمة في وضع القائمة */}
-        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-semantic-borderCard justify-end">
-          <button 
-            type="button"
-            onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-            className={`${UI.btnEmerald} py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 shrink-0`}
-          >
-            <Video size={14} />
-            <span>{t('goToAttendance', 'الجلسة المباشرة')}</span>
-          </button>
-
-          {onEditHalaqa && (
-            <button
-              type="button"
-              onClick={() => onEditHalaqa(halaqa)}
-              className={`${UI.btnSecondary} !w-9 !h-9 p-0 flex items-center justify-center text-xs font-bold shrink-0 rounded-xl`}
-              title={t('edit', 'تعديل')}
-            >
-              <Edit3 size={14} />
-            </button>
-          )}
-
-          <button 
-            type="button"
-            onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, halaqa?.is_archived)} 
-            className={`${UI.btnSecondary} px-3 py-2 text-xs font-bold shrink-0 rounded-xl`}
-          >
-            {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // وضع الشبكة (Grid Mode)
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover transition-all h-full`}>
+    <div className={`${UI.card} flex flex-col justify-between gap-4 p-4 hover:border-semantic-borderHover transition-all overflow-hidden h-full`}>
       <div>
+        {/* عنوان الحلقة وحالتها */}
         <div className="flex justify-between items-start gap-2 mb-2.5">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
             {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
           </h4>
           
-          {halaqa?.is_archived ? (
+          {isArchived ? (
             <span className="px-2 py-0.5 rounded-full text-[11px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold shrink-0">
               {t('archived', 'مؤرشفة')}
             </span>
@@ -137,6 +71,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
+        {/* معلومات المعلم */}
         <div className="flex items-center gap-1.5 text-xs text-semantic-textSecondary mb-2.5">
           {hasTeacher ? (
             <>
@@ -153,29 +88,26 @@ export default function HalaqaCardItem({
           )}
         </div>
 
+        {/* التوقيت */}
         {(startTimeFormatted || endTimeFormatted) && (
           <div className="flex items-center gap-2 text-[12px] text-semantic-textSecondary">
             <Clock size={13} className="text-semantic-textMuted shrink-0" />
             <span className="font-semibold">
               {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
             </span>
-            {halaqa?.timezone && (
-              <span className="text-[10px] bg-semantic-surfaceInput px-1.5 py-0.5 rounded text-semantic-textMuted border border-semantic-borderCard font-mono">
-                {halaqa.timezone}
-              </span>
-            )}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-semantic-borderCard pt-3 mt-1">
+      {/* أزرار الإجراءات - تم ضبط العرض ومنع الخروج من الحدود */}
+      <div className="flex items-center gap-2 border-t border-semantic-borderCard pt-3 mt-1 w-full shrink-0">
         <button 
           type="button"
           onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-          className={`${UI.btnEmerald} flex-1 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1.5`}
+          className={`${UI.btnEmerald} flex-1 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1.5 shrink-1 min-w-0`}
           title={t('goToAttendance', 'الانضمام للجلسة المباشرة')}
         >
-          <Video size={14} />
+          <Video size={14} className="shrink-0" />
           <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
         </button>
 
@@ -183,7 +115,7 @@ export default function HalaqaCardItem({
           <button
             type="button"
             onClick={() => onEditHalaqa(halaqa)}
-            className={`${UI.btnSecondary} !w-9 !h-9 p-0 flex items-center justify-center text-xs font-bold shrink-0 rounded-xl`}
+            className={`${UI.btnSecondary} !w-9 !h-9 !p-0 flex items-center justify-center text-xs font-bold shrink-0 rounded-xl`}
             title={t('edit', 'تعديل')}
           >
             <Edit3 size={14} />
@@ -192,10 +124,10 @@ export default function HalaqaCardItem({
 
         <button 
           type="button"
-          onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, halaqa?.is_archived)} 
-          className={`${UI.btnSecondary} px-2.5 py-2 text-xs font-bold shrink-0 rounded-xl`}
+          onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+          className={`${UI.btnSecondary} !w-auto px-3 py-2 text-xs font-bold shrink-0 rounded-xl`}
         >
-          {viewMode === 'active' ? t('archive', 'أرشفة') : t('activate', 'تنشيط')}
+          {isArchived ? t('activate', 'تنشيط') : t('archive', 'أرشفة')}
         </button>
       </div>
     </div>
