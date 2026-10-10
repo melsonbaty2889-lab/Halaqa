@@ -24,7 +24,6 @@ export default function HalaqaFormModal({
 
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-  // دالة استرجاع مضمونة لمعرف الأكاديمية من التخزين المحلي والجلسة
   const getStoredAcademyId = () => {
     try {
       const activeAcademy = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -146,11 +145,10 @@ export default function HalaqaFormModal({
       return;
     }
 
-    // التحقق المضمون والمزدوج من معرف الأكاديمية
     const resolvedAcademyId = formData?.academy_id || formData?.academyId || getStoredAcademyId();
 
     if (!resolvedAcademyId) {
-      alert('خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول أو اختيار أكاديمية.');
+      alert('خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.');
       return;
     }
 
@@ -194,7 +192,6 @@ export default function HalaqaFormModal({
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
         <div className="space-y-2.5 p-1 overflow-y-auto flex-1 pb-2">
           
-          {/* اسم الحلقة */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -208,7 +205,6 @@ export default function HalaqaFormModal({
             />
           </div>
 
-          {/* المسار والمعلم */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -237,7 +233,6 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* الفئة ونمط الانعقاد */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -266,7 +261,6 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* أوقات الحلقة والحد الأقصى */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <CustomTimePicker
               label={t('startTimeLabel', 'وقت البدء')}
@@ -299,7 +293,6 @@ export default function HalaqaFormModal({
             </div>
           </div>
 
-          {/* صندوق أخطاء التوقيت */}
           {timeError && (
             <div className="p-2 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
               <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
@@ -309,7 +302,6 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار التحكم */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-2.5 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
