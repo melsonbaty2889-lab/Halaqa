@@ -10,7 +10,6 @@ import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-// حالة أولية فارغة تماماً مع ربط معرف الأكاديمية الصحيح
 const getEmptyFormData = (academyId) => ({
   name: '',
   educational_track: '',
@@ -158,16 +157,18 @@ export default function ActiveHalaqas({
   };
 
   return (
-    <div className="space-y-4 pt-1 pb-8 bg-app-layout">
+    <div className="w-full max-w-7xl mx-auto px-4 space-y-5 pt-3 pb-12 bg-app-layout">
+      {/* زر إضافة حلقة مميز وسلس */}
       <button
         type="button"
         onClick={handleOpenCreateModal}
-        className={`${UI.btnPrimary} w-full py-3 font-extrabold flex items-center justify-center gap-2 relative z-10`}
+        className={`${UI.btnPrimary} w-full py-3.5 font-extrabold text-sm flex items-center justify-center gap-2 relative z-10 shadow-lg`}
       >
         <Plus size={18} />
         <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
       </button>
 
+      {/* شريط الفلترة */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -180,12 +181,13 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
+      {/* شبكة/قائمة العرض الاستجابة المحدثة */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
             layoutMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full'
-              : 'flex flex-col gap-3'
+              ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full'
+              : 'flex flex-col gap-3 w-full'
           }
         >
           {filteredHalaqas.map((halaqa) => (
