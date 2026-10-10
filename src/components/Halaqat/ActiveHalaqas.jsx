@@ -27,6 +27,8 @@ export default function ActiveHalaqas({
   halaqas = [],
   teachers = [],
   academyId = null,
+  filters = {},
+  setFilters,
   onCreateHalaqa,
   onUpdateHalaqa,
   onToggleArchiveHalaqa,
@@ -38,12 +40,26 @@ export default function ActiveHalaqas({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
-  const [viewMode, setViewMode] = useState('active');
   const [layoutMode, setLayoutMode] = useState('grid');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(() => getEmptyFormData(academyId));
+
+  // تحديد الـ viewMode الحالي بناءً على الـ filters القادمة من useHalaqas
+  const viewMode = filters.is_archived ? 'archived' : (filters.status === 'unassigned' ? 'unassigned' : 'active');
+
+  const setViewMode = (mode) => {
+    if (setFilters) {
+      if (mode === 'archived') {
+        setFilters((prev) => ({ ...prev, is_archived: true, status: 'all' }));
+      } else if (mode === 'unassigned') {
+        setFilters((prev) => ({ ...prev, is_archived: false, status: 'unassigned' }));
+      } else {
+        setFilters((prev) => ({ ...prev, is_archived: false, status: 'all' }));
+      }
+    }
+  };
 
   const stats = useMemo(() => {
     let totalActive = 0;
@@ -66,10 +82,7 @@ export default function ActiveHalaqas({
 
   const filteredHalaqas = useMemo(() => {
     return halaqas.filter((halaqa) => {
-      if (viewMode === 'archived' && !halaqa.is_archived) return false;
-      if (viewMode === 'active' && halaqa.is_archived) return false;
       if (viewMode === 'unassigned') {
-        if (halaqa.is_archived) return false;
         const hasTeacher = Boolean(halaqa.teacher_id || halaqa.teacher_name || halaqa.teacher);
         if (hasTeacher) return false;
       }
