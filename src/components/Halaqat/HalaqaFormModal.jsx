@@ -24,6 +24,7 @@ export default function HalaqaFormModal({
 
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
+  // دالة استرجاع مضمونة لمعرف الأكاديمية من التخزين المحلي والجلسة
   const getStoredAcademyId = () => {
     try {
       const activeAcademy = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -145,7 +146,13 @@ export default function HalaqaFormModal({
       return;
     }
 
+    // التحقق المضمون والمزدوج من معرف الأكاديمية
     const resolvedAcademyId = formData?.academy_id || formData?.academyId || getStoredAcademyId();
+
+    if (!resolvedAcademyId) {
+      alert('خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول أو اختيار أكاديمية.');
+      return;
+    }
 
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
       ? { ...formData.name, [currentLang]: rawName }
@@ -153,7 +160,8 @@ export default function HalaqaFormModal({
 
     const payload = {
       ...formData,
-      ...(resolvedAcademyId ? { academy_id: resolvedAcademyId, academyId: resolvedAcademyId } : {}),
+      academy_id: resolvedAcademyId,
+      academyId: resolvedAcademyId,
       name: formattedName,
       educational_track: formData?.educational_track || 'hifz',
       teaching_type: formData?.teaching_type || 'online',
@@ -184,7 +192,6 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
-        {/* تقليل الهوامش لتحسين تجربة التمرير على الجوال */}
         <div className="space-y-2.5 p-1 overflow-y-auto flex-1 pb-2">
           
           {/* اسم الحلقة */}
@@ -302,7 +309,7 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار التحكم بدون حشو أيقونات */}
+        {/* أزرار التحكم */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-2.5 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
