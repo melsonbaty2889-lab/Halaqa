@@ -97,16 +97,25 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 2. Mutation لإنشاء حلقة جديدة
+  // 2. Mutation لإنشاء حلقة جديدة (مع دعم الاسترجاع الاحتياطي الآمن لمعرف الأكاديمية)
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
-      if (!isValidAcademyId) {
+      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+      
+      const isCurrentValid = Boolean(
+        currentAcademyId &&
+        currentAcademyId !== 'undefined' &&
+        typeof currentAcademyId === 'string' &&
+        currentAcademyId.trim() !== ''
+      );
+
+      if (!isCurrentValid) {
         throw new Error('معرف الأكاديمية غير صالح');
       }
 
       const payload = {
         ...halaqaData,
-        academy_id: academyId,
+        academy_id: currentAcademyId,
         start_time: formatTimeForDb(halaqaData.start_time),
         end_time: formatTimeForDb(halaqaData.end_time),
       };
@@ -121,19 +130,26 @@ export const useHalaqas = ({
       return data;
     },
     onSuccess: () => {
-      if (isValidAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+      if (currentAcademyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', currentAcademyId] });
       }
     },
   });
 
-  // 3. Mutation لتعديل حلقة
+  // 3. Mutation لتعديل حلقة (مع دعم التحقق والربط الآمن للأكاديمية)
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
+      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+
       const payload: any = {
         ...halaqaData,
         updated_at: new Date().toISOString(),
       };
+
+      if (currentAcademyId && !payload.academy_id) {
+        payload.academy_id = currentAcademyId;
+      }
 
       if (halaqaData.start_time) {
         payload.start_time = formatTimeForDb(halaqaData.start_time);
@@ -153,8 +169,9 @@ export const useHalaqas = ({
       return data;
     },
     onSuccess: () => {
-      if (isValidAcademyId) {
-        queryClient.invalidateQueries({ queryKey: ['halaqas', academyId] });
+      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+      if (currentAcademyId) {
+        queryClient.invalidateQueries({ queryKey: ['halaqas', currentAcademyId] });
       }
     },
   });
