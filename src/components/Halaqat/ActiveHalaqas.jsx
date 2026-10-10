@@ -1,3 +1,5 @@
+/* src/components/Halaqat/ActiveHalaqas.jsx */
+
 import React, { useState, useMemo } from 'react';
 import { Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -182,7 +184,7 @@ export default function ActiveHalaqas({
         <div
           className={
             layoutMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full'
               : 'flex flex-col gap-3'
           }
         >
