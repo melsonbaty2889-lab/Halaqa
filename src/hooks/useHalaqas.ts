@@ -97,7 +97,19 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 2. Mutation لإنشاء حلقة جديدة مع تنظيف البيانات وإزالة الحقول غير الموجودة بقاعدة البيانات
+  // دوال تنظيف البيانات وحذف الحقول الزائدة غير الموجودة في جدول halaqas
+  const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
+    const cleaned = { ...data };
+    // حذف أي حقول وهمية قد تأتي من الواجهة الأمامية ولا تطابق أعمدة الجدول الفعلي
+    delete cleaned.academyId;
+    delete cleaned.track;
+    delete cleaned.type;
+    delete cleaned.timezone;
+    delete cleaned.selectedDays;
+    return cleaned;
+  };
+
+  // 2. Mutation لإنشاء حلقة جديدة
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -113,11 +125,7 @@ export const useHalaqas = ({
         throw new Error('معرف الأكاديمية غير صالح أو غير موجود في الجلسة');
       }
 
-      // تنظيف البيانات وحذف أي حقول وهمية قد تسبب خطأ في Schema Cache
-      const cleanedData = { ...halaqaData };
-      delete cleanedData.academyId;
-      delete cleanedData.track;
-      delete cleanedData.type;
+      const cleanedData = sanitizeHalaqaPayload(halaqaData);
 
       const payload = {
         ...cleanedData,
@@ -151,10 +159,7 @@ export const useHalaqas = ({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
 
-      const cleanedData = { ...halaqaData };
-      delete cleanedData.academyId;
-      delete cleanedData.track;
-      delete cleanedData.type;
+      const cleanedData = sanitizeHalaqaPayload(halaqaData);
 
       const payload: any = {
         ...cleanedData,
