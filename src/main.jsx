@@ -1,5 +1,21 @@
-// 0. كاشف الأخطاء المباشر للشاشة
+/* src/main.jsx */
+
+// 0. كاشف الأخطاء المباشر للشاشة مع معالجة ذكية لأخطاء الـ Dynamic Imports القديمة
 window.onerror = function (message, source, lineno, colno, error) {
+  const isChunkError = 
+    (message && typeof message === 'string' && (message.includes('Dynamically imported module') || message.includes('Failed to fetch') || message.includes('Importing a module script failed'))) ||
+    (error && error.message && (error.message.includes('Dynamically imported module') || error.message.includes('Failed to fetch')));
+
+  if (isChunkError) {
+    const reloadKey = 'pwa_reload_attempt_' + source;
+    const hasReloaded = sessionStorage.getItem(reloadKey);
+    if (!hasReloaded) {
+      sessionStorage.setItem(reloadKey, 'true');
+      window.location.reload(true);
+      return;
+    }
+  }
+
   const errorBox = document.createElement('div');
   errorBox.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#111;color:#ff5555;padding:20px;z-index:99999;overflow:auto;font-family:monospace;font-size:12px;direction:ltr;text-align:left;';
   errorBox.innerHTML = '<h3>⚠️ Runtime Error Found:</h3><p><b>Message:</b> ' + message + '</p><p><b>File:</b> ' + source + '</p><p><b>Line:</b> ' + lineno + ':' + colno + '</p><pre>' + (error && error.stack ? error.stack : '') + '</pre>';
@@ -27,8 +43,17 @@ import { DataProvider } from '@/context/DataContext';
 import { AcademyProvider } from '@/context/AcademyContext';
 import { C } from '@/theme/colors';
 
-// لالتقاط أخطاء الإقلاع الحرجة على مستوى النافذة
+// لالتقاط أخطاء الإقلاع الحرجة على مستوى النافذة مع معالجة الرابط البرمجي
 window.addEventListener('error', (event) => {
+  const errorMsg = event.error?.message || event.message || '';
+  if (errorMsg.includes('Dynamically imported module') || errorMsg.includes('Failed to fetch')) {
+    const reloadKey = 'pwa_reload_attempt_global';
+    if (!sessionStorage.getItem(reloadKey)) {
+      sessionStorage.setItem(reloadKey, 'true');
+      window.location.reload();
+      return;
+    }
+  }
   console.error('🚨 Critical Boot Error:', event.error || event.message);
 });
 
@@ -51,7 +76,7 @@ const InitialLoader = () => (
   </div>
 );
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(getElementByIdSafe('root') || document.getElementById('root')).render(
   <React.StrictMode>
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -69,6 +94,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 );
 
+function getElementByIdSafe(id) {
+  return document.getElementById(id);
+}
+
 // تسجيل وتحديث الـ Service Worker لتطبيقات الـ PWA
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
@@ -80,7 +109,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
           if (installingWorker) {
             installingWorker.onstatechange = () => {
               if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('🔄 نسق جديد متوفر، يرجى إعادة تحميل الصفحة.');
+                console.log('🔄 نسق جديد متوفر، يتم التحديث...');
+                window.location.reload();
               }
             };
           }
