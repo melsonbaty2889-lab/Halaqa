@@ -230,6 +230,7 @@
   },
   "clear": "مسح",
   "clearSearch": "مسح البحث",
+  "clickToAssignTeacher": "انقر لتعيين/تغيير المعلم سريعاً",
   "close": "Close",
   "comm": {
     "academy_default": "Smart Halaqa Complex",
@@ -754,6 +755,7 @@
   "noHalaqasInView": "لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.",
   "noHalaqatFound": "لا توجد حلقات مطابقة لخيارات البحث أو الفلترة الحالية",
   "noSearchResults": "لم نجد أي حلقات تطابق بحثك الحالي.",
+  "noTeachersAvailable": "لا يوجد معلمون مسجلون",
   "notifications": {
     "all": "All",
     "clearAll": "Clear All",
@@ -1142,6 +1144,7 @@
   "typeOnline": "عن بُعد (أونلاين)",
   "typeOnsite": "حضوري (في المقر / المسجد)",
   "unassigned": "Awaiting Certified Assignment",
+  "unassignTeacherOption": "بدون معلم (غير معين)",
   "unknownError": "خطأ غير معروف",
   "unnamed_student": "Unnamed Student",
   "unnamedHalaqa": "حلقة بدون اسم",

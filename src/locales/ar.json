@@ -197,6 +197,7 @@
   },
   "clear": "مسح",
   "clearSearch": "مسح البحث",
+  "clickToAssignTeacher": "انقر لتعيين/تغيير المعلم سريعاً",
   "comm": {
     "academy_default": "مجمع الحلقة الذكية",
     "app_notice": "إشعار التطبيق",
@@ -604,6 +605,7 @@
   "noHalaqasFound": "لا توجد حلقات للعرض",
   "noHalaqasInView": "لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.",
   "noSearchResults": "لم نجد أي حلقات تطابق بحثك الحالي.",
+  "noTeachersAvailable": "لا يوجد معلمون مسجلون",
   "notifications": {
     "all": "الكل",
     "clearAll": "حذف الكل",
@@ -971,6 +973,7 @@
   "typeOffline": "حضوري (في المقر / المسجد)",
   "typeOnline": "عن بُعد (أونلاين)",
   "unassigned": "بانتظار تعيين معتمد",
+  "unassignTeacherOption": "بدون معلم (غير معين)",
   "unknownError": "خطأ غير معروف",
   "unnamed_student": "طالب بدون اسم",
   "unnamedHalaqa": "حلقة بدون اسم",
