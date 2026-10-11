@@ -884,6 +884,8 @@
   "saveChanges": "حفظ التعديلات",
   "saving": "جاري الحفظ...",
   "search_placeholder": "Search for a student by name, phone...",
+  "searchInActiveSuggestion": "عُثر على نتائج متطابقة في الحلقات النشطة!",
+  "searchInArchivedSuggestion": "عُثر على نتائج متطابقة في الأرشيف!",
   "searchPh": "Search by halaqa name or assigned teacher name...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectAudiencePlaceholder": "اختر الفئة المستهدفة...",
@@ -1088,6 +1090,8 @@
     "txIdLabel": "Transaction / Reference Number (Optional)",
     "txIdPlaceholder": "Enter transaction number or sender's name"
   },
+  "switchToActiveBtn": "الانتقال إلى الحلقات النشطة",
+  "switchToArchivedBtn": "الانتقال إلى التبويب المؤرشف",
   "targetAudience": "الفئة المستهدفة",
   "targetAudienceLabel": "الفئة المستهدفة",
   "teacher": {

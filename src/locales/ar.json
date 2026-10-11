@@ -734,6 +734,8 @@
   "saveChanges": "حفظ التعديلات",
   "saving": "جاري الحفظ...",
   "search_placeholder": "ابحث عن طالب بالاسم، الهاتف...",
+  "searchInActiveSuggestion": "عُثر على نتائج متطابقة في الحلقات النشطة!",
+  "searchInArchivedSuggestion": "عُثر على نتائج متطابقة في الأرشيف!",
   "searchPlaceholder": "ابحث باسم الحلقة أو المعلم...",
   "selectAudiencePlaceholder": "اختر الفئة المستهدفة...",
   "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)...",
@@ -923,6 +925,8 @@
     "txIdLabel": "رقم عملية التحويل / المرجع (اختياري)",
     "txIdPlaceholder": "أدخل رقم المعاملة أو اسم المحوِّل"
   },
+  "switchToActiveBtn": "الانتقال إلى الحلقات النشطة",
+  "switchToArchivedBtn": "الانتقال إلى التبويب المؤرشف",
   "targetAudienceLabel": "الفئة المستهدفة",
   "teacher": {
     "name": "المعلم"
