@@ -169,7 +169,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa } = useHalaqas(academyId);
+  // تم استخراج filters و setFilters لربطها بـ ActiveHalaqas
+  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa, filters, setFilters } = useHalaqas(academyId);
 
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
@@ -451,37 +452,38 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'classes':
         return isTeacher ? (
           <ActiveHalaqas 
-  halaqas={enrichedHalaqas} 
-  teachers={teachers} 
-  students={students} 
-  academyId={academyId}
-  isLoading={loadingData} 
-  error={null} 
-  isRtl={isRtl} 
-  isMobile={isMobile} 
-  onCreateHalaqa={async (data) => {
-    // التحقق الفعلي والتشخيصي لمعرف الأكاديمية قبل الإرسال
-    const resolvedAcademyId = data?.academy_id || data?.academyId || academyId || session?.user?.user_metadata?.academy_id;
-    
-    if (!resolvedAcademyId) {
-      console.error("🚨 Missing Academy ID in Create Halaqa:", { data, academyId, metadata: session?.user?.user_metadata });
-      alert('خطأ: لم يتم التعرف على معرف الأكاديمية النشطة. يرجى إعادة اختيار الأكاديمية أو تنشيط الصفحة.');
-      return { success: false, error: 'معرف الأكاديمية غير صالح أو مفقود' };
-    }
+            halaqas={enrichedHalaqas} 
+            teachers={teachers} 
+            students={students} 
+            academyId={academyId}
+            filters={filters}
+            setFilters={setFilters}
+            isLoading={loadingData} 
+            error={null} 
+            isRtl={isRtl} 
+            isMobile={isMobile} 
+            onCreateHalaqa={async (data) => {
+              const resolvedAcademyId = data?.academy_id || data?.academyId || academyId || session?.user?.user_metadata?.academy_id;
+              
+              if (!resolvedAcademyId) {
+                console.error("🚨 Missing Academy ID in Create Halaqa:", { data, academyId, metadata: session?.user?.user_metadata });
+                alert('خطأ: لم يتم التعرف على معرف الأكاديمية النشطة. يرجى إعادة اختيار الأكاديمية أو تنشيط الصفحة.');
+                return { success: false, error: 'معرف الأكاديمية غير صالح أو مفقود' };
+              }
 
-    return await createHalaqa({
-      ...data,
-      academy_id: resolvedAcademyId,
-      academyId: resolvedAcademyId
-    });
-  }}
-  onUpdateHalaqa={updateHalaqa}
-  onToggleArchiveHalaqa={toggleArchiveHalaqa}
-  onNavigateToAttendance={(halaqaId) => {
-    setSelectedHalaqaId(halaqaId);
-    handleTabChange('attendance');
-  }}
-/>
+              return await createHalaqa({
+                ...data,
+                academy_id: resolvedAcademyId,
+                academyId: resolvedAcademyId
+              });
+            }}
+            onUpdateHalaqa={updateHalaqa}
+            onToggleArchiveHalaqa={toggleArchiveHalaqa}
+            onNavigateToAttendance={(halaqaId) => {
+              setSelectedHalaqaId(halaqaId);
+              handleTabChange('attendance');
+            }}
+          />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
       case 'attendance':
         return isTeacher ? <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} /> : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
