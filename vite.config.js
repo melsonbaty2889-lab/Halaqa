@@ -23,21 +23,20 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         sourcemap: true,
-        // منع تخزين index.html في الـ Service Worker كاش نهائياً
         navigateFallbackDenylist: [/^\/index\.html$/],
         runtimeCaching: [
           {
-            // كاش استجابات Supabase للعمل بدون إنترنت
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            // استثناء مسارات المصادقة والجلسات الأمنية، وتخزين بيانات القراءة العامة فقط بأمان
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'supabase-api-cache',
+              cacheName: 'supabase-data-cache',
               expiration: {
-                maxEntries: 150,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // حفظ البيانات أوفلاين لمدة أسبوع
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // يوم واحد فقط للبيانات العامة
               },
               cacheableResponse: {
-                statuses: [0, 200]
+                statuses: [200]
               }
             }
           }
@@ -75,12 +74,10 @@ export default defineConfig({
     })
   ],
   build: {
-    // إلغاء تحذير الـ Preload الناتج عن تحميل المكونات الكاسلة (Lazy components)
     modulePreload: false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // إضافة الـ Hash في أسماء الأصول لمنع المتصفح من قراءة النسخ القديمة
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
         assetFileNames: `assets/[name].[hash].[ext]`,
