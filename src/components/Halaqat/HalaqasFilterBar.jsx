@@ -19,19 +19,43 @@ export default function HalaqasFilterBar({
 }) {
   const { t } = useTranslation();
 
-  const extractValue = (val) => {
-    if (val && typeof val === 'object' && 'target' in val) {
-      return val.target.value;
+  // استخراج القيمة بأمان سواء كانت الحدث كامل أو النص مباشرة
+  const handleSearchChange = (val) => {
+    if (typeof setSearchQuery !== 'function') return;
+    
+    let textValue = '';
+    if (val && typeof val === 'object' && val.target) {
+      textValue = val.target.value;
+    } else if (typeof val === 'string') {
+      textValue = val;
+    } else if (val && typeof val === 'object' && 'value' in val) {
+      textValue = val.value;
     }
-    return val;
+
+    setSearchQuery(textValue);
+  };
+
+  const handleTrackChange = (val) => {
+    if (typeof setSelectedTrack !== 'function') return;
+
+    let trackValue = 'all';
+    if (val && typeof val === 'object' && val.target) {
+      trackValue = val.target.value;
+    } else if (typeof val === 'string') {
+      trackValue = val;
+    } else if (val && typeof val === 'object' && 'value' in val) {
+      trackValue = val.value;
+    }
+
+    setSelectedTrack(trackValue);
   };
 
   const trackOptions = getTrackOptions(t);
   const hasActiveFilters = Boolean(searchQuery?.trim()) || selectedTrack !== 'all';
 
   const handleResetFilters = () => {
-    setSearchQuery('');
-    setSelectedTrack('all');
+    if (typeof setSearchQuery === 'function') setSearchQuery('');
+    if (typeof setSelectedTrack === 'function') setSelectedTrack('all');
   };
 
   return (
@@ -40,7 +64,7 @@ export default function HalaqasFilterBar({
       <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
-          onClick={() => setViewMode('active')}
+          onClick={() => setViewMode && setViewMode('active')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'active'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -56,7 +80,7 @@ export default function HalaqasFilterBar({
 
         <button
           type="button"
-          onClick={() => setViewMode('unassigned')}
+          onClick={() => setViewMode && setViewMode('unassigned')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -72,7 +96,7 @@ export default function HalaqasFilterBar({
 
         <button
           type="button"
-          onClick={() => setViewMode('archived')}
+          onClick={() => setViewMode && setViewMode('archived')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -94,7 +118,7 @@ export default function HalaqasFilterBar({
             type="text"
             placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو المعلم...')}
             value={searchQuery}
-            onChange={(v) => setSearchQuery(extractValue(v))}
+            onChange={handleSearchChange}
             icon={<Search size={14} className="text-semantic-textMuted" />}
           />
         </div>
@@ -104,7 +128,7 @@ export default function HalaqasFilterBar({
             <Select
               title={t('selectTrackTitle', 'المسار التعليمي')}
               value={selectedTrack}
-              onChange={(v) => setSelectedTrack(extractValue(v))}
+              onChange={handleTrackChange}
               options={trackOptions}
             />
           </div>
@@ -123,7 +147,7 @@ export default function HalaqasFilterBar({
           <div className="flex sm:hidden items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
             <button
               type="button"
-              onClick={() => setLayoutMode('grid')}
+              onClick={() => setLayoutMode && setLayoutMode('grid')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
                 layoutMode === 'grid' 
                   ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -134,7 +158,7 @@ export default function HalaqasFilterBar({
             </button>
             <button
               type="button"
-              onClick={() => setLayoutMode('list')}
+              onClick={() => setLayoutMode && setLayoutMode('list')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
                 layoutMode === 'list' 
                   ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -149,7 +173,7 @@ export default function HalaqasFilterBar({
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
           <button
             type="button"
-            onClick={() => setLayoutMode('grid')}
+            onClick={() => setLayoutMode && setLayoutMode('grid')}
             className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
               layoutMode === 'grid' 
                 ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -160,7 +184,7 @@ export default function HalaqasFilterBar({
           </button>
           <button
             type="button"
-            onClick={() => setLayoutMode('list')}
+            onClick={() => setLayoutMode && setLayoutMode('list')}
             className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
               layoutMode === 'list' 
                 ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
