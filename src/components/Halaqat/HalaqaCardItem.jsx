@@ -199,36 +199,66 @@ export default function HalaqaCardItem({
         )}
       </div>
 
-      {/* أزرار الإجراءات */}
+      {/* أزرار الإجراءات الديناميكية */}
       <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
-        <button 
-          type="button"
-          onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-          className={`${UI.btnEmerald} col-span-7 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0`}
-          title={t('goToAttendance', 'الجلسة المباشرة')}
-        >
-          <Video size={13} className="shrink-0" />
-          <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
-        </button>
+        {isArchived ? (
+          <>
+            {/* في حالة الحلقات المؤرشفة: زر التنشيط هو الأساسي والبارز */}
+            <button 
+              type="button"
+              onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+              className={`${UI.btnEmerald} col-span-9 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0`}
+            >
+              <span className="truncate">{t('activate', 'تنشيط')}</span>
+            </button>
 
-        {onEditHalaqa && (
-          <button
-            type="button"
-            onClick={() => onEditHalaqa(halaqa)}
-            className={`${UI.btnSecondary} col-span-2 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl`}
-            title={t('edit', 'تعديل')}
-          >
-            <Edit3 size={14} />
-          </button>
+            {/* زر التعديل */}
+            {onEditHalaqa && (
+              <button
+                type="button"
+                onClick={() => onEditHalaqa(halaqa)}
+                className={`${UI.btnSecondary} col-span-3 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl`}
+                title={t('edit', 'تعديل')}
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            {/* في حالة الحلقات النشطة: الجلسة المباشرة هي الأساسية */}
+            <button 
+              type="button"
+              onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
+              className={`${UI.btnEmerald} col-span-7 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0`}
+              title={t('goToAttendance', 'الجلسة المباشرة')}
+            >
+              <Video size={13} className="shrink-0" />
+              <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
+            </button>
+
+            {/* زر التعديل */}
+            {onEditHalaqa && (
+              <button
+                type="button"
+                onClick={() => onEditHalaqa(halaqa)}
+                className={`${UI.btnSecondary} col-span-2 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl`}
+                title={t('edit', 'تعديل')}
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
+
+            {/* زر الأرشفة */}
+            <button 
+              type="button"
+              onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+              className={`${UI.btnSecondary} col-span-3 py-2 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate`}
+            >
+              <span className="truncate">{t('archive', 'أرشفة')}</span>
+            </button>
+          </>
         )}
-
-        <button 
-          type="button"
-          onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-          className={`${UI.btnSecondary} col-span-3 py-2 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate`}
-        >
-          <span className="truncate">{isArchived ? t('activate', 'تنشيط') : t('archive', 'أرشفة')}</span>
-        </button>
       </div>
     </div>
   );
