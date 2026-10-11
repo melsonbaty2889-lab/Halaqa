@@ -15,13 +15,16 @@
     <meta name="google" content="notranslate" />
 
     <!-- Favicon & PWA Manifest -->
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/pwa-192x192.png" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#050811" />
-    <!-- التحديث: استبدال الوسم القديم بوسم PWA المحدث لتفادي تحذيرات المتصفح -->
+    <meta name="theme-color" content="#090F17" />
+    
+    <!-- PWA & Apple Support -->
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="الحلقة الذكية" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
 
     <!-- منع تعديل الألوان التلقائي (Dark Mode Extensions / Force Dark) -->
     <meta name="darkreader-lock" />
@@ -30,7 +33,7 @@
     <!-- 3. تفريغ الـ Cache والـ Service Workers المسجلة قديمة تلقائياً -->
     <script>
       (function () {
-        const CURRENT_VERSION = '1.0.3'; // ترقية الإصدار عند النشر
+        const CURRENT_VERSION = '1.0.4'; // ترقية الإصدار لمسح التخزين القديم
         const savedVersion = localStorage.getItem('app_version');
 
         if (savedVersion !== CURRENT_VERSION) {
@@ -72,7 +75,7 @@
       }
     </script>
   </head>
-  <body class="bg-[#050811] text-slate-100 antialiased overflow-x-hidden">
+  <body class="bg-[#090F17] text-slate-100 antialiased overflow-x-hidden">
 
     <div id="root"></div>
     
