@@ -1,4 +1,4 @@
-جط/* src/components/UI/SmartHalaqaProLogo.jsx */
+/* src/components/UI/SmartHalaqaProLogo.jsx */
 import React, { useId } from 'react';
 import C from '@/theme/colors';
 
