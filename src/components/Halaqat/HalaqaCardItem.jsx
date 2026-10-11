@@ -75,6 +75,7 @@ export default function HalaqaCardItem({
   const endTimeFormatted = renderFormattedTime(halaqa?.end_time);
 
   const isArchived = Boolean(halaqa?.is_archived);
+  const isListView = layoutMode === 'list';
 
   // التعيين السريع للمعلم
   const handleSelectTeacher = async (teacherId) => {
@@ -95,8 +96,9 @@ export default function HalaqaCardItem({
   };
 
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-visible relative`}>
-      <div>
+    <div className={`${UI.card} flex ${isListView ? 'flex-row items-center justify-between flex-wrap md:flex-nowrap' : 'flex-col justify-between'} gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-visible relative`}>
+      {/* القسم الرئيسي للمعلومات (يتكيف حسب وضع العرض) */}
+      <div className={`flex flex-col justify-center ${isListView ? 'flex-1 min-w-[200px]' : 'w-full'}`}>
         {/* عنوان الحلقة وحالتها */}
         <div className="flex justify-between items-start gap-2 mb-2">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
@@ -199,8 +201,8 @@ export default function HalaqaCardItem({
         )}
       </div>
 
-      {/* أزرار الإجراءات الديناميكية */}
-      <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
+      {/* أزرار الإجراءات الديناميكية (تتأثر بـ layoutMode و isArchived) */}
+      <div className={`grid grid-cols-12 items-center gap-1.5 ${isListView ? 'border-t md:border-t-0 md:border-r md:pr-3 pt-3 md:pt-0 mt-1 md:mt-0 w-full md:w-auto shrink-0' : 'border-t border-semantic-borderCard pt-3 mt-1 w-full'}`}>
         {isArchived ? (
           <>
             {/* في حالة الحلقات المؤرشفة: زر التنشيط هو الأساسي والبارز */}
