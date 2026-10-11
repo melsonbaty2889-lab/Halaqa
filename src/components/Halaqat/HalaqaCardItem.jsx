@@ -1,7 +1,7 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
 
-import React from 'react';
-import { User, Clock, Video, AlertCircle, Edit3 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
@@ -9,15 +9,32 @@ import { formatTimeString } from '@/utils/dateUtils';
 
 export default function HalaqaCardItem({ 
   halaqa, 
+  teachers = [],
   viewMode = 'active', 
   layoutMode = 'grid',
   getLocalizedText, 
   onNavigateToAttendance, 
   onToggleArchiveHalaqa,
-  onEditHalaqa
+  onEditHalaqa,
+  onUpdateHalaqa
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
+
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+  const [isUpdatingTeacher, setIsUpdatingTeacher] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // إغلاق القائمة المنسدلة عند النقر خارجها
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsTeacherDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const halaqaName = getLocalizedContent(halaqa?.name, currentLang, getLocalizedText) || halaqa?.name_text;
   
@@ -28,6 +45,14 @@ export default function HalaqaCardItem({
     teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, currentLang, getLocalizedText) || rawTeacher.email;
   } else if (typeof rawTeacher === 'string') {
     teacherName = rawTeacher;
+  }
+
+  // البحث عن اسم المعلم من قائمة teachers الممررة إذا توفر id
+  if (!teacherName && halaqa?.teacher_id && Array.isArray(teachers)) {
+    const foundTeacher = teachers.find(t => String(t.id) === String(halaqa.teacher_id));
+    if (foundTeacher) {
+      teacherName = getLocalizedContent(foundTeacher.name || foundTeacher.full_name, currentLang, getLocalizedText) || foundTeacher.email;
+    }
   }
 
   const hasTeacher = Boolean(teacherName || halaqa?.teacher_id);
@@ -51,8 +76,26 @@ export default function HalaqaCardItem({
 
   const isArchived = Boolean(halaqa?.is_archived);
 
+  // التعيين السريع للمعلم
+  const handleSelectTeacher = async (teacherId) => {
+    setIsTeacherDropdownOpen(false);
+    if (!onUpdateHalaqa || isUpdatingTeacher) return;
+
+    setIsUpdatingTeacher(true);
+    try {
+      await onUpdateHalaqa({
+        ...halaqa,
+        teacher_id: teacherId || null
+      });
+    } catch (error) {
+      console.error("Failed to assign teacher:", error);
+    } finally {
+      setIsUpdatingTeacher(false);
+    }
+  };
+
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-hidden`}>
+    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-visible relative`}>
       <div>
         {/* عنوان الحلقة وحالتها */}
         <div className="flex justify-between items-start gap-2 mb-2">
@@ -71,19 +114,76 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* معلومات المعلم */}
-        <div className="flex items-center gap-1.5 text-xs text-semantic-textSecondary mb-2">
-          {hasTeacher ? (
-            <>
-              <User size={14} className="text-semantic-actionPrimary shrink-0" />
-              <span className="truncate font-semibold">
-                {teacherName || t('unnamedTeacher', 'معلم غير محدد')}
-              </span>
-            </>
-          ) : (
-            <div className="flex items-center gap-1.5 text-semantic-actionPrimary bg-semantic-actionPrimary/10 px-2 py-1 rounded-lg border border-semantic-actionPrimary/20 w-full">
-              <AlertCircle size={13} className="shrink-0" />
-              <span className="text-[11px] font-bold">{t('unassigned', 'بانتظار تعيين معتمد')}</span>
+        {/* معلومات المعلم مع التعيين السريع */}
+        <div className="relative mb-2" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
+            disabled={isUpdatingTeacher}
+            className={`w-full flex items-center justify-between gap-1.5 text-xs p-1.5 rounded-lg transition-colors border cursor-pointer ${
+              hasTeacher 
+                ? 'text-semantic-textSecondary bg-semantic-surfaceInput/40 border-semantic-borderCard hover:border-semantic-actionPrimary/40' 
+                : 'text-semantic-actionPrimary bg-semantic-actionPrimary/10 border-semantic-actionPrimary/20 hover:bg-semantic-actionPrimary/20'
+            }`}
+            title={t('clickToAssignTeacher', 'انقر لتعيين/تغيير المعلم سريعاً')}
+          >
+            <div className="flex items-center gap-1.5 truncate">
+              {hasTeacher ? (
+                <>
+                  <User size={14} className="text-semantic-actionPrimary shrink-0" />
+                  <span className="truncate font-semibold">
+                    {teacherName || t('unnamedTeacher', 'معلم غير محدد')}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span className="text-[11px] font-bold">{t('unassigned', 'بانتظار تعيين معتمد')}</span>
+                </>
+              )}
+            </div>
+            <ChevronDown size={13} className={`shrink-0 transition-transform ${isTeacherDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* القائمة المنسدلة لاختيار المعلم */}
+          {isTeacherDropdownOpen && (
+            <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 animate-fade-in">
+              <button
+                type="button"
+                onClick={() => handleSelectTeacher(null)}
+                className="w-full text-right px-2.5 py-1.5 text-xs text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer"
+              >
+                <span>{t('unassignTeacherOption', 'بدون معلم (غير معين)')}</span>
+                {!halaqa?.teacher_id && <Check size={12} className="text-semantic-actionPrimary" />}
+              </button>
+
+              <div className="my-1 border-t border-semantic-borderCard" />
+
+              {Array.isArray(teachers) && teachers.length > 0 ? (
+                teachers.map((teacher) => {
+                  const name = getLocalizedContent(teacher.name || teacher.full_name, currentLang, getLocalizedText) || teacher.email;
+                  const isSelected = String(halaqa?.teacher_id) === String(teacher.id);
+                  return (
+                    <button
+                      key={teacher.id}
+                      type="button"
+                      onClick={() => handleSelectTeacher(teacher.id)}
+                      className={`w-full text-right px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
+                        isSelected 
+                          ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary' 
+                          : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                      }`}
+                    >
+                      <span className="truncate">{name}</span>
+                      {isSelected && <Check size={12} className="text-semantic-actionPrimary" />}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="px-2.5 py-2 text-[11px] text-semantic-textMuted text-center">
+                  {t('noTeachersAvailable', 'لا يوجد معلمون مسجلون')}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -99,7 +199,7 @@ export default function HalaqaCardItem({
         )}
       </div>
 
-      {/* أزرار الإجراءات - محسنة لتتطابق تماماً مع حدود البطاقة بدون أي خروج */}
+      {/* أزرار الإجراءات */}
       <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
         <button 
           type="button"
