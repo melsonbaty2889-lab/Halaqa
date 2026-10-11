@@ -1,7 +1,7 @@
 /* src/components/Halaqat/ActiveHalaqas.jsx */
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, Archive, CheckCircle2, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -38,19 +38,15 @@ export default function ActiveHalaqas({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   
-  // استدعاء آمن لـ useAcademySettings مع توفير بديل محلي
   const academySettings = useAcademySettings() || {};
   const externalGetLocalizedText = academySettings.getLocalizedText;
 
-  // دالة مساعدة محلية وآمنة تماماً لاستخراج النصوص المترجمة دون أي أخطاء
   const safeGetLocalizedText = (val) => {
     if (typeof externalGetLocalizedText === 'function') {
       try {
         const res = externalGetLocalizedText(val);
         if (res) return String(res);
-      } catch (e) {
-        // تجاهل الخطأ والاعتصام بالبديل المحلي
-      }
+      } catch (e) {}
     }
     
     if (val === null || val === undefined) return '';
@@ -69,7 +65,6 @@ export default function ActiveHalaqas({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(() => getEmptyFormData(academyId));
 
-  // تحديد الـ viewMode الحالي
   const viewMode = filters.is_archived ? 'archived' : (filters.status === 'unassigned' ? 'unassigned' : 'active');
 
   const setViewMode = (mode) => {
@@ -84,7 +79,6 @@ export default function ActiveHalaqas({
     }
   };
 
-  // حساب الإحصائيات بأمان
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
@@ -107,7 +101,7 @@ export default function ActiveHalaqas({
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
-  // الفلترة المحلية الفورية والآمنة
+  // الفلترة المحلية الفورية
   const filteredHalaqas = useMemo(() => {
     if (!Array.isArray(halaqas)) return [];
 
@@ -115,7 +109,6 @@ export default function ActiveHalaqas({
       if (!halaqa) return false;
       const isArchived = Boolean(halaqa.is_archived);
 
-      // 1. فلترة حسب تبويب العرض الحالي
       if (viewMode === 'archived' && !isArchived) return false;
       if (viewMode === 'active' && isArchived) return false;
       if (viewMode === 'unassigned') {
@@ -124,13 +117,11 @@ export default function ActiveHalaqas({
         if (hasTeacher) return false;
       }
 
-      // 2. فلترة المسار التعليمي
       const trackVal = halaqa.educational_track || halaqa.track;
       if (selectedTrack !== 'all' && trackVal !== selectedTrack) {
         return false;
       }
 
-      // 3. فلترة البحث بشكل آمن ومحمي
       if (typeof searchQuery === 'string' && searchQuery.trim() !== '') {
         const query = searchQuery.trim().toLowerCase();
         const nameStr = safeGetLocalizedText(halaqa.name).toLowerCase();
@@ -143,6 +134,55 @@ export default function ActiveHalaqas({
       return true;
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, currentLang]);
+
+  // التحقق الفوري هل يوجد نصوص تطابق البحث في التبويبات الأخرى
+  const otherTabsSearchResult = useMemo(() => {
+    if (!searchQuery?.trim() || filteredHalaqas.length > 0 || !Array.isArray(halaqas)) {
+      return null;
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    
+    // البحث في الحلقات المؤرشفة أثناء وجودنا في النشطة
+    if (viewMode !== 'archived') {
+      const archivedMatch = halaqas.find((h) => {
+        if (!h?.is_archived) return false;
+        const nameStr = safeGetLocalizedText(h.name).toLowerCase();
+        const teacherStr = safeGetLocalizedText(h.teacher_name || h.teacher).toLowerCase();
+        return nameStr.includes(query) || teacherStr.includes(query);
+      });
+
+      if (archivedMatch) {
+        return {
+          targetMode: 'archived',
+          label: t('searchInArchivedSuggestion', 'عُثر على نتائج متطابقة في الأرشيف!'),
+          btnText: t('switchToArchivedBtn', 'الانتقال إلى التبويب المؤرشف'),
+          icon: Archive
+        };
+      }
+    }
+
+    // البحث في الحلقات النشطة أثناء وجودنا في الأرشيف
+    if (viewMode === 'archived') {
+      const activeMatch = halaqas.find((h) => {
+        if (h?.is_archived) return false;
+        const nameStr = safeGetLocalizedText(h.name).toLowerCase();
+        const teacherStr = safeGetLocalizedText(h.teacher_name || h.teacher).toLowerCase();
+        return nameStr.includes(query) || teacherStr.includes(query);
+      });
+
+      if (activeMatch) {
+        return {
+          targetMode: 'active',
+          label: t('searchInActiveSuggestion', 'عُثر على نتائج متطابقة في الحلقات النشطة!'),
+          btnText: t('switchToActiveBtn', 'الانتقال إلى الحلقات النشطة'),
+          icon: CheckCircle2
+        };
+      }
+    }
+
+    return null;
+  }, [searchQuery, filteredHalaqas, halaqas, viewMode, t]);
 
   const handleOpenCreateModal = () => {
     setFormData(getEmptyFormData(academyId));
@@ -234,7 +274,7 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
-      {/* عرض القائمة أو الشبكة */}
+      {/* شبكة/قائمة العرض */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
@@ -257,18 +297,39 @@ export default function ActiveHalaqas({
           ))}
         </div>
       ) : (
-        <div className={`${UI.card} text-center py-12 px-4 flex flex-col items-center justify-center`}>
-          <div className="p-4 rounded-2xl bg-semantic-surfaceInput/80 mb-3 border border-semantic-borderCard">
+        <div className={`${UI.card} text-center py-12 px-4 flex flex-col items-center justify-center space-y-3`}>
+          <div className="p-4 rounded-2xl bg-semantic-surfaceInput/80 border border-semantic-borderCard">
             <Users size={32} className="text-semantic-textMuted opacity-70" />
           </div>
-          <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
-            {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
-          </h3>
-          <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
-            {searchQuery
-              ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي.')
-              : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
-          </p>
+          <div>
+            <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
+              {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
+            </h3>
+            <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
+              {searchQuery
+                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.')
+                : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
+            </p>
+          </div>
+
+          {/* مقترح البحث الشامل السريع والتوجيه الذكي */}
+          {otherTabsSearchResult && (
+            <div className="pt-2 animate-fade-in">
+              <div className="p-3 bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 rounded-xl max-w-sm mx-auto space-y-2">
+                <p className="text-xs font-bold text-semantic-actionPrimary flex items-center justify-center gap-1.5">
+                  {React.createElement(otherTabsSearchResult.icon, { size: 14 })}
+                  <span>{otherTabsSearchResult.label}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setViewMode(otherTabsSearchResult.targetMode)}
+                  className="w-full py-2 px-3 bg-semantic-actionPrimary text-white font-bold text-xs rounded-lg shadow-sm hover:opacity-90 transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>{otherTabsSearchResult.btnText}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
