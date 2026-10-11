@@ -4,7 +4,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input, Select } from '@/components/UI';
-import { getTrackOptions } from './HalaqaConstants';
+
+// استيراد آمن مع دعم الفولباك في حال عدم وجود الملف أو الدالة
+import * as Constants from './HalaqaConstants';
 
 export default function HalaqasFilterBar({
   searchQuery = '',
@@ -19,38 +21,30 @@ export default function HalaqasFilterBar({
 }) {
   const { t } = useTranslation();
 
-  // استخراج القيمة بأمان سواء كانت الحدث كامل أو النص مباشرة
-  const handleSearchChange = (val) => {
+  // الحصول على خيارات المسارات بشكل آمن 100%
+  const getTracks = Constants.getTrackOptions || (() => [
+    { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
+    { value: 'hifz', label: t('trackHifz', 'حفظ القرآن') },
+    { value: 'tilawah', label: t('trackTilawah', 'التلاوة والتجويد') },
+    { value: 'mutun', label: t('trackMutun', 'المتون العلمية') }
+  ]);
+
+  const trackOptions = typeof getTracks === 'function' ? getTracks(t) : [];
+
+  // التعامل الآمن مع حقل البحث
+  const handleSearchChange = (e) => {
     if (typeof setSearchQuery !== 'function') return;
-    
-    let textValue = '';
-    if (val && typeof val === 'object' && val.target) {
-      textValue = val.target.value;
-    } else if (typeof val === 'string') {
-      textValue = val;
-    } else if (val && typeof val === 'object' && 'value' in val) {
-      textValue = val.value;
-    }
-
-    setSearchQuery(textValue);
+    const value = e && typeof e === 'object' && 'target' in e ? e.target.value : (e ?? '');
+    setSearchQuery(value);
   };
 
-  const handleTrackChange = (val) => {
+  // التعامل الآمن مع اختيار المسار
+  const handleTrackChange = (e) => {
     if (typeof setSelectedTrack !== 'function') return;
-
-    let trackValue = 'all';
-    if (val && typeof val === 'object' && val.target) {
-      trackValue = val.target.value;
-    } else if (typeof val === 'string') {
-      trackValue = val;
-    } else if (val && typeof val === 'object' && 'value' in val) {
-      trackValue = val.value;
-    }
-
-    setSelectedTrack(trackValue);
+    const value = e && typeof e === 'object' && 'target' in e ? e.target.value : (e ?? 'all');
+    setSelectedTrack(value);
   };
 
-  const trackOptions = getTrackOptions(t);
   const hasActiveFilters = Boolean(searchQuery?.trim()) || selectedTrack !== 'all';
 
   const handleResetFilters = () => {
@@ -64,7 +58,7 @@ export default function HalaqasFilterBar({
       <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
-          onClick={() => setViewMode && setViewMode('active')}
+          onClick={() => typeof setViewMode === 'function' && setViewMode('active')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'active'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -80,7 +74,7 @@ export default function HalaqasFilterBar({
 
         <button
           type="button"
-          onClick={() => setViewMode && setViewMode('unassigned')}
+          onClick={() => typeof setViewMode === 'function' && setViewMode('unassigned')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -96,7 +90,7 @@ export default function HalaqasFilterBar({
 
         <button
           type="button"
-          onClick={() => setViewMode && setViewMode('archived')}
+          onClick={() => typeof setViewMode === 'function' && setViewMode('archived')}
           className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
@@ -147,7 +141,7 @@ export default function HalaqasFilterBar({
           <div className="flex sm:hidden items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
             <button
               type="button"
-              onClick={() => setLayoutMode && setLayoutMode('grid')}
+              onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('grid')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
                 layoutMode === 'grid' 
                   ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -158,7 +152,7 @@ export default function HalaqasFilterBar({
             </button>
             <button
               type="button"
-              onClick={() => setLayoutMode && setLayoutMode('list')}
+              onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('list')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
                 layoutMode === 'list' 
                   ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -173,7 +167,7 @@ export default function HalaqasFilterBar({
         <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
           <button
             type="button"
-            onClick={() => setLayoutMode && setLayoutMode('grid')}
+            onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('grid')}
             className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
               layoutMode === 'grid' 
                 ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
@@ -184,7 +178,7 @@ export default function HalaqasFilterBar({
           </button>
           <button
             type="button"
-            onClick={() => setLayoutMode && setLayoutMode('list')}
+            onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('list')}
             className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
               layoutMode === 'list' 
                 ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
