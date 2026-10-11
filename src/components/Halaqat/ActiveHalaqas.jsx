@@ -1,7 +1,7 @@
 /* src/components/Halaqat/ActiveHalaqas.jsx */
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Users, Archive, CheckCircle2, Search } from 'lucide-react';
+import { Plus, Users, Archive, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
@@ -287,12 +287,14 @@ export default function ActiveHalaqas({
             <HalaqaCardItem
               key={halaqa.id}
               halaqa={halaqa}
+              teachers={teachers}
               viewMode={viewMode}
               layoutMode={layoutMode}
               getLocalizedText={safeGetLocalizedText}
               onNavigateToAttendance={onNavigateToAttendance}
               onToggleArchiveHalaqa={onToggleArchiveHalaqa}
               onEditHalaqa={handleOpenEditModal}
+              onUpdateHalaqa={onUpdateHalaqa}
             />
           ))}
         </div>
