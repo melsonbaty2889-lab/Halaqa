@@ -28,7 +28,6 @@ export default function HalaqasFilterBar({
 
   const trackOptions = typeof getTracks === 'function' ? getTracks(t) : [];
 
-  // معالجة آمنة 100% لتجنب أي خطأ نوع البيانات عند الكتابة
   const handleSearchChange = (e) => {
     if (typeof setSearchQuery !== 'function') return;
     
@@ -123,7 +122,8 @@ export default function HalaqasFilterBar({
 
       {/* 2. عناصر البحث والفلترة والتحكم بالنمط */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div className="flex-1">
+        {/* خانة البحث مع زر مسح داخلي سريع */}
+        <div className="relative flex-1">
           <Input
             type="text"
             placeholder={t('searchPlaceholder', 'ابحث باسم الحلقة أو المعلم...')}
@@ -131,6 +131,16 @@ export default function HalaqasFilterBar({
             onChange={handleSearchChange}
             icon={<Search size={14} className="text-semantic-textMuted" />}
           />
+          {searchQuery && searchQuery.trim() !== '' && (
+            <button
+              type="button"
+              onClick={() => typeof setSearchQuery === 'function' && setSearchQuery('')}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-semantic-textMuted hover:text-semantic-textPrimary transition-colors p-1 rounded-full bg-semantic-surfaceInput/50 hover:bg-semantic-surfaceInput cursor-pointer border-none flex items-center justify-center"
+              title={t('clearSearch', 'مسح البحث')}
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
 
         <div className="w-full sm:w-64 shrink-0 flex items-center gap-1.5">
