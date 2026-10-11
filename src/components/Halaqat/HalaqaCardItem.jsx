@@ -93,15 +93,15 @@ export default function HalaqaCardItem({
   };
 
   // ==========================================
-  // 1. وضع القائمة المدمج (List View - Compact)
+  // 1. وضع القائمة (List View - Clean Row Layout)
   // ==========================================
   if (isListView) {
     return (
-      <div className={`${UI.card} p-3 hover:border-semantic-borderHover transition-all w-full relative flex flex-col gap-2.5`}>
-        <div className="flex items-center justify-between gap-2">
-          {/* الاسم والحالة */}
-          <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 truncate">
+      <div className={`${UI.card} p-3 hover:border-semantic-borderHover transition-all w-full relative flex items-center justify-between gap-3 overflow-visible`}>
+        {/* القسم الأيمن: الاسم والحالة والمعلم */}
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="text-xs font-extrabold text-semantic-textPrimary m-0 truncate">
               {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
             </h4>
             {isArchived ? (
@@ -115,114 +115,99 @@ export default function HalaqaCardItem({
             )}
           </div>
 
-          {/* التوقيت المدمج */}
-          {(startTimeFormatted || endTimeFormatted) && (
-            <div className="flex items-center gap-1 text-[10px] text-semantic-textSecondary shrink-0 bg-semantic-surfaceInput/40 px-2 py-0.5 rounded-md">
-              <Clock size={11} className="text-semantic-textMuted" />
-              <span className="font-semibold">{startTimeFormatted}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-semantic-borderCard/60">
-          {/* المعلم */}
-          <div className="relative flex-1 min-w-0" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
-              disabled={isUpdatingTeacher}
-              className={`w-full flex items-center justify-between gap-1 text-[11px] p-1.5 rounded-lg border cursor-pointer ${
-                hasTeacher 
-                  ? 'text-semantic-textSecondary bg-semantic-surfaceInput/30 border-semantic-borderCard' 
-                  : 'text-semantic-actionPrimary bg-semantic-actionPrimary/10 border-semantic-actionPrimary/20'
-              }`}
-            >
-              <div className="flex items-center gap-1 truncate">
-                {hasTeacher ? (
-                  <>
-                    <User size={12} className="text-semantic-actionPrimary shrink-0" />
-                    <span className="truncate font-semibold">{teacherName}</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle size={12} className="shrink-0" />
-                    <span className="font-bold truncate">{t('unassigned', 'غير معين')}</span>
-                  </>
-                )}
-              </div>
-              <ChevronDown size={12} className={`shrink-0 transition-transform ${isTeacherDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {isTeacherDropdownOpen && (
-              <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-40 overflow-y-auto p-1 space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleSelectTeacher(null)}
-                  className="w-full text-right px-2 py-1 text-[11px] text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer"
-                >
-                  <span>{t('unassignTeacherOption', 'بدون معلم')}</span>
-                  {!halaqa?.teacher_id && <Check size={11} className="text-semantic-actionPrimary" />}
-                </button>
-                {Array.isArray(teachers) && teachers.map((teacher) => {
-                  const name = getLocalizedContent(teacher.name || teacher.full_name, currentLang, getLocalizedText) || teacher.email;
-                  const isSelected = String(halaqa?.teacher_id) === String(teacher.id);
-                  return (
-                    <button
-                      key={teacher.id}
-                      type="button"
-                      onClick={() => handleSelectTeacher(teacher.id)}
-                      className={`w-full text-right px-2 py-1 text-[11px] font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
-                        isSelected ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary' : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                      }`}
-                    >
-                      <span className="truncate">{name}</span>
-                      {isSelected && <Check size={11} className="text-semantic-actionPrimary" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* أزرار الإجراءات السريعة المصغرة */}
-          <div className="flex items-center gap-1 shrink-0">
-            {isArchived ? (
-              <button 
-                type="button"
-                onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-                className={`${UI.btnEmerald} px-3 py-1.5 text-[11px] font-extrabold flex items-center justify-center rounded-lg`}
-              >
-                <span>{t('activate', 'تنشيط')}</span>
-              </button>
-            ) : (
-              <button 
-                type="button"
-                onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-                className={`${UI.btnEmerald} px-2.5 py-1.5 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg`}
-              >
-                <Video size={12} />
-                <span>{t('goToAttendance', 'الجلسة')}</span>
-              </button>
-            )}
-
-            {onEditHalaqa && (
+          <div className="flex items-center gap-2 text-[11px] text-semantic-textSecondary">
+            {/* المعلم المبسط */}
+            <div className="relative inline-block" ref={dropdownRef}>
               <button
                 type="button"
-                onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg`}
-                title={t('edit', 'تعديل')}
+                onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
+                disabled={isUpdatingTeacher}
+                className="flex items-center gap-1 text-[11px] text-semantic-textSecondary bg-semantic-surfaceInput/50 px-2 py-0.5 rounded-md border border-semantic-borderCard cursor-pointer hover:border-semantic-actionPrimary/50"
               >
-                <Edit3 size={13} />
+                <User size={11} className="text-semantic-actionPrimary shrink-0" />
+                <span className="truncate max-w-[100px]">{teacherName || t('unassigned', 'غير معين')}</span>
+                <ChevronDown size={10} className="shrink-0" />
               </button>
+
+              {isTeacherDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl w-48 max-h-40 overflow-y-auto p-1 space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTeacher(null)}
+                    className="w-full text-right px-2 py-1 text-[11px] text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer"
+                  >
+                    <span>{t('unassignTeacherOption', 'بدون معلم')}</span>
+                    {!halaqa?.teacher_id && <Check size={11} className="text-semantic-actionPrimary" />}
+                  </button>
+                  {Array.isArray(teachers) && teachers.map((teacher) => {
+                    const name = getLocalizedContent(teacher.name || teacher.full_name, currentLang, getLocalizedText) || teacher.email;
+                    const isSelected = String(halaqa?.teacher_id) === String(teacher.id);
+                    return (
+                      <button
+                        key={teacher.id}
+                        type="button"
+                        onClick={() => handleSelectTeacher(teacher.id)}
+                        className={`w-full text-right px-2 py-1 text-[11px] font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
+                          isSelected ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary' : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                        }`}
+                      >
+                        <span className="truncate">{name}</span>
+                        {isSelected && <Check size={11} className="text-semantic-actionPrimary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* الوقت */}
+            {startTimeFormatted && (
+              <span className="text-[10px] text-semantic-textMuted flex items-center gap-1">
+                <Clock size={10} />
+                <span>{startTimeFormatted}</span>
+              </span>
             )}
           </div>
+        </div>
+
+        {/* القسم الأيسر: أزرار الإجراءات السريعة */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isArchived ? (
+            <button 
+              type="button"
+              onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+              className={`${UI.btnEmerald} px-3 py-1.5 text-[11px] font-extrabold flex items-center justify-center rounded-lg`}
+            >
+              <span>{t('activate', 'تنشيط')}</span>
+            </button>
+          ) : (
+            <button 
+              type="button"
+              onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
+              className={`${UI.btnEmerald} px-2.5 py-1.5 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg`}
+            >
+              <Video size={12} />
+              <span>{t('goToAttendance', 'الجلسة')}</span>
+            </button>
+          )}
+
+          {onEditHalaqa && (
+            <button
+              type="button"
+              onClick={() => onEditHalaqa(halaqa)}
+              className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg`}
+              title={t('edit', 'تعديل')}
+            >
+              <Edit3 size={13} />
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   // ==========================================
-  // 2. وضع الشبكة القياسي (Grid View - Full Card)
+  // 2. وضع الشبكة (Grid View - Standard Card)
   // ==========================================
   return (
     <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-visible relative`}>
