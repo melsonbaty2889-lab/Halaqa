@@ -169,7 +169,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  // تم استخراج filters و setFilters لربطها بـ ActiveHalaqas
   const { createHalaqa, updateHalaqa, toggleArchiveHalaqa, filters, setFilters } = useHalaqas(academyId);
 
   const getDefaultTabForRole = useCallback((role) => {
@@ -471,14 +470,36 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
                 return { success: false, error: 'معرف الأكاديمية غير صالح أو مفقود' };
               }
 
-              return await createHalaqa({
+              const res = await createHalaqa({
                 ...data,
                 academy_id: resolvedAcademyId,
                 academyId: resolvedAcademyId
               });
+              
+              if (res && res.success !== false) {
+                fetchSubResources(academyId, true);
+              }
+              return res;
             }}
-            onUpdateHalaqa={updateHalaqa}
-            onToggleArchiveHalaqa={toggleArchiveHalaqa}
+            onUpdateHalaqa={async (data) => {
+              const res = await updateHalaqa(data);
+              if (res && res.success !== false) {
+                fetchSubResources(academyId, true);
+              }
+              return res;
+            }}
+            onToggleArchiveHalaqa={async (halaqaId, currentArchived) => {
+              const res = await toggleArchiveHalaqa(halaqaId, currentArchived);
+              if (res && res.success !== false) {
+                // تحديث الحالة المحلية فوراً وانتقال الحلقة للتبويب الآخر لحظياً
+                setHalaqas(prev =>
+                  prev.map(h =>
+                    h.id === halaqaId ? { ...h, is_archived: !currentArchived } : h
+                  )
+                );
+              }
+              return res;
+            }}
             onNavigateToAttendance={(halaqaId) => {
               setSelectedHalaqaId(halaqaId);
               handleTabChange('attendance');
