@@ -1,6 +1,6 @@
 /* src/main.jsx */
 
-// 0. كاشف الأخطاء المباشر للشاشة مع معالجة ذكية لأخطاء الـ Dynamic Imports القديمة
+// معالجة آمنة لأخطاء الإقلاع وأخطاء التحميل الديناميكي للوحدات القديمة
 window.onerror = function (message, source, lineno, colno, error) {
   const isChunkError = 
     (message && typeof message === 'string' && (message.includes('Dynamically imported module') || message.includes('Failed to fetch') || message.includes('Importing a module script failed'))) ||
@@ -8,17 +8,27 @@ window.onerror = function (message, source, lineno, colno, error) {
 
   if (isChunkError) {
     const reloadKey = 'pwa_reload_attempt_' + source;
-    const hasReloaded = sessionStorage.getItem(reloadKey);
-    if (!hasReloaded) {
+    if (!sessionStorage.getItem(reloadKey)) {
       sessionStorage.setItem(reloadKey, 'true');
-      window.location.reload(true);
+      window.location.reload();
       return;
     }
   }
 
+  // في بيئة الإنتاج، لا تعرض تفاصيل الأخطاء الحساسة للمستخدم نهائياً
+  if (import.meta.env.PROD) return;
+
   const errorBox = document.createElement('div');
   errorBox.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#111;color:#ff5555;padding:20px;z-index:99999;overflow:auto;font-family:monospace;font-size:12px;direction:ltr;text-align:left;';
-  errorBox.innerHTML = '<h3>⚠️ Runtime Error Found:</h3><p><b>Message:</b> ' + message + '</p><p><b>File:</b> ' + source + '</p><p><b>Line:</b> ' + lineno + ':' + colno + '</p><pre>' + (error && error.stack ? error.stack : '') + '</pre>';
+  
+  const title = document.createElement('h3');
+  title.textContent = '⚠️ Runtime Error Found:';
+  errorBox.appendChild(title);
+
+  const msgP = document.createElement('p');
+  msgP.textContent = 'Message: ' + message;
+  errorBox.appendChild(msgP);
+
   document.body.appendChild(errorBox);
 };
 
@@ -26,24 +36,19 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-// 1. إدارة استعلامات البيانات
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 
-// 2. إعدادات الأنماط واللغات
 import '@/index.css';
 import '@/locales/i18n';
 
-// 3. المكون الرئيسي ومُعالج الأخطاء العام
 import App from '@/App';
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 
-// 4. مزودات السياق (Context Providers) والألوان
 import { DataProvider } from '@/context/DataContext';
 import { AcademyProvider } from '@/context/AcademyContext';
 import { C } from '@/theme/colors';
 
-// لالتقاط أخطاء الإقلاع الحرجة على مستوى النافذة مع معالجة الرابط البرمجي
 window.addEventListener('error', (event) => {
   const errorMsg = event.error?.message || event.message || '';
   if (errorMsg.includes('Dynamically imported module') || errorMsg.includes('Failed to fetch')) {
@@ -57,7 +62,6 @@ window.addEventListener('error', (event) => {
   console.error('🚨 Critical Boot Error:', event.error || event.message);
 });
 
-// شاشة التحميل الأولية المربوطة بنظام الألوان الموحد
 const InitialLoader = () => (
   <div 
     className="fixed inset-0 z-50 flex flex-col items-center justify-center font-cairo select-none"
@@ -76,7 +80,7 @@ const InitialLoader = () => (
   </div>
 );
 
-ReactDOM.createRoot(getElementByIdSafe('root') || document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -93,29 +97,3 @@ ReactDOM.createRoot(getElementByIdSafe('root') || document.getElementById('root'
     </GlobalErrorBoundary>
   </React.StrictMode>
 );
-
-function getElementByIdSafe(id) {
-  return document.getElementById(id);
-}
-
-// تسجيل وتحديث الـ Service Worker لتطبيقات الـ PWA
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((reg) => {
-        reg.onupdatefound = () => {
-          const installingWorker = reg.installing;
-          if (installingWorker) {
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('🔄 نسق جديد متوفر، يتم التحديث...');
-                window.location.reload();
-              }
-            };
-          }
-        };
-      })
-      .catch((err) => console.warn('⚠️ ServiceWorker Failed:', err));
-  });
-}
