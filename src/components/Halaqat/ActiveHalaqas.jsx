@@ -35,8 +35,31 @@ export default function ActiveHalaqas({
   onNavigateToAttendance,
   isLoading = false
 }) {
-  const { t } = useTranslation();
-  const { getLocalizedText } = useAcademySettings();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  
+  // استدعاء آمن لـ useAcademySettings مع توفير بديل محلي
+  const academySettings = useAcademySettings() || {};
+  const externalGetLocalizedText = academySettings.getLocalizedText;
+
+  // دالة مساعدة محلية وآمنة تماماً لاستخراج النصوص المترجمة دون أي أخطاء
+  const safeGetLocalizedText = (val) => {
+    if (typeof externalGetLocalizedText === 'function') {
+      try {
+        const res = externalGetLocalizedText(val);
+        if (res) return String(res);
+      } catch (e) {
+        // تجاهل الخطأ والاعتصام بالبديل المحلي
+      }
+    }
+    
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object') {
+      return val[currentLang] || val.ar || val.en || Object.values(val)[0] || '';
+    }
+    return String(val);
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
@@ -50,40 +73,46 @@ export default function ActiveHalaqas({
   const viewMode = filters.is_archived ? 'archived' : (filters.status === 'unassigned' ? 'unassigned' : 'active');
 
   const setViewMode = (mode) => {
-    if (setFilters) {
+    if (typeof setFilters === 'function') {
       if (mode === 'archived') {
-        setFilters((prev) => ({ ...prev, is_archived: true, status: 'all' }));
+        setFilters((prev) => ({ ...(prev || {}), is_archived: true, status: 'all' }));
       } else if (mode === 'unassigned') {
-        setFilters((prev) => ({ ...prev, is_archived: false, status: 'unassigned' }));
+        setFilters((prev) => ({ ...(prev || {}), is_archived: false, status: 'unassigned' }));
       } else {
-        setFilters((prev) => ({ ...prev, is_archived: false, status: 'all' }));
+        setFilters((prev) => ({ ...(prev || {}), is_archived: false, status: 'all' }));
       }
     }
   };
 
-  // حساب الإحصائيات دائمًا من كامل قائمة الحلقات
+  // حساب الإحصائيات بأمان
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
     let unassigned = 0;
 
-    halaqas.forEach((h) => {
-      if (h.is_archived) {
-        totalArchived++;
-      } else {
-        totalActive++;
-        if (!h.teacher_id && !h.teacher_name && !h.teacher) {
-          unassigned++;
+    if (Array.isArray(halaqas)) {
+      halaqas.forEach((h) => {
+        if (!h) return;
+        if (h.is_archived) {
+          totalArchived++;
+        } else {
+          totalActive++;
+          if (!h.teacher_id && !h.teacher_name && !h.teacher) {
+            unassigned++;
+          }
         }
-      }
-    });
+      });
+    }
 
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
-  // الفلترة المحلية الفورية لمنع ظهور الحلقة في غير مكانها
+  // الفلترة المحلية الفورية والآمنة
   const filteredHalaqas = useMemo(() => {
+    if (!Array.isArray(halaqas)) return [];
+
     return halaqas.filter((halaqa) => {
+      if (!halaqa) return false;
       const isArchived = Boolean(halaqa.is_archived);
 
       // 1. فلترة حسب تبويب العرض الحالي
@@ -101,19 +130,19 @@ export default function ActiveHalaqas({
         return false;
       }
 
-      // 3. فلترة البحث
-      if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        const nameStr = String(getLocalizedText(halaqa.name) || halaqa.name_text || '').toLowerCase();
+      // 3. فلترة البحث بشكل آمن ومحمي
+      if (typeof searchQuery === 'string' && searchQuery.trim() !== '') {
+        const query = searchQuery.trim().toLowerCase();
+        const nameStr = safeGetLocalizedText(halaqa.name).toLowerCase();
         const teacherData = halaqa.teacher_name || halaqa.teacher;
-        const teacherStr = String(getLocalizedText(teacherData) || '').toLowerCase();
+        const teacherStr = safeGetLocalizedText(teacherData).toLowerCase();
 
         return nameStr.includes(query) || teacherStr.includes(query);
       }
 
       return true;
     });
-  }, [halaqas, viewMode, selectedTrack, searchQuery, getLocalizedText]);
+  }, [halaqas, viewMode, selectedTrack, searchQuery, currentLang]);
 
   const handleOpenCreateModal = () => {
     setFormData(getEmptyFormData(academyId));
@@ -121,6 +150,7 @@ export default function ActiveHalaqas({
   };
 
   const handleOpenEditModal = (halaqa) => {
+    if (!halaqa) return;
     setFormData({
       id: halaqa.id,
       name: halaqa.name,
@@ -154,7 +184,7 @@ export default function ActiveHalaqas({
         academyId: resolvedAcademyId
       };
 
-      if (!dataToSave.id && !onCreateHalaqa) {
+      if (!dataToSave.id && typeof onCreateHalaqa !== 'function') {
         alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
         return;
       }
@@ -204,7 +234,7 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
-      {/* عرض القائمة أو الشبكة بناءً على layoutMode */}
+      {/* عرض القائمة أو الشبكة */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
@@ -219,7 +249,7 @@ export default function ActiveHalaqas({
               halaqa={halaqa}
               viewMode={viewMode}
               layoutMode={layoutMode}
-              getLocalizedText={getLocalizedText}
+              getLocalizedText={safeGetLocalizedText}
               onNavigateToAttendance={onNavigateToAttendance}
               onToggleArchiveHalaqa={onToggleArchiveHalaqa}
               onEditHalaqa={handleOpenEditModal}
