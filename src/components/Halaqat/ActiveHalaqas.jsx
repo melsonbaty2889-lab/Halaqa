@@ -274,7 +274,7 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
-      {/* شبكة/قائمة العرض */}
+      {/* حاوية العرض المتجاوبة مع وضع الشبكة والقائمة */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
