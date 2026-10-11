@@ -4,8 +4,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input, Select } from '@/components/UI';
-
-// استيراد آمن مع دعم الفولباك في حال عدم وجود الملف أو الدالة
 import * as Constants from './HalaqaConstants';
 
 export default function HalaqasFilterBar({
@@ -21,7 +19,6 @@ export default function HalaqasFilterBar({
 }) {
   const { t } = useTranslation();
 
-  // الحصول على خيارات المسارات بشكل آمن 100%
   const getTracks = Constants.getTrackOptions || (() => [
     { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
     { value: 'hifz', label: t('trackHifz', 'حفظ القرآن') },
@@ -31,17 +28,36 @@ export default function HalaqasFilterBar({
 
   const trackOptions = typeof getTracks === 'function' ? getTracks(t) : [];
 
-  // التعامل الآمن مع حقل البحث
+  // معالجة آمنة 100% لتجنب أي خطأ نوع البيانات عند الكتابة
   const handleSearchChange = (e) => {
     if (typeof setSearchQuery !== 'function') return;
-    const value = e && typeof e === 'object' && 'target' in e ? e.target.value : (e ?? '');
+    
+    let value = '';
+    if (typeof e === 'string' || typeof e === 'number') {
+      value = String(e);
+    } else if (e !== null && typeof e === 'object') {
+      if ('target' in e && e.target && typeof e.target === 'object' && 'value' in e.target) {
+        value = e.target.value;
+      } else if ('value' in e) {
+        value = e.value;
+      }
+    }
     setSearchQuery(value);
   };
 
-  // التعامل الآمن مع اختيار المسار
   const handleTrackChange = (e) => {
     if (typeof setSelectedTrack !== 'function') return;
-    const value = e && typeof e === 'object' && 'target' in e ? e.target.value : (e ?? 'all');
+    
+    let value = 'all';
+    if (typeof e === 'string' || typeof e === 'number') {
+      value = String(e);
+    } else if (e !== null && typeof e === 'object') {
+      if ('target' in e && e.target && typeof e.target === 'object' && 'value' in e.target) {
+        value = e.target.value;
+      } else if ('value' in e) {
+        value = e.value;
+      }
+    }
     setSelectedTrack(value);
   };
 
