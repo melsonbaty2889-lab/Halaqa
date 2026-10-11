@@ -35,9 +35,9 @@ export const useHalaqas = ({
     academyId.trim() !== ''
   );
 
-  const queryKey = ['halaqas', academyId || 'no-academy', filters];
+  const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب بيانات الحلقات
+  // 1. جلب كافة بيانات الحلقات (النشطة والمؤرشفة) دفعة واحدة للتحكم اللحظي
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -64,8 +64,7 @@ export const useHalaqas = ({
               title
             )
           `)
-          .eq('academy_id', academyId!)
-          .eq('is_archived', filters.is_archived);
+          .eq('academy_id', academyId!);
 
         if (filters.status && filters.status !== 'all') {
           query = query.eq('status', filters.status);
@@ -99,7 +98,6 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // دالة تنظيف البيانات وحذف الحقول الزائدة غير الموجودة في جدول halaqas
   const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
     const cleaned = { ...data };
     delete cleaned.academyId;
@@ -110,7 +108,6 @@ export const useHalaqas = ({
     return cleaned;
   };
 
-  // 2. Mutation لإنشاء حلقة جديدة مع تحديث فوري وإشعار نجاح
   const createHalaqaMutation = useMutation({
     mutationFn: async (halaqaData: Partial<Halaqa>) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
@@ -141,25 +138,18 @@ export const useHalaqas = ({
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase RLS/Insert Error:', error);
-        throw new Error(error.message || 'فشلت قاعدة البيانات في قبول بيانات الحلقة');
-      }
+      if (error) throw new Error(error.message);
       return data;
     },
     onSuccess: () => {
-      // ✅ تحديث فوري لكافة استعلامات الحلقات لتظهر الحلقة دون تحديث الصفحة
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
       queryClient.refetchQueries({ queryKey: ['halaqas'] });
-      alert('تم إنشاء الحلقة بنجاح وتم تحديث القائمة.');
     },
   });
 
-  // 3. Mutation لتعديل حلقة
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
-
       const cleanedData = sanitizeHalaqaPayload(halaqaData);
 
       const payload: any = {
@@ -171,12 +161,8 @@ export const useHalaqas = ({
         payload.academy_id = currentAcademyId;
       }
 
-      if (halaqaData.start_time) {
-        payload.start_time = formatTimeForDb(halaqaData.start_time);
-      }
-      if (halaqaData.end_time) {
-        payload.end_time = formatTimeForDb(halaqaData.end_time);
-      }
+      if (halaqaData.start_time) payload.start_time = formatTimeForDb(halaqaData.start_time);
+      if (halaqaData.end_time) payload.end_time = formatTimeForDb(halaqaData.end_time);
 
       const { data, error } = await supabase
         .from('halaqas')
@@ -194,7 +180,6 @@ export const useHalaqas = ({
     },
   });
 
-  // 4. Mutation لإسناد / تغيير المعلم للحلقة
   const assignTeacherMutation = useMutation({
     mutationFn: async ({ halaqaId, teacherId }: { halaqaId: string; teacherId: string | null }) => {
       const { error } = await supabase
@@ -213,7 +198,6 @@ export const useHalaqas = ({
     },
   });
 
-  // 5. Mutation للأرشفة مع التحديث الفوري المباشر
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
@@ -232,48 +216,42 @@ export const useHalaqas = ({
     },
   });
 
-  // دالة إنشاء حلقة جديدة
   const createHalaqa = useCallback(
     async (data: Partial<Halaqa>) => {
       try {
         const result = await createHalaqaMutation.mutateAsync(data);
         return { success: true, data: result };
       } catch (err: any) {
-        console.error('Create Halaqa Error:', err);
         return { success: false, error: err?.message || 'فشلت عملية إنشاء الحلقة' };
       }
     },
     [createHalaqaMutation]
   );
 
-  // دالة تعديل حلقة
   const updateHalaqa = useCallback(
     async (data: Partial<Halaqa> & { id: string }) => {
       try {
         const result = await updateHalaqaMutation.mutateAsync(data);
         return { success: true, data: result };
       } catch (err: any) {
-        console.error('Update Halaqa Error:', err);
         return { success: false, error: err?.message || 'فشلت عملية تعديل الحلقة' };
       }
     },
     [updateHalaqaMutation]
   );
 
-  // دالة إسناد المعلم
   const assignTeacherToHalaqa = useCallback(
     async (halaqaId: string, teacherId: string | null) => {
       try {
         await assignTeacherMutation.mutateAsync({ halaqaId, teacherId });
         return { success: true };
       } catch (err: any) {
-        return { success: false, error: err?.message || 'فشلت عملية إسناد المعلم' };
+        return { success: false, error: err?.message || 'فشلت العملية' };
       }
     },
     [assignTeacherMutation]
   );
 
-  // دالة الأرشفة والتنشيط
   const toggleArchiveHalaqa = useCallback(
     async (halaqaId: string, currentArchived: boolean) => {
       try {
