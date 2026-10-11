@@ -1,6 +1,9 @@
 {
+  "id": "/",
   "short_name": "الحلقة الذكية",
   "name": "منصة الحلقة الذكية - Smart Halaqa",
+  "description": "المنصة الذكية لإدارة حلقات القرآن الكريم",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -16,6 +19,7 @@
     }
   ],
   "start_url": "/",
+  "scope": "/",
   "background_color": "#090F17",
   "theme_color": "#090F17",
   "display": "standalone",
