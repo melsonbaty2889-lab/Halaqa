@@ -46,7 +46,7 @@ export default function ActiveHalaqas({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(() => getEmptyFormData(academyId));
 
-  // تحديد الـ viewMode الحالي بناءً على الـ filters القادمة من useHalaqas
+  // تحديد الـ viewMode الحالي
   const viewMode = filters.is_archived ? 'archived' : (filters.status === 'unassigned' ? 'unassigned' : 'active');
 
   const setViewMode = (mode) => {
@@ -61,6 +61,7 @@ export default function ActiveHalaqas({
     }
   };
 
+  // حساب الإحصائيات دائمًا من كامل قائمة الحلقات
   const stats = useMemo(() => {
     let totalActive = 0;
     let totalArchived = 0;
@@ -80,18 +81,27 @@ export default function ActiveHalaqas({
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
+  // الفلترة المحلية الفورية لمنع ظهور الحلقة في غير مكانها
   const filteredHalaqas = useMemo(() => {
     return halaqas.filter((halaqa) => {
+      const isArchived = Boolean(halaqa.is_archived);
+
+      // 1. فلترة حسب تبويب العرض الحالي
+      if (viewMode === 'archived' && !isArchived) return false;
+      if (viewMode === 'active' && isArchived) return false;
       if (viewMode === 'unassigned') {
+        if (isArchived) return false;
         const hasTeacher = Boolean(halaqa.teacher_id || halaqa.teacher_name || halaqa.teacher);
         if (hasTeacher) return false;
       }
 
+      // 2. فلترة المسار التعليمي
       const trackVal = halaqa.educational_track || halaqa.track;
       if (selectedTrack !== 'all' && trackVal !== selectedTrack) {
         return false;
       }
 
+      // 3. فلترة البحث
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
         const nameStr = String(getLocalizedText(halaqa.name) || halaqa.name_text || '').toLowerCase();
@@ -171,7 +181,7 @@ export default function ActiveHalaqas({
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 space-y-5 pt-3 pb-12 bg-app-layout">
-      {/* زر إضافة حلقة مميز وسلس */}
+      {/* زر إضافة حلقة */}
       <button
         type="button"
         onClick={handleOpenCreateModal}
@@ -194,7 +204,7 @@ export default function ActiveHalaqas({
         stats={stats}
       />
 
-      {/* شبكة/قائمة العرض الاستجابة المحدثة */}
+      {/* عرض القائمة أو الشبكة بناءً على layoutMode */}
       {filteredHalaqas.length > 0 ? (
         <div
           className={
