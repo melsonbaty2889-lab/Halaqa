@@ -45,51 +45,53 @@ export default function HalaqasFilterBar({
       className={`space-y-2.5 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm ${isRtl ? 'text-right' : 'text-left'}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. التبويبات الرئيسية دون تقطيع نصوص */}
+      
+      {/* 1. التبويبات الرئيسية المحدثة (مظهر سلس وبدون قص للنصوص) */}
       <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
+        
+        {/* تبويب النشطة */}
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('active')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-[11px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer min-w-0 ${
             viewMode === 'active'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <CheckCircle2 size={13} className="shrink-0" />
-          <span className="truncate">{t('statActive', 'النشطة')}</span>
+          <span className="whitespace-nowrap">{t('statActive', 'النشطة')}</span>
           <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.totalActive || 0}</bdi>
           </span>
         </button>
 
+        {/* تبويب بلا معلم */}
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('unassigned')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-[11px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer min-w-0 ${
             viewMode === 'unassigned'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Users size={13} className="shrink-0" />
-          <span className="truncate">{t('statUnassigned', 'بلا معلم')}</span>
+          <span className="whitespace-nowrap">{t('statUnassigned', 'بلا معلم')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.unassigned || 0}</bdi>
           </span>
         </button>
 
+        {/* تبويب المؤرشفة */}
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('archived')}
-          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-[11px] sm:text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer min-w-0 ${
             viewMode === 'archived'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Archive size={13} className="shrink-0" />
-          <span className="truncate">{t('statArchived', 'المؤرشفة')}</span>
+          <span className="whitespace-nowrap">{t('statArchived', 'المؤرشفة')}</span>
           <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.totalArchived || 0}</bdi>
           </span>
