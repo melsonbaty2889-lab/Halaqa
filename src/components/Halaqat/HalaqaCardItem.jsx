@@ -19,6 +19,9 @@ export default function HalaqaCardItem({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
+  
+  // تحديد اتجاه النصوص ديناميكياً حسب اللغة (RTL للأوردو والعربية، LTR للغات الأخرى)
+  const isRtl = ['ar', 'ur'].includes(currentLang);
 
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
   const [isUpdatingTeacher, setIsUpdatingTeacher] = useState(false);
@@ -79,7 +82,7 @@ export default function HalaqaCardItem({
       thu: t('days.thu', 'الخميس'),
       fri: t('days.fri', 'الجمعة')
     };
-    return daysArray.map((day) => dayNames[day] || day).join(' ، ');
+    return daysArray.map((day) => dayNames[day] || day).join(currentLang === 'ar' || currentLang === 'ur' ? ' ، ' : ', ');
   };
 
   const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
@@ -87,7 +90,6 @@ export default function HalaqaCardItem({
   const formattedDays = formatDaysDisplay(halaqa?.days_of_week);
   const isArchived = Boolean(halaqa?.is_archived);
 
-  // معرفة المسار التعليمي ونمط الانعقاد
   const trackOptions = getTrackOptions(t);
   const currentTrack = trackOptions.find(opt => opt.value === (halaqa?.educational_track || 'hifz'));
   
@@ -114,9 +116,12 @@ export default function HalaqaCardItem({
   };
 
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md`}>
+    <div 
+      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md ${isRtl ? 'text-right' : 'text-left'}`} 
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       <div>
-        {/* الترويسة: الاسم + الشارات (نشطة / أونلاين / المسار) */}
+        {/* الترويسة: الاسم + الشارات */}
         <div className="flex flex-col gap-2 mb-2.5">
           <div className="flex justify-between items-center gap-2">
             <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
@@ -146,9 +151,9 @@ export default function HalaqaCardItem({
             </div>
           </div>
 
-          {/* المسار التعليمي والفئة المستهدفة في كبسولات مخصصة */}
+          {/* المسار التعليمي والفئة المستهدفة */}
           {(currentTrack?.label || currentAudience?.label) && (
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className={`flex flex-wrap items-center gap-1.5 ${isRtl ? 'justify-start' : 'justify-start'}`}>
               {currentTrack?.label && (
                 <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard/80">
                   {currentTrack.label}
@@ -192,11 +197,11 @@ export default function HalaqaCardItem({
           </button>
 
           {isTeacherDropdownOpen && (
-            <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5">
+            <div className={`absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 ${isRtl ? 'text-right' : 'text-left'}`}>
               <button
                 type="button"
                 onClick={() => handleSelectTeacher(null)}
-                className="w-full text-right px-2.5 py-1.5 text-xs text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer"
+                className={`w-full px-2.5 py-1.5 text-xs text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer ${isRtl ? 'text-right' : 'text-left'}`}
               >
                 <span>{t('unassignTeacherOption', 'بدون معلم (غير معين)')}</span>
                 {!halaqa?.teacher_id && <Check size={12} className="text-semantic-actionPrimary" />}
@@ -211,9 +216,9 @@ export default function HalaqaCardItem({
                       key={teacher.id}
                       type="button"
                       onClick={() => handleSelectTeacher(teacher.id)}
-                      className={`w-full text-right px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
+                      className={`w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
                         isSelected ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary' : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                      }`}
+                      } ${isRtl ? 'text-right' : 'text-left'}`}
                     >
                       <span className="truncate">{name}</span>
                       {isSelected && <Check size={12} className="text-semantic-actionPrimary" />}
@@ -229,12 +234,12 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* المواعيد والأيام والسعة القصوى */}
+        {/* التوقيت والأيام والحد الأقصى للطلاب مع دعم اللغات */}
         <div className="space-y-1">
           {(startTimeFormatted || endTimeFormatted) && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
               <Clock size={13} className="text-semantic-textMuted shrink-0" />
-              <span className="font-semibold truncate">
+              <span className="font-semibold truncate" style={{ unicodeBidi: 'embed' }}>
                 {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
               </span>
             </div>
@@ -252,7 +257,9 @@ export default function HalaqaCardItem({
           {halaqa?.max_students && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted pt-0.5">
               <Users size={12} className="shrink-0" />
-              <span>{t('maxStudentsShort', 'الحد الأقصى:')} <strong className="text-semantic-textSecondary">{halaqa.max_students}</strong></span>
+              <span style={{ unicodeBidi: 'embed' }}>
+                {t('maxStudentsShort', 'الحد الأقصى:')} <strong className="text-semantic-textSecondary">{halaqa.max_students}</strong>
+              </span>
             </div>
           )}
         </div>
