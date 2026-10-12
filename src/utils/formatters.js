@@ -244,7 +244,7 @@ export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير مح�
 };
 
 // ==========================================
-// 5. تنسيق نطاقات الوقت (Time Range) بصيغة 12 ساعة مقروءة بدقة
+// 5. تنسيق نطاقات الوقت (Time Range) بصيغة 12 ساعة مقروءة بدقة مع عزل BIDI
 // ==========================================
 export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
   if (!startTime) return '';
@@ -281,7 +281,8 @@ export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
     const formattedHours = String(hours).padStart(2, '0');
     const period = ['ar', 'ur'].includes(lang) ? (isPM ? 'م' : 'ص') : (isPM ? 'PM' : 'AM');
     
-    return `${formattedHours}:${minutes} ${period}`;
+    // استخدام محارف التوجيه لعزل الوقت وضمان ظهور الرقم ثم الفترة بالشكل السليم
+    return `\u202A${formattedHours}:${minutes}\u202C ${period}`;
   };
 
   let start = startTime;
@@ -302,5 +303,5 @@ export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
 
   if (!endFormatted) return startFormatted;
 
-  return `${startFormatted} - ${endFormatted}`;
+  return `${startFormatted} \u200F-\u200F ${endFormatted}`;
 };
