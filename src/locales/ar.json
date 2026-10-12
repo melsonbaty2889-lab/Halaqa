@@ -304,6 +304,7 @@
     "preparing_dashboard": "جاري تجهيز لوحة التحكم...",
     "processing": "جاري المعالجة...",
     "quickSearch": "بحث سريع...",
+    "refresh": "تحديث",
     "remove": "إلغاء",
     "reset_filters": "إلغاء الفلاتر",
     "reset_zoom": "إعادة ضبط",
@@ -963,6 +964,8 @@
     "activeTeaching": "المعلمون المباشرون للحلقات",
     "addStaff": "إضافة كادر جديد",
     "addStaffTitle": "إضافة كادر تعليمي / إداري",
+    "allIjazat": "كل الإجازات",
+    "allTitles": "كل المسميات",
     "amount": "المبلغ",
     "defaultTitle": "معلّم / مقرئ",
     "description": "إدارة المعلمين والمشرفين ومدراء الأكاديمية",
@@ -984,9 +987,15 @@
     "roleAdmin": "مدير أكاديمية (إدارة + تدريس)",
     "roleSupervisor": "مشرف تعليمي",
     "roleTeacher": "معلّم (حلقة)",
+    "searchPlaceholder": "البحث بالاسم أو رقم الهاتف...",
     "systemRole": "الصلاحية للنظام",
     "timezone": "المنطقة الزمنية (Timezone)",
     "title": "الكادر التعليمي والإداري",
+    "titles": {
+      "admin": "مدير أكاديمية",
+      "supervisor": "مشرف تعليمي",
+      "teacher": "معلّم / مقرئ"
+    },
     "totalStaff": "إجمالي الكادر",
     "volunteer": "احتساب / تطوع",
     "yearsExp": "سنوات خبرة"
