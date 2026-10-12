@@ -1,3 +1,5 @@
+/* src/components/Teachers/Teachers.jsx */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
@@ -11,7 +13,6 @@ export default function Teachers({
   academyId, 
   teachers = [], 
   setTeachers, 
-  halaqas = [], 
   onRefresh
 }) {
   const { t, i18n } = useTranslation();
@@ -25,6 +26,7 @@ export default function Teachers({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTeacherForAvailability, setSelectedTeacherForAvailability] = useState(null);
 
+  // جلب بيانات الكادر من Supabase عند الحاجة
   const fetchStaff = useCallback(async () => {
     if (onRefresh) {
       onRefresh();
@@ -56,6 +58,7 @@ export default function Teachers({
     }
   }, [academyId, teachers.length, setTeachers, fetchStaff]);
 
+  // تحديث حالة المعلم (نشط / غير نشط)
   const toggleStatus = async (teacherId, currentStatus) => {
     try {
       const { error } = await supabase
@@ -72,6 +75,7 @@ export default function Teachers({
     }
   };
 
+  // فلترة الكادر بناءً على البحث، المسمى، والإجازة
   const filteredStaff = (teachers || []).filter(person => {
     const matchesSearch = (person.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (person.phone || '').includes(searchTerm);
@@ -83,7 +87,8 @@ export default function Teachers({
 
   return (
     <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-['Cairo',sans-serif]`}>
-      {/* Header */}
+      
+      {/* 1. الترويسة الرئيسية وزر الإضافة */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-semantic-textPrimary">
@@ -104,7 +109,7 @@ export default function Teachers({
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* 2. بطاقات الإحصائيات المختصرة */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card-surface flex items-center justify-between">
           <div>
@@ -143,7 +148,7 @@ export default function Teachers({
         </div>
       </div>
 
-      {/* Filter Bar */}
+      {/* 3. شريط الفلترة والبحث المخصص */}
       <TeacherFilter 
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -155,7 +160,7 @@ export default function Teachers({
         t={t}
       />
 
-      {/* Availability Manager Drawer */}
+      {/* 4. قسم إدارة أوقات التفرغ (إن وجد معلم محدد) */}
       {selectedTeacherForAvailability && (
         <div className="card-surface relative border-semantic-actionPrimary/40">
           <button 
@@ -168,7 +173,7 @@ export default function Teachers({
         </div>
       )}
 
-      {/* Teachers Cards Grid */}
+      {/* 5. شبكة عرض بطاقات الكادر أو حالات التحميل والفراغ */}
       {loading ? (
         <div className="text-center py-12 text-semantic-textSecondary text-xs">{t('common.loading', 'جاري تحميل البيانات...')}</div>
       ) : filteredStaff.length === 0 ? (
@@ -189,7 +194,7 @@ export default function Teachers({
         </div>
       )}
 
-      {/* Add Staff Modal */}
+      {/* 6. نافذة إضافة كادر جديد */}
       <AddStaffModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
