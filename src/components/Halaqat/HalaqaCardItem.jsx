@@ -117,20 +117,20 @@ export default function HalaqaCardItem({
     <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md`}>
       <div>
         {/* الترويسة: الاسم + الشارات (نشطة / أونلاين / المسار) */}
-        <div className="flex flex-col gap-1.5 mb-2.5">
-          <div className="flex justify-between items-start gap-2">
+        <div className="flex flex-col gap-2 mb-2.5">
+          <div className="flex justify-between items-center gap-2">
             <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
               {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
             </h4>
             
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {isOnline ? (
                 <span className="p-1 rounded-full bg-semantic-actionPrimary/15 text-semantic-actionPrimary" title={t('onlineHalaqa', 'حلقة عن بُعد')}>
-                  <Globe size={11} />
+                  <Globe size={13} />
                 </span>
               ) : (
                 <span className="p-1 rounded-full bg-semantic-surfaceInput text-semantic-textMuted" title={t('offlineHalaqa', 'حلقة حضورية')}>
-                  <Building2 size={11} />
+                  <Building2 size={13} />
                 </span>
               )}
 
@@ -146,16 +146,16 @@ export default function HalaqaCardItem({
             </div>
           </div>
 
-          {/* المسار التعليمي والفئة المستهدفة إن وجدت */}
+          {/* المسار التعليمي والفئة المستهدفة في كبسولات مخصصة */}
           {(currentTrack?.label || currentAudience?.label) && (
-            <div className="flex flex-wrap items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1.5">
               {currentTrack?.label && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-semantic-surfaceInput text-semantic-textSecondary border border-semantic-borderCard/60">
+                <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard/80">
                   {currentTrack.label}
                 </span>
               )}
               {currentAudience?.label && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-semantic-surfaceInput/60 text-semantic-textMuted">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-semantic-surfaceInput/50 text-semantic-textMuted border border-semantic-borderCard/40">
                   {currentAudience.label}
                 </span>
               )}
@@ -250,7 +250,7 @@ export default function HalaqaCardItem({
           )}
 
           {halaqa?.max_students && (
-            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted">
+            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted pt-0.5">
               <Users size={12} className="shrink-0" />
               <span>{t('maxStudentsShort', 'الحد الأقصى:')} <strong className="text-semantic-textSecondary">{halaqa.max_students}</strong></span>
             </div>
