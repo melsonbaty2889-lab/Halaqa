@@ -1,7 +1,7 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Archive } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
@@ -93,15 +93,15 @@ export default function HalaqaCardItem({
   };
 
   // ==========================================
-  // 1. وضع القائمة المدمج (List View)
+  // 1. وضع القائمة المدمج المنظم (List View)
   // ==========================================
   if (isListView) {
     return (
-      <div className={`${UI.card} p-3 transition-all w-full relative flex flex-col gap-2 overflow-visible border border-semantic-borderCard hover:border-semantic-borderHover`}>
+      <div className={`${UI.card} p-3 transition-all w-full relative flex flex-col gap-2.5 border border-semantic-borderCard hover:border-semantic-borderHover`}>
         {/* السطر الأول: الاسم والتوقيت والحالة */}
         <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/40 pb-2">
           <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 truncate">
+            <h4 className="text-xs md:text-sm font-extrabold text-semantic-textPrimary m-0 truncate">
               {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
             </h4>
             {isArchived ? (
@@ -123,20 +123,21 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* السطر الثاني: المعلم والأزرار */}
-        <div className="flex items-center justify-between gap-2 pt-0.5">
-          <div className="relative flex-1 min-w-0" ref={dropdownRef}>
+        {/* السطر الثاني: اختيار المعلم + زر الجلسة + التعديل + الأرشفة */}
+        <div className="flex items-center justify-between gap-2">
+          {/* قائمة المعلم */}
+          <div className="relative flex-1 min-w-[110px]" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
               disabled={isUpdatingTeacher}
-              className={`w-full flex items-center justify-between gap-1 text-[11px] p-1.5 rounded-lg border cursor-pointer ${
+              className={`w-full flex items-center justify-between gap-1 text-[11px] py-1.5 px-2 rounded-lg border cursor-pointer ${
                 hasTeacher 
                   ? 'text-semantic-textSecondary bg-semantic-surfaceInput/40 border-semantic-borderCard' 
                   : 'text-semantic-actionPrimary bg-semantic-actionPrimary/10 border-semantic-actionPrimary/20'
               }`}
             >
-              <div className="flex items-center gap-1 truncate">
+              <div className="flex items-center gap-1 min-w-0 truncate">
                 <User size={12} className={hasTeacher ? "text-semantic-actionPrimary shrink-0" : "shrink-0"} />
                 <span className="truncate font-semibold">{teacherName || t('unassigned', 'غير معين')}</span>
               </div>
@@ -144,7 +145,7 @@ export default function HalaqaCardItem({
             </button>
 
             {isTeacherDropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl w-full min-w-[180px] max-h-40 overflow-y-auto p-1 space-y-0.5">
+              <div className="absolute top-full right-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl w-48 max-h-40 overflow-y-auto p-1 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => handleSelectTeacher(null)}
@@ -175,35 +176,60 @@ export default function HalaqaCardItem({
             )}
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
-            {isArchived ? (
-              <button 
-                type="button"
-                onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-                className={`${UI.btnEmerald} px-3 py-1.5 text-[11px] font-extrabold flex items-center justify-center rounded-lg`}
-              >
-                <span>{t('activate', 'تنشيط')}</span>
-              </button>
-            ) : (
-              <button 
-                type="button"
-                onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-                className={`${UI.btnEmerald} px-2.5 py-1.5 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg`}
-              >
-                <Video size={11} />
-                <span>{t('goToAttendance', 'الجلسة')}</span>
-              </button>
-            )}
+          {/* أزرار العمليات المدمجة */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isArchived ? (
+              <>
+                <button 
+                  type="button"
+                  onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
+                  className={`${UI.btnEmerald} px-2.5 py-1.5 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg shrink-0`}
+                  title={t('goToAttendance', 'الجلسة المباشرة')}
+                >
+                  <Video size={12} />
+                  <span>{t('goToAttendance', 'الجلسة')}</span>
+                </button>
 
-            {onEditHalaqa && (
-              <button
-                type="button"
-                onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg`}
-                title={t('edit', 'تعديل')}
-              >
-                <Edit3 size={12} />
-              </button>
+                {onEditHalaqa && (
+                  <button
+                    type="button"
+                    onClick={() => onEditHalaqa(halaqa)}
+                    className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg shrink-0`}
+                    title={t('edit', 'تعديل')}
+                  >
+                    <Edit3 size={12} />
+                  </button>
+                )}
+
+                <button 
+                  type="button"
+                  onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+                  className={`${UI.btnSecondary} p-1.5 text-[11px] font-bold flex items-center justify-center rounded-lg shrink-0 text-semantic-textMuted hover:text-semantic-danger`}
+                  title={t('archive', 'أرشفة')}
+                >
+                  <Archive size={12} />
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  type="button"
+                  onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
+                  className={`${UI.btnEmerald} px-3 py-1.5 text-[11px] font-extrabold flex items-center justify-center rounded-lg shrink-0`}
+                >
+                  <span>{t('activate', 'تنشيط')}</span>
+                </button>
+                {onEditHalaqa && (
+                  <button
+                    type="button"
+                    onClick={() => onEditHalaqa(halaqa)}
+                    className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg shrink-0`}
+                    title={t('edit', 'تعديل')}
+                  >
+                    <Edit3 size={12} />
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -215,7 +241,7 @@ export default function HalaqaCardItem({
   // 2. وضع الشبكة القياسي (Grid View)
   // ==========================================
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full overflow-visible relative`}>
+    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative`}>
       <div>
         <div className="flex justify-between items-start gap-2 mb-2">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
@@ -261,7 +287,7 @@ export default function HalaqaCardItem({
           </button>
 
           {isTeacherDropdownOpen && (
-            <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 animate-fade-in">
+            <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5">
               <button
                 type="button"
                 onClick={() => handleSelectTeacher(null)}
