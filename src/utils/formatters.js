@@ -249,26 +249,49 @@ export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير مح�
 export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
   if (!startTime) return '';
 
-  const formatSingleTime = (timeStr) => {
-    if (!timeStr) return '';
+  const parseToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
     const clean = formatDigits(timeStr).trim();
-    
     const isPM = clean.includes('م') || /PM/i.test(clean);
     const isAM = clean.includes('ص') || /AM/i.test(clean);
     
+    const parts = clean.replace(/[^\d:]/g, '').split(':');
+    let hours = parseInt(parts[0] || 0, 10);
+    const minutes = parseInt(parts[1] || 0, 10);
+
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+
+    return hours * 60 + minutes;
+  };
+
+  const formatSingleTime = (timeStr) => {
+    if (!timeStr) return '';
+    const clean = formatDigits(timeStr).trim();
+    const isPM = clean.includes('م') || /PM/i.test(clean);
+    const isAM = clean.includes('ص') || /AM/i.test(clean);
     const numOnly = clean.replace(/[^\d:]/g, '');
     if (!numOnly) return clean;
 
-    if (isPM || isAM) {
-      const period = ['ar', 'ur'].includes(lang) ? (isPM ? 'م' : 'ص') : (isPM ? 'PM' : 'AM');
-      return `${numOnly} ${period}`;
-    }
-
-    return numOnly;
+    const period = ['ar', 'ur'].includes(lang) ? (isPM ? 'م' : 'ص') : (isPM ? 'PM' : 'AM');
+    return `${numOnly} ${period}`;
   };
 
-  const startFormatted = formatSingleTime(startTime);
-  const endFormatted = formatSingleTime(endTime);
+  let start = startTime;
+  let end = endTime;
+
+  if (start && end) {
+    const startMins = parseToMinutes(start);
+    const endMins = parseToMinutes(end);
+    if (startMins > endMins) {
+      const temp = start;
+      start = end;
+      end = temp;
+    }
+  }
+
+  const startFormatted = formatSingleTime(start);
+  const endFormatted = formatSingleTime(end);
 
   if (!endFormatted) return startFormatted;
 
