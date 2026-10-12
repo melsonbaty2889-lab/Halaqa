@@ -551,6 +551,7 @@
     "tuesday": "Tuesday",
     "wednesday": "Wednesday"
   },
+  "daysOfWeekLabel": "أيام انعقاد الحلقة",
   "dev": {
     "close_splash": "Close SplashScreen",
     "sub": "Unified environment for testing all project components and verifying multilingual formatting and colors",

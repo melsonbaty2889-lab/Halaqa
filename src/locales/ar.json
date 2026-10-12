@@ -414,6 +414,7 @@
     "tuesday": "tuesday",
     "wednesday": "wednesday"
   },
+  "daysOfWeekLabel": "أيام انعقاد الحلقة",
   "dev": {
     "close_splash": "إغلاق SplashScreen",
     "sub": "بيئة موحدة لاختبار كافة عناصر المشروع والتأكد من التنسيقات والألوان متعدده اللغات",
