@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { X, UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
+import { Modal } from '@/components/UI/Modal';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
   const { t, i18n } = useTranslation();
