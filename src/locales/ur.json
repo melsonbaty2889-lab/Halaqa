@@ -730,6 +730,7 @@
   "maxStudents": "السعة الأقصى للطلاب",
   "maxStudentsLabel": "الحد الأقصى للطلاب",
   "maxStudentsPlaceholder": "أدخل السعة القصوى",
+  "maxStudentsShort": "الحد الأقصى:",
   "menu": {
     "items": {
       "attendance": "التسميع والحضور",
@@ -775,6 +776,8 @@
     "title": "التنبيهات",
     "unread": "غير مقروء"
   },
+  "offlineHalaqa": "حلقة حضورية",
+  "onlineHalaqa": "حلقة عن بُعد",
   "pm": "م",
   "profile": {
     "changePasswordSection": "تغيير كلمة المرور (اختياري)",
