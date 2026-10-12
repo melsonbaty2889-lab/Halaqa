@@ -32,8 +32,9 @@ export default function HalaqaFormModal({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
-  const [timeError, setTimeError] = useState('');
+  const isRtl = ['ar', 'ur'].includes(currentLang);
 
+  const [timeError, setTimeError] = useState('');
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const getStoredAcademyId = () => {
@@ -59,7 +60,6 @@ export default function HalaqaFormModal({
     }
   }, [isOpen, open]);
 
-  // دالة متطورة لاستخراج وتعبئة اسم الحلقة بأمان
   const getCurrentName = () => {
     if (typeof formData?.name_text === 'string' && formData.name_text.trim() !== '') {
       return formData.name_text;
@@ -151,7 +151,7 @@ export default function HalaqaFormModal({
 
     const rawName = getCurrentName();
     if (!rawName || !rawName.trim()) {
-      alert('يرجى إدخال اسم الحلقة');
+      alert(t('enterHalaqaNameAlert', 'يرجى إدخال اسم الحلقة'));
       return;
     }
 
@@ -164,7 +164,7 @@ export default function HalaqaFormModal({
     const resolvedAcademyId = formData?.academy_id || formData?.academyId || getStoredAcademyId();
 
     if (!resolvedAcademyId) {
-      alert('خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.');
+      alert(t('academyErrorAlert', 'خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.'));
       return;
     }
 
@@ -194,7 +194,7 @@ export default function HalaqaFormModal({
     if (submitCallback) {
       await submitCallback(payload);
     } else {
-      alert('خطأ: لم يتم ربط دالة الحفظ بالمودال!');
+      alert(t('noSaveFuncAlert', 'خطأ: لم يتم ربط دالة الحفظ بالمودال!'));
     }
   };
 
@@ -207,7 +207,7 @@ export default function HalaqaFormModal({
       onClose={onClose}
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
-      <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
+      <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
           {/* اسم الحلقة */}
@@ -218,19 +218,19 @@ export default function HalaqaFormModal({
             <Input
               type="text"
               required
-              placeholder="أدخل اسم الحلقة"
+              placeholder={t('halaqaNamePlaceholder', 'أدخل اسم الحلقة')}
               value={getCurrentName()}
               onChange={handleNameChange}
             />
           </div>
 
-          {/* أيام الانعقاد بألوان وتنسيق واضع جداً */}
+          {/* أيام الانعقاد */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5 flex items-center gap-1.5">
               <Calendar size={13} className="text-semantic-actionPrimary" />
               <span>{t('daysOfWeekLabel', 'أيام انعقاد الحلقة')}</span>
             </label>
-            <div className="flex flex-wrap gap-1.5 dir-rtl">
+            <div className="flex flex-wrap gap-1.5">
               {DAYS_LIST.map((day) => {
                 const isSelected = selectedDays.includes(day.id);
                 return (
@@ -257,8 +257,8 @@ export default function HalaqaFormModal({
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
-                title="المسار التعليمي"
-                placeholder="اختر..."
+                title={t('trackLabel', 'المسار التعليمي')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData?.educational_track || ''}
                 onChange={(v) => handleChange('educational_track', v)}
                 options={trackOptions}
@@ -270,8 +270,8 @@ export default function HalaqaFormModal({
                 {t('teacherLabel', 'المعلم المسؤول')}
               </label>
               <Select
-                title="المعلم المسؤول"
-                placeholder="اختياري..."
+                title={t('teacherLabel', 'المعلم المسؤول')}
+                placeholder={t('optionalPlaceholder', 'اختياري...')}
                 value={formData?.teacher_id || ''}
                 onChange={(v) => handleChange('teacher_id', v)}
                 options={teacherSelectOptions}
@@ -285,8 +285,8 @@ export default function HalaqaFormModal({
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
-                title="الفئة المستهدفة"
-                placeholder="اختر..."
+                title={t('targetAudienceLabel', 'الفئة المستهدفة')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData?.target_audience || ''}
                 onChange={(v) => handleChange('target_audience', v)}
                 options={audienceOptions}
@@ -298,8 +298,8 @@ export default function HalaqaFormModal({
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
-                title="نمط انعقاد الحلقة"
-                placeholder="اختر..."
+                title={t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData?.teaching_type || ''}
                 onChange={(v) => handleChange('teaching_type', v)}
                 options={typeOptions}
@@ -332,7 +332,7 @@ export default function HalaqaFormModal({
                 type="number"
                 min="1"
                 max="500"
-                placeholder="أدخل العدد"
+                placeholder={t('enterNumberPlaceholder', 'أدخل العدد')}
                 value={formData?.max_students ?? ''}
                 onChange={(v) => handleChange('max_students', extractValue(v))}
               />
@@ -348,7 +348,7 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار العمليات في الأسفل */}
+        {/* أزرار العمليات */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
