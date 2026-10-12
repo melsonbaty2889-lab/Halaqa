@@ -1,9 +1,16 @@
+/* src/components/Teachers/TeacherAvailabilityManager.jsx */
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Calendar, Clock, Plus, Save, Trash2, CheckCircle2, AlertCircle, User } from 'lucide-react';
-import colors from '@/theme/colors';
+import { useTranslation } from 'react-i18next';
+import { UI } from '@/theme/styles';
 
-export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
+export default function TeacherAvailabilityManager({ teacherId }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
+
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(teacherId || '');
   const [availabilityList, setAvailabilityList] = useState([]);
@@ -16,13 +23,13 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
   const [message, setMessage] = useState(null);
 
   const daysOptions = [
-    { value: 'Saturday', label: 'السبت' },
-    { value: 'Sunday', label: 'الأحد' },
-    { value: 'Monday', label: 'الإثنين' },
-    { value: 'Tuesday', label: 'الثلاثاء' },
-    { value: 'Wednesday', label: 'الأربعاء' },
-    { value: 'Thursday', label: 'الخميس' },
-    { value: 'Friday', label: 'الجمعة' },
+    { value: 'Saturday', label: t('days.saturday', 'السبت') },
+    { value: 'Sunday', label: t('days.sunday', 'الأحد') },
+    { value: 'Monday', label: t('days.monday', 'الإثنين') },
+    { value: 'Tuesday', label: t('days.tuesday', 'الثلاثاء') },
+    { value: 'Wednesday', label: t('days.wednesday', 'الأربعاء') },
+    { value: 'Thursday', label: t('days.thursday', 'الخميس') },
+    { value: 'Friday', label: t('days.friday', 'الجمعة') },
   ];
 
   useEffect(() => {
@@ -35,7 +42,6 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
     }
   }, [selectedTeacher]);
 
-  // جلب قائمة المعلمين للاختيار بينهم إذا لم يتم تمرير ID
   const fetchTeachers = async () => {
     try {
       const { data, error } = await supabase
@@ -52,7 +58,6 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
     }
   };
 
-  // جلب مواعيد التوفر للمعلم المحدد
   const fetchAvailability = async (tId) => {
     try {
       const { data, error } = await supabase
@@ -68,11 +73,10 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
     }
   };
 
-  // إضافة موعد توفر جديد
   const handleAddAvailability = async (e) => {
     e.preventDefault();
     if (!selectedTeacher) {
-      setMessage({ type: 'error', text: 'يرجى اختيار المعلم أولاً.' });
+      setMessage({ type: 'error', text: t('teachers.selectTeacherFirst', 'يرجى اختيار المعلم أولاً.') });
       return;
     }
 
@@ -95,16 +99,15 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
 
       if (error) throw error;
 
-      setMessage({ type: 'success', text: 'تم إضافة الموعد بنجاح!' });
+      setMessage({ type: 'success', text: t('teachers.availabilityAddedSuccess', 'تم إضافة الموعد بنجاح!') });
       fetchAvailability(selectedTeacher);
     } catch (err) {
-      setMessage({ type: 'error', text: 'حدث خطأ أثناء الحفظ: ' + err.message });
+      setMessage({ type: 'error', text: t('common.errorOccurred', 'حدث خطأ أثناء الحفظ: ') + err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  // حذف موعد توفر
   const handleDelete = async (id) => {
     try {
       const { error } = await supabase
@@ -121,28 +124,27 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
 
   return (
     <div 
-      dir={dir} 
-      style={{ backgroundColor: colors?.surface || '#0F172A' }}
-      className="w-full max-w-4xl border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col gap-6 text-white"
+      dir={isRtl ? 'rtl' : 'ltr'} 
+      className={`${UI.card} w-full max-w-4xl flex flex-col gap-6`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <div className="flex items-center justify-between border-b border-semantic-borderCard pb-4">
         <div className="flex items-center gap-2.5">
-          <Calendar className="w-6 h-6 text-[#FBBF24]" />
-          <h2 className="text-lg font-bold">إدارة مواعيد توفر المعلمين</h2>
+          <Calendar className="w-6 h-6 text-semantic-actionPrimary" />
+          <h2 className="text-lg font-bold text-semantic-textPrimary">{t('teachers.availabilityManagerTitle', 'إدارة مواعيد توفر المعلمين')}</h2>
         </div>
 
         {/* اختيار المعلم */}
         {teachers.length > 0 && (
-          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-            <User className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 bg-semantic-surfaceInput px-3 py-1.5 rounded-xl border border-semantic-borderInput">
+            <User className="w-4 h-4 text-semantic-textSecondary" />
             <select
               value={selectedTeacher}
               onChange={(e) => setSelectedTeacher(e.target.value)}
-              className="bg-transparent text-xs text-white border-none focus:outline-none"
+              className="bg-transparent text-xs text-semantic-textPrimary border-none focus:outline-none cursor-pointer"
             >
               {teachers.map((t) => (
-                <option key={t.id} value={t.id} className="bg-slate-800 text-white">
+                <option key={t.id} value={t.id} className="bg-slate-900 text-white">
                   {t.name}
                 </option>
               ))}
@@ -154,8 +156,8 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
       {message && (
         <div className={`p-3.5 rounded-xl flex items-center gap-2 text-xs font-bold ${
           message.type === 'success' 
-            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+            ? 'bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30' 
+            : 'bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30'
         }`}>
           {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{message.text}</span>
@@ -163,22 +165,22 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
       )}
 
       {/* Form */}
-      <form onSubmit={handleAddAvailability} className="bg-white/[0.02] p-4 rounded-xl border border-white/5 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#FBBF24]">
+      <form onSubmit={handleAddAvailability} className="bg-semantic-surfaceInput/40 p-4 rounded-xl border border-semantic-borderCard space-y-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-semantic-actionPrimary">
           <Plus className="w-4 h-4" />
-          <span>إضافة فترات توفر جديدة</span>
+          <span>{t('teachers.addNewSlot', 'إضافة فترات توفر جديدة')}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-slate-300 mb-1">اليوم</label>
+            <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.day', 'اليوم')}</label>
             <select
               value={dayOfWeek}
               onChange={(e) => setDayOfWeek(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#FBBF24]"
+              className={UI.input}
             >
               {daysOptions.map((day) => (
-                <option key={day.value} value={day.value}>
+                <option key={day.value} value={day.value} className="bg-slate-900 text-white">
                   {day.label}
                 </option>
               ))}
@@ -186,23 +188,25 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 mb-1">من الساعة</label>
+            <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.fromTime', 'من الساعة')}</label>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#FBBF24]"
+              className={`${UI.input} text-start`}
+              dir="ltr"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 mb-1">إلى الساعة</label>
+            <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.toTime', 'إلى الساعة')}</label>
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#FBBF24]"
+              className={`${UI.input} text-start`}
+              dir="ltr"
               required
             />
           </div>
@@ -211,32 +215,36 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FBBF24] text-[#0F172A] text-xs font-bold rounded-xl hover:bg-[#FBBF24]/90 transition-colors"
+          className={`${UI.btnPrimary} flex items-center justify-center gap-1.5 cursor-pointer`}
         >
-          <Save className="w-4 h-4" />
-          <span>{loading ? 'جاري الحفظ...' : 'حفظ موعد التوفر'}</span>
+          <Save className="variable w-4 h-4" />
+          <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('teachers.saveSlot', 'حفظ موعد التوفر')}</span>
         </button>
       </form>
 
       {/* Grid view of availability */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-xs font-bold text-slate-400">جدول المواعيد المسجلة ({availabilityList.length})</h3>
+        <h3 className="text-xs font-bold text-semantic-textSecondary">
+          {t('teachers.registeredSlots', 'جدول المواعيد المسجلة')} (<bdi>{availabilityList.length}</bdi>)
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {availabilityList.length === 0 ? (
-            <p className="text-xs text-slate-500 py-4 col-span-2 text-center">لا توجد مواعيد توفر مسجلة لهذا المعلم.</p>
+            <p className="text-xs text-semantic-textMuted py-4 col-span-2 text-center">
+              {t('teachers.noSlotsFound', 'لا توجد مواعيد توفر مسجلة لهذا المعلم.')}
+            </p>
           ) : (
             availabilityList.map((item) => (
-              <div key={item.id} className="p-3.5 bg-white/[0.02] border border-white/5 rounded-xl flex items-center justify-between">
+              <div key={item.id} className="p-3.5 card-surface border-semantic-borderCard flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#FBBF24]/10 text-[#FBBF24]">
+                  <div className="p-2 rounded-lg bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-white">
+                    <span className="text-xs font-bold text-semantic-textPrimary">
                       {daysOptions.find((d) => d.value === item.day_of_week)?.label || item.day_of_week}
                     </span>
-                    <span className="text-[11px] text-slate-400">
-                      من {item.start_time} إلى {item.end_time}
+                    <span className="text-[11px] text-semantic-textSecondary">
+                      <bdi>{item.start_time}</bdi> - <bdi>{item.end_time}</bdi>
                     </span>
                   </div>
                 </div>
@@ -244,8 +252,8 @@ export default function TeacherAvailabilityManager({ teacherId, dir = 'rtl' }) {
                 <button
                   type="button"
                   onClick={() => handleDelete(item.id)}
-                  className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
-                  title="حذف"
+                  className="p-1.5 rounded-lg bg-semantic-dangerBg text-semantic-danger hover:bg-semantic-danger/20 transition-colors cursor-pointer"
+                  title={t('common.delete', 'حذف')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
