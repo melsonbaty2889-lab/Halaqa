@@ -1,10 +1,16 @@
+/* src/components/Teachers/AddStaffModal.jsx */
+
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
-import { C } from '@/theme/colors';
-import { Btn, Input } from '@/components/UI/UI';
+import { useTranslation } from 'react-i18next';
+import { UI } from '@/theme/styles';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,7 +31,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
   if (!isOpen) return null;
 
-  // المسميات المبسطة
   const titlesList = [
     'معلّم / مقرئ',
     'مشرف تعليمي',
@@ -54,7 +59,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setErrorMsg('يرجى إدخال اسم الكادر');
+      setErrorMsg(t('teachers.errorNameRequired', 'يرجى إدخال اسم الكادر'));
       return;
     }
 
@@ -105,29 +110,29 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
       onClose();
     } catch (err) {
       console.error("🚨 خطأ أثناء إضافة الكادر:", err);
-      setErrorMsg(err.message || "حدث خطأ أثناء حفظ البيانات");
+      setErrorMsg(err.message || t('common.errorOccurred', 'حدث خطأ أثناء حفظ البيانات'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-semantic-bgPage/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div 
-        className="w-full max-w-2xl rounded-2xl p-6 shadow-2xl border text-white max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: C.surface, borderColor: C.border }}
+        className={`${UI.card} w-full max-w-2xl p-6 text-semantic-textPrimary max-h-[90vh] overflow-y-auto`}
+        dir={isRtl ? 'rtl' : 'ltr'}
       >
-        <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
-          <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: C.primary }}>
-            <UserPlus className="w-5 h-5" /> إضافة كادر تعليمي / إداري
+        <div className="flex justify-between items-center mb-5 pb-3 border-b border-semantic-borderCard">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-semantic-actionPrimary">
+            <UserPlus className="w-5 h-5" /> {t('teachers.addStaffTitle', 'إضافة كادر تعليمي / إداري')}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-xs font-bold mb-4">
+          <div className="bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger p-3 rounded-xl text-xs font-bold mb-4">
             {errorMsg}
           </div>
         )}
@@ -135,108 +140,111 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-slate-300 mb-1">الاسم الكامل *</label>
-              <Input 
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.fullName', 'الاسم الكامل *')}</label>
+              <input 
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="اسم المعلم أو الإداري"
+                placeholder={t('teachers.namePlaceholder', 'اسم المعلم أو الإداري')}
+                className={UI.input}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">المسمى الوظيفي</label>
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.jobTitle', 'المسمى الوظيفي')}</label>
               <select 
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                className={UI.input}
               >
-                {titlesList.map((t, idx) => (
-                  <option key={idx} value={t}>{t}</option>
+                {titlesList.map((item, idx) => (
+                  <option key={idx} value={item} className="bg-slate-900 text-white">{item}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">البريد الإلكتروني</label>
-              <Input 
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.email', 'البريد الإلكتروني')}</label>
+              <input 
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="email@example.com"
+                className={UI.input}
                 dir="ltr"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">رقم الهاتف / الواتساب</label>
-              <Input 
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.phone', 'رقم الهاتف / الواتساب')}</label>
+              <input 
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+20 / +966 / +1 ..."
+                className={UI.input}
                 dir="ltr"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">الصلاحية للنظام</label>
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.systemRole', 'الصلاحية للنظام')}</label>
               <select 
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                className={UI.input}
               >
-                <option value="teacher">معلّم (حلقة)</option>
-                <option value="admin">مدير أكاديمية (إدارة + تدريس)</option>
-                <option value="supervisor">مشرف تعليمي</option>
+                <option value="teacher" className="bg-slate-900 text-white">{t('teachers.roleTeacher', 'معلّم (حلقة)')}</option>
+                <option value="admin" className="bg-slate-900 text-white">{t('teachers.roleAdmin', 'مدير أكاديمية (إدارة + تدريس)')}</option>
+                <option value="supervisor" className="bg-slate-900 text-white">{t('teachers.roleSupervisor', 'مشرف تعليمي')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs text-slate-300 mb-1">المنطقة الزمنية (Timezone)</label>
+              <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.timezone', 'المنطقة الزمنية (Timezone)')}</label>
               <select 
                 value={formData.timezone}
                 onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                className="w-full p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                className={UI.input}
               >
-                <option value="Africa/Cairo">مصر (UTC+2)</option>
-                <option value="Asia/Riyadh">السعودية / الخليج (UTC+3)</option>
-                <option value="UTC">جرينتش (UTC+0)</option>
-                <option value="Africa/Casablanca">المغرب العربي (UTC+1)</option>
-                <option value="America/New_York">نيويورك (UTC-5)</option>
+                <option value="Africa/Cairo" className="bg-slate-900 text-white">مصر (UTC+2)</option>
+                <option value="Asia/Riyadh" className="bg-slate-900 text-white">السعودية / الخليج (UTC+3)</option>
+                <option value="UTC" className="bg-slate-900 text-white">جرينتش (UTC+0)</option>
+                <option value="Africa/Casablanca" className="bg-slate-900 text-white">المغرب العربي (UTC+1)</option>
+                <option value="America/New_York" className="bg-slate-900 text-white">نيويورك (UTC-5)</option>
               </select>
             </div>
           </div>
 
           {/* خيار التدريس الفعلي */}
-          <div className="bg-slate-800/50 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+          <div className="card-surface p-3 border-semantic-borderCard/50 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-200">إتاحة التدريس المباشر للحلقات</p>
-              <p className="text-[10px] text-slate-400">تفعيل هذا الخيار يسمح ببيان الاسم في قائمة معلمي الحلقات</p>
+              <p className="text-xs font-bold text-semantic-textPrimary">{t('teachers.enableTeaching', 'إتاحة التدريس المباشر للحلقات')}</p>
+              <p className="text-[10px] text-semantic-textSecondary">{t('teachers.enableTeachingDesc', 'تفعيل هذا الخيار يسمح ببيان الاسم في قائمة معلمي الحلقات')}</p>
             </div>
             <input 
               type="checkbox"
               checked={formData.isTeaching}
               onChange={(e) => setFormData({ ...formData, isTeaching: e.target.checked })}
-              className="w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-0 cursor-pointer"
+              className="w-4 h-4 rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer"
             />
           </div>
 
           {/* الإجازات القرآنية */}
           {formData.isTeaching && (
             <div className="pt-2">
-              <label className="block text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5">
-                <Award className="w-4 h-4" /> الإجازات القرآنية
+              <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
+                <Award className="w-4 h-4" /> {t('teachers.ijazat', 'الإجازات القرآنية')}
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
                 {ijazatOptions.map((ijaza, idx) => (
-                  <label key={idx} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white">
+                  <label key={idx} className="flex items-center gap-2 text-xs text-semantic-textSecondary cursor-pointer hover:text-semantic-textPrimary">
                     <input 
                       type="checkbox"
                       checked={formData.ijazat.includes(ijaza)}
                       onChange={() => handleIjazatChange(ijaza)}
-                      className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0"
+                      className="rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer"
                     />
                     <span>{ijaza}</span>
                   </label>
@@ -247,50 +255,51 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
           {/* النظام المالي */}
           <div className="pt-2">
-            <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4 text-emerald-400" /> التعاقد والماليات
+            <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
+              <DollarSign className="w-4 h-4 text-semantic-success" /> {t('teachers.financialSystem', 'التعاقد والماليات')}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <select 
                 value={formData.compensationType}
                 onChange={(e) => setFormData({ ...formData, compensationType: e.target.value })}
-                className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                className={UI.input}
               >
-                <option value="volunteer">احتساب / تطوع</option>
-                <option value="hourly">بالساعة</option>
-                <option value="monthly">راتب شهري</option>
+                <option value="volunteer" className="bg-slate-900 text-white">{t('teachers.volunteer', 'احتساب / تطوع')}</option>
+                <option value="hourly" className="bg-slate-900 text-white">{t('teachers.hourly', 'بالساعة')}</option>
+                <option value="monthly" className="bg-slate-900 text-white">{t('teachers.monthly', 'راتب شهري')}</option>
               </select>
 
               {formData.compensationType !== 'volunteer' && (
                 <>
-                  <Input 
+                  <input 
                     type="number"
                     value={formData.hourlyRate}
                     onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                    placeholder="المبلغ"
+                    placeholder={t('teachers.amount', 'المبلغ')}
+                    className={UI.input}
                   />
                   <select 
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="p-2.5 rounded-xl bg-slate-800 border border-white/10 text-white text-xs focus:outline-none"
+                    className={UI.input}
                   >
-                    <option value="EGP">EGP (ج.م)</option>
-                    <option value="SAR">SAR (ر.س)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
+                    <option value="EGP" className="bg-slate-900 text-white">EGP (ج.م)</option>
+                    <option value="SAR" className="bg-slate-900 text-white">SAR (ر.س)</option>
+                    <option value="USD" className="bg-slate-900 text-white">USD ($)</option>
+                    <option value="EUR" className="bg-slate-900 text-white">EUR (€)</option>
                   </select>
                 </>
               )}
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-white/10">
-            <Btn type="submit" disabled={loading} variant="primary" className="flex-1 flex items-center justify-center gap-2">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ البيانات'}
-            </Btn>
-            <Btn type="button" onClick={onClose} variant="secondary" className="flex-1">
-              إلغاء
-            </Btn>
+          <div className="flex gap-3 pt-4 border-t border-semantic-borderCard">
+            <button type="submit" disabled={loading} className={`${UI.btnPrimary} flex-1 flex items-center justify-center gap-2 cursor-pointer`}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save', 'حفظ البيانات')}
+            </button>
+            <button type="button" onClick={onClose} className={`${UI.btnSecondary} flex-1 cursor-pointer`}>
+              {t('common.cancel', 'إلغاء')}
+            </button>
           </div>
         </form>
       </div>
