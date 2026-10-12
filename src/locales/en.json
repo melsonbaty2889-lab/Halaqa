@@ -543,12 +543,19 @@
     "years": "years"
   },
   "days": {
+    "fri": "الجمعة",
     "friday": "Friday",
+    "mon": "الإثنين",
     "monday": "Monday",
+    "sat": "السبت",
     "saturday": "Saturday",
+    "sun": "الأحد",
     "sunday": "Sunday",
+    "thu": "الخميس",
     "thursday": "Thursday",
+    "tue": "الثلاثاء",
     "tuesday": "Tuesday",
+    "wed": "الأربعاء",
     "wednesday": "Wednesday"
   },
   "daysOfWeekLabel": "أيام انعقاد الحلقة",
