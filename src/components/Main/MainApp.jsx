@@ -112,7 +112,7 @@ const Payments = safeLazy(() => import('@/components/Payments/StudentPayments.js
 const Settings = safeLazy(() => import('@/components/Settings/Settings.jsx')); 
 const CommunicationHub = safeLazy(() => import('@/components/Notifications/CommunicationHub.jsx'));
 const Reports = safeLazy(() => import('@/components/Reports/Reports.jsx'));
-const HalaqasManager.jsx = safeLazy(() => import('@/components/Halaqat/HalaqasManager.jsx'));
+const HalaqasManager = safeLazy(() => import('@/components/Halaqat/HalaqasManager.jsx'));
 const RealtimeAudit = safeLazy(() => import('@/components/Logs/RealtimeAudit.jsx'));
 const Parents = safeLazy(() => import('@/components/Parents/ParentsManagement.jsx'));
 const GamificationStreaks = safeLazy(() => import('@/components/Gamification/GamificationStreaks.jsx'));
