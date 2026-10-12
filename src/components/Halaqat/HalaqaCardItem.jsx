@@ -5,7 +5,7 @@ import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar, U
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent, getTrackOptions, getTargetAudienceOptions } from './HalaqaConstants';
-import { formatTimeString } from '@/utils/dateUtils';
+import { formatTimeRange } from '@/utils/formatters';
 
 export default function HalaqaCardItem({ 
   halaqa, 
@@ -56,20 +56,6 @@ export default function HalaqaCardItem({
 
   const hasTeacher = Boolean(teacherName || halaqa?.teacher_id);
 
-  const renderFormattedTime = (timeStr) => {
-    if (!timeStr) return '';
-    if (timeStr.includes('ص') || timeStr.includes('م') || timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
-      return timeStr;
-    }
-    const [hours, minutes] = timeStr.split(':');
-    if (hours !== undefined && minutes !== undefined) {
-      const dummyDate = new Date();
-      dummyDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
-      return formatTimeString(dummyDate, currentLang);
-    }
-    return timeStr;
-  };
-
   const formatDaysDisplay = (daysArray = []) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const dayNames = {
@@ -85,8 +71,7 @@ export default function HalaqaCardItem({
     return daysArray.map((day) => dayNames[day] || day).join(separator);
   };
 
-  const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
-  const endTimeFormatted = renderFormattedTime(halaqa?.end_time);
+  const formattedTimeRange = formatTimeRange(halaqa?.start_time, halaqa?.end_time, currentLang);
   const formattedDays = formatDaysDisplay(halaqa?.days_of_week);
   const isArchived = Boolean(halaqa?.is_archived);
 
@@ -151,7 +136,7 @@ export default function HalaqaCardItem({
             </div>
           </div>
 
-          {/* المسار التعليمي والفئة المستهدفة (محاذاة لليمين تماماً) */}
+          {/* المسار التعليمي والفئة المستهدفة */}
           {(currentTrack?.label || currentAudience?.label) && (
             <div className="flex flex-wrap items-center gap-1.5 justify-start">
               {currentTrack?.label && (
@@ -234,13 +219,13 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* المواعيد والأيام والحد الأقصى مع عزل اتجاه الأرقام */}
+        {/* المواعيد والأيام والحد الأقصى مع ضبط اتجاه الوقت القياسي */}
         <div className="space-y-1">
-          {(startTimeFormatted || endTimeFormatted) && (
+          {formattedTimeRange && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
               <Clock size={13} className="text-semantic-textMuted shrink-0" />
               <bdi className="font-semibold truncate" style={{ direction: 'ltr', display: 'inline-block' }}>
-                {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
+                {formattedTimeRange}
               </bdi>
             </div>
           )}
