@@ -247,28 +247,23 @@ export default function HalaqasManager({
   return (
     <div className="w-full max-w-7xl mx-auto px-4 space-y-4 pt-3 pb-12 bg-app-layout">
       
-      {/* 1. ترويسة الصفحة وزر الإضافة المدمج الذكي */}
-      <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm">
-        <div>
-          <h1 className="text-sm sm:text-base font-black text-semantic-textPrimary m-0">
-            {t('halaqasManagerTitle', 'إدارة الحلقات والفصول')}
-          </h1>
-          <p className="text-[11px] text-semantic-textMuted m-0 hidden sm:block">
-            {t('halaqasManagerSub', 'تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة')}
-          </p>
-        </div>
+      {/* شريط علوي مرن ونظيف يضم الوصف وزر الإضافة دون تكرار العنوان */}
+      <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm">
+        <p className="text-xs text-semantic-textSecondary m-0 font-medium">
+          {t('halaqasManagerSub', 'تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة')}
+        </p>
 
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} py-2 px-3.5 font-extrabold text-xs flex items-center gap-1.5 rounded-xl shadow-md shrink-0 cursor-pointer`}
+          className={`${UI.btnPrimary} py-2 px-4 font-extrabold text-xs flex items-center gap-1.5 rounded-xl shadow-md shrink-0 cursor-pointer`}
         >
-          <Plus size={15} />
-          <span>{t('createNewHalaqaBtn', 'إضافة حلقة')}</span>
+          <Plus size={16} />
+          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
         </button>
       </div>
 
-      {/* 2. شريط الفلترة */}
+      {/* شريط الفلترة */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -279,7 +274,7 @@ export default function HalaqasManager({
         stats={stats}
       />
 
-      {/* 3. حاوية العرض بنمط الشبكة */}
+      {/* حاوية العرض بنمط الشبكة القياسي */}
       {filteredHalaqas.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 w-full">
           {filteredHalaqas.map((halaqa) => (
