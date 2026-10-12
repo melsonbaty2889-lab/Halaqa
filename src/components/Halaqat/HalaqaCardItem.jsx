@@ -1,7 +1,7 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Archive } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
@@ -68,8 +68,23 @@ export default function HalaqaCardItem({
     return timeStr;
   };
 
+  const formatDaysDisplay = (daysArray = []) => {
+    if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
+    const dayNames = {
+      sat: t('days.sat', 'السبت'),
+      sun: t('days.sun', 'الأحد'),
+      mon: t('days.mon', 'الإثنين'),
+      tue: t('days.tue', 'الثلاثاء'),
+      wed: t('days.wed', 'الأربعاء'),
+      thu: t('days.thu', 'الخميس'),
+      fri: t('days.fri', 'الجمعة')
+    };
+    return daysArray.map((day) => dayNames[day] || day).join(' ، ');
+  };
+
   const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
   const endTimeFormatted = renderFormattedTime(halaqa?.end_time);
+  const formattedDays = formatDaysDisplay(halaqa?.days_of_week);
   const isArchived = Boolean(halaqa?.is_archived);
 
   const handleSelectTeacher = async (teacherId) => {
@@ -175,15 +190,26 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* التوقيت */}
-        {(startTimeFormatted || endTimeFormatted) && (
-          <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
-            <Clock size={13} className="text-semantic-textMuted shrink-0" />
-            <span className="font-semibold truncate">
-              {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
-            </span>
-          </div>
-        )}
+        {/* المواعيد والأيام */}
+        <div className="space-y-1">
+          {(startTimeFormatted || endTimeFormatted) && (
+            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
+              <Clock size={13} className="text-semantic-textMuted shrink-0" />
+              <span className="font-semibold truncate">
+                {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
+              </span>
+            </div>
+          )}
+
+          {formattedDays && (
+            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
+              <Calendar size={13} className="text-semantic-actionPrimary shrink-0" />
+              <span className="font-semibold truncate text-semantic-textPrimary">
+                {formattedDays}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* أزرار العمليات السريعة */}
