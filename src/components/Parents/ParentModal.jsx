@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, User, Phone, Mail, Save, AlertCircle } from 'lucide-react';
+import { Modal } from '@/components/UI/Modal';
+
 
 export default function ParentModal({ isOpen, onClose, parentToEdit = null, academyId, onSaved }) {
   const [name, setName] = useState('');
