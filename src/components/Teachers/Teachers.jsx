@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { UI } from '@/theme/styles';
 import AddStaffModal from './AddStaffModal';
 import TeacherCard from './TeacherCard';
 import TeacherFilter from './TeacherFilter';
@@ -86,7 +87,7 @@ export default function Teachers({
   });
 
   return (
-    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-['Cairo',sans-serif]`}>
+    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-cairo`}>
       
       {/* 1. الترويسة الرئيسية وزر الإضافة */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -102,7 +103,7 @@ export default function Teachers({
 
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm w-full md:w-auto cursor-pointer"
+          className={`${UI.btnPrimary} w-full md:w-auto cursor-pointer`}
         >
           <Plus className="w-4 h-4" /> 
           {t('teachers.addStaff', 'إضافة كادر جديد')}
@@ -111,7 +112,7 @@ export default function Teachers({
 
       {/* 2. بطاقات الإحصائيات المختصرة */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card-surface flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
             <p className="text-2xl font-bold text-semantic-textPrimary mt-1">
@@ -123,7 +124,7 @@ export default function Teachers({
           </div>
         </div>
 
-        <div className="card-surface flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
             <p className="text-2xl font-bold text-semantic-success mt-1">
@@ -135,7 +136,7 @@ export default function Teachers({
           </div>
         </div>
 
-        <div className="card-surface flex items-center justify-between">
+        <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
             <p className="text-2xl font-bold text-sky-400 mt-1">
@@ -162,10 +163,10 @@ export default function Teachers({
 
       {/* 4. قسم إدارة أوقات التفرغ (إن وجد معلم محدد) */}
       {selectedTeacherForAvailability && (
-        <div className="card-surface relative border-semantic-actionPrimary/40">
+        <div className={`${UI.card} relative border-semantic-actionPrimary/40`}>
           <button 
             onClick={() => setSelectedTeacherForAvailability(null)}
-            className="absolute top-4 left-4 text-xs text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer"
+            className="absolute top-4 end-4 text-xs text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer"
           >
             ✕ {t('common.close', 'إغلاق')}
           </button>
@@ -177,7 +178,7 @@ export default function Teachers({
       {loading ? (
         <div className="text-center py-12 text-semantic-textSecondary text-xs">{t('common.loading', 'جاري تحميل البيانات...')}</div>
       ) : filteredStaff.length === 0 ? (
-        <div className="text-center py-12 card-surface border-dashed text-semantic-textSecondary text-xs">
+        <div className={`text-center py-12 ${UI.card} border-dashed text-semantic-textSecondary text-xs`}>
           {t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}
         </div>
       ) : (
