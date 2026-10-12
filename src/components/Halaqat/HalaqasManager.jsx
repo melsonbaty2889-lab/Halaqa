@@ -12,6 +12,7 @@ import HalaqaFormModal from './HalaqaFormModal';
 
 const getEmptyFormData = (academyId) => ({
   name: '',
+  days_of_week: [],
   educational_track: '',
   teacher_id: '',
   target_audience: '',
@@ -190,6 +191,7 @@ export default function HalaqasManager({
       id: halaqa.id,
       name: halaqa.name,
       name_text: typeof halaqa.name === 'string' ? halaqa.name : '',
+      days_of_week: Array.isArray(halaqa.days_of_week) ? halaqa.days_of_week : [],
       educational_track: halaqa.educational_track || halaqa.track || 'hifz',
       teacher_id: halaqa.teacher_id || '',
       target_audience: halaqa.target_audience || 'kids',
@@ -212,6 +214,7 @@ export default function HalaqasManager({
 
       const dataToSave = {
         ...baseData,
+        days_of_week: Array.isArray(baseData.days_of_week) ? baseData.days_of_week : [],
         educational_track: baseData.educational_track || 'hifz',
         target_audience: baseData.target_audience || 'kids',
         teaching_type: baseData.teaching_type || 'online',
@@ -247,7 +250,7 @@ export default function HalaqasManager({
   return (
     <div className="w-full max-w-7xl mx-auto px-4 space-y-4 pt-3 pb-12 bg-app-layout">
       
-      {/* شريط علوي مرن ونظيف يضم الوصف الجديد وزر الإضافة دون تداخل */}
+      {/* شريط علوي مرن ونظيف */}
       <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm">
         <p className="text-xs text-semantic-textSecondary m-0 font-medium truncate">
           {t('halaqasManagerSub', 'متابعة وتنظيم الحلقات التعليمية')}
