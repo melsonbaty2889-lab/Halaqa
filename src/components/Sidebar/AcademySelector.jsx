@@ -3,6 +3,7 @@ import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Building2, Plus, X, Clock } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
+import { formatDigits, formatGregorianDate } from '@/utils/formatters';
 
 export default function AcademySelector({
   academiesList = [],
@@ -23,6 +24,7 @@ export default function AcademySelector({
   dropDirection = 'down'
 }) {
   const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
   const isRtl = i18n.dir() === 'rtl';
 
   const resolveText = useCallback((textObj) => {
@@ -32,10 +34,10 @@ export default function AcademySelector({
     }
     if (typeof textObj === 'string') return textObj;
     if (textObj && typeof textObj === 'object') {
-      return textObj[i18n.language] || textObj.ar || textObj.en || '';
+      return textObj[currentLang] || textObj.ar || textObj.en || '';
     }
     return '';
-  }, [getText, i18n.language]);
+  }, [getText, currentLang]);
 
   const activeName = useMemo(() => {
     if (currentAcademyName) return currentAcademyName;
@@ -57,21 +59,11 @@ export default function AcademySelector({
     return sub?.trial_ends_at || currentAcademy?.trial_ends_at || null;
   }, [subscription, currentAcademy]);
 
-  // تنسيق تاريخ الانتهاء بحسب اللغة الحالية
+  // تنسيق تاريخ الانتهاء باستخدام دالة formatGregorianDate الموحدة للأرقام (123)
   const formattedExpiryDate = useMemo(() => {
     if (!expiryDate) return null;
-    try {
-      const d = new Date(expiryDate);
-      if (isNaN(d.getTime())) return null;
-      return d.toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch {
-      return null;
-    }
-  }, [expiryDate, i18n.language]);
+    return formatGregorianDate(expiryDate, currentLang);
+  }, [expiryDate, currentLang]);
 
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
 
@@ -113,7 +105,7 @@ export default function AcademySelector({
             </h2>
 
             <div className="flex items-center gap-1.5 flex-wrap">
-              {/* شارة الحالة الديناميكية المعتمِدة على التوكنز واللغة */}
+              {/* شارة الحالة الديناميكية */}
               {statusBadge && (
                 <span 
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
@@ -123,16 +115,20 @@ export default function AcademySelector({
                 </span>
               )}
 
-              {/* عداد الأيام المتبقية */}
+              {/* عداد الأيام المتبقية بأرقام موحدة */}
               {typeof effectiveDaysLeft === 'number' && effectiveDaysLeft > 0 && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-md border border-amber-400/20">
                   <Clock size={10} />
-                  <span>{t('sidebar.daysLeft', 'متبقي {{days}} يوم', { days: effectiveDaysLeft })}</span>
+                  <span>
+                    {t('sidebar.daysLeft', 'متبقي {{days}} يوم', { 
+                      days: formatDigits(effectiveDaysLeft) 
+                    })}
+                  </span>
                 </span>
               )}
             </div>
 
-            {/* تاريخ الانتهاء الصحيح */}
+            {/* تاريخ الانتهاء الموحد */}
             {formattedExpiryDate && (
               <span className="text-[10px] text-semantic-textMuted leading-none mt-0.5">
                 {t('sidebar.expiresOn', 'ينتهي في:')} {formattedExpiryDate}
