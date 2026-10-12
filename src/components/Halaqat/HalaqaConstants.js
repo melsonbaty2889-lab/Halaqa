@@ -1,3 +1,8 @@
+/* src/components/Halaqat/HalaqaConstants.js */
+
+/**
+ * دالة جلب النص المترجم بمرونة حسب اللغة الحالية واللغات الست المعتمدة
+ */
 export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText = null) => {
   if (!value) return '';
   
@@ -15,17 +20,26 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
   }
 
   if (typeof value === 'object' && value !== null) {
-    return value[currentLang] || value.ar || value.en || value.fr || value.tr || value.ur || value.id || '';
+    return (
+      value[currentLang] ||
+      value.ar ||
+      value.en ||
+      value.fr ||
+      value.tr ||
+      value.ur ||
+      value.id ||
+      Object.values(value)[0] ||
+      ''
+    );
   }
 
   return '';
 };
 
 /**
- * خيارات المسارات التعليمية المعتمدة (مربوطة بقاعدة البيانات)
+ * المسارات التعليمية الأساسية فقط (تستخدم في نماذج الإنشاء والتعديل)
  */
 export const getTrackOptions = (t) => [
-  { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
   { value: 'hifz', label: t('trackHifz', 'حفظ القرآن الكريم وتجويده') },
   { value: 'muraja', label: t('trackMuraja', 'المراجعة والتثبيت') },
   { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
@@ -34,13 +48,28 @@ export const getTrackOptions = (t) => [
 ];
 
 /**
- * خيارات الفئات المستهدفة
+ * مسارات الفلترة (تستخدم في شريط الفلترة فقط عبر إضافة خيار "الكل")
+ */
+export const getFilterTrackOptions = (t) => [
+  { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
+  ...getTrackOptions(t)
+];
+
+/**
+ * الفئات المستهدفة الأساسية (تستخدم في النماذج)
  */
 export const getTargetAudienceOptions = (t) => [
-  { value: 'all', label: t('audienceAll', 'جميع الفئات') },
   { value: 'kids', label: t('audienceKids', 'الأطفال') },
   { value: 'males', label: t('audienceMales', 'الرجال / الذكور') },
   { value: 'females', label: t('audienceFemales', 'النساء / الإناث') }
+];
+
+/**
+ * فئات الفلترة المستهدفة (تستخدم في الفلاتر)
+ */
+export const getFilterTargetAudienceOptions = (t) => [
+  { value: 'all', label: t('audienceAll', 'جميع الفئات') },
+  ...getTargetAudienceOptions(t)
 ];
 
 /**
