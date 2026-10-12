@@ -20,7 +20,7 @@ export default function HalaqaCardItem({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   
-  // تحديد اتجاه النصوص ديناميكياً حسب اللغة (RTL للأوردو والعربية، LTR للغات الأخرى)
+  // اللغات ذات الاتجاه من اليمين إلى اليسار (العربية والأوردو)
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
@@ -82,7 +82,8 @@ export default function HalaqaCardItem({
       thu: t('days.thu', 'الخميس'),
       fri: t('days.fri', 'الجمعة')
     };
-    return daysArray.map((day) => dayNames[day] || day).join(currentLang === 'ar' || currentLang === 'ur' ? ' ، ' : ', ');
+    const separator = isRtl ? ' ، ' : ', ';
+    return daysArray.map((day) => dayNames[day] || day).join(separator);
   };
 
   const startTimeFormatted = renderFormattedTime(halaqa?.start_time);
@@ -117,18 +118,18 @@ export default function HalaqaCardItem({
 
   return (
     <div 
-      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md ${isRtl ? 'text-right' : 'text-left'}`} 
+      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md ${isRtl ? 'text-right' : 'text-left'}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <div>
-        {/* الترويسة: الاسم + الشارات */}
+        {/* الترويسة: الاسم والشارات */}
         <div className="flex flex-col gap-2 mb-2.5">
           <div className="flex justify-between items-center gap-2">
             <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
               {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
             </h4>
             
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               {isOnline ? (
                 <span className="p-1 rounded-full bg-semantic-actionPrimary/15 text-semantic-actionPrimary" title={t('onlineHalaqa', 'حلقة عن بُعد')}>
                   <Globe size={13} />
@@ -153,7 +154,7 @@ export default function HalaqaCardItem({
 
           {/* المسار التعليمي والفئة المستهدفة */}
           {(currentTrack?.label || currentAudience?.label) && (
-            <div className={`flex flex-wrap items-center gap-1.5 ${isRtl ? 'justify-start' : 'justify-start'}`}>
+            <div className="flex flex-wrap items-center gap-1.5">
               {currentTrack?.label && (
                 <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard/80">
                   {currentTrack.label}
@@ -168,7 +169,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* قائمة اختيار المعلم المدمجة */}
+        {/* قائمة المعلم المدمجة */}
         <div className="relative mb-2.5" ref={dropdownRef}>
           <button
             type="button"
@@ -234,14 +235,14 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* التوقيت والأيام والحد الأقصى للطلاب مع دعم اللغات */}
+        {/* التوقيت والأيام والأعداد مع الحماية بالـ Unicode Bidi */}
         <div className="space-y-1">
           {(startTimeFormatted || endTimeFormatted) && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
               <Clock size={13} className="text-semantic-textMuted shrink-0" />
-              <span className="font-semibold truncate" style={{ unicodeBidi: 'embed' }}>
+              <bdi className="font-semibold truncate">
                 {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
-              </span>
+              </bdi>
             </div>
           )}
 
@@ -257,8 +258,9 @@ export default function HalaqaCardItem({
           {halaqa?.max_students && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted pt-0.5">
               <Users size={12} className="shrink-0" />
-              <span style={{ unicodeBidi: 'embed' }}>
-                {t('maxStudentsShort', 'الحد الأقصى:')} <strong className="text-semantic-textSecondary">{halaqa.max_students}</strong>
+              <span>
+                {t('maxStudentsShort', 'الحد الأقصى:')}{' '}
+                <bdi className="font-bold text-semantic-textSecondary">{halaqa.max_students}</bdi>
               </span>
             </div>
           )}
