@@ -242,3 +242,35 @@ export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير مح�
   }
   return countryCode;
 };
+
+// ==========================================
+// 5. تنسيق نطاقات الوقت (Time Range)
+// ==========================================
+export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
+  if (!startTime) return '';
+
+  const formatSingleTime = (timeStr) => {
+    if (!timeStr) return '';
+    const clean = formatDigits(timeStr).trim();
+    
+    const isPM = clean.includes('م') || /PM/i.test(clean);
+    const isAM = clean.includes('ص') || /AM/i.test(clean);
+    
+    const numOnly = clean.replace(/[^\d:]/g, '');
+    if (!numOnly) return clean;
+
+    if (isPM || isAM) {
+      const period = ['ar', 'ur'].includes(lang) ? (isPM ? 'م' : 'ص') : (isPM ? 'PM' : 'AM');
+      return `${numOnly} ${period}`;
+    }
+
+    return numOnly;
+  };
+
+  const startFormatted = formatSingleTime(startTime);
+  const endFormatted = formatSingleTime(endTime);
+
+  if (!endFormatted) return startFormatted;
+
+  return `${startFormatted} - ${endFormatted}`;
+};
