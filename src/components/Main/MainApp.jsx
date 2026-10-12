@@ -620,9 +620,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             avatar: session?.user?.user_metadata?.avatar_url || ""
           }}
         />
-        <main 
-          className={`flex-1 w-full box-border overflow-y-auto ${
-            isMobile ? 'p-3 pb-20' : 'p-6 pb-6'
+                <main 
+          className={`flex-1 w-full max-w-7xl mx-auto box-border overflow-y-auto ${
+            isMobile ? 'px-3 sm:px-5 py-3 pb-20' : 'px-4 sm:px-6 py-4 pb-6'
           }`}
         >
           <Suspense fallback={<PageSkeleton />}>
