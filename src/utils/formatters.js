@@ -1,3 +1,5 @@
+/* src/utils/formatters.js */
+
 import { RIWAYAT_MAP } from '@/constants/riwayat';
 import { COUNTRIES_MAP, COUNTRIES_LIST } from '@/constants/countries';
 
@@ -25,29 +27,62 @@ export const formatShortName = (name, lang = 'ar') => {
 };
 
 // ==========================================
-// 2. تنسيق الأرقام والنسب والعملات دولياً
+// 2. تنسيق وتحويل الأرقام والنسب والعملات موحدة (123)
 // ==========================================
-export const formatNumber = (number, locale = 'ar-EG', options = {}) => {
-  if (number === null || number === undefined || isNaN(number)) return '0';
-  return new Intl.NumberFormat(locale, options).format(number);
+
+/**
+ * تحويل دائم للأرقام الهندية/الفارسية إلى أرقام لاتينية قياسية (0-9)
+ */
+export const formatDigits = (input) => {
+  if (input === null || input === undefined) return '';
+  const str = String(input);
+  
+  const persianNumbers = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
+  const arabicEasternNumbers = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
+
+  let converted = str;
+  for (let i = 0; i < 10; i++) {
+    converted = converted.replace(persianNumbers[i], i).replace(arabicEasternNumbers[i], i);
+  }
+
+  return converted;
 };
 
-export const formatCurrency = (amount, currency = 'EGP', locale = 'ar-EG') => {
+/**
+ * تنسيق الأرقام مع ضمان ظهورها بالشكل القياسي الموحد (123) في جميع اللغات الست
+ */
+export const formatNumber = (number, locale = 'en-US', options = {}) => {
+  if (number === null || number === undefined || isNaN(number)) return '0';
+  const formatted = new Intl.NumberFormat(locale, {
+    numberingSystem: 'latn',
+    ...options
+  }).format(number);
+  
+  return formatDigits(formatted);
+};
+
+export const formatCurrency = (amount, currency = 'EGP', locale = 'en-US') => {
   if (amount === null || amount === undefined || isNaN(amount)) amount = 0;
-  return new Intl.NumberFormat(locale, {
+  const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
     maximumFractionDigits: 2,
+    numberingSystem: 'latn'
   }).format(amount);
+
+  return formatDigits(formatted);
 };
 
-export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
+export const formatPercent = (value, locale = 'en-US', decimals = 0) => {
   if (value === null || value === undefined || isNaN(value)) value = 0;
   const normalizedValue = value > 1 ? value / 100 : value;
-  return new Intl.NumberFormat(locale, {
+  const formatted = new Intl.NumberFormat(locale, {
     style: 'percent',
     maximumFractionDigits: decimals,
+    numberingSystem: 'latn'
   }).format(normalizedValue);
+
+  return formatDigits(formatted);
 };
 
 // ==========================================
@@ -56,21 +91,15 @@ export const formatPercent = (value, locale = 'ar-EG', decimals = 0) => {
 
 /**
  * الكشف الذكي والحيادي عن كود دولة المستخدم
- * 1. Timezone دقيق من COUNTRIES_LIST
- * 2. navigator.language
- * 3. navigator.languages
- * 4. Fallback النهائي: EG
  */
 export const detectUserCountryCode = () => {
   try {
-    // 1. مطابقة دقيقة للـ Timezone
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (tz && Array.isArray(COUNTRIES_LIST)) {
       const exactTzMatch = COUNTRIES_LIST.find((c) => c.timezone === tz);
       if (exactTzMatch) return exactTzMatch.code;
     }
 
-    // 2. مطابقة بواسطة navigator.language
     const primaryLang = typeof navigator !== 'undefined' ? navigator.language : null;
     if (primaryLang && primaryLang.includes('-')) {
       const codeFromLang = primaryLang.split('-')[1].toUpperCase();
@@ -78,7 +107,6 @@ export const detectUserCountryCode = () => {
       if (langMatch) return langMatch.code;
     }
 
-    // 3. مطابقة بواسطة navigator.languages
     const langList = typeof navigator !== 'undefined' && Array.isArray(navigator.languages) ? navigator.languages : [];
     for (const langItem of langList) {
       if (langItem && langItem.includes('-')) {
@@ -91,7 +119,6 @@ export const detectUserCountryCode = () => {
     // تجاهل أخطاء الوصول لخاصيات المتصفح
   }
 
-  // 4. Fallback النهائي الصريح
   return 'EG';
 };
 
@@ -101,10 +128,9 @@ export const detectUserCountryCode = () => {
 export const parsePhoneNumber = (rawPhone = '') => {
   if (!rawPhone) return { dialCode: '', phone: '' };
 
-  const clean = rawPhone.trim();
+  const clean = formatDigits(rawPhone).trim();
   const list = COUNTRIES_LIST || Object.values(COUNTRIES_MAP || {});
 
-  // ترتيب القائمة حسب طول dialCode تنازلياً لمنع مطابقة +1 قبل +1242
   const sortedCountries = [...list].sort(
     (a, b) => (b.dialCode || '').length - (a.dialCode || '').length
   );
@@ -128,7 +154,7 @@ export const parsePhoneNumber = (rawPhone = '') => {
  */
 export const formatPhoneNumber = (phone, countryCode = 'EG') => {
   if (!phone) return '';
-  const cleaned = phone.replace(/[^\d+]/g, '');
+  const cleaned = formatDigits(phone).replace(/[^\d+]/g, '');
   
   if (cleaned.startsWith('+')) return cleaned;
 
@@ -143,12 +169,11 @@ export const formatPhoneNumber = (phone, countryCode = 'EG') => {
 
 /**
  * دالة توحيد الرقم لتخزينه في قاعدة البيانات (بدون علامة +)
- * تطابق تماماً دالة normalize_phone في Supabase
  */
 export const normalizePhone = (phone, countryCode = 'EG') => {
   if (!phone) return null;
 
-  let cleaned = phone.replace(/[^0-9]/g, '');
+  let cleaned = formatDigits(phone).replace(/[^0-9]/g, '');
   if (!cleaned) return null;
 
   const country = COUNTRIES_MAP[countryCode?.toUpperCase()];
@@ -166,19 +191,22 @@ export const normalizePhone = (phone, countryCode = 'EG') => {
 };
 
 // ==========================================
-// 4. باقي أدوات التنسيق (بدون أي تعديل)
+// 4. باقي أدوات التنسيق
 // ==========================================
 export const formatAyahRange = (surahName, startAyah, endAyah, lang = 'ar') => {
   if (!surahName) return '';
   const surah = typeof surahName === 'object' ? formatName(surahName, lang) : surahName;
   
-  if (!startAyah) return surah;
-  if (!endAyah || startAyah === endAyah) {
-    return lang === 'ar' ? `${surah}: آية ${startAyah}` : `${surah}: Ayah ${startAyah}`;
+  const startDigits = formatDigits(startAyah);
+  const endDigits = formatDigits(endAyah);
+
+  if (!startDigits) return surah;
+  if (!endDigits || startDigits === endDigits) {
+    return lang === 'ar' ? `${surah}: آية ${startDigits}` : `${surah}: Ayah ${startDigits}`;
   }
   return lang === 'ar' 
-    ? `${surah}: من آية ${startAyah} إلى ${endAyah}` 
-    : `${surah}: Ayah ${startAyah}-${endAyah}`;
+    ? `${surah}: من آية ${startDigits} إلى ${endDigits}` 
+    : `${surah}: Ayah ${startDigits}-${endDigits}`;
 };
 
 export const truncateText = (text, maxLength = 50, fallback = '') => {
@@ -195,7 +223,7 @@ export const formatFileSize = (bytes, lang = 'ar') => {
     : ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const size = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
-  return `${formatNumber(size, lang === 'ar' ? 'ar-EG' : 'en-US')} ${sizes[i]}`;
+  return `${formatNumber(size)} ${sizes[i]}`;
 };
 
 export const formatRiwayah = (riwayahKey, lang = 'ar', fallback = 'غير محددة') => {
