@@ -1,5 +1,6 @@
 // src/utils/dateUtils.js
 import moment from 'moment-hijri';
+import { formatDigits } from './formatters';
 
 export const HIJRI_MONTHS = {
   ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'],
@@ -10,22 +11,10 @@ export const HIJRI_MONTHS = {
   id: ['Muharram', 'Safar', 'Rabiul Awal', 'Rabiul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', "Sya'ban", 'Ramadhan', 'Syawal', "Dzulqa'dah", 'Dzulhijjah']
 };
 
-export const toEngNums = (str) => {
-  if (!str && str !== 0) return '';
-  return String(str)
-    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶٧٨٩'.indexOf(d));
-};
-
-export const toArNums = (str) => {
-  if (!str && str !== 0) return '';
-  return String(str).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
-};
-
-export const toUrNums = (str) => {
-  if (!str && str !== 0) return '';
-  return String(str).replace(/\d/g, (d) => '۰۱۲۳۴۵۶٧٨٩'[d]);
-};
+// توحيد جميع دوال تحويل الأرقام لتستخدم الصيغة القياسية (1234) حصرياً
+export const toEngNums = (str) => formatDigits(str);
+export const toArNums = (str) => formatDigits(str);
+export const toUrNums = (str) => formatDigits(str);
 
 export const getSavedHijriOffset = () => {
   try {
@@ -115,16 +104,11 @@ export const formatTimeString = (dateObj, lang = 'ar') => {
   const formattedTime = new Intl.DateTimeFormat(cleanLang, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
+    numberingSystem: 'latn' // فرض الأرقام القياسية اللاتينية
   }).format(date);
 
-  if (cleanLang === 'ar') {
-    return toArNums(formattedTime);
-  } else if (cleanLang === 'ur') {
-    return toUrNums(formattedTime);
-  }
-
-  return formattedTime;
+  return formatDigits(formattedTime);
 };
 
 export const formatGregorianDate = (dateObj, lang = 'ar') => {
@@ -136,12 +120,11 @@ export const formatGregorianDate = (dateObj, lang = 'ar') => {
   const formatted = new Intl.DateTimeFormat(cleanLang, {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    numberingSystem: 'latn' // فرض الأرقام القياسية اللاتينية
   }).format(date);
 
-  if (cleanLang === 'ar') return toArNums(formatted);
-  if (cleanLang === 'ur') return toUrNums(formatted);
-  return formatted;
+  return formatDigits(formatted);
 };
 
 export const formatHijriDate = (dateObj, lang = 'ar') => {
@@ -156,18 +139,9 @@ export const formatHijriDate = (dateObj, lang = 'ar') => {
   const currentLangMap = HIJRI_MONTHS[cleanLang] ? cleanLang : 'ar';
   const monthName = HIJRI_MONTHS[currentLangMap][parts.month] || HIJRI_MONTHS.ar[parts.month];
 
-  let dayStr = String(parts.day);
-  let yearStr = String(parts.year);
-  let suffix = ['ar', 'ur'].includes(cleanLang) ? 'هـ' : 'AH';
-
-  if (cleanLang === 'ar') {
-    dayStr = toArNums(parts.day);
-    yearStr = toArNums(parts.year);
-  } else if (cleanLang === 'ur') {
-    dayStr = toUrNums(parts.day);
-    yearStr = toUrNums(parts.year);
-    suffix = 'ء';
-  }
+  const dayStr = formatDigits(parts.day);
+  const yearStr = formatDigits(parts.year);
+  const suffix = ['ar', 'ur'].includes(cleanLang) ? 'هـ' : 'AH';
 
   return `${dayStr} ${monthName} ${yearStr} ${suffix}`;
 };
@@ -176,16 +150,12 @@ export const formatHijriDate = (dateObj, lang = 'ar') => {
 // معالجة وتحويل أوقات الحلقات والتوقيت (Postgres / UI)
 // ==========================================
 
-/**
- * تحويل نص الوقت (سواء 12-ساعة بصيغة ص/م أو 24-ساعة) إلى دقائق إجمالية للمقارنة
- */
 export const parseTimeToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== 'string') return null;
 
-  const rawStr = toEngNums(timeStr).trim();
+  const rawStr = formatDigits(timeStr).trim();
   if (!rawStr) return null;
 
-  // التحقق من المؤشرات الصريحة للمساء والصباح قبل التنظيف
   const isPM = rawStr.includes('م') || /PM/i.test(rawStr);
   const isAM = rawStr.includes('ص') || /AM/i.test(rawStr);
 
@@ -207,9 +177,6 @@ export const parseTimeToMinutes = (timeStr) => {
   return hours * 60 + minutes;
 };
 
-/**
- * التحقق من أن وقت البدء أسبق من وقت الانتهاء (مع دعم الحلقات المسائية التي تنتهي عند منتصف الليل 12:00 ص)
- */
 export const isStartTimeBeforeEndTime = (startTime, endTime) => {
   if (!startTime || !endTime) return true;
 
@@ -218,7 +185,6 @@ export const isStartTimeBeforeEndTime = (startTime, endTime) => {
 
   if (startMins === null || endMins === null) return true;
 
-  // إذا انتهت الحلقة الساعة 12:00 ص (منتصف الليل 00:00) وكان البدء مساءً، فإن وقت الانتهاء يعتبر 24:00 (1440 دقيقة)
   if (endMins === 0 && startMins > 0) {
     endMins = 1440;
   }
@@ -226,9 +192,6 @@ export const isStartTimeBeforeEndTime = (startTime, endTime) => {
   return startMins < endMins;
 };
 
-/**
- * تحويل الوقت إلى صيغة HH:mm:ss القياسية المعتمدة في Postgres/Supabase
- */
 export const formatTimeForDb = (timeStr) => {
   const totalMins = parseTimeToMinutes(timeStr);
   if (totalMins === null) return '00:00:00';
