@@ -244,7 +244,7 @@ export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير مح�
 };
 
 // ==========================================
-// 5. تنسيق نطاقات الوقت (Time Range)
+// 5. تنسيق نطاقات الوقت (Time Range) بصيغة 12 ساعة مقروءة
 // ==========================================
 export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
   if (!startTime) return '';
@@ -268,13 +268,30 @@ export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
   const formatSingleTime = (timeStr) => {
     if (!timeStr) return '';
     const clean = formatDigits(timeStr).trim();
-    const isPM = clean.includes('م') || /PM/i.test(clean);
-    const isAM = clean.includes('ص') || /AM/i.test(clean);
-    const numOnly = clean.replace(/[^\d:]/g, '');
-    if (!numOnly) return clean;
+    
+    const parts = clean.replace(/[^\d:]/g, '').split(':');
+    let hours = parseInt(parts[0] || 0, 10);
+    const minutes = parts[1] !== undefined ? parts[1].padStart(2, '0') : '00';
 
+    if (isNaN(hours)) return clean;
+
+    let isPM = clean.includes('م') || /PM/i.test(clean);
+    let isAM = clean.includes('ص') || /AM/i.test(clean);
+
+    if (!isPM && !isAM) {
+      if (hours >= 12) {
+        isPM = true;
+        if (hours > 12) hours -= 12;
+      } else {
+        isAM = true;
+        if (hours === 0) hours = 12;
+      }
+    }
+
+    const formattedHours = String(hours).padStart(2, '0');
     const period = ['ar', 'ur'].includes(lang) ? (isPM ? 'م' : 'ص') : (isPM ? 'PM' : 'AM');
-    return `${numOnly} ${period}`;
+    
+    return `${formattedHours}:${minutes} ${period}`;
   };
 
   let start = startTime;
