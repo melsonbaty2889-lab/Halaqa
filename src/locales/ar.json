@@ -543,6 +543,8 @@
   },
   "halaqaNameLabel": "اسم الحلقة",
   "halaqaNamePlaceholder": "أدخل اسم الحلقة",
+  "halaqasManagerSub": "تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة",
+  "halaqasManagerTitle": "إدارة الحلقات والفصول",
   "halaqaTypeLabel": "نمط انعقاد الحلقة",
   "header": {
     "defaultUser": "الحساب الشخصي",
