@@ -247,10 +247,10 @@ export default function HalaqasManager({
   return (
     <div className="w-full max-w-7xl mx-auto px-4 space-y-4 pt-3 pb-12 bg-app-layout">
       
-      {/* شريط علوي مرن ونظيف يضم الوصف وزر الإضافة دون تكرار العنوان */}
+      {/* شريط علوي مرن ونظيف يضم الوصف الجديد وزر الإضافة دون تداخل */}
       <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm">
-        <p className="text-xs text-semantic-textSecondary m-0 font-medium">
-          {t('halaqasManagerSub', 'تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة')}
+        <p className="text-xs text-semantic-textSecondary m-0 font-medium truncate">
+          {t('halaqasManagerSub', 'متابعة وتنظيم الحلقات التعليمية')}
         </p>
 
         <button
