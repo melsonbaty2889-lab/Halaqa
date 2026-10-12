@@ -59,7 +59,6 @@ export default function HalaqasManager({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('all');
-  const [layoutMode, setLayoutMode] = useState('grid');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,8 +153,8 @@ export default function HalaqasManager({
       if (archivedMatch) {
         return {
           targetMode: 'archived',
-          label: t('searchInArchivedSuggestion', 'عُثر على نتائج متطابقة في الأرشيف[span_2](start_span)[span_2](end_span)!'),
-          btnText: t('switchToArchivedBtn', 'الانتقال إلى التبويب المؤرشف[span_3](start_span)[span_3](end_span)'),
+          label: t('searchInArchivedSuggestion', 'عُثر على نتائج متطابقة في الأرشيف!'),
+          btnText: t('switchToArchivedBtn', 'الانتقال إلى التبويب المؤرشف'),
           icon: Archive
         };
       }
@@ -172,8 +171,8 @@ export default function HalaqasManager({
       if (activeMatch) {
         return {
           targetMode: 'active',
-          label: t('searchInActiveSuggestion', 'عُثر على نتائج متطابقة في الحلقات النشطة[span_4](start_span)[span_4](end_span)!'),
-          btnText: t('switchToActiveBtn', 'الانتقال إلى الحلقات النشطة[span_5](start_span)[span_5](end_span)'),
+          label: t('searchInActiveSuggestion', 'عُثر على نتائج متطابقة في الحلقات النشطة!'),
+          btnText: t('switchToActiveBtn', 'الانتقال إلى الحلقات النشطة'),
           icon: CheckCircle2
         };
       }
@@ -223,7 +222,7 @@ export default function HalaqasManager({
       };
 
       if (!dataToSave.id && typeof onCreateHalaqa !== 'function') {
-        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون[span_6](start_span)[span_6](end_span)!'));
+        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
         return;
       }
 
@@ -235,13 +234,13 @@ export default function HalaqasManager({
       }
 
       if (res && res.success === false) {
-        alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة:[span_7](start_span)[span_7](end_span) ') + (res.error || t('unknownError', 'خطأ غير معروف[span_8](start_span)[span_8](end_span)')));
+        alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة: ') + (res.error || t('unknownError', 'خطأ غير معروف')));
       } else {
         setIsModalOpen(false);
       }
     } catch (error) {
       console.error('Failed to save halaqa:', error);
-      alert(t('errorOccurred', 'حدث خطأ أثناء الحفظ:[span_9](start_span)[span_9](end_span) ') + (error?.message || error));
+      alert(t('errorOccurred', 'حدث خطأ أثناء الحفظ: ') + (error?.message || error));
     } finally {
       setIsSubmitting(false);
     }
@@ -256,7 +255,7 @@ export default function HalaqasManager({
         className={`${UI.btnPrimary} w-full py-3.5 font-extrabold text-sm flex items-center justify-center gap-2 relative z-10 shadow-lg`}
       >
         <Plus size={18} />
-        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة[span_10](start_span)[span_10](end_span)')}</span>
+        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
       </button>
 
       {/* شريط الفلترة */}
@@ -267,27 +266,18 @@ export default function HalaqasManager({
         setSelectedTrack={setSelectedTrack}
         viewMode={viewMode}
         setViewMode={setViewMode}
-        layoutMode={layoutMode}
-        setLayoutMode={setLayoutMode}
         stats={stats}
       />
 
-      {/* حاوية العرض المتجاوبة مع وضع الشبكة والقائمة */}
+      {/* حاوية العرض المتجاوبة بنمط الشبكة القياسي الموحد */}
       {filteredHalaqas.length > 0 ? (
-        <div
-          className={
-            layoutMode === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full'
-              : 'flex flex-col gap-3 w-full'
-          }
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
           {filteredHalaqas.map((halaqa) => (
             <HalaqaCardItem
               key={halaqa.id}
               halaqa={halaqa}
               teachers={teachers}
               viewMode={viewMode}
-              layoutMode={layoutMode}
               getLocalizedText={safeGetLocalizedText}
               onNavigateToAttendance={onNavigateToAttendance}
               onToggleArchiveHalaqa={onToggleArchiveHalaqa}
@@ -303,12 +293,12 @@ export default function HalaqasManager({
           </div>
           <div>
             <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
-              {t('noHalaqasFound', 'لا توجد حلقات للعرض[span_11](start_span)[span_11](end_span)')}
+              {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
             </h3>
             <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
               {searchQuery
-                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.[span_12](start_span)[span_12](end_span)')
-                : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.[span_13](start_span)[span_13](end_span)')}
+                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.')
+                : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
             </p>
           </div>
 
