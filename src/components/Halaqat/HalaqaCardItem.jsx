@@ -93,12 +93,12 @@ export default function HalaqaCardItem({
   };
 
   // ==========================================
-  // 1. وضع القائمة المدمج الواضح (List View)
+  // 1. وضع القائمة المدمج والمنظم (List View)
   // ==========================================
   if (isListView) {
     return (
       <div className={`${UI.card} p-3 transition-all w-full relative flex flex-col gap-2 overflow-visible border border-semantic-borderCard hover:border-semantic-borderHover`}>
-        {/* الصف الأول: العنوان والوسم والتوقيت */}
+        {/* السطر الأول: الاسم + الحالة + التوقيت */}
         <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/40 pb-2">
           <div className="flex items-center gap-2 min-w-0">
             <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 truncate">
@@ -123,9 +123,9 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* الصف الثاني: اختيار المعلم والأزرار في نفس السطر */}
+        {/* السطر الثاني: معلم الحلقة + أزرار الإجراءات */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          {/* المعلم */}
+          {/* اختيار المعلم */}
           <div className="relative flex-1 min-w-0" ref={dropdownRef}>
             <button
               type="button"
@@ -176,13 +176,13 @@ export default function HalaqaCardItem({
             )}
           </div>
 
-          {/* الأزرار المصغرة المدمجة */}
+          {/* الأزرار */}
           <div className="flex items-center gap-1 shrink-0">
             {isArchived ? (
               <button 
                 type="button"
                 onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-                className={`${UI.btnEmerald} px-3 py-1 text-[11px] font-extrabold flex items-center justify-center rounded-lg`}
+                className={`${UI.btnEmerald} px-3 py-1.5 text-[11px] font-extrabold flex items-center justify-center rounded-lg`}
               >
                 <span>{t('activate', 'تنشيط')}</span>
               </button>
@@ -190,7 +190,7 @@ export default function HalaqaCardItem({
               <button 
                 type="button"
                 onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-                className={`${UI.btnEmerald} px-2.5 py-1 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg`}
+                className={`${UI.btnEmerald} px-2.5 py-1.5 text-[11px] font-extrabold flex items-center justify-center gap-1 rounded-lg`}
               >
                 <Video size={11} />
                 <span>{t('goToAttendance', 'الجلسة')}</span>
@@ -201,7 +201,7 @@ export default function HalaqaCardItem({
               <button
                 type="button"
                 onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} p-1 flex items-center justify-center rounded-lg`}
+                className={`${UI.btnSecondary} p-1.5 flex items-center justify-center rounded-lg`}
                 title={t('edit', 'تعديل')}
               >
                 <Edit3 size={12} />
