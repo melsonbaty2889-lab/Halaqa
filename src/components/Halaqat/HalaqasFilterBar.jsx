@@ -4,7 +4,7 @@ import React from 'react';
 import { Search, Users, CheckCircle2, Archive, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input, Select } from '@/components/UI';
-import * as Constants from './HalaqaConstants';
+import { getFilterTrackOptions } from './HalaqaConstants';
 
 export default function HalaqasFilterBar({
   searchQuery = '',
@@ -17,18 +17,9 @@ export default function HalaqasFilterBar({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
-  
-  // اللغات ذات الاتجاه من اليمين إلى اليسار (العربية والأوردو)
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
-  const getTracks = Constants.getTrackOptions || (() => [
-    { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
-    { value: 'hifz', label: t('trackHifz', 'حفظ القرآن') },
-    { value: 'tilawah', label: t('trackTilawah', 'التلاوة والتجويد') },
-    { value: 'mutun', label: t('trackMutun', 'المتون العلمية') }
-  ]);
-
-  const trackOptions = typeof getTracks === 'function' ? getTracks(t) : [];
+  const trackOptions = getFilterTrackOptions(t);
 
   const handleSearchChange = (e) => {
     if (typeof setSearchQuery !== 'function') return;
@@ -51,24 +42,23 @@ export default function HalaqasFilterBar({
 
   return (
     <div 
-      className={`space-y-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm ${isRtl ? 'text-right' : 'text-left'}`}
+      className={`space-y-2.5 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm ${isRtl ? 'text-right' : 'text-left'}`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      
-      {/* 1. التبويبات الرئيسية (النشطة / بلا معلم / المؤرشفة) مع عزل اتجاه الأعداد */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
+      {/* 1. التبويبات الرئيسية دون تقطيع نصوص */}
+      <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('active')}
-          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'active'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <CheckCircle2 size={14} className="shrink-0" />
+          <CheckCircle2 size={13} className="shrink-0" />
           <span className="truncate">{t('statActive', 'النشطة')}</span>
-          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.totalActive || 0}</bdi>
           </span>
         </button>
@@ -76,15 +66,15 @@ export default function HalaqasFilterBar({
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('unassigned')}
-          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'unassigned'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Users size={14} className="shrink-0" />
+          <Users size={13} className="shrink-0" />
           <span className="truncate">{t('statUnassigned', 'بلا معلم')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.unassigned || 0}</bdi>
           </span>
         </button>
@@ -92,21 +82,21 @@ export default function HalaqasFilterBar({
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('archived')}
-          className={`py-2 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border-none cursor-pointer ${
+          className={`py-1.5 px-1 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 transition-all border-none cursor-pointer ${
             viewMode === 'archived'
               ? 'bg-semantic-surfaceCard text-semantic-actionPrimary shadow-sm border border-semantic-borderCard'
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Archive size={14} className="shrink-0" />
+          <Archive size={13} className="shrink-0" />
           <span className="truncate">{t('statArchived', 'المؤرشفة')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0">
             <bdi>{stats.totalArchived || 0}</bdi>
           </span>
         </button>
       </div>
 
-      {/* 2. شريط البحث والفلترة حسب المسار */}
+      {/* 2. شريط البحث وقائمة المسارات */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="relative flex-1">
           <Input
