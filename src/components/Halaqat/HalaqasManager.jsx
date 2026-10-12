@@ -1,4 +1,4 @@
-/* src/components/Halaqat/ActiveHalaqas.jsx */
+/* src/components/Halaqat/HalaqasManager.jsx */
 
 import React, { useState, useMemo } from 'react';
 import { Plus, Users, Archive, CheckCircle2 } from 'lucide-react';
@@ -143,7 +143,6 @@ export default function ActiveHalaqas({
 
     const query = searchQuery.trim().toLowerCase();
     
-    // البحث في الحلقات المؤرشفة أثناء وجودنا في النشطة
     if (viewMode !== 'archived') {
       const archivedMatch = halaqas.find((h) => {
         if (!h?.is_archived) return false;
@@ -155,14 +154,13 @@ export default function ActiveHalaqas({
       if (archivedMatch) {
         return {
           targetMode: 'archived',
-          label: t('searchInArchivedSuggestion', 'عُثر على نتائج متطابقة في الأرشيف!'),
-          btnText: t('switchToArchivedBtn', 'الانتقال إلى التبويب المؤرشف'),
+          label: t('searchInArchivedSuggestion', 'عُثر على نتائج متطابقة في الأرشيف[span_2](start_span)[span_2](end_span)!'),
+          btnText: t('switchToArchivedBtn', 'الانتقال إلى التبويب المؤرشف[span_3](start_span)[span_3](end_span)'),
           icon: Archive
         };
       }
     }
 
-    // البحث في الحلقات النشطة أثناء وجودنا في الأرشيف
     if (viewMode === 'archived') {
       const activeMatch = halaqas.find((h) => {
         if (h?.is_archived) return false;
@@ -174,8 +172,8 @@ export default function ActiveHalaqas({
       if (activeMatch) {
         return {
           targetMode: 'active',
-          label: t('searchInActiveSuggestion', 'عُثر على نتائج متطابقة في الحلقات النشطة!'),
-          btnText: t('switchToActiveBtn', 'الانتقال إلى الحلقات النشطة'),
+          label: t('searchInActiveSuggestion', 'عُثر على نتائج متطابقة في الحلقات النشطة[span_4](start_span)[span_4](end_span)!'),
+          btnText: t('switchToActiveBtn', 'الانتقال إلى الحلقات النشطة[span_5](start_span)[span_5](end_span)'),
           icon: CheckCircle2
         };
       }
@@ -225,7 +223,7 @@ export default function ActiveHalaqas({
       };
 
       if (!dataToSave.id && typeof onCreateHalaqa !== 'function') {
-        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
+        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون[span_6](start_span)[span_6](end_span)!'));
         return;
       }
 
@@ -237,13 +235,13 @@ export default function ActiveHalaqas({
       }
 
       if (res && res.success === false) {
-        alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة: ') + (res.error || t('unknownError', 'خطأ غير معروف')));
+        alert(t('errorCreateFailed', 'فشلت عملية حفظ الحلقة:[span_7](start_span)[span_7](end_span) ') + (res.error || t('unknownError', 'خطأ غير معروف[span_8](start_span)[span_8](end_span)')));
       } else {
         setIsModalOpen(false);
       }
     } catch (error) {
       console.error('Failed to save halaqa:', error);
-      alert(t('errorOccurred', 'حدث خطأ أثناء الحفظ: ') + (error?.message || error));
+      alert(t('errorOccurred', 'حدث خطأ أثناء الحفظ:[span_9](start_span)[span_9](end_span) ') + (error?.message || error));
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +256,7 @@ export default function ActiveHalaqas({
         className={`${UI.btnPrimary} w-full py-3.5 font-extrabold text-sm flex items-center justify-center gap-2 relative z-10 shadow-lg`}
       >
         <Plus size={18} />
-        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
+        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة[span_10](start_span)[span_10](end_span)')}</span>
       </button>
 
       {/* شريط الفلترة */}
@@ -305,16 +303,15 @@ export default function ActiveHalaqas({
           </div>
           <div>
             <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
-              {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
+              {t('noHalaqasFound', 'لا توجد حلقات للعرض[span_11](start_span)[span_11](end_span)')}
             </h3>
             <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
               {searchQuery
-                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.')
-                : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
+                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.[span_12](start_span)[span_12](end_span)')
+                : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.[span_13](start_span)[span_13](end_span)')}
             </p>
           </div>
 
-          {/* مقترح البحث الشامل السريع والتوجيه الذكي */}
           {otherTabsSearchResult && (
             <div className="pt-2 animate-fade-in">
               <div className="p-3 bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/30 rounded-xl max-w-sm mx-auto space-y-2">
