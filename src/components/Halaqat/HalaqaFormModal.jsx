@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 import { isStartTimeBeforeEndTime } from '@/utils/dateUtils';
+
+const DAYS_LIST = [
+  { id: 'sat', labelKey: 'days.sat', defaultLabel: 'السبت' },
+  { id: 'sun', labelKey: 'days.sun', defaultLabel: 'الأحد' },
+  { id: 'mon', labelKey: 'days.mon', defaultLabel: 'الإثنين' },
+  { id: 'tue', labelKey: 'days.tue', defaultLabel: 'الثلاثاء' },
+  { id: 'wed', labelKey: 'days.wed', defaultLabel: 'الأربعاء' },
+  { id: 'thu', labelKey: 'days.thu', defaultLabel: 'الخميس' },
+  { id: 'fri', labelKey: 'days.fri', defaultLabel: 'الجمعة' }
+];
 
 export default function HalaqaFormModal({ 
   isOpen,
@@ -47,6 +57,7 @@ export default function HalaqaFormModal({
       if (!formData?.id) {
         setFormData((prev) => ({
           ...prev,
+          days_of_week: prev?.days_of_week || [],
           educational_track: prev?.educational_track === 'hifz' ? '' : (prev?.educational_track || ''),
           target_audience: prev?.target_audience === 'kids' ? '' : (prev?.target_audience || ''),
           teaching_type: prev?.teaching_type === 'online' ? '' : (prev?.teaching_type || ''),
@@ -79,6 +90,16 @@ export default function HalaqaFormModal({
       ...prev,
       [field]: value
     }));
+  };
+
+  const toggleDay = (dayId) => {
+    setFormData((prev) => {
+      const currentDays = Array.isArray(prev?.days_of_week) ? prev.days_of_week : [];
+      const updatedDays = currentDays.includes(dayId)
+        ? currentDays.filter((d) => d !== dayId)
+        : [...currentDays, dayId];
+      return { ...prev, days_of_week: updatedDays };
+    });
   };
 
   const validateTimes = (startTime, endTime) => {
@@ -161,6 +182,7 @@ export default function HalaqaFormModal({
       academy_id: resolvedAcademyId,
       academyId: resolvedAcademyId,
       name: formattedName,
+      days_of_week: Array.isArray(formData?.days_of_week) ? formData.days_of_week : [],
       educational_track: formData?.educational_track || 'hifz',
       teaching_type: formData?.teaching_type || 'online',
       target_audience: formData?.target_audience || 'kids',
@@ -182,6 +204,7 @@ export default function HalaqaFormModal({
   };
 
   const isModalVisible = Boolean(isOpen || open);
+  const selectedDays = Array.isArray(formData?.days_of_week) ? formData.days_of_week : [];
 
   return (
     <Modal
@@ -190,7 +213,7 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
-        <div className="space-y-2.5 p-1 overflow-y-auto flex-1 pb-2">
+        <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-2">
           
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -203,6 +226,33 @@ export default function HalaqaFormModal({
               value={getCurrentName()}
               onChange={handleNameChange}
             />
+          </div>
+
+          {/* اختيار أيام انعقاد الحلقة */}
+          <div>
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1 flex items-center gap-1">
+              <Calendar size={13} className="text-semantic-actionPrimary" />
+              <span>{t('daysOfWeekLabel', 'أيام انعقاد الحلقة')}</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {DAYS_LIST.map((day) => {
+                const isSelected = selectedDays.includes(day.id);
+                return (
+                  <button
+                    key={day.id}
+                    type="button"
+                    onClick={() => toggleDay(day.id)}
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                      isSelected
+                        ? 'bg-semantic-actionPrimary text-white border-semantic-actionPrimary shadow-xs'
+                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:text-semantic-textPrimary'
+                    }`}
+                  >
+                    {t(day.labelKey, day.defaultLabel)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
