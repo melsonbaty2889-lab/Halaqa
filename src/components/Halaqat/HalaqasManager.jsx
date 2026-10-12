@@ -248,7 +248,7 @@ export default function HalaqasManager({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 space-y-4 pt-3 pb-12 bg-app-layout">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-5 space-y-4 pt-3 pb-12 bg-app-layout">
       
       {/* شريط علوي مرن ونظيف */}
       <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm">
