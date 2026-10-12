@@ -1,4 +1,5 @@
 /* src/components/Halaqat/HalaqasFilterBar.jsx */
+
 import React from 'react';
 import { Search, Users, CheckCircle2, Archive, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -45,9 +46,10 @@ export default function HalaqasFilterBar({
   };
 
   return (
-    <div className="space-y-3">
-      {/* التبويبات الرئيسية */}
-      <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
+    <div className="space-y-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm">
+      
+      {/* 1. التبويبات الرئيسية (النشطة / بلا معلم / المؤرشفة) */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
           onClick={() => typeof setViewMode === 'function' && setViewMode('active')}
@@ -97,7 +99,7 @@ export default function HalaqasFilterBar({
         </button>
       </div>
 
-      {/* عناصر البحث والفلترة فقط بدون زر التبديل */}
+      {/* 2. شريط البحث والفلترة حسب المسار */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="relative flex-1">
           <Input
@@ -133,8 +135,8 @@ export default function HalaqasFilterBar({
             <button
               type="button"
               onClick={handleResetFilters}
-              title={t('resetFilters', 'إعادة ضبط')}
-              className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer shrink-0 transition-colors"
+              title={t('resetFilters', 'إعادة ضبط الفلاتر')}
+              className="p-2.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textMuted hover:text-semantic-textPrimary cursor-pointer shrink-0 transition-colors flex items-center justify-center"
             >
               <X size={15} />
             </button>
