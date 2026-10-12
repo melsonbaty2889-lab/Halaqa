@@ -100,7 +100,6 @@ export default function HalaqasManager({
     return { totalActive, totalArchived, unassigned };
   }, [halaqas]);
 
-  // الفلترة المحلية الفورية
   const filteredHalaqas = useMemo(() => {
     if (!Array.isArray(halaqas)) return [];
 
@@ -134,7 +133,6 @@ export default function HalaqasManager({
     });
   }, [halaqas, viewMode, selectedTrack, searchQuery, currentLang]);
 
-  // التحقق الفوري هل يوجد نصوص تطابق البحث في التبويبات الأخرى
   const otherTabsSearchResult = useMemo(() => {
     if (!searchQuery?.trim() || filteredHalaqas.length > 0 || !Array.isArray(halaqas)) {
       return null;
@@ -222,7 +220,7 @@ export default function HalaqasManager({
       };
 
       if (!dataToSave.id && typeof onCreateHalaqa !== 'function') {
-        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!'));
+        alert(t('errorNoCreateFunc', 'خطأ: لم يتم ربط دالة الإنشاء بالمكون!'));
         return;
       }
 
@@ -247,18 +245,30 @@ export default function HalaqasManager({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 space-y-5 pt-3 pb-12 bg-app-layout">
-      {/* زر إضافة حلقة */}
-      <button
-        type="button"
-        onClick={handleOpenCreateModal}
-        className={`${UI.btnPrimary} w-full py-3.5 font-extrabold text-sm flex items-center justify-center gap-2 relative z-10 shadow-lg`}
-      >
-        <Plus size={18} />
-        <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
-      </button>
+    <div className="w-full max-w-7xl mx-auto px-4 space-y-4 pt-3 pb-12 bg-app-layout">
+      
+      {/* 1. ترويسة الصفحة وزر الإضافة المدمج الذكي */}
+      <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm">
+        <div>
+          <h1 className="text-sm sm:text-base font-black text-semantic-textPrimary m-0">
+            {t('halaqasManagerTitle', 'إدارة الحلقات والفصول')}
+          </h1>
+          <p className="text-[11px] text-semantic-textMuted m-0 hidden sm:block">
+            {t('halaqasManagerSub', 'تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة')}
+          </p>
+        </div>
 
-      {/* شريط الفلترة */}
+        <button
+          type="button"
+          onClick={handleOpenCreateModal}
+          className={`${UI.btnPrimary} py-2 px-3.5 font-extrabold text-xs flex items-center gap-1.5 rounded-xl shadow-md shrink-0 cursor-pointer`}
+        >
+          <Plus size={15} />
+          <span>{t('createNewHalaqaBtn', 'إضافة حلقة')}</span>
+        </button>
+      </div>
+
+      {/* 2. شريط الفلترة */}
       <HalaqasFilterBar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -269,9 +279,9 @@ export default function HalaqasManager({
         stats={stats}
       />
 
-      {/* حاوية العرض المتجاوبة بنمط الشبكة القياسي الموحد */}
+      {/* 3. حاوية العرض بنمط الشبكة */}
       {filteredHalaqas.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 w-full">
           {filteredHalaqas.map((halaqa) => (
             <HalaqaCardItem
               key={halaqa.id}
@@ -289,15 +299,15 @@ export default function HalaqasManager({
       ) : (
         <div className={`${UI.card} text-center py-12 px-4 flex flex-col items-center justify-center space-y-3`}>
           <div className="p-4 rounded-2xl bg-semantic-surfaceInput/80 border border-semantic-borderCard">
-            <Users size={32} className="text-semantic-textMuted opacity-70" />
+            <Users size={30} className="text-semantic-textMuted opacity-70" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-semantic-textPrimary mb-1">
+            <h3 className="text-sm font-bold text-semantic-textPrimary mb-1">
               {t('noHalaqasFound', 'لا توجد حلقات للعرض')}
             </h3>
             <p className="text-xs text-semantic-textSecondary max-w-sm mx-auto leading-relaxed">
               {searchQuery
-                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي في هذا التبويب.')
+                ? t('noSearchResults', 'لم نجد أي حلقات تطابق بحثك الحالي.')
                 : t('noHalaqasInView', 'لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.')}
             </p>
           </div>
