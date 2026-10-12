@@ -3,7 +3,8 @@ import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Check, Building2, Plus, X, Clock } from 'lucide-react';
 import SmartHalaqaProLogo from '@/components/UI/SmartHalaqaProLogo.jsx';
-import { formatDigits, formatGregorianDate } from '@/utils/formatters';
+import { formatDigits } from '@/utils/formatters';
+import { formatGregorianDate } from '@/utils/dateUtils';
 
 export default function AcademySelector({
   academiesList = [],
