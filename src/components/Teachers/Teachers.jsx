@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import AddStaffModal from './AddStaffModal';
 import TeacherCard from './TeacherCard';
 import TeacherFilter from './TeacherFilter';
@@ -11,24 +12,18 @@ export default function Teachers({
   teachers = [], 
   setTeachers, 
   halaqas = [], 
-  onRefresh, 
-  t, 
-  isRtl = true 
+  onRefresh
 }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
+
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTitle, setSelectedTitle] = useState('all');
   const [selectedIjaza, setSelectedIjaza] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTeacherForAvailability, setSelectedTeacherForAvailability] = useState(null);
-
-  const translate = useCallback((key, fallback) => {
-    if (typeof t === 'function') {
-      const res = t(key);
-      if (res && typeof res === 'string' && res !== key) return res;
-    }
-    return fallback;
-  }, [t]);
 
   const fetchStaff = useCallback(async () => {
     if (onRefresh) {
@@ -55,7 +50,6 @@ export default function Teachers({
     }
   }, [academyId, onRefresh, setTeachers]);
 
-  // إيقاف الوميض بإيقاف استدعاء fetchStaff إذا كان setTeachers ممرراً بالفعل أو البيانات متوفرة
   useEffect(() => {
     if (academyId && teachers.length === 0 && !setTeachers) {
       fetchStaff();
@@ -88,54 +82,60 @@ export default function Teachers({
   });
 
   return (
-    <div className={`space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-['Cairo',sans-serif]`}>
+    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-['Cairo',sans-serif]`}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-            <Users className="w-6 h-6 text-[#E07A00]" /> 
-            {translate('teachers_title', 'الكادر التعليمي والإداري')}
+          <h2 className="text-xl font-bold flex items-center gap-2 text-semantic-textPrimary">
+            <Users className="w-6 h-6 text-semantic-actionPrimary" /> 
+            {t('teachers.title', 'الكادر التعليمي والإداري')}
           </h2>
-          <p className="text-xs text-[#94A3B8] mt-1">
-            {translate('teachers_desc', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية')}
+          <p className="text-xs text-semantic-textSecondary mt-1">
+            {t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية')}
           </p>
         </div>
 
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-[#E07A00] hover:bg-[#C66B00] transition-colors shadow-lg shadow-[#E07A00]/10 active:scale-95"
+          className="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm w-full md:w-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" /> 
-          {translate('add_staff', 'إضافة كادر جديد')}
+          {t('teachers.addStaff', 'إضافة كادر جديد')}
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
+        <div className="card-surface flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('total_staff', 'إجمالي الكادر')}</p>
-            <p className="text-2xl font-bold text-white mt-1">{teachers.length}</p>
+            <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
+            <p className="text-2xl font-bold text-semantic-textPrimary mt-1">
+              <bdi>{teachers.length}</bdi>
+            </p>
           </div>
-          <div className="p-3 rounded-xl bg-[#E07A00]/10 text-[#E07A00]">
+          <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
             <Users className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
+        <div className="card-surface flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('active_teaching', 'المعلمون المباشرون للحلقات')}</p>
-            <p className="text-2xl font-bold text-[#10B981] mt-1">{teachers.filter(s => s.is_teaching).length}</p>
+            <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
+            <p className="text-2xl font-bold text-semantic-success mt-1">
+              <bdi>{teachers.filter(s => s.is_teaching).length}</bdi>
+            </p>
           </div>
-          <div className="p-3 rounded-xl bg-[#09332C] text-[#10B981] border border-[#0D5C4D]">
+          <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30">
             <UserCheck className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F172A]/85 border border-[#1B2738] flex items-center justify-between">
+        <div className="card-surface flex items-center justify-between">
           <div>
-            <p className="text-xs text-[#94A3B8]">{translate('active_accounts', 'الحسابات النشطة')}</p>
-            <p className="text-2xl font-bold text-sky-400 mt-1">{teachers.filter(s => s.is_active).length}</p>
+            <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
+            <p className="text-2xl font-bold text-sky-400 mt-1">
+              <bdi>{teachers.filter(s => s.is_active).length}</bdi>
+            </p>
           </div>
           <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
             <ShieldCheck className="w-6 h-6" />
@@ -152,17 +152,17 @@ export default function Teachers({
         selectedIjaza={selectedIjaza}
         setSelectedIjaza={setSelectedIjaza}
         onRefresh={fetchStaff}
-        t={translate}
+        t={t}
       />
 
       {/* Availability Manager Drawer */}
       {selectedTeacherForAvailability && (
-        <div className="p-4 bg-[#0F172A] rounded-2xl border border-[#E07A00]/40 relative">
+        <div className="card-surface relative border-semantic-actionPrimary/40">
           <button 
             onClick={() => setSelectedTeacherForAvailability(null)}
-            className="absolute top-4 left-4 text-xs text-[#94A3B8] hover:text-white"
+            className="absolute top-4 left-4 text-xs text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer"
           >
-            ✕ {translate('close', 'إغلاق')}
+            ✕ {t('common.close', 'إغلاق')}
           </button>
           <TeacherAvailabilityManager teacherId={selectedTeacherForAvailability} />
         </div>
@@ -170,10 +170,10 @@ export default function Teachers({
 
       {/* Teachers Cards Grid */}
       {loading ? (
-        <div className="text-center py-12 text-[#94A3B8] text-xs">{translate('loading', 'جاري تحميل البيانات...')}</div>
+        <div className="text-center py-12 text-semantic-textSecondary text-xs">{t('common.loading', 'جاري تحميل البيانات...')}</div>
       ) : filteredStaff.length === 0 ? (
-        <div className="text-center py-12 bg-[#0F172A]/40 rounded-2xl border border-dashed border-[#1B2738] text-[#94A3B8] text-xs">
-          {translate('no_teachers_found', 'لا توجد نتائج تطابق خيارات البحث')}
+        <div className="text-center py-12 card-surface border-dashed text-semantic-textSecondary text-xs">
+          {t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -183,7 +183,7 @@ export default function Teachers({
               person={person}
               onToggleStatus={toggleStatus}
               onManageAvailability={(id) => setSelectedTeacherForAvailability(id)}
-              t={translate}
+              t={t}
             />
           ))}
         </div>
