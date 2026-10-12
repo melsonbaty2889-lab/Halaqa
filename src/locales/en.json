@@ -31,6 +31,7 @@
     "unspecified_country": "Unspecified",
     "whatsapp_chat": "Direct WhatsApp Chat"
   },
+  "academyErrorAlert": "خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.",
   "activate": "Activate",
   "activeHalaqasSub": "متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين",
   "activeHalaqasTitle": "إدارة الحلقات والفصول",
@@ -597,6 +598,8 @@
   "editHalaqaTitle": "تعديل بيانات الحلقة",
   "endTime": "End Time",
   "endTimeLabel": "وقت الانتهاء",
+  "enterHalaqaNameAlert": "يرجى إدخال اسم الحلقة",
+  "enterNumberPlaceholder": "أدخل العدد",
   "errorCreateFailed": "فشلت عملية حفظ الحلقة: ",
   "errorNoCreateFunc": "خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!",
   "errorOccurred": "حدث خطأ أثناء الحفظ: ",
@@ -765,6 +768,7 @@
   "noHalaqasFound": "لا توجد حلقات للعرض",
   "noHalaqasInView": "لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.",
   "noHalaqatFound": "لا توجد حلقات مطابقة لخيارات البحث أو الفلترة الحالية",
+  "noSaveFuncAlert": "خطأ: لم يتم ربط دالة الحفظ بالمودال!",
   "noSearchResults": "لم نجد أي حلقات تطابق بحثك الحالي.",
   "noTeachersAvailable": "لا يوجد معلمون مسجلون",
   "notifications": {
@@ -778,6 +782,7 @@
   },
   "offlineHalaqa": "حلقة حضورية",
   "onlineHalaqa": "حلقة عن بُعد",
+  "optionalPlaceholder": "اختياري...",
   "pm": "م",
   "profile": {
     "changePasswordSection": "Change Password (Optional)",
@@ -905,6 +910,7 @@
   "searchPh": "Search by halaqa name or assigned teacher name...",
   "searchPlaceholder": "ابحث باسم الحلقة أو اسم المعلم...",
   "selectAudiencePlaceholder": "اختر الفئة المستهدفة...",
+  "selectPlaceholder": "اختر...",
   "selectTeacher": "-- Select Certified Teacher --",
   "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)",
   "selectTime": "اختر الوقت",

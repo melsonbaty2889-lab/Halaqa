@@ -7,6 +7,7 @@
     "name": "اسم الأكاديمية",
     "name_placeholder": "أدخل اسم الأكاديمية"
   },
+  "academyErrorAlert": "خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.",
   "activate": "تنشيط",
   "activeSession": "نشطة",
   "add_new_student": "إضافة طالب جديد",
@@ -459,6 +460,8 @@
   "edit": "تعديل",
   "editHalaqaTitle": "تعديل بيانات الحلقة",
   "endTimeLabel": "وقت الانتهاء",
+  "enterHalaqaNameAlert": "يرجى إدخال اسم الحلقة",
+  "enterNumberPlaceholder": "أدخل العدد",
   "errorCreateFailed": "فشلت عملية حفظ الحلقة: ",
   "errorNoCreateFunc": "خطأ: لم يتم ربط دالة الإنشاء onCreateHalaqa بالمكون!",
   "errorOccurred": "حدث خطأ أثناء الحفظ: ",
@@ -615,6 +618,7 @@
   "no_search_results": "لم يتم العثور على نتائج تطابق بحثك.",
   "noHalaqasFound": "لا توجد حلقات للعرض",
   "noHalaqasInView": "لا توجد حلقات ينطبق عليها هذا الفلتر حالياً.",
+  "noSaveFuncAlert": "خطأ: لم يتم ربط دالة الحفظ بالمودال!",
   "noSearchResults": "لم نجد أي حلقات تطابق بحثك الحالي.",
   "noTeachersAvailable": "لا يوجد معلمون مسجلون",
   "notifications": {
@@ -628,6 +632,7 @@
   },
   "offlineHalaqa": "حلقة حضورية",
   "onlineHalaqa": "حلقة عن بُعد",
+  "optionalPlaceholder": "اختياري...",
   "pm": "م",
   "profile": {
     "changePasswordSection": "تغيير كلمة المرور (اختياري)",
@@ -754,6 +759,7 @@
   "searchInArchivedSuggestion": "عُثر على نتائج متطابقة في الأرشيف!",
   "searchPlaceholder": "ابحث باسم الحلقة أو المعلم...",
   "selectAudiencePlaceholder": "اختر الفئة المستهدفة...",
+  "selectPlaceholder": "اختر...",
   "selectTeacherPlaceholder": "اختر معلماً للحلقة (اختياري)...",
   "selectTime": "اختر الوقت",
   "selectTrackPlaceholder": "اختر المسار التعليمي...",
