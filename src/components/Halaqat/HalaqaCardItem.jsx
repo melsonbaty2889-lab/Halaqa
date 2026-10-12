@@ -1,6 +1,7 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
+
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Archive } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent } from './HalaqaConstants';
@@ -89,8 +90,9 @@ export default function HalaqaCardItem({
   };
 
   return (
-    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative`}>
+    <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md`}>
       <div>
+        {/* الترويسة: اسم الحلقة + شارة الحالة */}
         <div className="flex justify-between items-start gap-2 mb-2">
           <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
             {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
@@ -107,6 +109,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
+        {/* قائمة اختيار المعلم المدمجة */}
         <div className="relative mb-2" ref={dropdownRef}>
           <button
             type="button"
@@ -172,6 +175,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
+        {/* التوقيت */}
         {(startTimeFormatted || endTimeFormatted) && (
           <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
             <Clock size={13} className="text-semantic-textMuted shrink-0" />
@@ -182,13 +186,14 @@ export default function HalaqaCardItem({
         )}
       </div>
 
+      {/* أزرار العمليات السريعة */}
       <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
         {isArchived ? (
           <>
             <button 
               type="button"
               onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-              className={`${UI.btnEmerald} col-span-9 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0`}
+              className={`${UI.btnEmerald} col-span-9 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
             >
               <span className="truncate">{t('activate', 'تنشيط')}</span>
             </button>
@@ -196,7 +201,7 @@ export default function HalaqaCardItem({
               <button
                 type="button"
                 onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} col-span-3 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl`}
+                className={`${UI.btnSecondary} col-span-3 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
                 title={t('edit', 'تعديل')}
               >
                 <Edit3 size={14} />
@@ -208,18 +213,18 @@ export default function HalaqaCardItem({
             <button 
               type="button"
               onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-              className={`${UI.btnEmerald} col-span-7 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0`}
+              className={`${UI.btnEmerald} col-span-7 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
               title={t('goToAttendance', 'الجلسة المباشرة')}
             >
               <Video size={13} className="shrink-0" />
-              <span className="truncate">{t('goToAttendance', 'الجلسة المباشرة')}</span>
+              <span className="truncate">{t('goToAttendance', 'الجلسة')}</span>
             </button>
 
             {onEditHalaqa && (
               <button
                 type="button"
                 onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} col-span-2 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl`}
+                className={`${UI.btnSecondary} col-span-2 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
                 title={t('edit', 'تعديل')}
               >
                 <Edit3 size={14} />
@@ -229,7 +234,8 @@ export default function HalaqaCardItem({
             <button 
               type="button"
               onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-              className={`${UI.btnSecondary} col-span-3 py-2 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate`}
+              className={`${UI.btnSecondary} col-span-3 py-2 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate text-semantic-textMuted hover:text-semantic-danger cursor-pointer`}
+              title={t('archive', 'أرشفة')}
             >
               <span className="truncate">{t('archive', 'أرشفة')}</span>
             </button>
