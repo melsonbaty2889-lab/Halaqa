@@ -93,12 +93,12 @@ export default function HalaqaCardItem({
   };
 
   // ==========================================
-  // 1. وضع القائمة المدمج والمنظم (List View)
+  // 1. وضع القائمة المدمج (List View)
   // ==========================================
   if (isListView) {
     return (
       <div className={`${UI.card} p-3 transition-all w-full relative flex flex-col gap-2 overflow-visible border border-semantic-borderCard hover:border-semantic-borderHover`}>
-        {/* السطر الأول: الاسم + الحالة + التوقيت */}
+        {/* السطر الأول: الاسم والتوقيت والحالة */}
         <div className="flex items-center justify-between gap-2 border-b border-semantic-borderCard/40 pb-2">
           <div className="flex items-center gap-2 min-w-0">
             <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 truncate">
@@ -123,9 +123,8 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* السطر الثاني: معلم الحلقة + أزرار الإجراءات */}
+        {/* السطر الثاني: المعلم والأزرار */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          {/* اختيار المعلم */}
           <div className="relative flex-1 min-w-0" ref={dropdownRef}>
             <button
               type="button"
@@ -176,7 +175,6 @@ export default function HalaqaCardItem({
             )}
           </div>
 
-          {/* الأزرار */}
           <div className="flex items-center gap-1 shrink-0">
             {isArchived ? (
               <button 
