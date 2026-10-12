@@ -1,7 +1,6 @@
+/* src/components/Halaqat/HalaqasFilterBar.jsx */
 import React from 'react';
-import { 
-  Search, Users, Grid, List, CheckCircle2, Archive, X 
-} from 'lucide-react';
+import { Search, Users, CheckCircle2, Archive, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input, Select } from '@/components/UI';
 import * as Constants from './HalaqaConstants';
@@ -13,8 +12,6 @@ export default function HalaqasFilterBar({
   setSelectedTrack,
   viewMode = 'active',
   setViewMode,
-  layoutMode = 'grid',
-  setLayoutMode,
   stats = { totalActive: 0, totalArchived: 0, unassigned: 0 }
 }) {
   const { t } = useTranslation();
@@ -30,33 +27,13 @@ export default function HalaqasFilterBar({
 
   const handleSearchChange = (e) => {
     if (typeof setSearchQuery !== 'function') return;
-    
-    let value = '';
-    if (typeof e === 'string' || typeof e === 'number') {
-      value = String(e);
-    } else if (e !== null && typeof e === 'object') {
-      if ('target' in e && e.target && typeof e.target === 'object' && 'value' in e.target) {
-        value = e.target.value;
-      } else if ('value' in e) {
-        value = e.value;
-      }
-    }
+    let value = typeof e === 'string' || typeof e === 'number' ? String(e) : (e?.target?.value ?? e?.value ?? '');
     setSearchQuery(value);
   };
 
   const handleTrackChange = (e) => {
     if (typeof setSelectedTrack !== 'function') return;
-    
-    let value = 'all';
-    if (typeof e === 'string' || typeof e === 'number') {
-      value = String(e);
-    } else if (e !== null && typeof e === 'object') {
-      if ('target' in e && e.target && typeof e.target === 'object' && 'value' in e.target) {
-        value = e.target.value;
-      } else if ('value' in e) {
-        value = e.value;
-      }
-    }
+    let value = typeof e === 'string' || typeof e === 'number' ? String(e) : (e?.target?.value ?? e?.value ?? 'all');
     setSelectedTrack(value);
   };
 
@@ -69,7 +46,7 @@ export default function HalaqasFilterBar({
 
   return (
     <div className="space-y-3">
-      {/* 1. التبويبات الثلاثة الرئيسية */}
+      {/* التبويبات الرئيسية */}
       <div className="grid grid-cols-3 gap-1 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
@@ -120,9 +97,8 @@ export default function HalaqasFilterBar({
         </button>
       </div>
 
-      {/* 2. عناصر البحث والفلترة والتحكم بالنمط */}
+      {/* عناصر البحث والفلترة فقط بدون زر التبديل */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        {/* خانة البحث مع زر مسح داخلي سريع */}
         <div className="relative flex-1">
           <Input
             type="text"
@@ -163,56 +139,6 @@ export default function HalaqasFilterBar({
               <X size={15} />
             </button>
           )}
-
-          <div className="flex sm:hidden items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
-            <button
-              type="button"
-              onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('grid')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
-                layoutMode === 'grid' 
-                  ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
-                  : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
-              }`}
-            >
-              <Grid size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('list')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
-                layoutMode === 'list' 
-                  ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
-                  : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
-              }`}
-            >
-              <List size={15} />
-            </button>
-          </div>
-        </div>
-
-        <div className="hidden sm:flex items-center bg-semantic-surfaceInput rounded-xl p-1 border border-semantic-borderCard shrink-0">
-          <button
-            type="button"
-            onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('grid')}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
-              layoutMode === 'grid' 
-                ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
-                : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
-            }`}
-          >
-            <Grid size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => typeof setLayoutMode === 'function' && setLayoutMode('list')}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer border-none ${
-              layoutMode === 'list' 
-                ? 'bg-semantic-actionPrimary text-semantic-textPrimary shadow-sm' 
-                : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
-            }`}
-          >
-            <List size={15} />
-          </button>
         </div>
       </div>
     </div>
