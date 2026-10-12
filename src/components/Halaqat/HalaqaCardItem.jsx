@@ -219,14 +219,14 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* المواعيد والأيام والحد الأقصى مع ضبط اتجاه الوقت القياسي */}
+        {/* المواعيد والأيام والحد الأقصى */}
         <div className="space-y-1">
           {formattedTimeRange && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
               <Clock size={13} className="text-semantic-textMuted shrink-0" />
-              <bdi className="font-semibold truncate" style={{ direction: 'ltr', display: 'inline-block' }}>
+              <span className="font-semibold truncate">
                 {formattedTimeRange}
-              </bdi>
+              </span>
             </div>
           )}
 
@@ -244,9 +244,9 @@ export default function HalaqaCardItem({
               <Users size={12} className="shrink-0" />
               <span>
                 {t('maxStudentsShort', 'الحد الأقصى:')}{' '}
-                <bdi className="font-bold text-semantic-textSecondary" style={{ direction: 'ltr', display: 'inline-block' }}>
+                <span className="font-bold text-semantic-textSecondary">
                   {halaqa.max_students}
-                </bdi>
+                </span>
               </span>
             </div>
           )}
