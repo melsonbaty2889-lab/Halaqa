@@ -1120,6 +1120,15 @@
     "name": "Teacher"
   },
   "teacherLabel": "المعلم المسؤول",
+  "teachers": {
+    "activeAccounts": "الحسابات النشطة",
+    "activeTeaching": "المعلمون المباشرون للحلقات",
+    "addStaff": "إضافة كادر جديد",
+    "description": "إدارة المعلمين والمشرفين ومدراء الأكاديمية",
+    "noTeachersFound": "لا توجد نتائج تطابق خيارات البحث",
+    "title": "الكادر التعليمي والإداري",
+    "totalStaff": "إجمالي الكادر"
+  },
   "termsModal": {
     "acceptBtn": "Accept & Continue",
     "agreeCheckbox": "I have read all terms and agree to abide by them",
