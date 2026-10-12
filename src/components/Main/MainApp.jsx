@@ -450,7 +450,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       case 'active-halaqas':
       case 'classes':
         return isTeacher ? (
-          <ActiveHalaqas 
+          <HalaqasManager 
             halaqas={enrichedHalaqas} 
             teachers={teachers} 
             students={students} 
