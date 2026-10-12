@@ -1,3 +1,5 @@
+/* src/components/Halaqat/HalaqaFormModal.jsx */
+
 import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -54,25 +56,19 @@ export default function HalaqaFormModal({
     const isVisible = Boolean(isOpen || open);
     if (isVisible) {
       setTimeError('');
-      if (!formData?.id) {
-        setFormData((prev) => ({
-          ...prev,
-          days_of_week: prev?.days_of_week || [],
-          educational_track: prev?.educational_track === 'hifz' ? '' : (prev?.educational_track || ''),
-          target_audience: prev?.target_audience === 'kids' ? '' : (prev?.target_audience || ''),
-          teaching_type: prev?.teaching_type === 'online' ? '' : (prev?.teaching_type || ''),
-          track: '',
-          type: ''
-        }));
-      }
     }
   }, [isOpen, open]);
 
+  // دالة متطورة لاستخراج وتعبئة اسم الحلقة بأمان
   const getCurrentName = () => {
-    if (typeof formData?.name_text === 'string') return formData.name_text;
-    if (typeof formData?.name === 'string') return formData.name;
+    if (typeof formData?.name_text === 'string' && formData.name_text.trim() !== '') {
+      return formData.name_text;
+    }
+    if (typeof formData?.name === 'string') {
+      return formData.name;
+    }
     if (typeof formData?.name === 'object' && formData?.name !== null) {
-      return formData.name[currentLang] || formData.name.ar || formData.name.en || '';
+      return formData.name[currentLang] || formData.name.ar || formData.name.en || Object.values(formData.name)[0] || '';
     }
     return '';
   };
@@ -133,10 +129,9 @@ export default function HalaqaFormModal({
     setFormData((prev) => ({
       ...prev,
       name_text: value,
-      name: {
-        ...(typeof prev?.name === 'object' && prev?.name !== null ? prev.name : {}),
-        [currentLang]: value
-      }
+      name: typeof prev?.name === 'object' && prev?.name !== null 
+        ? { ...prev.name, [currentLang]: value } 
+        : { [currentLang]: value, ar: value }
     }));
   };
 
@@ -213,8 +208,9 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right">
-        <div className="space-y-3 p-1 overflow-y-auto flex-1 pb-2">
+        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
+          {/* اسم الحلقة */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
@@ -228,13 +224,13 @@ export default function HalaqaFormModal({
             />
           </div>
 
-          {/* اختيار أيام انعقاد الحلقة */}
+          {/* أيام الانعقاد بألوان وتنسيق واضع جداً */}
           <div>
-            <label className="block text-xs font-bold text-semantic-textPrimary mb-1 flex items-center gap-1">
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5 flex items-center gap-1.5">
               <Calendar size={13} className="text-semantic-actionPrimary" />
               <span>{t('daysOfWeekLabel', 'أيام انعقاد الحلقة')}</span>
             </label>
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <div className="flex flex-wrap gap-1.5 dir-rtl">
               {DAYS_LIST.map((day) => {
                 const isSelected = selectedDays.includes(day.id);
                 return (
@@ -242,10 +238,10 @@ export default function HalaqaFormModal({
                     key={day.id}
                     type="button"
                     onClick={() => toggleDay(day.id)}
-                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                    className={`py-1.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-semantic-actionPrimary text-white border-semantic-actionPrimary shadow-xs'
-                        : 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:text-semantic-textPrimary'
+                        ? 'bg-semantic-actionPrimary text-white border-semantic-actionPrimary shadow-md'
+                        : 'bg-semantic-surfaceCard text-semantic-textSecondary border-semantic-borderCard hover:border-semantic-actionPrimary/50 hover:text-semantic-textPrimary'
                     }`}
                   >
                     {t(day.labelKey, day.defaultLabel)}
@@ -352,27 +348,22 @@ export default function HalaqaFormModal({
 
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-2.5 mt-auto shrink-0 bg-semantic-surfaceCard">
+        {/* أزرار العمليات في الأسفل */}
+        <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
             onClick={onClose}
-            className={`${UI.btnSecondary} text-xs py-2 px-4 rounded-xl font-bold`}
+            className={`${UI.btnSecondary} text-xs py-2.5 px-4 rounded-xl font-bold cursor-pointer`}
           >
             {t('cancel', 'إلغاء')}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`${UI.btnPrimary} text-xs py-2 px-6 rounded-xl font-extrabold transition-opacity flex items-center justify-center`}
+            className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer`}
           >
-            {formData?.id ? (
-              <span className="flex items-center gap-1.5">
-                <Save size={14} />
-                <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : t('saveChanges', 'حفظ التعديلات')}</span>
-              </span>
-            ) : (
-              <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : t('createNewHalaqa', 'إنشاء الحلقة')}</span>
-            )}
+            <Save size={14} />
+            <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : (formData?.id ? t('saveChanges', 'حفظ التعديلات') : t('createNewHalaqa', 'إنشاء الحلقة'))}</span>
           </button>
         </div>
       </form>
