@@ -1,10 +1,10 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar, Users, Globe, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
-import { getLocalizedContent } from './HalaqaConstants';
+import { getLocalizedContent, getTrackOptions, getTargetAudienceOptions } from './HalaqaConstants';
 import { formatTimeString } from '@/utils/dateUtils';
 
 export default function HalaqaCardItem({ 
@@ -87,6 +87,15 @@ export default function HalaqaCardItem({
   const formattedDays = formatDaysDisplay(halaqa?.days_of_week);
   const isArchived = Boolean(halaqa?.is_archived);
 
+  // معرفة المسار التعليمي ونمط الانعقاد
+  const trackOptions = getTrackOptions(t);
+  const currentTrack = trackOptions.find(opt => opt.value === (halaqa?.educational_track || 'hifz'));
+  
+  const audienceOptions = getTargetAudienceOptions(t);
+  const currentAudience = audienceOptions.find(opt => opt.value === halaqa?.target_audience);
+
+  const isOnline = (halaqa?.teaching_type || 'online') === 'online';
+
   const handleSelectTeacher = async (teacherId) => {
     setIsTeacherDropdownOpen(false);
     if (!onUpdateHalaqa || isUpdatingTeacher) return;
@@ -107,25 +116,55 @@ export default function HalaqaCardItem({
   return (
     <div className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md`}>
       <div>
-        {/* الترويسة: اسم الحلقة + شارة الحالة */}
-        <div className="flex justify-between items-start gap-2 mb-2">
-          <h4 className="text-sm font-extrabold text-semantic-textPrimary m-0 line-clamp-1">
-            {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
-          </h4>
-          
-          {isArchived ? (
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold shrink-0">
-              {t('archived', 'مؤرشفة')}
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold shrink-0">
-              {t('activeSession', 'نشطة')}
-            </span>
+        {/* الترويسة: الاسم + الشارات (نشطة / أونلاين / المسار) */}
+        <div className="flex flex-col gap-1.5 mb-2.5">
+          <div className="flex justify-between items-start gap-2">
+            <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
+              {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
+            </h4>
+            
+            <div className="flex items-center gap-1 shrink-0">
+              {isOnline ? (
+                <span className="p-1 rounded-full bg-semantic-actionPrimary/15 text-semantic-actionPrimary" title={t('onlineHalaqa', 'حلقة عن بُعد')}>
+                  <Globe size={11} />
+                </span>
+              ) : (
+                <span className="p-1 rounded-full bg-semantic-surfaceInput text-semantic-textMuted" title={t('offlineHalaqa', 'حلقة حضورية')}>
+                  <Building2 size={11} />
+                </span>
+              )}
+
+              {isArchived ? (
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold">
+                  {t('archived', 'مؤرشفة')}
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold">
+                  {t('activeSession', 'نشطة')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* المسار التعليمي والفئة المستهدفة إن وجدت */}
+          {(currentTrack?.label || currentAudience?.label) && (
+            <div className="flex flex-wrap items-center gap-1">
+              {currentTrack?.label && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-semantic-surfaceInput text-semantic-textSecondary border border-semantic-borderCard/60">
+                  {currentTrack.label}
+                </span>
+              )}
+              {currentAudience?.label && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-semantic-surfaceInput/60 text-semantic-textMuted">
+                  {currentAudience.label}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
         {/* قائمة اختيار المعلم المدمجة */}
-        <div className="relative mb-2" ref={dropdownRef}>
+        <div className="relative mb-2.5" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
@@ -190,7 +229,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* المواعيد والأيام */}
+        {/* المواعيد والأيام والسعة القصوى */}
         <div className="space-y-1">
           {(startTimeFormatted || endTimeFormatted) && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
@@ -207,6 +246,13 @@ export default function HalaqaCardItem({
               <span className="font-semibold truncate text-semantic-textPrimary">
                 {formattedDays}
               </span>
+            </div>
+          )}
+
+          {halaqa?.max_students && (
+            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted">
+              <Users size={12} className="shrink-0" />
+              <span>{t('maxStudentsShort', 'الحد الأقصى:')} <strong className="text-semantic-textSecondary">{halaqa.max_students}</strong></span>
             </div>
           )}
         </div>
