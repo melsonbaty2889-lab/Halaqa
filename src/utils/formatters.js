@@ -244,48 +244,38 @@ export const formatCountry = (countryCode, lang = 'ar', fallback = 'غير مح�
 };
 
 // ==========================================
-// 5. تنسيق نطاقات الوقت (Time Range) بصيغة 12 ساعة مقروءة
+// 5. تنسيق نطاقات الوقت (Time Range) بصيغة 12 ساعة مقروءة بدقة
 // ==========================================
 export const formatTimeRange = (startTime, endTime, lang = 'ar') => {
   if (!startTime) return '';
 
   const parseToMinutes = (timeStr) => {
     if (!timeStr) return 0;
-    const clean = formatDigits(timeStr).trim();
-    const isPM = clean.includes('م') || /PM/i.test(clean);
-    const isAM = clean.includes('ص') || /AM/i.test(clean);
-    
+    const clean = String(timeStr).trim();
     const parts = clean.replace(/[^\d:]/g, '').split(':');
     let hours = parseInt(parts[0] || 0, 10);
     const minutes = parseInt(parts[1] || 0, 10);
-
-    if (isPM && hours < 12) hours += 12;
-    if (isAM && hours === 12) hours = 0;
-
     return hours * 60 + minutes;
   };
 
   const formatSingleTime = (timeStr) => {
     if (!timeStr) return '';
-    const clean = formatDigits(timeStr).trim();
-    
+    const clean = String(timeStr).trim();
     const parts = clean.replace(/[^\d:]/g, '').split(':');
     let hours = parseInt(parts[0] || 0, 10);
     const minutes = parts[1] !== undefined ? parts[1].padStart(2, '0') : '00';
 
     if (isNaN(hours)) return clean;
 
-    let isPM = clean.includes('م') || /PM/i.test(clean);
-    let isAM = clean.includes('ص') || /AM/i.test(clean);
+    let isPM = false;
+    let isAM = false;
 
-    if (!isPM && !isAM) {
-      if (hours >= 12) {
-        isPM = true;
-        if (hours > 12) hours -= 12;
-      } else {
-        isAM = true;
-        if (hours === 0) hours = 12;
-      }
+    if (hours >= 12) {
+      isPM = true;
+      if (hours > 12) hours -= 12;
+    } else {
+      isAM = true;
+      if (hours === 0) hours = 12;
     }
 
     const formattedHours = String(hours).padStart(2, '0');
