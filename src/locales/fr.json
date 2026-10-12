@@ -311,6 +311,7 @@
     "date": "التاريخ",
     "days": "يوم",
     "dayUnit": "يوم",
+    "deactivate": "تعطيل الحساب",
     "defaultHalaqaName": "حلقة قرآنية",
     "delete": "حذف",
     "details": "التفاصيل",
@@ -376,6 +377,7 @@
     "uploading": "جاري الرفع...",
     "view": "عرض",
     "viewAll": "عرض الكل",
+    "whatsapp": "مراسلة عبر واتساب",
     "years_old": "سنة",
     "zoom_in": "تكبير",
     "zoom_out": "تصغير"
@@ -1126,6 +1128,7 @@
     "addStaff": "إضافة كادر جديد",
     "addStaffTitle": "إضافة كادر تعليمي / إداري",
     "amount": "المبلغ",
+    "defaultTitle": "معلّم / مقرئ",
     "description": "إدارة المعلمين والمشرفين ومدراء الأكاديمية",
     "email": "البريد الإلكتروني",
     "enableTeaching": "إتاحة التدريس المباشر للحلقات",
@@ -1135,7 +1138,9 @@
     "fullName": "الاسم الكامل *",
     "hourly": "بالساعة",
     "ijazat": "الإجازات القرآنية",
+    "ijazatTitle": "الإجازات القرآنية",
     "jobTitle": "المسمى الوظيفي",
+    "manageAvailability": "إدارة المواعيد",
     "monthly": "راتب شهري",
     "namePlaceholder": "اسم المعلم أو الإداري",
     "noTeachersFound": "لا توجد نتائج تطابق خيارات البحث",
@@ -1147,7 +1152,8 @@
     "timezone": "المنطقة الزمنية (Timezone)",
     "title": "الكادر التعليمي والإداري",
     "totalStaff": "إجمالي الكادر",
-    "volunteer": "احتساب / تطوع"
+    "volunteer": "احتساب / تطوع",
+    "yearsExp": "سنوات خبرة"
   },
   "termsModal": {
     "acceptBtn": "موافقة ومتابعة",
