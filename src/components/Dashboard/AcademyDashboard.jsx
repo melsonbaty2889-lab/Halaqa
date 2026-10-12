@@ -11,7 +11,7 @@ import {
   BarChart2
 } from 'lucide-react';
 
-import ActiveHalaqas from '@/components/Dashboard/ActiveHalaqas';
+import HalaqasManager from '@/HalaqasManager';
 import AchievementChart from '@/components/Gamification/AchievementChart';
 
 export default function AcademyDashboard({ 
