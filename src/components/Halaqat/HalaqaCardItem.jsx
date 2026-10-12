@@ -20,7 +20,6 @@ export default function HalaqaCardItem({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   
-  // اللغات ذات الاتجاه من اليمين إلى اليسار (العربية والأوردو)
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
@@ -118,11 +117,11 @@ export default function HalaqaCardItem({
 
   return (
     <div 
-      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md ${isRtl ? 'text-right' : 'text-left'}`}
-      dir={isRtl ? 'rtl' : 'ltr'}
+      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md text-right`} 
+      dir="rtl"
     >
       <div>
-        {/* الترويسة: الاسم والشارات */}
+        {/* الترويسة: اسم الحلقة والشارات */}
         <div className="flex flex-col gap-2 mb-2.5">
           <div className="flex justify-between items-center gap-2">
             <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
@@ -152,9 +151,9 @@ export default function HalaqaCardItem({
             </div>
           </div>
 
-          {/* المسار التعليمي والفئة المستهدفة */}
+          {/* المسار التعليمي والفئة المستهدفة (محاذاة لليمين تماماً) */}
           {(currentTrack?.label || currentAudience?.label) && (
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5 justify-start">
               {currentTrack?.label && (
                 <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard/80">
                   {currentTrack.label}
@@ -169,7 +168,7 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* قائمة المعلم المدمجة */}
+        {/* قائمة المعلم */}
         <div className="relative mb-2.5" ref={dropdownRef}>
           <button
             type="button"
@@ -198,11 +197,11 @@ export default function HalaqaCardItem({
           </button>
 
           {isTeacherDropdownOpen && (
-            <div className={`absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 ${isRtl ? 'text-right' : 'text-left'}`}>
+            <div className="absolute top-full right-0 left-0 mt-1 z-50 bg-semantic-surfaceCard border border-semantic-borderCard rounded-xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 text-right">
               <button
                 type="button"
                 onClick={() => handleSelectTeacher(null)}
-                className={`w-full px-2.5 py-1.5 text-xs text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer ${isRtl ? 'text-right' : 'text-left'}`}
+                className="w-full text-right px-2.5 py-1.5 text-xs text-semantic-textMuted hover:bg-semantic-surfaceInput rounded-lg flex items-center justify-between border-none cursor-pointer"
               >
                 <span>{t('unassignTeacherOption', 'بدون معلم (غير معين)')}</span>
                 {!halaqa?.teacher_id && <Check size={12} className="text-semantic-actionPrimary" />}
@@ -217,9 +216,9 @@ export default function HalaqaCardItem({
                       key={teacher.id}
                       type="button"
                       onClick={() => handleSelectTeacher(teacher.id)}
-                      className={`w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
+                      className={`w-full text-right px-2.5 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between border-none cursor-pointer ${
                         isSelected ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary' : 'text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                      } ${isRtl ? 'text-right' : 'text-left'}`}
+                      }`}
                     >
                       <span className="truncate">{name}</span>
                       {isSelected && <Check size={12} className="text-semantic-actionPrimary" />}
@@ -235,12 +234,12 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* التوقيت والأيام والأعداد مع الحماية بالـ Unicode Bidi */}
+        {/* المواعيد والأيام والحد الأقصى مع عزل اتجاه الأرقام */}
         <div className="space-y-1">
           {(startTimeFormatted || endTimeFormatted) && (
             <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
               <Clock size={13} className="text-semantic-textMuted shrink-0" />
-              <bdi className="font-semibold truncate">
+              <bdi className="font-semibold truncate" style={{ direction: 'ltr', display: 'inline-block' }}>
                 {startTimeFormatted} {endTimeFormatted && `- ${endTimeFormatted}`}
               </bdi>
             </div>
@@ -260,14 +259,16 @@ export default function HalaqaCardItem({
               <Users size={12} className="shrink-0" />
               <span>
                 {t('maxStudentsShort', 'الحد الأقصى:')}{' '}
-                <bdi className="font-bold text-semantic-textSecondary">{halaqa.max_students}</bdi>
+                <bdi className="font-bold text-semantic-textSecondary" style={{ direction: 'ltr', display: 'inline-block' }}>
+                  {halaqa.max_students}
+                </bdi>
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* أزرار العمليات السريعة */}
+      {/* أزرار العمليات */}
       <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
         {isArchived ? (
           <>
