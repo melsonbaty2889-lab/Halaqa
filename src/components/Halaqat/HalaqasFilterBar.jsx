@@ -15,7 +15,11 @@ export default function HalaqasFilterBar({
   setViewMode,
   stats = { totalActive: 0, totalArchived: 0, unassigned: 0 }
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
+  
+  // اللغات ذات الاتجاه من اليمين إلى اليسار (العربية والأوردو)
+  const isRtl = ['ar', 'ur'].includes(currentLang);
 
   const getTracks = Constants.getTrackOptions || (() => [
     { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
@@ -46,9 +50,12 @@ export default function HalaqasFilterBar({
   };
 
   return (
-    <div className="space-y-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm">
+    <div 
+      className={`space-y-3 bg-semantic-surfaceCard p-3.5 rounded-2xl border border-semantic-borderCard shadow-sm ${isRtl ? 'text-right' : 'text-left'}`}
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       
-      {/* 1. التبويبات الرئيسية (النشطة / بلا معلم / المؤرشفة) */}
+      {/* 1. التبويبات الرئيسية (النشطة / بلا معلم / المؤرشفة) مع عزل اتجاه الأعداد */}
       <div className="grid grid-cols-3 gap-1.5 p-1 bg-semantic-surfaceInput rounded-xl border border-semantic-borderCard">
         <button
           type="button"
@@ -59,10 +66,10 @@ export default function HalaqasFilterBar({
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <CheckCircle2 size={14} />
-          <span>{t('statActive', 'النشطة')}</span>
-          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-2 py-0.5 rounded-full text-[10px] font-extrabold">
-            {stats.totalActive || 0}
+          <CheckCircle2 size={14} className="shrink-0" />
+          <span className="truncate">{t('statActive', 'النشطة')}</span>
+          <span className="bg-semantic-actionPrimary/15 text-semantic-actionPrimary px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+            <bdi>{stats.totalActive || 0}</bdi>
           </span>
         </button>
 
@@ -75,10 +82,10 @@ export default function HalaqasFilterBar({
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Users size={14} />
-          <span>{t('statUnassigned', 'بلا معلم')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold">
-            {stats.unassigned || 0}
+          <Users size={14} className="shrink-0" />
+          <span className="truncate">{t('statUnassigned', 'بلا معلم')}</span>
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+            <bdi>{stats.unassigned || 0}</bdi>
           </span>
         </button>
 
@@ -91,10 +98,10 @@ export default function HalaqasFilterBar({
               : 'bg-transparent text-semantic-textMuted hover:text-semantic-textPrimary'
           }`}
         >
-          <Archive size={14} />
-          <span>{t('statArchived', 'المؤرشفة')}</span>
-          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold">
-            {stats.totalArchived || 0}
+          <Archive size={14} className="shrink-0" />
+          <span className="truncate">{t('statArchived', 'المؤرشفة')}</span>
+          <span className="bg-semantic-borderCard text-semantic-textMuted px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+            <bdi>{stats.totalArchived || 0}</bdi>
           </span>
         </button>
       </div>
@@ -113,7 +120,9 @@ export default function HalaqasFilterBar({
             <button
               type="button"
               onClick={() => typeof setSearchQuery === 'function' && setSearchQuery('')}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-semantic-textMuted hover:text-semantic-textPrimary transition-colors p-1 rounded-full bg-semantic-surfaceInput/50 hover:bg-semantic-surfaceInput cursor-pointer border-none flex items-center justify-center"
+              className={`absolute top-1/2 -translate-y-1/2 text-semantic-textMuted hover:text-semantic-textPrimary transition-colors p-1 rounded-full bg-semantic-surfaceInput/50 hover:bg-semantic-surfaceInput cursor-pointer border-none flex items-center justify-center ${
+                isRtl ? 'left-3' : 'right-3'
+              }`}
               title={t('clearSearch', 'مسح البحث')}
             >
               <X size={13} />
