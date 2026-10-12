@@ -23,7 +23,7 @@ const getEmptyFormData = (academyId) => ({
   academyId: academyId || null
 });
 
-export default function ActiveHalaqas({
+export default function HalaqasManager({
   halaqas = [],
   teachers = [],
   academyId = null,
