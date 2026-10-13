@@ -7,6 +7,9 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 import { Input, Select } from '@/components/UI';
+import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
+import { getTimezoneOptions } from '@/constants/timezones';
+import { getCurrencies } from '@/constants/currencies';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
   const { t, i18n } = useTranslation();
@@ -20,8 +23,8 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     role: 'teacher',
     title: 'معلّم / مقرئ',
     isTeaching: true,
-    country: '',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    country: 'EG', // الدولة الافتراضية (مصر)
+    timezone: 'Africa/Cairo', // المنطقة الزمنية الافتراضية المتوافقة مع الدولة
     ijazat: [],
     compensationType: 'volunteer',
     hourlyRate: '',
@@ -43,16 +46,13 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     { value: 'supervisor', label: t('teachers.roles.supervisor', 'مشرف تعليمي') }
   ];
 
-  const timezoneOptions = [
-    { value: 'UTC', label: t('timezones.utc', 'التوقيت العالمي (UTC)') },
-    { value: 'Africa/Cairo', label: t('timezones.cairo', 'القاهرة (UTC+2)') },
-    { value: 'Asia/Riyadh', label: t('timezones.riyadh', 'الرياض / مكة (UTC+3)') },
-    { value: 'Europe/Istanbul', label: t('timezones.istanbul', 'إسطنبول (UTC+3)') },
-    { value: 'Asia/Jakarta', label: t('timezones.jakarta', 'جاكرتا (UTC+7)') },
-    { value: 'Asia/Karachi', label: t('timezones.karachi', 'كراتشي (UTC+5)') },
-    { value: 'Europe/Paris', label: t('timezones.paris', 'باريس (UTC+1)') },
-    { value: 'America/New_York', label: t('timezones.newYork', 'نيويورك (UTC-5)') }
-  ];
+  // تحويل قائمة الدول لتناسب مكون Select المركزي
+  const countryOptions = COUNTRIES_LIST.map((c) => ({
+    value: c.code,
+    label: `${c.flag} ${currentLang === 'en' ? c.nameEn : c.nameAr} (${c.dialCode})`
+  }));
+
+  const timezoneOptions = getTimezoneOptions(t);
 
   const compensationOptions = [
     { value: 'volunteer', label: t('teachers.compensation.volunteer', 'تطوع / احتساب') },
@@ -60,13 +60,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     { value: 'monthly', label: t('teachers.compensation.monthly', 'راتب شهري ثابت') }
   ];
 
-  const currencyOptions = [
-    { value: 'USD', label: 'USD ($)' },
-    { value: 'EUR', label: 'EUR (€)' },
-    { value: 'SAR', label: 'SAR (ر.س)' },
-    { value: 'EGP', label: 'EGP (ج.م)' },
-    { value: 'TRY', label: 'TRY (₺)' }
-  ];
+  const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
+
+const currencyOptions = getCurrencies(t)
+  .filter(c => supportedCurrencyCodes.includes(c.code))
+  .map(c => ({
+    value: c.code,
+    label: `${c.code} (${c.symbol})`
+  }));
 
   const ijazatOptions = [
     'حفص عن عاصم',
@@ -85,12 +86,23 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     return val;
   };
 
+  // دالة التحديث الذكي التي تربط الدولة بالمنطقة الزمنية تلقائياً
   const handleChange = (field, val) => {
     const value = extractValue(val);
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value
-    }));
+    
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // إذا تم تغيير الدولة، نقوم بتحديث المنطقة الزمنية تلقائياً بناءً على الثوابت
+      if (field === 'country') {
+        const countryData = COUNTRIES_MAP[value];
+        if (countryData && countryData.timezone) {
+          updated.timezone = countryData.timezone;
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleIjazatChange = (ijaza) => {
@@ -206,6 +218,33 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           </div>
 
+          {/* اختيار الدولة والمنطقة الزمنية المرتبطة تلقائياً */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('teachers.countryLabel', 'الدولة')}
+              </label>
+              <Select
+                title={t('teachers.countryLabel', 'الدولة')}
+                value={formData.country}
+                onChange={(v) => handleChange('country', v)}
+                options={countryOptions}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+                {t('teachers.timezoneLabel', 'المنطقة الزمنية (تتحدث تلقائياً وقابلة للتعديل)')}
+              </label>
+              <Select
+                title={t('teachers.timezoneLabel', 'المنطقة الزمنية')}
+                value={formData.timezone}
+                onChange={(v) => handleChange('timezone', v)}
+                options={timezoneOptions}
+              />
+            </div>
+          </div>
+
           {/* البريد الإلكتروني ورقم الهاتف */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
@@ -235,31 +274,17 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           </div>
 
-          {/* الصلاحية والمنطقة الزمنية */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
-              </label>
-              <Select
-                title={t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
-                value={formData.role}
-                onChange={(v) => handleChange('role', v)}
-                options={roleOptions}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.timezoneLabel', 'المنطقة الزمنية الأساسية')}
-              </label>
-              <Select
-                title={t('teachers.timezoneLabel', 'المنطقة الزمنية الأساسية')}
-                value={formData.timezone}
-                onChange={(v) => handleChange('timezone', v)}
-                options={timezoneOptions}
-              />
-            </div>
+          {/* الصلاحية داخل النظام */}
+          <div>
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              {t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
+            </label>
+            <Select
+              title={t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
+              value={formData.role}
+              onChange={(v) => handleChange('role', v)}
+              options={roleOptions}
+            />
           </div>
 
           {/* خيار التدريس الفعلي */}
