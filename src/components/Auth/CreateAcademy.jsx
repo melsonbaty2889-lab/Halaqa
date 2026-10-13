@@ -1,3 +1,5 @@
+/* src/components/Auth/CreateAcademy.jsx */
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
@@ -73,12 +75,17 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     }));
   }, [isAr]);
 
+  // قائمة العملات الديناميكية المترجمة بحسب دالة الترجمة t
+  const currenciesList = useMemo(() => {
+    return getCurrencies(t);
+  }, [t]);
+
   const currencyOptions = useMemo(() => {
-    return (CURRENCIES || []).map((currency) => ({
-      label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
+    return (currenciesList || []).map((currency) => ({
+      label: `${currency.name} (${currency.code}) - ${currency.symbol}`,
       value: currency.code,
     }));
-  }, [isAr]);
+  }, [currenciesList]);
 
   const timezoneOptions = useMemo(
     () => [
@@ -104,7 +111,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     if (matchedCountry?.timezone) {
       updateField('timezone', matchedCountry.timezone);
     }
-    const matchedCurrency = (CURRENCIES || []).find((c) => c.countryCode === countryCode);
+    const matchedCurrency = (currenciesList || []).find((c) => c.countryCode === countryCode);
     if (matchedCurrency?.code) {
       updateField('currency', matchedCurrency.code);
     }
@@ -235,32 +242,29 @@ export default function CreateAcademy({ onSubmitAcademy }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
-            <CustomSelect
-              label={t('settings.country', 'الدولة')}
+            <Select
+              title={t('settings.country', 'الدولة')}
               value={academyData.country_code}
               onChange={handleCountryChange}
               options={countryOptions}
-              searchable={true}
             />
-            <CustomSelect
-              label={t('settings.currency', 'العملة الرسمية')}
+            <Select
+              title={t('settings.currency', 'العملة الرسمية')}
               value={academyData.currency}
               onChange={(val) => updateField('currency', val)}
               options={currencyOptions}
-              searchable={true}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 !overflow-visible">
-            <CustomSelect
-              label={t('settings.timezone', 'المنطقة الزمنية')}
+            <Select
+              title={t('settings.timezone', 'المنطقة الزمنية')}
               value={academyData.timezone}
               onChange={(val) => updateField('timezone', val)}
               options={timezoneOptions}
-              searchable={true}
             />
-            <CustomSelect
-              label={t('settings.calendarType', 'نوع التقويم')}
+            <Select
+              title={t('settings.calendarType', 'نوع التقويم')}
               value={academyData.calendar_type}
               onChange={(val) => updateField('calendar_type', val)}
               options={calendarOptions}
