@@ -22,7 +22,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     email: '',
     phone: '',
     role: 'teacher',
-    title: 'معلّم / مقرئ',
+    title: 'شيخ حلقة / معلم قرآن',
     isTeaching: true,
     country: 'EG',
     timezone: 'Africa/Cairo',
@@ -36,16 +36,20 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // 1. الصفة واللقب العلمي للشيخ / المعلم
   const titlesList = [
-    { value: 'معلّم / مقرئ', label: t('teachers.titles.teacher', 'معلّم / مقرئ') },
-    { value: 'مشرف تعليمي', label: t('teachers.titles.supervisor', 'مشرف تعليمي') },
-    { value: 'مدير أكاديمية', label: t('teachers.titles.admin', 'مدير أكاديمية') }
+    { value: 'شيخ حلقة / معلم قرآن', label: t('staff.titles.quranTeacher', 'شيخ حلقة / معلّم قرآن') },
+    { value: 'مقرئ ومجيز بالسند', label: t('staff.titles.sanadTeacher', 'مقرئ ومجيز بالسند') },
+    { value: 'معلم نورانية وتأسيس', label: t('staff.titles.nouraniyahTeacher', 'معلّم نورانية وتأسيس') },
+    { value: 'مشرف تعليمي', label: t('staff.titles.supervisor', 'مشرف تعليمي') },
+    { value: 'مدير الأكاديمية', label: t('staff.titles.admin', 'مدير الأكاديمية') }
   ];
 
+  // 2. صلاحية الحساب التقنية في النظام
   const roleOptions = [
-    { value: 'teacher', label: t('teachers.roles.teacher', 'معلّم حلقة') },
-    { value: 'admin', label: t('teachers.roles.admin', 'مدير أكاديمية') },
-    { value: 'supervisor', label: t('teachers.roles.supervisor', 'مشرف تعليمي') }
+    { value: 'teacher', label: t('staff.roles.teacher', 'معلّم (إدارة الحلقات المسندة)') },
+    { value: 'supervisor', label: t('staff.roles.supervisor', 'مشرف (إشراف ومتابعة الحلقات)') },
+    { value: 'admin', label: t('staff.roles.admin', 'مدير نظام (تحكم كامل بالمنصة)') }
   ];
 
   const countryOptions = COUNTRIES_LIST.map((c) => ({
@@ -56,9 +60,9 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const timezoneOptions = getTimezoneOptions(t);
 
   const compensationOptions = [
-    { value: 'volunteer', label: t('teachers.compensation.volunteer', 'تطوع / احتساب') },
-    { value: 'hourly', label: t('teachers.compensation.hourly', 'أجر بالساعة') },
-    { value: 'monthly', label: t('teachers.compensation.monthly', 'راتب شهري ثابت') }
+    { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوّع / احتساب') },
+    { value: 'hourly', label: t('staff.compensation.hourly', 'مكافأة بالحصة / الساعة') },
+    { value: 'monthly', label: t('staff.compensation.monthly', 'كفالة / راتب شهري ثابت') }
   ];
 
   const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
@@ -108,7 +112,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     if (e && e.preventDefault) e.preventDefault();
 
     if (!formData.name.trim()) {
-      setErrorMsg(t('teachers.errorNameRequired', 'يرجى إدخال اسم الكادر التعليمي أو الإداري'));
+      setErrorMsg(t('staff.errors.nameRequired', 'يرجى إدخال اسم الكادر كاملاً'));
       return;
     }
 
@@ -118,7 +122,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     try {
       const newTeacherId = crypto.randomUUID();
 
-      // تجهيز القيم المتوافق مع قيود الجدول DB Checks
       const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
       const parsedHourly = formData.compensationType === 'hourly' ? parseFloat(formData.hourlyRate) || 0 : 0;
       const parsedMonthly = formData.compensationType === 'monthly' ? parseFloat(formData.monthlySalary || formData.hourlyRate) || 0 : 0;
@@ -163,7 +166,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             }
           ]);
 
-        if (relError) console.warn("Notice: Rel insertion optional or logged:", relError.message);
+        if (relError) console.warn("Notice: Rel insertion logged:", relError.message);
       }
 
       if (onSuccess) onSuccess();
@@ -180,7 +183,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     <Modal
       open={isOpen}
       onClose={onClose}
-      title={t('teachers.addStaffTitle', 'إضافة كادر تعليمي / إداري جديد')}
+      title={t('staff.addTitle', 'إضافة كادر تعليمي / إداري جديد')}
     >
       <form onSubmit={handleSubmit} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
@@ -191,16 +194,16 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           )}
 
-          {/* الاسم الكامل والمسمى الوظيفي */}
+          {/* الاسم المسمى العلمي */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.fullNameLabel', 'الاسم الكامل')} <span className="text-semantic-actionPrimary">*</span>
+                {t('staff.fields.fullName', 'الاسم الكامل')} <span className="text-semantic-actionPrimary">*</span>
               </label>
               <Input
                 type="text"
                 required
-                placeholder={t('teachers.namePlaceholder', 'مثال: محمد أحمد العبدالله')}
+                placeholder={t('staff.placeholders.fullName', 'مثال: الشيخ د. أحمد بن علي')}
                 value={formData.name}
                 onChange={(v) => handleChange('name', v)}
               />
@@ -208,10 +211,10 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.jobTitleLabel', 'المسمى الوظيفي')}
+                {t('staff.fields.title', 'الصفة / المسمى العلمي')}
               </label>
               <Select
-                title={t('teachers.jobTitleLabel', 'المسمى الوظيفي')}
+                title={t('staff.fields.title', 'الصفة / المسمى العلمي')}
                 value={formData.title}
                 onChange={(v) => handleChange('title', v)}
                 options={titlesList}
@@ -219,14 +222,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           </div>
 
-          {/* الدولة والمنطقة الزمنية (مزامنة تلقائية) */}
+          {/* الدولة والمنطقة الزمنية */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.countryLabel', 'الدولة')}
+                {t('staff.fields.country', 'بلد الإقامة')}
               </label>
               <Select
-                title={t('teachers.countryLabel', 'الدولة')}
+                title={t('staff.fields.country', 'بلد الإقامة')}
                 value={formData.country}
                 onChange={(v) => handleChange('country', v)}
                 options={countryOptions}
@@ -235,10 +238,10 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.timezoneLabel', 'المنطقة الزمنية')}
+                {t('staff.fields.timezone', 'المنطقة الزمنية')}
               </label>
               <Select
-                title={t('teachers.timezoneLabel', 'المنطقة الزمنية')}
+                title={t('staff.fields.timezone', 'المنطقة الزمنية')}
                 value={formData.timezone}
                 onChange={(v) => handleChange('timezone', v)}
                 options={timezoneOptions}
@@ -246,15 +249,15 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           </div>
 
-          {/* البريد وال هاتف */}
+          {/* البريد ورقم التواصل */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.emailLabel', 'البريد الإلكتروني')}
+                {t('staff.fields.email', 'البريد الإلكتروني')}
               </label>
               <Input
                 type="email"
-                placeholder={t('teachers.emailPlaceholder', 'name@academy.com')}
+                placeholder={t('staff.placeholders.email', 'teacher@academy.com')}
                 value={formData.email}
                 onChange={(v) => handleChange('email', v)}
                 dir="ltr"
@@ -263,11 +266,11 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.phoneLabel', 'رقم الهاتف / تطبيق المحادثة')}
+                {t('staff.fields.phone', 'رقم التواصل (واتساب)')}
               </label>
               <Input
                 type="tel"
-                placeholder={t('teachers.phonePlaceholder', '+XX XXXXXXXXXX')}
+                placeholder={t('staff.placeholders.phone', '+XX XXXXXXXXXX')}
                 value={formData.phone}
                 onChange={(v) => handleChange('phone', v)}
                 dir="ltr"
@@ -275,13 +278,13 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           </div>
 
-          {/* الصلاحية */}
+          {/* صلاحية لوحة التحكم */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-              {t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
+              {t('staff.fields.role', 'صلاحيات لوحة التحكم')}
             </label>
             <Select
-              title={t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
+              title={t('staff.fields.role', 'صلاحيات لوحة التحكم')}
               value={formData.role}
               onChange={(v) => handleChange('role', v)}
               options={roleOptions}
@@ -291,8 +294,8 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
           {/* خيار التدريس الفعلي */}
           <div className="card-surface p-3 border-semantic-borderCard/50 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-semantic-textPrimary">{t('teachers.enableTeachingTitle', 'إتاحة التدريس المباشر للحلقات')}</p>
-              <p className="text-[10px] text-semantic-textSecondary">{t('teachers.enableTeachingDesc', 'تفعيل ظهور اسم المعلم في جداول وقوائم الحلقات الدراسية')}</p>
+              <p className="text-xs font-bold text-semantic-textPrimary">{t('staff.teaching.enableTitle', 'إتاحة التدريس المباشر للحلقات')}</p>
+              <p className="text-[10px] text-semantic-textSecondary">{t('staff.teaching.enableDesc', 'تفعيل ظهور اسم المعلم في جداول وقوائم الحلقات الدراسية')}</p>
             </div>
             <input 
               type="checkbox"
@@ -306,7 +309,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
           {formData.isTeaching && (
             <div className="pt-1">
               <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
-                <Award className="w-4 h-4" /> {t('teachers.ijazatLabel', 'الإجازات والسند القرآني')}
+                <Award className="w-4 h-4" /> {t('staff.ijazat.title', 'الإجازات والسند القرآني')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
                 {ijazatOptions.map((item) => (
@@ -324,14 +327,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           )}
 
-          {/* التعاقد والماليات */}
+          {/* المكافآت والماليات */}
           <div className="pt-1">
             <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4 text-semantic-success" /> {t('teachers.financialSystemLabel', 'نظام التعاقد والمستحقات')}
+              <DollarSign className="w-4 h-4 text-semantic-success" /> {t('staff.financial.title', 'نظام المكافآت والمستحقات المالية')}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <Select
-                title={t('teachers.financialSystemLabel', 'نظام التعاقد والمستحقات')}
+                title={t('staff.financial.type', 'نظام المكافأة')}
                 value={formData.compensationType}
                 onChange={(v) => handleChange('compensationType', v)}
                 options={compensationOptions}
@@ -343,12 +346,12 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder={t('teachers.amountPlaceholder', 'القيمة المالية')}
+                    placeholder={t('staff.financial.amount', 'المبلغ / المستحق')}
                     value={formData.compensationType === 'hourly' ? formData.hourlyRate : formData.monthlySalary}
                     onChange={(v) => handleChange(formData.compensationType === 'hourly' ? 'hourlyRate' : 'monthlySalary', extractValue(v))}
                   />
                   <Select
-                    title={t('teachers.currencyLabel', 'العملة')}
+                    title={t('staff.financial.currency', 'عملة التعامل')}
                     value={formData.currency}
                     onChange={(v) => handleChange('currency', v)}
                     options={currencyOptions}
@@ -360,7 +363,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
         </div>
 
-        {/* الأزرار */}
+        {/* أزرار الحفظ والإلغاء */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
@@ -375,7 +378,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer`}
           >
             <UserPlus size={14} />
-            <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('common.saveData', 'حفظ البيانات')}</span>
+            <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('staff.actions.save', 'حفظ البيانات')}</span>
           </button>
         </div>
       </form>
