@@ -760,6 +760,15 @@
     "slugLabel": "Slug Label",
     "uploadBtn": "Upload Button"
   },
+  "ijazat": {
+    "duriAbuAmr": "الدوري عن أبي عمرو / Al-Duri an Abu Amr",
+    "hafsAsim": "حفص عن عاصم / Hafs an Asim",
+    "kubra10": "القراءات العشر الكبرى / The Ten Major Qiraat",
+    "mutunLicense": "إجازة المتون العلمية / Mutun & Text Licenses",
+    "qalunNafi": "قالون عن نافع / Qalun an Nafi",
+    "sughra10": "القراءات العشر الصغرى / The Ten Minor Qiraat",
+    "warshNafi": "ورش عن نافع / Warsh an Nafi"
+  },
   "loading": "Loading data...",
   "maxStudents": "السعة الأقصى للطلاب",
   "maxStudentsLabel": "الحد الأقصى للطلاب",
