@@ -52,12 +52,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     label: `${c.flag} ${currentLang === 'en' ? c.nameEn : c.nameAr} (${c.dialCode})`
   }));
 
-  // 4. خيارات المناطق الزمنية المصححة
-  const rawTimezoneOptions = getTimezoneOptions(t);
-  const timezoneOptions = rawTimezoneOptions.map((tz) => ({
-    value: tz.value || tz.id || tz,
-    label: tz.label || tz.name || tz.value || tz
-  }));
+  const timezoneOptions = getTimezoneOptions(t);
 
   // 5. أنظمة المكافآت والماليات
   const compensationOptions = [
