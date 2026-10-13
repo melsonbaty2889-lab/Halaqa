@@ -32,6 +32,7 @@ export default function HalaqaFormModal({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
   
   const [timeError, setTimeError] = useState('');
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -206,7 +207,7 @@ export default function HalaqaFormModal({
       onClose={onClose}
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
-      <form onSubmit={onSubmitForm} className="flex flex-col flex-1 min-h-0 text-right" dir="rtl">
+      <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
           {/* اسم الحلقة */}
