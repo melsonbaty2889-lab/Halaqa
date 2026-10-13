@@ -37,36 +37,45 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. استدعاء المسميات العلمية والوظيفية من ملف الثوابت الموحد
+  // 1. المسميات العلمية والوظيفية من الثوابت الموحدة
   const titlesList = getStaffTitles(t);
 
-  // 2. صلاحيات لوحة التحكم المطابقة لقاعدة البيانات (تقتصر على معلم وأدمن للأكاديمية)
+  // 2. صلاحيات لوحة التحكم المعتمدة بالنظام
   const roleOptions = [
-    { value: 'teacher', label: t('staff.roles.teacher', 'معلّم / محفّظ (حلقات وتسميع)') },
-    { value: 'admin', label: t('staff.roles.admin', 'مدير أكاديمية (إدارة كاملة)') }
+    { value: 'teacher', label: t('staff.roles.teacher', 'معلّم / محفّظ (إدارة الحلقات المسندة)') },
+    { value: 'admin', label: t('staff.roles.admin', 'مدير أكاديمية (تحكم وإدارة كاملة)') }
   ];
 
+  // 3. خيارات الدول بأسماء مترجمة وعلم الدولة
   const countryOptions = COUNTRIES_LIST.map((c) => ({
     value: c.code,
     label: `${c.flag} ${currentLang === 'en' ? c.nameEn : c.nameAr} (${c.dialCode})`
   }));
 
-  const timezoneOptions = getTimezoneOptions(t);
+  // 4. خيارات المناطق الزمنية المصححة
+  const rawTimezoneOptions = getTimezoneOptions(t);
+  const timezoneOptions = rawTimezoneOptions.map((tz) => ({
+    value: tz.value || tz.id || tz,
+    label: tz.label || tz.name || tz.value || tz
+  }));
 
+  // 5. أنظمة المكافآت والماليات
   const compensationOptions = [
     { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوّع / احتساب') },
     { value: 'hourly', label: t('staff.compensation.hourly', 'مكافأة بالحصة / الساعة') },
     { value: 'monthly', label: t('staff.compensation.monthly', 'كفالة / راتب شهري ثابت') }
   ];
 
+  // 6. العملات المدعومة
   const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
   const currencyOptions = getCurrencies(t)
     .filter(c => supportedCurrencyCodes.includes(c.code))
     .map(c => ({
       value: c.code,
-      label: `${c.code} (${c.symbol})`
+      label: `${c.code} (${c.symbol}) - ${c.name}`
     }));
 
+  // 7. قائمة الإجازات والسند
   const ijazatOptions = getIjazatOptions(t);
 
   const extractValue = (val) => {
@@ -87,6 +96,11 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
         if (countryData && countryData.timezone) {
           updated.timezone = countryData.timezone;
         }
+      }
+
+      if (field === 'compensationType' && value === 'volunteer') {
+        updated.hourlyRate = '';
+        updated.monthlySalary = '';
       }
 
       return updated;
@@ -117,8 +131,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
       const newTeacherId = crypto.randomUUID();
 
       const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
-      
-      // معالجة آمنة للأرقام والأسعار
       const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
       const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
 
@@ -134,7 +146,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             is_teaching: formData.isTeaching,
             country: formData.country || null,
             timezone: formData.timezone,
-            ijazas: formData.ijazat,
+            ijazas: formData.isTeaching ? formData.ijazat : [],
             employment_type: dbEmploymentType,
             salary_system: formData.compensationType,
             hourly_rate: parsedHourly,
@@ -182,7 +194,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
       title={t('staff.addTitle', 'إضافة كادر تعليمي / إداري جديد')}
     >
       <form onSubmit={handleSubmit} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
+        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-6">
           
           {errorMsg && (
             <div className="bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger p-3 rounded-xl text-xs font-bold mb-2">
@@ -190,7 +202,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           )}
 
-          {/* الاسم والمسمى العلمى */}
+          {/* الاسم والمسمى العلمي */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -288,7 +300,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
           </div>
 
           {/* خيار التدريس الفعلي */}
-          <div className="card-surface p-3 border-semantic-borderCard/50 flex items-center justify-between">
+          <div className="card-surface p-3 border-semantic-borderCard/50 flex items-center justify-between rounded-xl">
             <div>
               <p className="text-xs font-bold text-semantic-textPrimary">{t('staff.teaching.enableTitle', 'إتاحة التدريس المباشر للحلقات')}</p>
               <p className="text-[10px] text-semantic-textSecondary">{t('staff.teaching.enableDesc', 'تفعيل ظهور اسم المعلم في جداول وقوائم الحلقات الدراسية')}</p>
@@ -359,7 +371,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
         </div>
 
-        {/* أزرار الحفظ والإلغاء */}
+        {/* أزرار الحفظ والإلغاء الثابتة أسفل الشاشة */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
