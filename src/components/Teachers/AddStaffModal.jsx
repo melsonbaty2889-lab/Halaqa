@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { X, UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
+import { UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { Modal } from '@/components/UI/Modal';
@@ -29,8 +29,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  if (!isOpen) return null;
 
   const titlesList = [
     'معلّم / مقرئ',
@@ -118,20 +116,18 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   };
 
   return (
-    <div className="fixed inset-0 bg-semantic-bgPage/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div 
-        className={`${UI.card} w-full max-w-2xl p-6 text-semantic-textPrimary max-h-[90vh] overflow-y-auto`}
-        dir={isRtl ? 'rtl' : 'ltr'}
-      >
-        <div className="flex justify-between items-center mb-5 pb-3 border-b border-semantic-borderCard">
-          <h3 className="text-lg font-bold flex items-center gap-2 text-semantic-actionPrimary">
-            <UserPlus className="w-5 h-5" /> {t('teachers.addStaffTitle', 'إضافة كادر تعليمي / إداري')}
-          </h3>
-          <button onClick={onClose} className="text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={
+        <span className="flex items-center gap-2 text-semantic-actionPrimary">
+          <UserPlus className="w-5 h-5" /> 
+          {t('teachers.addStaffTitle', 'إضافة كادر تعليمي / إداري')}
+        </span>
+      }
+      className="max-w-2xl"
+    >
+      <div dir={isRtl ? 'rtl' : 'ltr'} className="text-semantic-textPrimary">
         {errorMsg && (
           <div className="bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger p-3 rounded-xl text-xs font-bold mb-4">
             {errorMsg}
@@ -304,6 +300,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
