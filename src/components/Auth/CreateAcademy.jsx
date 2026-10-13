@@ -9,7 +9,7 @@ import { C } from '@/theme/colors';
 import { useCreateAcademy } from '@/hooks/useCreateAcademy';
 import Select from '@/components/UI/Select.jsx';
 import { COUNTRIES_LIST } from '@/constants/countries.js';
-import { CURRENCIES } from '@/constants/currencies.js';
+import { getCurrencies } from '@/constants/currencies.js';
 
 import { Building2, CheckCircle2, Globe, Mail, Phone, AlertCircle } from 'lucide-react';
 
