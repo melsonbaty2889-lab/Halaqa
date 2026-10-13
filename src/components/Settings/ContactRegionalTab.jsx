@@ -1,11 +1,11 @@
-// src/components/Settings/ContactRegionalTab.jsx
+/* src/components/Settings/ContactRegionalTab.jsx */
 
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Select from '@/components/UI/Select';
 import { COUNTRIES_LIST } from '@/constants/countries';
-import { CURRENCIES } from '@/constants/currencies';
+import { getCurrencies } from '@/constants/currencies';
 
 export default function ContactRegionalTab({ formData = {}, updateField }) {
   const { t, i18n } = useTranslation();
@@ -22,13 +22,18 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
     }));
   }, [isAr]);
 
+  // قائمة العملات الديناميكية المترجمة بحسب دالة الترجمة t
+  const currenciesList = useMemo(() => {
+    return getCurrencies(t);
+  }, [t]);
+
   // تحضير وتثبيت خيارات العملات
   const currencyOptions = useMemo(() => {
-    return (CURRENCIES || []).map(currency => ({
-      label: `${isAr ? currency.nameAr : currency.nameEn} (${currency.code}) - ${currency.symbol}`,
+    return (currenciesList || []).map(currency => ({
+      label: `${currency.name} (${currency.code}) - ${currency.symbol}`,
       value: currency.code
     }));
-  }, [isAr]);
+  }, [currenciesList]);
 
   // تحضير وتثبيت خيارات المناطق الزمنية
   const timezoneOptions = useMemo(() => [
@@ -68,7 +73,7 @@ export default function ContactRegionalTab({ formData = {}, updateField }) {
       updateField('timezone', matchedCountry.timezone);
     }
     
-    const matchedCurrency = (CURRENCIES || []).find(c => c.countryCode === countryCode);
+    const matchedCurrency = (currenciesList || []).find(c => c.countryCode === countryCode);
     if (matchedCurrency?.code) {
       updateField('currency', matchedCurrency.code);
     }
