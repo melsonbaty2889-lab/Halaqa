@@ -11,6 +11,7 @@ import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { getTimezoneOptions } from '@/constants/timezones';
 import { getCurrencies } from '@/constants/currencies';
 import { getIjazatOptions } from '@/constants/ijazat';
+import { getStaffTitles } from '@/constants/staffTitles';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
   const { t, i18n } = useTranslation();
@@ -22,7 +23,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     email: '',
     phone: '',
     role: 'teacher',
-    title: 'شيخ حلقة / معلم قرآن',
+    title: 'quran_teacher',
     isTeaching: true,
     country: 'EG',
     timezone: 'Africa/Cairo',
@@ -36,20 +37,13 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. الصفة واللقب العلمي للشيخ / المعلم
-  const titlesList = [
-    { value: 'شيخ حلقة / معلم قرآن', label: t('staff.titles.quranTeacher', 'شيخ حلقة / معلّم قرآن') },
-    { value: 'مقرئ ومجيز بالسند', label: t('staff.titles.sanadTeacher', 'مقرئ ومجيز بالسند') },
-    { value: 'معلم نورانية وتأسيس', label: t('staff.titles.nouraniyahTeacher', 'معلّم نورانية وتأسيس') },
-    { value: 'مشرف تعليمي', label: t('staff.titles.supervisor', 'مشرف تعليمي') },
-    { value: 'مدير الأكاديمية', label: t('staff.titles.admin', 'مدير الأكاديمية') }
-  ];
+  // 1. استدعاء المسميات العلمية والوظيفية من ملف الثوابت الموحد
+  const titlesList = getStaffTitles(t);
 
-  // 2. صلاحية الحساب التقنية في النظام
+  // 2. صلاحيات لوحة التحكم المطابقة لقاعدة البيانات (تقتصر على معلم وأدمن للأكاديمية)
   const roleOptions = [
-    { value: 'teacher', label: t('staff.roles.teacher', 'معلّم (إدارة الحلقات المسندة)') },
-    { value: 'supervisor', label: t('staff.roles.supervisor', 'مشرف (إشراف ومتابعة الحلقات)') },
-    { value: 'admin', label: t('staff.roles.admin', 'مدير نظام (تحكم كامل بالمنصة)') }
+    { value: 'teacher', label: t('staff.roles.teacher', 'معلّم / محفّظ (حلقات وتسميع)') },
+    { value: 'admin', label: t('staff.roles.admin', 'مدير أكاديمية (إدارة كاملة)') }
   ];
 
   const countryOptions = COUNTRIES_LIST.map((c) => ({
@@ -123,8 +117,10 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
       const newTeacherId = crypto.randomUUID();
 
       const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
-      const parsedHourly = formData.compensationType === 'hourly' ? parseFloat(formData.hourlyRate) || 0 : 0;
-      const parsedMonthly = formData.compensationType === 'monthly' ? parseFloat(formData.monthlySalary || formData.hourlyRate) || 0 : 0;
+      
+      // معالجة آمنة للأرقام والأسعار
+      const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
+      const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
 
       const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
@@ -194,7 +190,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
             </div>
           )}
 
-          {/* الاسم المسمى العلمي */}
+          {/* الاسم والمسمى العلمى */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
