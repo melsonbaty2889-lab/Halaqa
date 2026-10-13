@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UserPlus, Loader2, Award, DollarSign } from 'lucide-react';
+import { UserPlus, Award, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -10,6 +10,7 @@ import { Input, Select } from '@/components/UI';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { getTimezoneOptions } from '@/constants/timezones';
 import { getCurrencies } from '@/constants/currencies';
+import { getIjazatOptions } from '@/constants/ijazat';
 
 export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
   const { t, i18n } = useTranslation();
@@ -23,11 +24,12 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     role: 'teacher',
     title: 'معلّم / مقرئ',
     isTeaching: true,
-    country: 'EG', // الدولة الافتراضية (مصر)
-    timezone: 'Africa/Cairo', // المنطقة الزمنية الافتراضية المتوافقة مع الدولة
+    country: 'EG',
+    timezone: 'Africa/Cairo',
     ijazat: [],
     compensationType: 'volunteer',
     hourlyRate: '',
+    monthlySalary: '',
     currency: 'USD'
   });
 
@@ -46,7 +48,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     { value: 'supervisor', label: t('teachers.roles.supervisor', 'مشرف تعليمي') }
   ];
 
-  // تحويل قائمة الدول لتناسب مكون Select المركزي
   const countryOptions = COUNTRIES_LIST.map((c) => ({
     value: c.code,
     label: `${c.flag} ${currentLang === 'en' ? c.nameEn : c.nameAr} (${c.dialCode})`
@@ -61,23 +62,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
   ];
 
   const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
+  const currencyOptions = getCurrencies(t)
+    .filter(c => supportedCurrencyCodes.includes(c.code))
+    .map(c => ({
+      value: c.code,
+      label: `${c.code} (${c.symbol})`
+    }));
 
-const currencyOptions = getCurrencies(t)
-  .filter(c => supportedCurrencyCodes.includes(c.code))
-  .map(c => ({
-    value: c.code,
-    label: `${c.code} (${c.symbol})`
-  }));
-
-  const ijazatOptions = [
-    'حفص عن عاصم',
-    'ورش عن نافع',
-    'قالون عن نافع',
-    'الدوري عن أبي عمرو',
-    'القراءات العشر الصغرى',
-    'القراءات العشر الكبرى',
-    'إجازة المتون'
-  ];
+  const ijazatOptions = getIjazatOptions(t);
 
   const extractValue = (val) => {
     if (val && typeof val === 'object' && 'target' in val) {
@@ -86,14 +78,12 @@ const currencyOptions = getCurrencies(t)
     return val;
   };
 
-  // دالة التحديث الذكي التي تربط الدولة بالمنطقة الزمنية تلقائياً
   const handleChange = (field, val) => {
     const value = extractValue(val);
     
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
 
-      // إذا تم تغيير الدولة، نقوم بتحديث المنطقة الزمنية تلقائياً بناءً على الثوابت
       if (field === 'country') {
         const countryData = COUNTRIES_MAP[value];
         if (countryData && countryData.timezone) {
@@ -105,19 +95,17 @@ const currencyOptions = getCurrencies(t)
     });
   };
 
-  const handleIjazatChange = (ijaza) => {
+  const handleIjazatChange = (ijazaId) => {
     setFormData(prev => ({
       ...prev,
-      ijazat: prev.ijazat.includes(ijaza)
-        ? prev.ijazat.filter(i => i !== ijaza)
-        : [...prev.ijazat, ijaza]
+      ijazat: prev.ijazat.includes(ijazaId)
+        ? prev.ijazat.filter(i => i !== ijazaId)
+        : [...prev.ijazat, ijazaId]
     }));
   };
 
   const handleSubmit = async (e) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
+    if (e && e.preventDefault) e.preventDefault();
 
     if (!formData.name.trim()) {
       setErrorMsg(t('teachers.errorNameRequired', 'يرجى إدخال اسم الكادر التعليمي أو الإداري'));
@@ -128,10 +116,18 @@ const currencyOptions = getCurrencies(t)
     setErrorMsg('');
 
     try {
+      const newTeacherId = crypto.randomUUID();
+
+      // تجهيز القيم المتوافق مع قيود الجدول DB Checks
+      const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
+      const parsedHourly = formData.compensationType === 'hourly' ? parseFloat(formData.hourlyRate) || 0 : 0;
+      const parsedMonthly = formData.compensationType === 'monthly' ? parseFloat(formData.monthlySalary || formData.hourlyRate) || 0 : 0;
+
       const { data: teacherData, error: teacherError } = await supabase
         .from('teachers')
         .insert([
           {
+            id: newTeacherId,
             name: formData.name.trim(),
             email: formData.email.trim() || null,
             phone: formData.phone.trim() || null,
@@ -140,10 +136,15 @@ const currencyOptions = getCurrencies(t)
             country: formData.country || null,
             timezone: formData.timezone,
             ijazas: formData.ijazat,
-            employment_type: formData.compensationType,
-            hourly_rate: formData.compensationType === 'hourly' ? parseFloat(formData.hourlyRate) || 0 : 0,
-            monthly_salary: formData.compensationType === 'monthly' ? parseFloat(formData.hourlyRate) || 0 : 0,
-            salary_system: formData.compensationType
+            employment_type: dbEmploymentType,
+            salary_system: formData.compensationType,
+            hourly_rate: parsedHourly,
+            monthly_salary: parsedMonthly,
+            academy_id: academyId || null,
+            metadata: {
+              currency: formData.currency,
+              system_role: formData.role
+            }
           }
         ])
         .select()
@@ -162,7 +163,7 @@ const currencyOptions = getCurrencies(t)
             }
           ]);
 
-        if (relError) throw relError;
+        if (relError) console.warn("Notice: Rel insertion optional or logged:", relError.message);
       }
 
       if (onSuccess) onSuccess();
@@ -218,7 +219,7 @@ const currencyOptions = getCurrencies(t)
             </div>
           </div>
 
-          {/* اختيار الدولة والمنطقة الزمنية المرتبطة تلقائياً */}
+          {/* الدولة والمنطقة الزمنية (مزامنة تلقائية) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -234,7 +235,7 @@ const currencyOptions = getCurrencies(t)
 
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('teachers.timezoneLabel', 'المنطقة الزمنية (تتحدث تلقائياً وقابلة للتعديل)')}
+                {t('teachers.timezoneLabel', 'المنطقة الزمنية')}
               </label>
               <Select
                 title={t('teachers.timezoneLabel', 'المنطقة الزمنية')}
@@ -245,7 +246,7 @@ const currencyOptions = getCurrencies(t)
             </div>
           </div>
 
-          {/* البريد الإلكتروني ورقم الهاتف */}
+          {/* البريد وال هاتف */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -274,7 +275,7 @@ const currencyOptions = getCurrencies(t)
             </div>
           </div>
 
-          {/* الصلاحية داخل النظام */}
+          {/* الصلاحية */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
               {t('teachers.systemRoleLabel', 'الصلاحية داخل النظام')}
@@ -307,16 +308,16 @@ const currencyOptions = getCurrencies(t)
               <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
                 <Award className="w-4 h-4" /> {t('teachers.ijazatLabel', 'الإجازات والسند القرآني')}
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
-                {ijazatOptions.map((ijaza, idx) => (
-                  <label key={idx} className="flex items-center gap-2 text-xs text-semantic-textSecondary cursor-pointer hover:text-semantic-textPrimary">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
+                {ijazatOptions.map((item) => (
+                  <label key={item.id} className="flex items-center gap-2 text-xs text-semantic-textSecondary cursor-pointer hover:text-semantic-textPrimary">
                     <input 
                       type="checkbox"
-                      checked={formData.ijazat.includes(ijaza)}
-                      onChange={() => handleIjazatChange(ijaza)}
+                      checked={formData.ijazat.includes(item.id)}
+                      onChange={() => handleIjazatChange(item.id)}
                       className="rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer"
                     />
-                    <span>{ijaza}</span>
+                    <span>{item.label}</span>
                   </label>
                 ))}
               </div>
@@ -343,8 +344,8 @@ const currencyOptions = getCurrencies(t)
                     min="0"
                     step="0.01"
                     placeholder={t('teachers.amountPlaceholder', 'القيمة المالية')}
-                    value={formData.hourlyRate}
-                    onChange={(v) => handleChange('hourlyRate', extractValue(v))}
+                    value={formData.compensationType === 'hourly' ? formData.hourlyRate : formData.monthlySalary}
+                    onChange={(v) => handleChange(formData.compensationType === 'hourly' ? 'hourlyRate' : 'monthlySalary', extractValue(v))}
                   />
                   <Select
                     title={t('teachers.currencyLabel', 'العملة')}
@@ -359,7 +360,7 @@ const currencyOptions = getCurrencies(t)
 
         </div>
 
-        {/* أزرار العمليات السفلية */}
+        {/* الأزرار */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
