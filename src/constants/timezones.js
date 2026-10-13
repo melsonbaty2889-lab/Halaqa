@@ -7,7 +7,7 @@ export const getTimezoneOptions = (t) => [
   },
   { 
     value: 'Africa/Cairo', 
-    label: t('timezones.cairo', 'القاهرة، مصر (UTC+2)') 
+    label: t('timezones.cairo', 'القاهرة، مصر (UTC+2 / UTC+3)') 
   },
   { 
     value: 'Asia/Riyadh', 
@@ -27,10 +27,10 @@ export const getTimezoneOptions = (t) => [
   },
   { 
     value: 'Europe/Paris', 
-    label: t('timezones.paris', 'باريس، فرنسا (UTC+1)') 
+    label: t('timezones.paris', 'باريس، فرنسا (UTC+1 / UTC+2)') 
   },
   { 
     value: 'America/New_York', 
-    label: t('timezones.newYork', 'نيويورك، الولايات المتحدة (UTC-5)') 
+    label: t('timezones.newYork', 'نيويورك، الولايات المتحدة (UTC-5 / UTC-4)') 
   }
 ];
