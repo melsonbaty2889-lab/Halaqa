@@ -1,4 +1,5 @@
 /* src/constants/languages.js */
+
 export const SUPPORTED_LANGUAGES = [
   { code: 'ar', name: 'العربية', nativeName: 'العربية', dir: 'rtl', flag: '🇸🇦' },
   { code: 'en', name: 'الإنجليزية', nativeName: 'English', dir: 'ltr', flag: '🇬🇧' },
@@ -7,3 +8,12 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'tr', name: 'التركية', nativeName: 'Türkçe', dir: 'ltr', flag: '🇹🇷' },
   { code: 'id', name: 'الأندونيسية', nativeName: 'Bahasa Indonesia', dir: 'ltr', flag: '🇮🇩' },
 ];
+
+export const LANGUAGES_MAP = SUPPORTED_LANGUAGES.reduce((acc, curr) => {
+  acc[curr.code] = curr;
+  return acc;
+}, {});
+
+export const DEFAULT_LANGUAGE = 'ar';
+
+export default SUPPORTED_LANGUAGES;
