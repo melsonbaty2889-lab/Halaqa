@@ -1,10 +1,11 @@
 /* src/components/Halaqat/HalaqasManager.jsx */
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Users, Archive, CheckCircle2 } from 'lucide-react';
+import { Plus, Users, Archive, CheckCircle2, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { useAcademySettings } from '@/hooks/useAcademySettings';
+import PageLayout from '@/components/UI/PageLayout';
 
 import HalaqasFilterBar from './HalaqasFilterBar';
 import HalaqaCardItem from './HalaqaCardItem';
@@ -38,6 +39,7 @@ export default function HalaqasManager({
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
+  const isRtl = ['ar', 'ur'].includes(currentLang);
   
   const academySettings = useAcademySettings() || {};
   const externalGetLocalizedText = academySettings.getLocalizedText;
@@ -247,37 +249,84 @@ export default function HalaqasManager({
     }
   };
 
-  return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-5 space-y-4 pt-3 pb-12 bg-app-layout">
-      
-      {/* شريط علوي مرن ونظيف */}
-      <div className="flex items-center justify-between gap-3 bg-semantic-surfaceCard p-3 rounded-2xl border border-semantic-borderCard shadow-sm">
-        <p className="text-xs text-semantic-textSecondary m-0 font-medium truncate">
-          {t('halaqasManagerSub', 'متابعة وتنظيم الحلقات التعليمية')}
-        </p>
+  // 1. زر الإضافة الرئيسي الممرر للقالب
+  const actionButton = (
+    <button
+      type="button"
+      onClick={handleOpenCreateModal}
+      className={`${UI.btnPrimary} py-2.5 px-4 font-extrabold text-xs flex items-center gap-1.5 rounded-xl shadow-md cursor-pointer`}
+    >
+      <Plus size={16} />
+      <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
+    </button>
+  );
 
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className={`${UI.btnPrimary} py-2 px-4 font-extrabold text-xs flex items-center gap-1.5 rounded-xl shadow-md shrink-0 cursor-pointer`}
-        >
-          <Plus size={16} />
-          <span>{t('createNewHalaqaBtn', 'إضافة حلقة جديدة')}</span>
-        </button>
+  // 2. بطاقات الإحصائيات العلوية الممررة للقالب (إجمالي النشطة، المؤرشفة، غير المسندة)
+  const statsGrid = (
+    <>
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('statsActiveHalaqas', 'الحلقات النشطة')}</p>
+          <p className="text-2xl font-extrabold text-semantic-success mt-1">
+            <bdi>{stats.totalActive}</bdi>
+          </p>
+        </div>
+        <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/40">
+          <CheckCircle2 className="w-6 h-6" />
+        </div>
       </div>
 
-      {/* شريط الفلترة */}
-      <HalaqasFilterBar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedTrack={selectedTrack}
-        setSelectedTrack={setSelectedTrack}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        stats={stats}
-      />
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('statsUnassigned', 'بدون معلم')}</p>
+          <p className="text-2xl font-extrabold text-amber-400 mt-1">
+            <bdi>{stats.unassigned}</bdi>
+          </p>
+        </div>
+        <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <Users className="w-6 h-6" />
+        </div>
+      </div>
 
-      {/* حاوية العرض بنمط الشبكة القياسي */}
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('statsArchived', 'المؤرشفة')}</p>
+          <p className="text-2xl font-extrabold text-semantic-textMuted mt-1">
+            <bdi>{stats.totalArchived}</bdi>
+          </p>
+        </div>
+        <div className="p-3 rounded-xl bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard">
+          <Archive className="w-6 h-6" />
+        </div>
+      </div>
+    </>
+  );
+
+  // 3. شريط الفلترة والبحث
+  const filterBar = (
+    <HalaqasFilterBar
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      selectedTrack={selectedTrack}
+      setSelectedTrack={setSelectedTrack}
+      viewMode={viewMode}
+      setViewMode={setViewMode}
+      stats={stats}
+    />
+  );
+
+  return (
+    <PageLayout
+      title={t('halaqasManagerTitle', 'إدارة الحلقات والفصول')}
+      description={t('halaqasManagerSub', 'متابعة وتنظيم الحلقات التعليمية وإسناد المعلمين')}
+      icon={BookOpen}
+      actionButton={actionButton}
+      statsGrid={statsGrid}
+      filterBar={filterBar}
+      loading={isLoading}
+      isRtl={isRtl}
+      t={t}
+    >
       {filteredHalaqas.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 w-full">
           {filteredHalaqas.map((halaqa) => (
@@ -339,6 +388,6 @@ export default function HalaqasManager({
         teachers={teachers}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </PageLayout>
   );
 }
