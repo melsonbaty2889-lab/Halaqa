@@ -32,7 +32,7 @@ export default function AddStaffModal({
     phone: '',
     role: '',
     title: '',
-    isTeaching: true,
+    isTeaching: true, // مفعّل افتراضياً لظهور الحقول مباشرة دون تشتت
     country: '',
     timezone: '',
     ijazat: [],
@@ -53,16 +53,13 @@ export default function AddStaffModal({
     }
   }, [isModalVisible]);
 
-  // 1. المسميات العلمية والوظيفية من الثوابت الموحدة
   const titlesList = getStaffTitles(t);
 
-  // 2. صلاحيات لوحة التحكم المعتمدة بالنظام
   const roleOptions = [
     { value: 'teacher', label: t('staff.roles.teacher', 'معلّم / محفّظ (إدارة الحلقات المسندة)') },
     { value: 'admin', label: t('staff.roles.admin', 'مدير أكاديمية (تحكم وإدارة كاملة)') }
   ];
 
-  // 3. خيارات الدول بأسماء مترجمة وعلم الدولة
   const countryOptions = COUNTRIES_LIST.map((c) => ({
     value: c.code,
     label: `${c.flag} ${currentLang === 'en' ? c.nameEn : c.nameAr} (${c.dialCode})`
@@ -70,14 +67,12 @@ export default function AddStaffModal({
 
   const timezoneOptions = getTimezoneOptions(t);
 
-  // 5. أنظمة المكافآت والماليات
-    const compensationOptions = [
+  const compensationOptions = [
     { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوعي (بدون مقابل مالى)') },
     { value: 'hourly', label: t('staff.compensation.hourly', 'أجر بالساعة / الحصة') },
     { value: 'monthly', label: t('staff.compensation.monthly', 'راتب شهري ثابت') }
   ];
 
-  // 6. العملات المدعومة
   const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
   const currencyOptions = getCurrencies(t)
     .filter(c => supportedCurrencyCodes.includes(c.code))
@@ -86,7 +81,6 @@ export default function AddStaffModal({
       label: `${c.code} (${c.symbol}) - ${c.name}`
     }));
 
-  // 7. قائمة الإجازات والسند
   const ijazatOptions = getIjazatOptions(t);
 
   const extractValue = (val) => {
@@ -317,60 +311,44 @@ export default function AddStaffModal({
             />
           </div>
 
-          {/* خيار التدريس الفعلي */}
-          <div className="card-surface p-3 border-semantic-borderCard/50 flex items-center justify-between rounded-xl">
-            <div>
-              <p className="text-xs font-bold text-semantic-textPrimary">{t('staff.teaching.enableTitle', 'إتاحة التدريس المباشر للحلقات')}</p>
-              <p className="text-[10px] text-semantic-textSecondary">{t('staff.teaching.enableDesc', 'تفعيل ظهور اسم المعلم في جداول وقوائم الحلقات الدراسية')}</p>
+          {/* الإجازات والسند القرآني ظاهرة مباشرة وواضحة لتجربة مستخدم سلسة */}
+          <div className="pt-1">
+            <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
+              <Award className="w-4 h-4" /> {t('staff.ijazat.title', 'الإجازات والسند القرآني')}
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
+              {ijazatOptions.map((item) => {
+                const isChecked = formData.ijazat.includes(item.id);
+                return (
+                  <label 
+                    key={item.id} 
+                    className={`flex items-center gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition border ${
+                      isChecked 
+                        ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary/40 text-semantic-textPrimary font-bold shadow-sm' 
+                        : 'border-semantic-borderCard/50 text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                    }`}
+                  >
+                    <input 
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleIjazatChange(item.id)}
+                      className="w-4 h-4 rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer shrink-0"
+                    />
+                    <span className="select-none leading-tight">{item.label}</span>
+                  </label>
+                );
+              })}
             </div>
-            <input 
-              type="checkbox"
-              checked={formData.isTeaching}
-              onChange={(e) => setFormData({ ...formData, isTeaching: e.target.checked })}
-              className="w-4 h-4 rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer"
-            />
           </div>
 
-          {/* الإجازات القرآنية المحسنة لتجربة المستخدم */}
-          {formData.isTeaching && (
-            <div className="pt-1">
-              <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
-                <Award className="w-4 h-4" /> {t('staff.ijazat.title', 'الإجازات والسند القرآني')}
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
-                {ijazatOptions.map((item) => {
-                  const isChecked = formData.ijazat.includes(item.id);
-                  return (
-                    <label 
-                      key={item.id} 
-                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition border ${
-                        isChecked 
-                          ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary/40 text-semantic-textPrimary font-bold shadow-sm' 
-                          : 'border-semantic-borderCard/50 text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput'
-                      }`}
-                    >
-                      <input 
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => handleIjazatChange(item.id)}
-                        className="w-4 h-4 rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer shrink-0"
-                      />
-                      <span className="select-none leading-tight">{item.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* المكافآت والماليات */}
+          {/* المستحقات المالية */}
           <div className="pt-1">
             <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4 text-semantic-success" /> {t('staff.financial.title', 'نظام المكافآت والمستحقات المالية')}
+              <DollarSign className="w-4 h-4 text-semantic-success" /> المستحقات المالية
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <Select
-                title={t('staff.financial.type', 'نظام المكافأة')}
+                title="المستحقات المالية"
                 placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData.compensationType}
                 onChange={(v) => handleChange('compensationType', v)}
@@ -414,7 +392,7 @@ export default function AddStaffModal({
             disabled={loading}
             className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer`}
           >
-            <UserPlus size5={14} />
+            <UserPlus size={14} />
             <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('staff.actions.save', 'حفظ البيانات')}</span>
           </button>
         </div>
