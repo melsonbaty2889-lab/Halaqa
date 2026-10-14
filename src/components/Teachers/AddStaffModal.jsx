@@ -45,7 +45,7 @@ export default function AddStaffModal({
   });
 
   const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState({ type: '', message: '' }); // { type: 'success' | 'error', message: '' }
+  const [feedback, setFeedback] = useState({ type: '', message: '' });
 
   const isModalVisible = Boolean(isOpen || open);
 
@@ -143,8 +143,6 @@ export default function AddStaffModal({
       if (submitCallback) {
         await submitCallback(formData);
       } else {
-        const newTeacherId = crypto.randomUUID();
-
         const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
         const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
         const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
@@ -154,7 +152,6 @@ export default function AddStaffModal({
           .from('teachers')
           .insert([
             {
-              id: newTeacherId,
               name: formData.name.trim(),
               email: formData.email.trim() || null,
               phone: fullPhoneNumber,
@@ -194,13 +191,17 @@ export default function AddStaffModal({
         }
       }
 
-      // عرض رسالة النجاح فوراً قبل الإغلاق بقليل
-      setFeedback({ type: 'success', message: t('common.successSaved', 'تمت إضافة حفظ البيانات بنجاح!') });
+      // إظهار رسالة النجاح في الواجهة
+      setFeedback({ 
+        type: 'success', 
+        message: t('staff.success.saved', 'تمت إضافة البيانات بنجاح!') 
+      });
 
+      // إعطاء مهلة للمستخدم لرؤية الرسالة قبل الإغلاق وتحديث القائمة
       setTimeout(() => {
         if (onSuccess) onSuccess();
         onClose();
-      }, 800);
+      }, 1200);
 
     } catch (err) {
       console.error("🚨 خطأ أثناء إضافة الكادر:", err);
@@ -222,14 +223,14 @@ export default function AddStaffModal({
       <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
-          {/* صندوق رسائل النجاح أو الفشل التفاعلي */}
+          {/* صندوق التنبيهات (النجاح أو الفشل) */}
           {feedback.message && (
-            <div className={`p-3 rounded-xl text-xs font-bold mb-2 flex items-center gap-2 border ${
+            <div className={`p-3 rounded-xl text-xs font-bold mb-2 flex items-center gap-2 border transition-all ${
               feedback.type === 'success' 
                 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' 
                 : 'bg-semantic-dangerBg border-semantic-danger/30 text-semantic-danger'
             }`}>
-              {feedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {feedback.type === 'success' ? <CheckCircle2 size={16} className="shrink-0" /> : <AlertCircle size={16} className="shrink-0" />}
               <span>{feedback.message}</span>
             </div>
           )}
