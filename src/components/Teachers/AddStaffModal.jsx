@@ -239,6 +239,7 @@ export default function AddStaffModal({
               </label>
               <Select
                 title={t('staff.fields.title', 'الصفة / المسمى العلمي')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData.title}
                 onChange={(v) => handleChange('title', v)}
                 options={titlesList}
@@ -254,6 +255,7 @@ export default function AddStaffModal({
               </label>
               <Select
                 title={t('staff.fields.country', 'بلد الإقامة')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData.country}
                 onChange={(v) => handleChange('country', v)}
                 options={countryOptions}
@@ -266,6 +268,7 @@ export default function AddStaffModal({
               </label>
               <Select
                 title={t('staff.fields.timezone', 'المنطقة الزمنية')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData.timezone}
                 onChange={(v) => handleChange('timezone', v)}
                 options={timezoneOptions}
@@ -307,6 +310,7 @@ export default function AddStaffModal({
             </label>
             <Select
               title={t('staff.fields.role', 'صلاحيات لوحة التحكم')}
+              placeholder={t('selectPlaceholder', 'اختر...')}
               value={formData.role}
               onChange={(v) => handleChange('role', v)}
               options={roleOptions}
@@ -357,6 +361,7 @@ export default function AddStaffModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <Select
                 title={t('staff.financial.type', 'نظام المكافأة')}
+                placeholder={t('selectPlaceholder', 'اختر...')}
                 value={formData.compensationType}
                 onChange={(v) => handleChange('compensationType', v)}
                 options={compensationOptions}
@@ -368,12 +373,12 @@ export default function AddStaffModal({
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder={t('staff.financial.amount', 'المبلغ / المستحق')}
                     value={formData.compensationType === 'hourly' ? formData.hourlyRate : formData.monthlySalary}
                     onChange={(v) => handleChange(formData.compensationType === 'hourly' ? 'hourlyRate' : 'monthlySalary', extractValue(v))}
                   />
                   <Select
                     title={t('staff.financial.currency', 'عملة التعامل')}
+                    placeholder={t('selectPlaceholder', 'اختر...')}
                     value={formData.currency}
                     onChange={(v) => handleChange('currency', v)}
                     options={currencyOptions}
