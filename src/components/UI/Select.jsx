@@ -10,6 +10,17 @@ const getTextSub = () => 'var(--color-text-secondary)';
 const getDanger = () => 'var(--color-danger)';
 const getCardBg = () => 'var(--color-surface-card)';
 
+// سجل عام لإدارة القوائم المنسدلة المفتوحة وضمان عدم فتح أكثر من قائمة معاً
+const selectRegistry = new Map();
+
+const closeOtherSelects = (currentId) => {
+  selectRegistry.forEach((closeFn, id) => {
+    if (id !== currentId) {
+      closeFn();
+    }
+  });
+};
+
 export const Select = forwardRef(({ 
   label, 
   value, 
@@ -43,6 +54,15 @@ export const Select = forwardRef(({
 
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
+
+  // تسجيل القائمة في السجل العام لضمان الإغلاق المتبادل
+  useEffect(() => {
+    const closeMe = () => setIsOpen(false);
+    selectRegistry.set(selectId, closeMe);
+    return () => {
+      selectRegistry.delete(selectId);
+    };
+  }, [selectId]);
 
   // تحديث حالة الشاشة لحساب وضع الجوال
   useEffect(() => {
@@ -112,18 +132,19 @@ export const Select = forwardRef(({
     });
   }, [options, searchTerm]);
 
-  // شرط إظهار شريط البحث: فقط عندما تكون خاصية searchable مفعّلة والخيارات أكثر من 5
   const shouldShowSearch = searchable && options.length > 5;
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
     if (!isOpen) {
       updatePosition();
+      // إغلاق أي قائمة منسدلة أخرى مفتوحة حالياً في الصفحة
+      closeOtherSelects(selectId);
     }
     setSearchTerm('');
     setActiveIndex(-1);
     setIsOpen(prev => !prev);
-  }, [isOpen, disabled, updatePosition]);
+  }, [isOpen, disabled, updatePosition, selectId]);
 
   const handleOptionSelect = (optionValue) => {
     if (typeof onChange === 'function') {
@@ -239,7 +260,6 @@ export const Select = forwardRef(({
 
       {isOpen && typeof window !== 'undefined' && createPortal(
         isMobile ? (
-          /* وضع الهواتف المحمولة (Select Modal) */
           <div 
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150"
             onClick={() => setIsOpen(false)}
@@ -249,8 +269,6 @@ export const Select = forwardRef(({
               className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary"
               onClick={(e) => e.stopPropagation()}
             >
-              
-              {/* الهيدر */}
               <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40 shrink-0">
                 <h3 className="text-sm font-bold m-0 text-semantic-textPrimary">
                   {title || label || placeholder}
@@ -266,7 +284,6 @@ export const Select = forwardRef(({
                 </button>
               </div>
 
-              {/* حقل البحث يظهر فقط إذا كان مفعلاً وكانت الخيارات أكثر من 5 */}
               {shouldShowSearch && (
                 <div className="p-3 border-b border-semantic-borderInput shrink-0">
                   <div className="relative">
@@ -286,7 +303,6 @@ export const Select = forwardRef(({
                 </div>
               )}
 
-              {/* قائمة الخيارات */}
               <div 
                 className="overflow-y-auto p-2 space-y-1 max-h-[50vh] overscroll-contain"
                 style={{ overscrollBehavior: 'contain' }}
@@ -328,11 +344,9 @@ export const Select = forwardRef(({
                   })
                 )}
               </div>
-
             </div>
           </div>
         ) : (
-          /* وضع الشاشات الكبيرة (Desktop Dropdown) */
           <>
             <div 
               style={{ position: "fixed", inset: 0, zIndex: 9998 }} 
@@ -417,7 +431,7 @@ export const Select = forwardRef(({
                           transition: "background 0.15s ease",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between"
+                          justifyContent: "space-headers"
                         }}
                       >
                         <div style={{ display: "flex", flexDirection: "column" }}>
