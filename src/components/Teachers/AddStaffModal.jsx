@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UserPlus, Award, DollarSign } from 'lucide-react';
+import { UserPlus, Award, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
@@ -39,7 +39,7 @@ export default function AddStaffModal({
     compensationType: '',
     hourlyRate: '',
     monthlySalary: '',
-    currency: 'USD'
+    currency: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -347,9 +347,9 @@ export default function AddStaffModal({
 
           {/* المستحقات المالية المحدثة والمدمجة برُقي */}
           <div className="pt-1">
-            <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
-              <DollarSign className="w-4 h-4 text-semantic-success" /> المستحقات المالية
-            </label>
+  <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
+    <Wallet className="w-4 h-4 text-semantic-actionPrimary" /> المستحقات المالية
+  </label>
             
             <div className="space-y-2.5">
               <Select
