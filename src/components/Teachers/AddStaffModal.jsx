@@ -6,6 +6,7 @@ import { UserPlus, Award, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
+import Toast from '@/components/UI/Toast';
 import { Input, Select } from '@/components/UI';
 import PhoneInput from '@/components/UI/PhoneInput';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
