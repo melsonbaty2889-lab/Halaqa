@@ -71,10 +71,10 @@ export default function AddStaffModal({
   const timezoneOptions = getTimezoneOptions(t);
 
   // 5. أنظمة المكافآت والماليات
-  const compensationOptions = [
-    { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوّع / احتساب') },
-    { value: 'hourly', label: t('staff.compensation.hourly', 'مكافأة بالحصة / الساعة') },
-    { value: 'monthly', label: t('staff.compensation.monthly', 'كفالة / راتب شهري ثابت') }
+    const compensationOptions = [
+    { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوعي (بدون مقابل مالى)') },
+    { value: 'hourly', label: t('staff.compensation.hourly', 'أجر بالساعة / الحصة') },
+    { value: 'monthly', label: t('staff.compensation.monthly', 'راتب شهري ثابت') }
   ];
 
   // 6. العملات المدعومة
