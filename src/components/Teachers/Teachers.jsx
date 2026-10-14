@@ -87,39 +87,43 @@ export default function Teachers({
   });
 
   return (
-    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'dir-rtl text-right' : 'dir-ltr text-left'} font-cairo`}>
+    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'text-right' : 'text-left'} font-cairo`} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* 1. الترويسة الرئيسية وزر الإضافة */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold flex items-center gap-2 text-semantic-textPrimary">
-            <Users className="w-6 h-6 text-semantic-actionPrimary" /> 
-            {t('teachers.title', 'الكادر التعليمي والإداري')}
-          </h2>
-          <p className="text-xs text-semantic-textSecondary mt-1">
-            {t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية')}
+      {/* 1. الترويسة الرئيسية وزر الإضافة الاحترافي */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card-surface bg-gradient-to-r from-semantic-surfaceCard via-semantic-surfaceSecondary to-semantic-surfaceCard">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-semantic-actionPrimary/15 text-semantic-actionPrimary border border-semantic-actionPrimary/30">
+              <Users className="w-5 h-5" />
+            </span>
+            <h2 className={UI.title}>
+              {t('teachers.title', 'الكادر التعليمي والإداري')}
+            </h2>
+          </div>
+          <p className={UI.subtitle}>
+            {t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية باحترافية عالية')}
           </p>
         </div>
 
         <button 
           onClick={() => setIsModalOpen(true)} 
-          className={`${UI.btnPrimary} w-full md:w-auto cursor-pointer`}
+          className={`${UI.btnPrimary} w-full sm:w-auto cursor-pointer`}
         >
           <Plus className="w-4 h-4" /> 
-          {t('teachers.addStaff', 'إضافة كادر جديد')}
+          <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
         </button>
       </div>
 
-      {/* 2. بطاقات الإحصائيات المختصرة */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 2. بطاقات الإحصائيات المختصرة المحدثة */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
-            <p className="text-2xl font-bold text-semantic-textPrimary mt-1">
+            <p className="text-2xl font-extrabold text-semantic-textPrimary mt-1">
               <bdi>{teachers.length}</bdi>
             </p>
           </div>
-          <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
+          <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
             <Users className="w-6 h-6" />
           </div>
         </div>
@@ -127,11 +131,11 @@ export default function Teachers({
         <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
-            <p className="text-2xl font-bold text-semantic-success mt-1">
+            <p className="text-2xl font-extrabold text-semantic-success mt-1">
               <bdi>{teachers.filter(s => s.is_teaching).length}</bdi>
             </p>
           </div>
-          <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30">
+          <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/40">
             <UserCheck className="w-6 h-6" />
           </div>
         </div>
@@ -139,7 +143,7 @@ export default function Teachers({
         <div className={`${UI.card} flex items-center justify-between`}>
           <div>
             <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
-            <p className="text-2xl font-bold text-sky-400 mt-1">
+            <p className="text-2xl font-extrabold text-sky-400 mt-1">
               <bdi>{teachers.filter(s => s.is_active).length}</bdi>
             </p>
           </div>
@@ -163,10 +167,10 @@ export default function Teachers({
 
       {/* 4. قسم إدارة أوقات التفرغ (إن وجد معلم محدد) */}
       {selectedTeacherForAvailability && (
-        <div className={`${UI.card} relative border-semantic-actionPrimary/40`}>
+        <div className={`${UI.card} relative border-semantic-actionPrimary/40 animate-fade-in`}>
           <button 
             onClick={() => setSelectedTeacherForAvailability(null)}
-            className="absolute top-4 end-4 text-xs text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer"
+            className="absolute top-4 end-4 text-xs font-bold text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderCard transition-colors"
           >
             ✕ {t('common.close', 'إغلاق')}
           </button>
@@ -176,10 +180,15 @@ export default function Teachers({
 
       {/* 5. شبكة عرض بطاقات الكادر أو حالات التحميل والفراغ */}
       {loading ? (
-        <div className="text-center py-12 text-semantic-textSecondary text-xs">{t('common.loading', 'جاري تحميل البيانات...')}</div>
+        <div className="text-center py-16 text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-semantic-actionPrimary border-t-transparent animate-spin"></div>
+          <span>{t('common.loading', 'جاري تحميل البيانات...')}</span>
+        </div>
       ) : filteredStaff.length === 0 ? (
-        <div className={`text-center py-12 ${UI.card} border-dashed text-semantic-textSecondary text-xs`}>
-          {t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}
+        <div className={`text-center py-16 ${UI.card} border-dashed text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-2`}>
+          <Users className="w-10 h-10 text-semantic-textMuted/50 mb-1" />
+          <span className="font-bold text-semantic-textPrimary text-sm">{t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}</span>
+          <span className="text-semantic-textSecondary">جرب تغيير كلمات البحث أو إزالة بعض الفلاتر</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
