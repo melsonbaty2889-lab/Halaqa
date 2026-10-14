@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { UserPlus, Award, Wallet } from 'lucide-react';
+import { UserPlus, Award, Wallet, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
-import Toast from '@/components/UI/Toast';
 import { Input, Select } from '@/components/UI';
 import PhoneInput from '@/components/UI/PhoneInput';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
@@ -46,13 +45,13 @@ export default function AddStaffModal({
   });
 
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [feedback, setFeedback] = useState({ type: '', message: '' }); // { type: 'success' | 'error', message: '' }
 
   const isModalVisible = Boolean(isOpen || open);
 
   useEffect(() => {
     if (isModalVisible) {
-      setErrorMsg('');
+      setFeedback({ type: '', message: '' });
     }
   }, [isModalVisible]);
 
@@ -131,12 +130,12 @@ export default function AddStaffModal({
     if (e && e.preventDefault) e.preventDefault();
 
     if (!formData.name.trim()) {
-      setErrorMsg(t('staff.errors.nameRequired', 'يرجى إدخال اسم الكادر كاملاً'));
+      setFeedback({ type: 'error', message: t('staff.errors.nameRequired', 'يرجى إدخال اسم الكادر كاملاً') });
       return;
     }
 
     setLoading(true);
-    setErrorMsg('');
+    setFeedback({ type: '', message: '' });
 
     try {
       const submitCallback = propsHandleSubmit || onSubmit;
@@ -195,11 +194,20 @@ export default function AddStaffModal({
         }
       }
 
-      if (onSuccess) onSuccess();
-      onClose();
+      // عرض رسالة النجاح فوراً قبل الإغلاق بقليل
+      setFeedback({ type: 'success', message: t('common.successSaved', 'تمت إضافة حفظ البيانات بنجاح!') });
+
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+        onClose();
+      }, 800);
+
     } catch (err) {
       console.error("🚨 خطأ أثناء إضافة الكادر:", err);
-      setErrorMsg(err.message || t('common.errorOccurred', 'حدث خطأ أثناء حفظ البيانات، يرجى المحاولة لاحقاً'));
+      setFeedback({ 
+        type: 'error', 
+        message: err.message || t('common.errorOccurred', 'حدث خطأ أثناء حفظ البيانات، يرجى المحاولة لاحقاً') 
+      });
     } finally {
       setLoading(false);
     }
@@ -214,9 +222,15 @@ export default function AddStaffModal({
       <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
-          {errorMsg && (
-            <div className="bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger p-3 rounded-xl text-xs font-bold mb-2">
-              {errorMsg}
+          {/* صندوق رسائل النجاح أو الفشل التفاعلي */}
+          {feedback.message && (
+            <div className={`p-3 rounded-xl text-xs font-bold mb-2 flex items-center gap-2 border ${
+              feedback.type === 'success' 
+                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' 
+                : 'bg-semantic-dangerBg border-semantic-danger/30 text-semantic-danger'
+            }`}>
+              {feedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              <span>{feedback.message}</span>
             </div>
           )}
 
