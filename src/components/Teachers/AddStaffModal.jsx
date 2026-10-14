@@ -26,7 +26,6 @@ export default function AddStaffModal({
   const currentLang = i18n?.language || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
-  // تم جعل جميع القوائم المنسدلة فارغة ابتكاراً لتظهر كلمة "اختر..." تماماً كصفحة إضافة الحلقة
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -332,24 +331,34 @@ export default function AddStaffModal({
             />
           </div>
 
-          {/* الإجازات القرآنية */}
+          {/* الإجازات القرآنية المحسنة لتجربة المستخدم */}
           {formData.isTeaching && (
             <div className="pt-1">
               <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
                 <Award className="w-4 h-4" /> {t('staff.ijazat.title', 'الإجازات والسند القرآني')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-semantic-surfaceInput/40 p-3 rounded-xl border border-semantic-borderCard">
-                {ijazatOptions.map((item) => (
-                  <label key={item.id} className="flex items-center gap-2 text-xs text-semantic-textSecondary cursor-pointer hover:text-semantic-textPrimary">
-                    <input 
-                      type="checkbox"
-                      checked={formData.ijazat.includes(item.id)}
-                      onChange={() => handleIjazatChange(item.id)}
-                      className="rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer"
-                    />
-                    <span>{item.label}</span>
-                  </label>
-                ))}
+                {ijazatOptions.map((item) => {
+                  const isChecked = formData.ijazat.includes(item.id);
+                  return (
+                    <label 
+                      key={item.id} 
+                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs cursor-pointer transition border ${
+                        isChecked 
+                          ? 'bg-semantic-actionPrimary/15 border-semantic-actionPrimary/40 text-semantic-textPrimary font-bold shadow-sm' 
+                          : 'border-semantic-borderCard/50 text-semantic-textSecondary hover:text-semantic-textPrimary hover:bg-semantic-surfaceInput'
+                      }`}
+                    >
+                      <input 
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleIjazatChange(item.id)}
+                        className="w-4 h-4 rounded border-semantic-borderInput bg-semantic-surfaceInput text-semantic-actionPrimary focus:ring-0 cursor-pointer shrink-0"
+                      />
+                      <span className="select-none leading-tight">{item.label}</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -405,7 +414,7 @@ export default function AddStaffModal({
             disabled={loading}
             className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer`}
           >
-            <UserPlus size={14} />
+            <UserPlus size5={14} />
             <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('staff.actions.save', 'حفظ البيانات')}</span>
           </button>
         </div>
