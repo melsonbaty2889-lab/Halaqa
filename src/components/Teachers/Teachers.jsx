@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
+
+// استيراد المكونات الفرعية لصفحة الكادر
 import AddStaffModal from './AddStaffModal';
 import TeacherCard from './TeacherCard';
 import TeacherFilter from './TeacherFilter';
@@ -89,7 +91,7 @@ export default function Teachers({
   return (
     <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'text-right' : 'text-left'} font-cairo`} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* 1. الترويسة الرئيسية وزر الإضافة الاحترافي */}
+      {/* 1. الترويسة الرئيسية وزر الإضافة (مطابقة تماماً لصفحة الحلقات) */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card-surface bg-gradient-to-r from-semantic-surfaceCard via-semantic-surfaceSecondary to-semantic-surfaceCard">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
@@ -114,7 +116,7 @@ export default function Teachers({
         </button>
       </div>
 
-      {/* 2. بطاقات الإحصائيات المختصرة المحدثة */}
+      {/* 2. بطاقات الإحصائيات الثلاثية (مطابقة لصفحة الحلقات تماماً) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={`${UI.card} flex items-center justify-between`}>
           <div>
@@ -188,7 +190,6 @@ export default function Teachers({
         <div className={`text-center py-16 ${UI.card} border-dashed text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-2`}>
           <Users className="w-10 h-10 text-semantic-textMuted/50 mb-1" />
           <span className="font-bold text-semantic-textPrimary text-sm">{t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}</span>
-          <span className="text-semantic-textSecondary">جرب تغيير كلمات البحث أو إزالة بعض الفلاتر</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
