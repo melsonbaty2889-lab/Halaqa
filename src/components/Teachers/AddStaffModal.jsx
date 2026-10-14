@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/UI/Modal';
 import { UI } from '@/theme/styles';
 import { Input, Select } from '@/components/UI';
+import PhoneInput from '@/components/UI/PhoneInput';
 import { COUNTRIES_LIST, COUNTRIES_MAP } from '@/constants/countries';
 import { getTimezoneOptions } from '@/constants/timezones';
 import { getCurrencies } from '@/constants/currencies';
@@ -30,6 +31,7 @@ export default function AddStaffModal({
     name: '',
     email: '',
     phone: '',
+    countryCode: '',
     role: '',
     title: '',
     isTeaching: true,
@@ -98,13 +100,12 @@ export default function AddStaffModal({
 
       if (field === 'country') {
         const countryData = COUNTRIES_MAP[value];
-        if (countryData && countryData.timezone) {
-          updated.timezone = countryData.timezone;
+        if (countryData) {
+          if (countryData.timezone) updated.timezone = countryData.timezone;
+          if (value === 'EG') updated.currency = 'EGP';
+          else if (value === 'SA') updated.currency = 'SAR';
+          else if (value === 'TR') updated.currency = 'TRY';
         }
-        // تعيين العملة التلقائية حسب دولة الإقامة
-        if (value === 'EG') updated.currency = 'EGP';
-        else if (value === 'SA') updated.currency = 'SAR';
-        else if (value === 'TR') updated.currency = 'TRY';
       }
 
       if (field === 'compensationType' && value === 'volunteer') {
@@ -147,6 +148,7 @@ export default function AddStaffModal({
         const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
         const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
         const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
+        const fullPhoneNumber = formData.phone ? `${formData.countryCode || ''}${formData.phone}`.trim() : null;
 
         const { data: teacherData, error: teacherError } = await supabase
           .from('teachers')
@@ -155,7 +157,7 @@ export default function AddStaffModal({
               id: newTeacherId,
               name: formData.name.trim(),
               email: formData.email.trim() || null,
-              phone: formData.phone.trim() || null,
+              phone: fullPhoneNumber,
               title: formData.title || 'quran_teacher',
               is_teaching: formData.isTeaching,
               country: formData.country || null,
@@ -167,7 +169,7 @@ export default function AddStaffModal({
               monthly_salary: parsedMonthly,
               academy_id: academyId || null,
               metadata: {
-                currency: formData.currency || 'USD',
+                currency: formData.currency || null,
                 system_role: formData.role || 'teacher'
               }
             }
@@ -274,7 +276,7 @@ export default function AddStaffModal({
             </div>
           </div>
 
-          {/* البريد ورقم التواصل */}
+          {/* البريد ورقم التواصل الإحترافي */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
@@ -289,14 +291,15 @@ export default function AddStaffModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
-                {t('staff.fields.phone', 'رقم التواصل (واتساب)')}
-              </label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(v) => handleChange('phone', v)}
-                dir="ltr"
+              <PhoneInput
+                label={t('staff.fields.phone', 'رقم التواصل (واتساب)')}
+                countryCode={formData.countryCode}
+                phone={formData.phone}
+                onCountryChange={(code) => handleChange('countryCode', code)}
+                onPhoneChange={(v) => handleChange('phone', v)}
+                lang={currentLang}
+                isRtl={isRtl}
+                t={t}
               />
             </div>
           </div>
@@ -345,11 +348,11 @@ export default function AddStaffModal({
             </div>
           </div>
 
-          {/* المستحقات المالية المحدثة والمدمجة برُقي */}
+          {/* المستحقات المالية المحايدة والمدمجة */}
           <div className="pt-1">
-  <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
-    <Wallet className="w-4 h-4 text-semantic-actionPrimary" /> المستحقات المالية
-  </label>
+            <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
+              <Wallet className="w-4 h-4 text-semantic-actionPrimary" /> المستحقات المالية
+            </label>
             
             <div className="space-y-2.5">
               <Select
@@ -394,7 +397,7 @@ export default function AddStaffModal({
 
         </div>
 
-        {/* أزرار الحفظ والإلغاء */}
+        {/* أزرار الحفظ والإلغاء الثابتة */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
