@@ -5,8 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
-
-// استيراد المكونات الفرعية لصفحة الكادر
+import PageLayout from '@/components/UI/PageLayout'; 
+ 
 import AddStaffModal from './AddStaffModal';
 import TeacherCard from './TeacherCard';
 import TeacherFilter from './TeacherFilter';
@@ -88,85 +88,84 @@ export default function Teachers({
     return matchesSearch && matchesTitle && matchesIjaza;
   });
 
-  return (
-    <div className={`px-3 sm:px-5 space-y-6 ${isRtl ? 'text-right' : 'text-left'} font-cairo`} dir={isRtl ? 'rtl' : 'ltr'}>
-      
-      {/* 1. الترويسة الرئيسية وزر الإضافة (مطابقة تماماً لصفحة الحلقات) */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card-surface bg-gradient-to-r from-semantic-surfaceCard via-semantic-surfaceSecondary to-semantic-surfaceCard">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-semantic-actionPrimary/15 text-semantic-actionPrimary border border-semantic-actionPrimary/30">
-              <Users className="w-5 h-5" />
-            </span>
-            <h2 className={UI.title}>
-              {t('teachers.title', 'الكادر التعليمي والإداري')}
-            </h2>
-          </div>
-          <p className={UI.subtitle}>
-            {t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية باحترافية عالية')}
+  // 1. زر الإضافة الرئيسي الممرر للقالب
+  const actionButton = (
+    <button 
+      onClick={() => setIsModalOpen(true)} 
+      className={`${UI.btnPrimary} w-full sm:w-auto cursor-pointer`}
+    >
+      <Plus className="w-4 h-4" /> 
+      <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
+    </button>
+  );
+
+  // 2. بطاقات الإحصائيات الثلاثية الممررة للقالب
+  const statsGrid = (
+    <>
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
+          <p className="text-2xl font-extrabold text-semantic-textPrimary mt-1">
+            <bdi>{teachers.length}</bdi>
           </p>
         </div>
-
-        <button 
-          onClick={() => setIsModalOpen(true)} 
-          className={`${UI.btnPrimary} w-full sm:w-auto cursor-pointer`}
-        >
-          <Plus className="w-4 h-4" /> 
-          <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
-        </button>
-      </div>
-
-      {/* 2. بطاقات الإحصائيات الثلاثية (مطابقة لصفحة الحلقات تماماً) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className={`${UI.card} flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
-            <p className="text-2xl font-extrabold text-semantic-textPrimary mt-1">
-              <bdi>{teachers.length}</bdi>
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className={`${UI.card} flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
-            <p className="text-2xl font-extrabold text-semantic-success mt-1">
-              <bdi>{teachers.filter(s => s.is_teaching).length}</bdi>
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/40">
-            <UserCheck className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className={`${UI.card} flex items-center justify-between`}>
-          <div>
-            <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
-            <p className="text-2xl font-extrabold text-sky-400 mt-1">
-              <bdi>{teachers.filter(s => s.is_active).length}</bdi>
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
+        <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
+          <Users className="w-6 h-6" />
         </div>
       </div>
 
-      {/* 3. شريط الفلترة والبحث المخصص */}
-      <TeacherFilter 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedTitle={selectedTitle}
-        setSelectedTitle={setSelectedTitle}
-        selectedIjaza={selectedIjaza}
-        setSelectedIjaza={setSelectedIjaza}
-        onRefresh={fetchStaff}
-        t={t}
-      />
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
+          <p className="text-2xl font-extrabold text-semantic-success mt-1">
+            <bdi>{teachers.filter(s => s.is_teaching).length}</bdi>
+          </p>
+        </div>
+        <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/40">
+          <UserCheck className="w-6 h-6" />
+        </div>
+      </div>
 
+      <div className={`${UI.card} flex items-center justify-between`}>
+        <div>
+          <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
+          <p className="text-2xl font-extrabold text-sky-400 mt-1">
+            <bdi>{teachers.filter(s => s.is_active).length}</bdi>
+          </p>
+        </div>
+        <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <ShieldCheck className="w-6 h-6" />
+        </div>
+      </div>
+    </>
+  );
+
+  // 3. شريط الفلترة والبحث الممرر للقالب
+  const filterBar = (
+    <TeacherFilter 
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      selectedTitle={selectedTitle}
+      setSelectedTitle={setSelectedTitle}
+      selectedIjaza={selectedIjaza}
+      setSelectedIjaza={setSelectedIjaza}
+      onRefresh={fetchStaff}
+      t={t}
+    />
+  );
+
+  return (
+    <PageLayout
+      title={t('teachers.title', 'الكادر التعليمي والإداري')}
+      description={t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية باحترافية عالية')}
+      icon={Users}
+      actionButton={actionButton}
+      statsGrid={statsGrid}
+      filterBar={filterBar}
+      loading={loading}
+      isRtl={isRtl}
+      t={t}
+    >
       {/* 4. قسم إدارة أوقات التفرغ (إن وجد معلم محدد) */}
       {selectedTeacherForAvailability && (
         <div className={`${UI.card} relative border-semantic-actionPrimary/40 animate-fade-in`}>
@@ -180,13 +179,8 @@ export default function Teachers({
         </div>
       )}
 
-      {/* 5. شبكة عرض بطاقات الكادر أو حالات التحميل والفراغ */}
-      {loading ? (
-        <div className="text-center py-16 text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-semantic-actionPrimary border-t-transparent animate-spin"></div>
-          <span>{t('common.loading', 'جاري تحميل البيانات...')}</span>
-        </div>
-      ) : filteredStaff.length === 0 ? (
+      {/* 5. شبكة عرض بطاقات الكادر أو حالات الفراغ */}
+      {filteredStaff.length === 0 ? (
         <div className={`text-center py-16 ${UI.card} border-dashed text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-2`}>
           <Users className="w-10 h-10 text-semantic-textMuted/50 mb-1" />
           <span className="font-bold text-semantic-textPrimary text-sm">{t('teachers.noTeachersFound', 'لا توجد نتائج تطابق خيارات البحث')}</span>
@@ -212,6 +206,6 @@ export default function Teachers({
         onSuccess={fetchStaff}
         academyId={academyId}
       />
-    </div>
+    </PageLayout>
   );
 }
