@@ -1,6 +1,7 @@
 /* src/components/UI/Select.jsx */
 
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useId, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X, Check, ChevronDown } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -11,6 +12,7 @@ const getTextSub = () => 'var(--color-text-secondary)';
 const getDanger = () => 'var(--color-danger)';
 const getCardBg = () => 'var(--color-surface-card)';
 
+// سجل عام لمنع فتح أكثر من قائمة منسدلة معاً في كامل التطبيق
 const selectRegistry = new Map();
 
 const closeOtherSelects = (currentId) => {
@@ -42,9 +44,9 @@ export const Select = forwardRef(({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [openUpward, setOpenUpward] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, openUpward: false });
+  const [isMobile, setIsMobile] = useState(false);
 
-  const containerRef = useRef(null);
   const triggerRef = useRef(null);
   const autoId = useId();
   const selectId = customId || autoId;
@@ -53,27 +55,70 @@ export const Select = forwardRef(({
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
 
+  // التسجيل في السجل المركزي للإغلاق المتبادل
   useEffect(() => {
     const closeMe = () => setIsOpen(false);
     selectRegistry.set(selectId, closeMe);
     return () => selectRegistry.delete(selectId);
   }, [selectId]);
 
+  // الكشف المباشر عن نوع الشاشة (جوال أم سطح مكتب)
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // حساب الموضع الذكي لشاشات سطح المكتب وتفادي انقطاع القائمة
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const minWidth = 220;
+      const computedWidth = Math.max(rect.width, minWidth);
+      
+      let leftPos = rect.left;
+      if (leftPos + computedWidth > window.innerWidth) {
+        leftPos = window.innerWidth - computedWidth - 12;
       }
-    };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
+      if (leftPos < 12) leftPos = 12;
+
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUpward = spaceBelow < 220 && rect.top > 220;
+
+      setCoords({
+        top: openUpward ? rect.top - 8 : rect.bottom + 4,
+        left: leftPos,
+        width: computedWidth,
+        openUpward
+      });
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isOpen]);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && !isMobile) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [isOpen, isMobile, updatePosition]);
+
+  // قفل تمرير الشاشة في الجوال عند فتح القائمة المنبثقة
+  useEffect(() => {
+    if (isOpen && isMobile) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen, isMobile]);
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return options;
@@ -90,21 +135,14 @@ export const Select = forwardRef(({
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
-
     if (!isOpen) {
+      updatePosition();
       closeOtherSelects(selectId);
-      // حساب المسافة المتبقية أسفل الحقل لمنع القطع فتحها للأعلى عند الحاجة
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        setOpenUpward(spaceBelow < 220);
-      }
     }
-
     setSearchTerm('');
     setActiveIndex(-1);
     setIsOpen(prev => !prev);
-  }, [isOpen, disabled, selectId]);
+  }, [isOpen, disabled, updatePosition, selectId]);
 
   const handleOptionSelect = (optionValue) => {
     if (typeof onChange === 'function') {
@@ -115,7 +153,7 @@ export const Select = forwardRef(({
   };
 
   return (
-    <div ref={containerRef} style={{ width: "100%", boxSizing: "border-box", position: "relative" }} dir={dir}>
+    <div style={{ width: "100%", boxSizing: "border-box", position: "relative" }} dir={dir}>
       {label && (
         <label 
           htmlFor={selectId}
@@ -182,97 +220,174 @@ export const Select = forwardRef(({
         </span>
       )}
 
-      {/* القائمة المنبثقة التكيفية الاتجاه (أعلى / أسفل) */}
-      {isOpen && (
-        <div
-          dir={dir}
-          style={{
-            position: "absolute",
-            ...(openUpward ? { bottom: "calc(100% + 4px)" } : { top: "calc(100% + 4px)" }),
-            left: 0,
-            right: 0,
-            background: getCardBg(),
-            border: `1px solid ${getBorder()}`,
-            borderRadius: 12,
-            padding: "6px 0",
-            zIndex: 60,
-            maxHeight: 200,
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(12px)"
-          }}
-        >
-          {shouldShowSearch && (
-            <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
-              <input
-                type="text"
-                placeholder={searchPlaceholder || t('common.search', 'بحث...')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                autoFocus
-                style={{
-                  width: "100%",
-                  padding: "6px 10px",
-                  fontSize: "0.8rem",
-                  borderRadius: 6,
-                  border: `1px solid ${getBorder()}`,
-                  background: getSurface(),
-                  color: getTextTitle(),
-                  outline: "none"
-                }}
-              />
-            </div>
-          )}
-
-          <ul
-            role="listbox"
-            style={{
-              margin: 0,
-              padding: "4px 0",
-              listStyle: "none",
-              overflowY: "auto",
-              maxHeight: 160,
-              overscrollBehavior: 'contain'
-            }}
+      {/* العرض الهجين التكيفي الذكي عالمياً */}
+      {isOpen && typeof window !== 'undefined' && createPortal(
+        isMobile ? (
+          /* وضع الجوال المحمول الاحترافي (Modal Sheet) */
+          <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
+            onClick={() => setIsOpen(false)}
+            dir={dir}
           >
-            {filteredOptions.length === 0 ? (
-              <li style={{ padding: "12px 14px", fontSize: "0.8rem", color: getTextSub(), textAlign: "center" }}>
-                {noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة')}
-              </li>
-            ) : (
-              filteredOptions.map((o, idx) => {
-                const isSelected = String(o.value) === safeValue;
-                const isActive = idx === activeIndex;
-                return (
-                  <li
-                    key={o.value}
-                    role="option"
-                    aria-selected={isSelected}
-                    onClick={() => handleOptionSelect(o.value)}
+            <div 
+              className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40 shrink-0">
+                <h3 className="text-sm font-bold m-0 text-semantic-textPrimary">
+                  {title || label || placeholder}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 rounded-lg text-semantic-textSecondary hover:bg-semantic-surfaceInput hover:text-semantic-textPrimary cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {shouldShowSearch && (
+                <div className="p-3 border-b border-semantic-borderInput shrink-0">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder={searchPlaceholder || t('common.search', 'بحث...')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full py-2 px-9 border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary rounded-xl text-xs outline-none transition focus:border-semantic-actionPrimary"
+                      autoFocus
+                    />
+                    <Search size={14} className={`absolute top-3 ${dir === 'rtl' ? 'right-3' : 'left-3'} text-semantic-textSecondary`} />
+                  </div>
+                </div>
+              )}
+
+              <div className="overflow-y-auto p-2 space-y-1 max-h-[50vh] overscroll-contain">
+                {filteredOptions.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-semantic-textSecondary">
+                    {noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة')}
+                  </div>
+                ) : (
+                  filteredOptions.map((option) => {
+                    const isSelected = String(option.value) === safeValue;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleOptionSelect(option.value)}
+                        className={`w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl text-xs transition text-start cursor-pointer border ${
+                          isSelected
+                            ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold border-semantic-actionPrimary/30'
+                            : 'border-transparent text-semantic-textPrimary font-medium hover:bg-semantic-surfaceInput'
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {isSelected && <Check size={16} className="shrink-0 ms-2 text-semantic-actionPrimary" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* وضع الشاشات الكبيرة الذكي (Desktop Dropdown with Smart Position) */
+          <>
+            <div 
+              style={{ position: "fixed", inset: 0, zIndex: 9998 }} 
+              onClick={() => setIsOpen(false)} 
+            />
+            <div
+              dir={dir}
+              style={{
+                position: "fixed",
+                ...(coords.openUpward ? { bottom: `${window.innerHeight - coords.top}px` } : { top: `${coords.top}px` }),
+                left: coords.left,
+                width: coords.width,
+                background: getCardBg(),
+                border: `1px solid ${getBorder()}`,
+                borderRadius: 12,
+                padding: "6px 0",
+                zIndex: 9999,
+                maxHeight: 240,
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(12px)"
+              }}
+            >
+              {shouldShowSearch && (
+                <div style={{ padding: "6px 10px", borderBottom: `1px solid ${getBorder()}` }}>
+                  <input
+                    type="text"
+                    placeholder={searchPlaceholder || t('common.search', 'بحث...')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    autoFocus
                     style={{
-                      padding: "10px 14px",
-                      minHeight: "38px",
-                      fontSize: "0.85rem",
-                      color: isSelected || isActive ? getPrimary() : getTextTitle(),
-                      background: isActive ? "color-mix(in srgb, var(--color-action-primary) 20%, transparent)" : (isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent"),
-                      cursor: "pointer",
-                      textAlign: "start",
-                      fontWeight: isSelected ? 700 : 400,
-                      transition: "background 0.15s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between"
+                      width: "100%",
+                      padding: "6px 10px",
+                      fontSize: "0.8rem",
+                      borderRadius: 6,
+                      border: `1px solid ${getBorder()}`,
+                      background: getSurface(),
+                      color: getTextTitle(),
+                      outline: "none"
                     }}
-                  >
-                    <span>{o.label}</span>
-                    {isSelected && <Check size={16} style={{ color: getPrimary() }} />}
+                  />
+                </div>
+              )}
+
+              <ul
+                role="listbox"
+                style={{
+                  margin: 0,
+                  padding: "4px 0",
+                  listStyle: "none",
+                  overflowY: "auto",
+                  maxHeight: 180,
+                  overscrollBehavior: 'contain'
+                }}
+              >
+                {filteredOptions.length === 0 ? (
+                  <li style={{ padding: "12px 14px", fontSize: "0.8rem", color: getTextSub(), textAlign: "center" }}>
+                    {noOptionsMessage || t('common.noOptions', 'لا توجد خيارات متاحة')}
                   </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
+                ) : (
+                  filteredOptions.map((o) => {
+                    const isSelected = String(o.value) === safeValue;
+                    return (
+                      <li
+                        key={o.value}
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => handleOptionSelect(o.value)}
+                        style={{
+                          padding: "10px 14px",
+                          minHeight: "38px",
+                          fontSize: "0.85rem",
+                          color: isSelected ? getPrimary() : getTextTitle(),
+                          background: isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent",
+                          cursor: "pointer",
+                          textAlign: "start",
+                          fontWeight: isSelected ? 700 : 400,
+                          transition: "background 0.15s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between"
+                        }}
+                      >
+                        <span>{o.label}</span>
+                        {isSelected && <Check size={16} style={{ color: getPrimary() }} />}
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>
+          </>
+        ),
+        document.body
       )}
     </div>
   );
