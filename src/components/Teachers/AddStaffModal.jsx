@@ -26,20 +26,21 @@ export default function AddStaffModal({
   const currentLang = i18n?.language || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
+  // تم جعل جميع القوائم المنسدلة فارغة ابتكاراً لتظهر كلمة "اختر..." تماماً كصفحة إضافة الحلقة
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    role: 'teacher',
-    title: 'quran_teacher',
+    role: '',
+    title: '',
     isTeaching: true,
-    country: 'EG',
-    timezone: 'Africa/Cairo',
+    country: '',
+    timezone: '',
     ijazat: [],
-    compensationType: 'volunteer',
+    compensationType: '',
     hourlyRate: '',
     monthlySalary: '',
-    currency: 'USD'
+    currency: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -158,19 +159,19 @@ export default function AddStaffModal({
               name: formData.name.trim(),
               email: formData.email.trim() || null,
               phone: formData.phone.trim() || null,
-              title: formData.title,
+              title: formData.title || 'quran_teacher',
               is_teaching: formData.isTeaching,
               country: formData.country || null,
-              timezone: formData.timezone,
+              timezone: formData.timezone || 'Africa/Cairo',
               ijazas: formData.isTeaching ? formData.ijazat : [],
               employment_type: dbEmploymentType,
-              salary_system: formData.compensationType,
+              salary_system: formData.compensationType || 'volunteer',
               hourly_rate: parsedHourly,
               monthly_salary: parsedMonthly,
               academy_id: academyId || null,
               metadata: {
-                currency: formData.currency,
-                system_role: formData.role
+                currency: formData.currency || 'USD',
+                system_role: formData.role || 'teacher'
               }
             }
           ])
@@ -367,7 +368,7 @@ export default function AddStaffModal({
                 options={compensationOptions}
               />
 
-              {formData.compensationType !== 'volunteer' && (
+              {formData.compensationType && formData.compensationType !== 'volunteer' && (
                 <>
                   <Input
                     type="number"
