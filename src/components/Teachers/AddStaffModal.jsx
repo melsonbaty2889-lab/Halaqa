@@ -1,6 +1,6 @@
 /* src/components/Teachers/AddStaffModal.jsx */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserPlus, Award, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,15 @@ import { getCurrencies } from '@/constants/currencies';
 import { getIjazatOptions } from '@/constants/ijazat';
 import { getStaffTitles } from '@/constants/staffTitles';
 
-export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId }) {
+export default function AddStaffModal({ 
+  isOpen, 
+  open,
+  onClose, 
+  onSuccess, 
+  onSubmit,
+  handleSubmit: propsHandleSubmit,
+  academyId 
+}) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
@@ -36,6 +44,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const isModalVisible = Boolean(isOpen || open);
+
+  useEffect(() => {
+    if (isModalVisible) {
+      setErrorMsg('');
+    }
+  }, [isModalVisible]);
 
   // 1. المسميات العلمية والوظيفية من الثوابت الموحدة
   const titlesList = getStaffTitles(t);
@@ -111,7 +127,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const onSubmitForm = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
     if (!formData.name.trim()) {
@@ -123,53 +139,59 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
     setErrorMsg('');
 
     try {
-      const newTeacherId = crypto.randomUUID();
+      const submitCallback = propsHandleSubmit || onSubmit;
 
-      const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
-      const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
-      const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
+      if (submitCallback) {
+        await submitCallback(formData);
+      } else {
+        const newTeacherId = crypto.randomUUID();
 
-      const { data: teacherData, error: teacherError } = await supabase
-        .from('teachers')
-        .insert([
-          {
-            id: newTeacherId,
-            name: formData.name.trim(),
-            email: formData.email.trim() || null,
-            phone: formData.phone.trim() || null,
-            title: formData.title,
-            is_teaching: formData.isTeaching,
-            country: formData.country || null,
-            timezone: formData.timezone,
-            ijazas: formData.isTeaching ? formData.ijazat : [],
-            employment_type: dbEmploymentType,
-            salary_system: formData.compensationType,
-            hourly_rate: parsedHourly,
-            monthly_salary: parsedMonthly,
-            academy_id: academyId || null,
-            metadata: {
-              currency: formData.currency,
-              system_role: formData.role
-            }
-          }
-        ])
-        .select()
-        .single();
+        const dbEmploymentType = formData.compensationType === 'hourly' ? 'hourly' : 'salary';
+        const parsedHourly = formData.compensationType === 'hourly' ? Math.max(0, parseFloat(formData.hourlyRate) || 0) : 0;
+        const parsedMonthly = formData.compensationType === 'monthly' ? Math.max(0, parseFloat(formData.monthlySalary || formData.hourlyRate) || 0) : 0;
 
-      if (teacherError) throw teacherError;
-
-      if (teacherData && academyId) {
-        const { error: relError } = await supabase
-          .from('academy_teachers')
+        const { data: teacherData, error: teacherError } = await supabase
+          .from('teachers')
           .insert([
             {
-              academy_id: academyId,
-              teacher_id: teacherData.id,
-              is_active: true
+              id: newTeacherId,
+              name: formData.name.trim(),
+              email: formData.email.trim() || null,
+              phone: formData.phone.trim() || null,
+              title: formData.title,
+              is_teaching: formData.isTeaching,
+              country: formData.country || null,
+              timezone: formData.timezone,
+              ijazas: formData.isTeaching ? formData.ijazat : [],
+              employment_type: dbEmploymentType,
+              salary_system: formData.compensationType,
+              hourly_rate: parsedHourly,
+              monthly_salary: parsedMonthly,
+              academy_id: academyId || null,
+              metadata: {
+                currency: formData.currency,
+                system_role: formData.role
+              }
             }
-          ]);
+          ])
+          .select()
+          .single();
 
-        if (relError) console.warn("Notice: Rel insertion logged:", relError.message);
+        if (teacherError) throw teacherError;
+
+        if (teacherData && academyId) {
+          const { error: relError } = await supabase
+            .from('academy_teachers')
+            .insert([
+              {
+                academy_id: academyId,
+                teacher_id: teacherData.id,
+                is_active: true
+              }
+            ]);
+
+          if (relError) console.warn("Notice: Rel insertion logged:", relError.message);
+        }
       }
 
       if (onSuccess) onSuccess();
@@ -184,12 +206,12 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
 
   return (
     <Modal
-      open={isOpen}
+      open={isModalVisible}
       onClose={onClose}
       title={t('staff.addTitle', 'إضافة كادر تعليمي / إداري جديد')}
     >
-      <form onSubmit={handleSubmit} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-6">
+      <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
           
           {errorMsg && (
             <div className="bg-semantic-dangerBg border border-semantic-danger/30 text-semantic-danger p-3 rounded-xl text-xs font-bold mb-2">
