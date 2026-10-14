@@ -1073,6 +1073,9 @@
   "startTimeLabel": "وقت البدء",
   "statActive": "الحلقات النشطة",
   "statArchived": "المؤرشفة",
+  "statsActiveHalaqas": "الحلقات النشطة",
+  "statsArchived": "المؤرشفة",
+  "statsUnassigned": "بدون معلم",
   "statUnassigned": "بانتظار معلم",
   "status": {
     "active": "اشتراك نشط",
