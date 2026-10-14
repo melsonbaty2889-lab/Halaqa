@@ -39,7 +39,7 @@ export default function AddStaffModal({
     compensationType: '',
     hourlyRate: '',
     monthlySalary: '',
-    currency: ''
+    currency: 'USD'
   });
 
   const [loading, setLoading] = useState(false);
@@ -67,7 +67,6 @@ export default function AddStaffModal({
 
   const timezoneOptions = getTimezoneOptions(t);
 
-  // خيارات المستحقات المالية الصريحة المباشرة
   const compensationOptions = [
     { value: 'volunteer', label: 'تطوعي (بدون مقابل مالي)' },
     { value: 'hourly', label: 'أجر بالساعة / الحصة' },
@@ -102,6 +101,10 @@ export default function AddStaffModal({
         if (countryData && countryData.timezone) {
           updated.timezone = countryData.timezone;
         }
+        // تعيين العملة التلقائية حسب دولة الإقامة
+        if (value === 'EG') updated.currency = 'EGP';
+        else if (value === 'SA') updated.currency = 'SAR';
+        else if (value === 'TR') updated.currency = 'TRY';
       }
 
       if (field === 'compensationType' && value === 'volunteer') {
@@ -342,12 +345,13 @@ export default function AddStaffModal({
             </div>
           </div>
 
-          {/* المستحقات المالية */}
+          {/* المستحقات المالية المحدثة والمدمجة برُقي */}
           <div className="pt-1">
             <label className="block text-xs font-bold text-semantic-textSecondary mb-2 flex items-center gap-1.5">
               <DollarSign className="w-4 h-4 text-semantic-success" /> المستحقات المالية
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            
+            <div className="space-y-2.5">
               <Select
                 title="المستحقات المالية"
                 placeholder={t('selectPlaceholder', 'اختر...')}
@@ -357,22 +361,33 @@ export default function AddStaffModal({
               />
 
               {formData.compensationType && formData.compensationType !== 'volunteer' && (
-                <>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.compensationType === 'hourly' ? formData.hourlyRate : formData.monthlySalary}
-                    onChange={(v) => handleChange(formData.compensationType === 'hourly' ? 'hourlyRate' : 'monthlySalary', extractValue(v))}
-                  />
-                  <Select
-                    title={t('staff.financial.currency', 'عملة التعامل')}
-                    placeholder={t('selectPlaceholder', 'اختر...')}
-                    value={formData.currency}
-                    onChange={(v) => handleChange('currency', v)}
-                    options={currencyOptions}
-                  />
-                </>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-semibold text-semantic-textSecondary mb-1">
+                      {formData.compensationType === 'hourly' ? 'المبلغ المستحق عن كل ساعة / حصة' : 'قيمة الراتب الشهري الثابت'}
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder={formData.compensationType === 'hourly' ? 'أدخل الأجر بالساعة (مثال: 50)' : 'أدخل المبلغ (مثال: 3000)'}
+                      value={formData.compensationType === 'hourly' ? formData.hourlyRate : formData.monthlySalary}
+                      onChange={(v) => handleChange(formData.compensationType === 'hourly' ? 'hourlyRate' : 'monthlySalary', extractValue(v))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-semantic-textSecondary mb-1">
+                      عملة التعامل
+                    </label>
+                    <Select
+                      title={t('staff.financial.currency', 'عملة التعامل')}
+                      placeholder={t('selectPlaceholder', 'اختر...')}
+                      value={formData.currency}
+                      onChange={(v) => handleChange('currency', v)}
+                      options={currencyOptions}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           </div>
