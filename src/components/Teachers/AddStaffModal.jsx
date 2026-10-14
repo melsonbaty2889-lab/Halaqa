@@ -206,7 +206,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
               <Input
                 type="text"
                 required
-                placeholder={t('staff.placeholders.fullName', 'مثال: الشيخ د. أحمد بن علي')}
                 value={formData.name}
                 onChange={(v) => handleChange('name', v)}
               />
@@ -260,7 +259,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
               </label>
               <Input
                 type="email"
-                placeholder={t('staff.placeholders.email', 'teacher@academy.com')}
                 value={formData.email}
                 onChange={(v) => handleChange('email', v)}
                 dir="ltr"
@@ -273,7 +271,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, academyId })
               </label>
               <Input
                 type="tel"
-                placeholder={t('staff.placeholders.phone', '+XX XXXXXXXXXX')}
                 value={formData.phone}
                 onChange={(v) => handleChange('phone', v)}
                 dir="ltr"
