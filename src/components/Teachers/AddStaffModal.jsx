@@ -32,7 +32,7 @@ export default function AddStaffModal({
     phone: '',
     role: '',
     title: '',
-    isTeaching: true, // مفعّل افتراضياً لظهور الحقول مباشرة دون تشتت
+    isTeaching: true,
     country: '',
     timezone: '',
     ijazat: [],
@@ -67,10 +67,11 @@ export default function AddStaffModal({
 
   const timezoneOptions = getTimezoneOptions(t);
 
+  // خيارات المستحقات المالية الصريحة المباشرة
   const compensationOptions = [
-    { value: 'volunteer', label: t('staff.compensation.volunteer', 'تطوعي (بدون مقابل مالى)') },
-    { value: 'hourly', label: t('staff.compensation.hourly', 'أجر بالساعة / الحصة') },
-    { value: 'monthly', label: t('staff.compensation.monthly', 'راتب شهري ثابت') }
+    { value: 'volunteer', label: 'تطوعي (بدون مقابل مالي)' },
+    { value: 'hourly', label: 'أجر بالساعة / الحصة' },
+    { value: 'monthly', label: 'راتب شهري ثابت' }
   ];
 
   const supportedCurrencyCodes = ['USD', 'EUR', 'SAR', 'EGP', 'TRY'];
@@ -311,7 +312,7 @@ export default function AddStaffModal({
             />
           </div>
 
-          {/* الإجازات والسند القرآني ظاهرة مباشرة وواضحة لتجربة مستخدم سلسة */}
+          {/* الإجازات والسند القرآني */}
           <div className="pt-1">
             <label className="block text-xs font-bold text-semantic-actionPrimary mb-2 flex items-center gap-1.5">
               <Award className="w-4 h-4" /> {t('staff.ijazat.title', 'الإجازات والسند القرآني')}
@@ -378,7 +379,7 @@ export default function AddStaffModal({
 
         </div>
 
-        {/* أزرار الحفظ والإلغاء الثابتة أسفل الشاشة */}
+        {/* أزرار الحفظ والإلغاء */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
