@@ -11,14 +11,11 @@ const getTextSub = () => 'var(--color-text-secondary)';
 const getDanger = () => 'var(--color-danger)';
 const getCardBg = () => 'var(--color-surface-card)';
 
-// سجل عام لإدارة القوائم المنسدلة المفتوحة لضمان فتح قائمة واحدة فقط في نفس الوقت
 const selectRegistry = new Map();
 
 const closeOtherSelects = (currentId) => {
   selectRegistry.forEach((closeFn, id) => {
-    if (id !== currentId) {
-      closeFn();
-    }
+    if (id !== currentId) closeFn();
   });
 };
 
@@ -45,6 +42,7 @@ export const Select = forwardRef(({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [openUpward, setOpenUpward] = useState(false);
 
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
@@ -55,16 +53,12 @@ export const Select = forwardRef(({
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
 
-  // تسجيل وإلغاء القائمة من السجل العام
   useEffect(() => {
     const closeMe = () => setIsOpen(false);
     selectRegistry.set(selectId, closeMe);
-    return () => {
-      selectRegistry.delete(selectId);
-    };
+    return () => selectRegistry.delete(selectId);
   }, [selectId]);
 
-  // إغلاق القائمة عند النقر في أي مكان خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -81,7 +75,6 @@ export const Select = forwardRef(({
     };
   }, [isOpen]);
 
-  // تصفية الخيارات بناءً على نص البحث
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return options;
     const query = searchTerm.toLowerCase().trim();
@@ -97,9 +90,17 @@ export const Select = forwardRef(({
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
+
     if (!isOpen) {
       closeOtherSelects(selectId);
+      // حساب المسافة المتبقية أسفل الحقل لمنع القطع فتحها للأعلى عند الحاجة
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        setOpenUpward(spaceBelow < 220);
+      }
     }
+
     setSearchTerm('');
     setActiveIndex(-1);
     setIsOpen(prev => !prev);
@@ -111,41 +112,6 @@ export const Select = forwardRef(({
     }
     setIsOpen(false);
     setSearchTerm('');
-  };
-
-  const handleKeyDown = (e) => {
-    if (disabled) return;
-
-    if (!isOpen) {
-      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
-        e.preventDefault();
-        handleToggle();
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setActiveIndex(prev => (prev < filteredOptions.length - 1 ? prev + 1 : 0));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setActiveIndex(prev => (prev > 0 ? prev - 1 : filteredOptions.length - 1));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (activeIndex >= 0 && activeIndex < filteredOptions.length) {
-          handleOptionSelect(filteredOptions[activeIndex].value);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        break;
-      default:
-        break;
-    }
   };
 
   return (
@@ -171,7 +137,6 @@ export const Select = forwardRef(({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={handleToggle}
-        onKeyDown={handleKeyDown}
         className={`ui-select ${className}`}
         style={{
           width: "100%",
@@ -217,24 +182,24 @@ export const Select = forwardRef(({
         </span>
       )}
 
-      {/* قائمة الخيارات المنسدلة المطلقة المحصورة داخل المودال تماماً */}
+      {/* القائمة المنبثقة التكيفية الاتجاه (أعلى / أسفل) */}
       {isOpen && (
         <div
           dir={dir}
           style={{
             position: "absolute",
-            top: "calc(100% + 4px)",
+            ...(openUpward ? { bottom: "calc(100% + 4px)" } : { top: "calc(100% + 4px)" }),
             left: 0,
             right: 0,
             background: getCardBg(),
             border: `1px solid ${getBorder()}`,
             borderRadius: 12,
             padding: "6px 0",
-            zIndex: 50,
-            maxHeight: 240,
+            zIndex: 60,
+            maxHeight: 200,
             display: "flex",
             flexDirection: "column",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
             backdropFilter: "blur(12px)"
           }}
         >
@@ -245,7 +210,6 @@ export const Select = forwardRef(({
                 placeholder={searchPlaceholder || t('common.search', 'بحث...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
                 autoFocus
                 style={{
                   width: "100%",
@@ -268,7 +232,7 @@ export const Select = forwardRef(({
               padding: "4px 0",
               listStyle: "none",
               overflowY: "auto",
-              maxHeight: 180,
+              maxHeight: 160,
               overscrollBehavior: 'contain'
             }}
           >
@@ -288,8 +252,8 @@ export const Select = forwardRef(({
                     onClick={() => handleOptionSelect(o.value)}
                     style={{
                       padding: "10px 14px",
-                      minHeight: "40px",
-                      fontSize: "0.875rem",
+                      minHeight: "38px",
+                      fontSize: "0.85rem",
                       color: isSelected || isActive ? getPrimary() : getTextTitle(),
                       background: isActive ? "color-mix(in srgb, var(--color-action-primary) 20%, transparent)" : (isSelected ? "color-mix(in srgb, var(--color-action-primary) 12%, transparent)" : "transparent"),
                       cursor: "pointer",
@@ -301,12 +265,7 @@ export const Select = forwardRef(({
                       justifyContent: "space-between"
                     }}
                   >
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <span>{o.label}</span>
-                      {o.subLabel && (
-                        <span style={{ fontSize: "0.7rem", color: getTextSub() }}>{o.subLabel}</span>
-                      )}
-                    </div>
+                    <span>{o.label}</span>
                     {isSelected && <Check size={16} style={{ color: getPrimary() }} />}
                   </li>
                 );
