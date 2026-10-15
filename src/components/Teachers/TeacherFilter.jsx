@@ -3,6 +3,9 @@
 import React from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { UI } from '@/theme/styles';
+import { Select } from '@/components/UI';
+import { getStaffTitles } from '@/constants/staffTitles';
+import { getIjazatOptions } from '@/constants/ijazat';
 
 export default function TeacherFilter({ 
   searchTerm, 
@@ -14,8 +17,23 @@ export default function TeacherFilter({
   onRefresh,
   t = (s) => s
 }) {
+  // جلب خيارات المسميات والإجازات من ملفات الثوابت المركزية
+  const titlesList = getStaffTitles(t);
+  const ijazatOptions = getIjazatOptions(t);
+
+  const titleOptions = [
+    { value: 'all', label: t('teachers.allTitles', 'كل المسميات') },
+    ...titlesList.map(item => ({ value: item.value, label: item.label }))
+  ];
+
+  const ijazaOptions = [
+    { value: 'all', label: t('teachers.allIjazat', 'كل الإجازات') },
+    ...ijazatOptions.map(item => ({ value: item.id, label: item.label }))
+  ];
+
   return (
     <div className="card-surface p-4 space-y-3 md:space-y-0 md:flex md:items-center md:gap-4 border-semantic-borderCard">
+      {/* حقل البحث الشامل */}
       <div className="relative flex-1">
         <Search className="w-4 h-4 absolute start-3 top-3 text-semantic-textSecondary" />
         <input 
@@ -27,30 +45,27 @@ export default function TeacherFilter({
         />
       </div>
 
-      <div className="flex gap-2">
-        <select 
-          value={selectedTitle}
-          onChange={(e) => setSelectedTitle(e.target.value)}
-          className={UI.input}
-        >
-          <option value="all" className="bg-slate-900 text-white">{t('teachers.allTitles', 'كل المسميات')}</option>
-          <option value="معلّم / مقرئ" className="bg-slate-900 text-white">{t('teachers.titles.teacher', 'معلّم / مقرئ')}</option>
-          <option value="مشرف تعليمي" className="bg-slate-900 text-white">{t('teachers.titles.supervisor', 'مشرف تعليمي')}</option>
-          <option value="مدير أكاديمية" className="bg-slate-900 text-white">{t('teachers.titles.admin', 'مدير أكاديمية')}</option>
-        </select>
+      {/* حنبات الفلترة وزر التحديث */}
+      <div className="flex gap-2 items-center">
+        <div className="w-40 sm:w-48">
+          <Select
+            title={t('teachers.fields.title', 'المسمى')}
+            placeholder={t('teachers.allTitles', 'كل المسميات')}
+            value={selectedTitle}
+            onChange={(v) => setSelectedTitle(v)}
+            options={titleOptions}
+          />
+        </div>
 
-        <select 
-          value={selectedIjaza}
-          onChange={(e) => setSelectedIjaza(e.target.value)}
-          className={UI.input}
-        >
-          <option value="all" className="bg-slate-900 text-white">{t('teachers.allIjazat', 'كل الإجازات')}</option>
-          <option value="حفص عن عاصم" className="bg-slate-900 text-white">حفص عن عاصم</option>
-          <option value="ورش عن نافع" className="bg-slate-900 text-white">ورش عن نافع</option>
-          <option value="قالون عن نافع" className="bg-slate-900 text-white">قالون عن نافع</option>
-          <option value="القراءات العشر الصغرى" className="bg-slate-900 text-white">القراءات العشر الصغرى</option>
-          <option value="القراءات العشر الكبرى" className="bg-slate-900 text-white">القراءات العشر الكبرى</option>
-        </select>
+        <div className="w-40 sm:w-48">
+          <Select
+            title={t('teachers.ijazatTitle', 'الإجازة')}
+            placeholder={t('teachers.allIjazat', 'كل الإجازات')}
+            value={selectedIjaza}
+            onChange={(v) => setSelectedIjaza(v)}
+            options={ijazaOptions}
+          />
+        </div>
 
         <button 
           onClick={onRefresh} 
