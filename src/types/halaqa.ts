@@ -1,30 +1,39 @@
+// Src/types/halaqa.ts
+
 export type HalaqaStatus = 'active' | 'paused';
 export type TargetAudience = 'all' | 'kids' | 'males' | 'females';
 export type TeachingType = 'online' | 'offline';
+export type EducationalTrack = 'hifz' | 'muraja' | 'tilawa' | 'tajweed' | string;
+
+export interface LocalizedText {
+  ar?: string;
+  en?: string;
+  [key: string]: string | undefined;
+}
 
 export interface Halaqa {
   id: string;
   academy_id: string;
   teacher_id?: string | null;
-  description?: Record<string, any> | null; // JSONB للوصف
+  name: LocalizedText | Record<string, any>; // JSONB لاسم الحلقة بلغات متعددة
+  description?: LocalizedText | Record<string, any> | null; // JSONB للوصف
   days_of_week?: string[] | null;
   start_time: string; // time without time zone
   end_time: string;   // time without time zone
   max_students?: number | null;
+  min_students?: number | null;
   meeting_url?: string | null;
+  meeting_platform?: string | null;
   status?: HalaqaStatus | string | null;
   target_audience?: TargetAudience | string | null;
   teaching_type?: TeachingType | string | null;
-  educational_track?: string | null;
+  educational_track?: EducationalTrack | null;
   created_at?: string | null;
   updated_at?: string | null;
   is_archived: boolean;
   code?: string | null;
   language_code?: string | null;
   curriculum_id?: string | null;
-  min_students?: number | null;
-  meeting_platform?: string | null;
-  name: Record<string, any>; // JSONB لاسم الحلقة بلغات متعددة
 
   // العلاقات المجلوبة (Joined Relations)
   teachers?: {
