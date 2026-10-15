@@ -13,7 +13,7 @@ import { useAcademy } from '@/context/AcademyContext';
 import { useStudentsManager } from '@/hooks/useStudentsManager';
 import { renderStatusBadge } from '@/utils/studentUtils';
 
-const StudentsList = ({ 
+export default function StudentsList({ 
   students = [], 
   setStudents, 
   academyId, 
@@ -22,14 +22,14 @@ const StudentsList = ({
   onDeleteStudent,
   academySettings,
   onRefresh
-}) => {
+}) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
 
   const { academy } = useAcademy?.() || {};
   const calendarType = academySettings?.calendar_type || academy?.calendar_type || 'gregorian';
 
-  // إدارة حالات الطلاب والفلترة من الهوك المخصص
+  // إدارة حالات الطلاب والفلترة عبر الهوك المخصص
   const manager = useStudentsManager({
     students,
     setStudents,
@@ -53,7 +53,7 @@ const StudentsList = ({
     handleConfirmAction, handleModalSuccess,
   } = manager;
 
-  // في حالة عرض الملف الشخصي الكامل لطلب معين
+  // في حالة تحديد طالب لعرض الملف الشخصي الكامل
   if (selectedStudent) {
     return (
       <>
@@ -113,7 +113,7 @@ const StudentsList = ({
     );
   }
 
-  // خيارات القوائم المنسدلة للفلترة
+  // خيارات الفلاتر والترتيب
   const statusOptions = [
     { label: t('students.filter_all', 'جميع الحالات'), value: 'all' },
     { label: t('status_active', 'نشط'), value: 'active' },
@@ -228,7 +228,7 @@ const StudentsList = ({
         isRtl={isRtl}
         t={t}
       >
-        {/* عرض شبكة بطاقات الطلاب أو حالة عدم وجود نتائج */}
+        {/* شبكة بطاقات الطلاب */}
         {filteredStudents.length === 0 ? (
           <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-2">
             <Users className="w-10 h-10 text-semantic-textSecondary mx-auto" />
@@ -269,7 +269,7 @@ const StudentsList = ({
         />
       )}
 
-      {/* نافذة التأكيد (ConfirmModal) للأرشفة والحذف */}
+      {/* نافذة التأكيد */}
       <ConfirmModal
         isOpen={confirmModalState.isOpen}
         onClose={() => setConfirmModalState({ isOpen: false, student: null, type: null, isLoading: false })}
@@ -300,6 +300,4 @@ const StudentsList = ({
       />
     </>
   );
-};
-
-export default StudentsList;
+}
