@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Calendar, Clock, Plus, Save, Trash2, CheckCircle2, AlertCircle, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
+import { Select } from '@/components/UI';
 
 export default function TeacherAvailabilityManager({ teacherId }) {
   const { t, i18n } = useTranslation();
@@ -122,33 +123,33 @@ export default function TeacherAvailabilityManager({ teacherId }) {
     }
   };
 
+  const teacherSelectOptions = teachers.map(t => ({
+    value: t.id,
+    label: t.name
+  }));
+
   return (
     <div 
       dir={isRtl ? 'rtl' : 'ltr'} 
       className={`${UI.card} w-full max-w-4xl flex flex-col gap-6`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-semantic-borderCard pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-semantic-borderCard pb-4">
         <div className="flex items-center gap-2.5">
           <Calendar className="w-6 h-6 text-semantic-actionPrimary" />
           <h2 className="text-lg font-bold text-semantic-textPrimary">{t('teachers.availabilityManagerTitle', 'إدارة مواعيد توفر المعلمين')}</h2>
         </div>
 
-        {/* اختيار المعلم */}
+        {/* اختيار المعلم باستخدام مكون Select الموحد */}
         {teachers.length > 0 && (
-          <div className="flex items-center gap-2 bg-semantic-surfaceInput px-3 py-1.5 rounded-xl border border-semantic-borderInput">
-            <User className="w-4 h-4 text-semantic-textSecondary" />
-            <select
+          <div className="w-full sm:w-64">
+            <Select
+              title={t('teachers.selectTeacher', 'اختر المعلم')}
+              placeholder={t('teachers.selectTeacher', 'اختر المعلم')}
               value={selectedTeacher}
-              onChange={(e) => setSelectedTeacher(e.target.value)}
-              className="bg-transparent text-xs text-semantic-textPrimary border-none focus:outline-none cursor-pointer"
-            >
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id} className="bg-slate-900 text-white">
-                  {t.name}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setSelectedTeacher(v)}
+              options={teacherSelectOptions}
+            />
           </div>
         )}
       </div>
@@ -174,17 +175,13 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.day', 'اليوم')}</label>
-            <select
+            <Select
+              title={t('teachers.day', 'اليوم')}
+              placeholder={t('selectPlaceholder', 'اختر...')}
               value={dayOfWeek}
-              onChange={(e) => setDayOfWeek(e.target.value)}
-              className={UI.input}
-            >
-              {daysOptions.map((day) => (
-                <option key={day.value} value={day.value} className="bg-slate-900 text-white">
-                  {day.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setDayOfWeek(v)}
+              options={daysOptions}
+            />
           </div>
 
           <div>
@@ -217,7 +214,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
           disabled={loading}
           className={`${UI.btnPrimary} flex items-center justify-center gap-1.5 cursor-pointer`}
         >
-          <Save className="variable w-4 h-4" />
+          <Save className="w-4 h-4" />
           <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('teachers.saveSlot', 'حفظ موعد التوفر')}</span>
         </button>
       </form>
