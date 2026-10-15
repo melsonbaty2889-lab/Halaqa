@@ -278,7 +278,12 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       }
     }
     isFetchingRef.current = true;
-    setLoadingData(true);
+    
+    // 💡 التعديل هنا: لا تقم بإظهار شاشة التحميل الكاملة إلا إذا لم تكن البيانات محملة من قبل
+    if (!fetchedAcademyIdRef.current) {
+      setLoadingData(true);
+    }
+
     try {
       const { data: rels } = await supabase
         .from('academy_teachers')
