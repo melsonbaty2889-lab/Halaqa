@@ -1,54 +1,38 @@
-/* src/components/Teachers/Teachers.jsx */
+// src/components/Teachers/Teachers.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Users, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { UI } from '@/theme/styles';
-import PageLayout from '@/components/UI/PageLayout'; 
+import { Users, Plus } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-import AddStaffModal from './AddStaffModal';
-import TeacherFilter from './TeacherFilter';
 import TeacherStats from './TeacherStats';
+import TeacherFilter from './TeacherFilter';
 import TeacherGrid from './TeacherGrid';
+import AddStaffModal from './AddStaffModal';
 import TeacherAvailabilityManager from './TeacherAvailabilityManager';
 
-export default function Teachers({ 
-  academyId, 
-  teachers = [], 
-  setTeachers, 
-  onRefresh
-}) {
+export default function Teachers({ academyId, teachers = [], setTeachers, onRefresh }) {
   const { t, i18n } = useTranslation();
-  const currentLang = i18n?.language || 'ar';
-  const isRtl = ['ar', 'ur'].includes(currentLang);
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
 
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTitle, setSelectedTitle] = useState('all');
-  const [selectedIjaza, setSelectedIjaza] = useState('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [titleFilter, setTitleFilter] = useState('all');
+  const [ijazaFilter, setIjazaFilter] = useState('all');
+  
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedTeacherForAvailability, setSelectedTeacherForAvailability] = useState(null);
 
-  // جلب بيانات الكادر من Supabase عند الحاجة
   const fetchStaff = useCallback(async () => {
-    if (onRefresh) {
-      onRefresh();
-      return;
-    }
+    if (onRefresh) return onRefresh();
     if (!academyId) return;
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .eq('academy_id', academyId);
-
+      const { data, error } = await supabase.from('teachers').select('*').eq('academy_id', academyId);
       if (error) throw error;
-      if (setTeachers) {
-        setTeachers(data || []);
-      }
+      if (setTeachers) setTeachers(data || []);
     } catch (err) {
       console.error('🚨 Error fetching teachers:', err);
     } finally {
@@ -57,101 +41,92 @@ export default function Teachers({
   }, [academyId, onRefresh, setTeachers]);
 
   useEffect(() => {
-    if (academyId && teachers.length === 0 && !setTeachers) {
-      fetchStaff();
-    }
+    if (academyId && teachers.length === 0 && !setTeachers) fetchStaff();
   }, [academyId, teachers.length, setTeachers, fetchStaff]);
 
-  // تحديث حالة المعلم (نشط / غير نشط)
   const toggleStatus = async (teacherId, currentStatus) => {
     try {
-      const { error } = await supabase
-        .from('teachers')
-        .update({ is_active: !currentStatus })
-        .eq('id', teacherId);
-
+      const { error } = await supabase.from('teachers').update({ is_active: !currentStatus }).eq('id', teacherId);
       if (error) throw error;
       if (setTeachers) {
         setTeachers(prev => prev.map(item => item.id === teacherId ? { ...item, is_active: !currentStatus } : item));
       }
     } catch (err) {
-      console.error('🚨 Error updating teacher status:', err);
+      console.error('🚨 Error updating status:', err);
     }
   };
 
-  // فلترة الكادر بناءً على البحث، المسمى، والإجازة
-  const filteredStaff = (teachers || []).filter(person => {
-    const matchesSearch = (person.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (person.phone || '').includes(searchTerm);
-    
-    // مطابقة المسمى أو الحالة بناءً على الفلتر المختار
-    let matchesTitle = true;
-    if (selectedTitle === 'quran_teacher') {
-      matchesTitle = person.is_teaching === true;
-    } else if (selectedTitle === 'active') {
-      matchesTitle = person.is_active === true;
-    } else if (selectedTitle !== 'all') {
-      matchesTitle = person.title === selectedTitle;
-    }
+  const filteredTeachers = (teachers || []).filter(person => {
+    const matchesSearch = (person.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (person.phone || '').includes(searchQuery);
+    let matchesStatus = true;
+    if (statusFilter === 'active') matchesStatus = person.is_active === true;
+    if (statusFilter === 'teaching') matchesStatus = person.is_teaching === true;
 
-    const matchesIjaza = selectedIjaza === 'all' || (person.ijazas && person.ijazas.includes(selectedIjaza));
+    const matchesTitle = titleFilter === 'all' || person.title === titleFilter;
+    const matchesIjaza = ijazaFilter === 'all' || (person.ijazas && person.ijazas.includes(ijazaFilter));
 
-    return matchesSearch && matchesTitle && matchesIjaza;
+    return matchesSearch && matchesStatus && matchesTitle && matchesIjaza;
   });
 
-  // 1. زر الإضافة الرئيسي
-  const actionButton = (
-    <button 
-      onClick={() => setIsModalOpen(true)} 
-      className={`${UI.btnPrimary} w-full sm:w-auto cursor-pointer`}
-    >
-      <Plus className="w-4 h-4" /> 
-      <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
-    </button>
-  );
-
-  // 2. بطاقات الإحصائيات المستقلة
-  const statsGrid = (
-    <TeacherStats 
-      teachers={teachers} 
-      selectedTitle={selectedTitle} 
-      setSelectedTitle={setSelectedTitle} 
-      t={t} 
-    />
-  );
-
-  // 3. شريط الفلترة والبحث
-  const filterBar = (
-    <TeacherFilter 
-      searchTerm={searchTerm}
-      setSearchTerm={setSearchTerm}
-      selectedTitle={selectedTitle}
-      setSelectedTitle={setSelectedTitle}
-      selectedIjaza={selectedIjaza}
-      setSelectedIjaza={setSelectedIjaza}
-      onRefresh={fetchStaff}
-      t={t}
-    />
-  );
-
   return (
-    <PageLayout
-      title={t('teachers.title', 'الكادر التعليمي والإداري')}
-      description={t('teachers.description', 'إدارة المعلمين والمشرفين ومدراء الأكاديمية باحترافية عالية')}
-      icon={Users}
-      actionButton={actionButton}
-      statsGrid={statsGrid}
-      filterBar={filterBar}
-      loading={loading}
-      isRtl={isRtl}
-      t={t}
-    >
-      {/* 4. قسم إدارة أوقات التفرغ */}
+    <div className="space-y-4 text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* 1. الترويسة الرئيسية */}
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3 text-start w-full sm:w-auto">
+          <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-semantic-textPrimary leading-snug">
+              {t('teachers.title', 'الكادر التعليمي والإداري')}
+            </h1>
+            <p className="text-xs text-semantic-textSecondary">
+              {t('teachers.subtitle', 'إدارة وتنظيم بيانات المعلمين والمشرفين')}
+            </p>
+          </div>
+        </div>
+
+        <button 
+          type="button"
+          onClick={() => setIsAddModalOpen(true)} 
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-semantic-actionPrimary text-white font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
+        </button>
+      </div>
+
+      {/* 2. الإحصائيات في مكون مستقل */}
+      <TeacherStats 
+        teachers={teachers} 
+        statusFilter={statusFilter} 
+        setStatusFilter={setStatusFilter} 
+        t={t} 
+      />
+
+      {/* 3. الفلترة في مكون مستقل */}
+      <TeacherFilter 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        titleFilter={titleFilter}
+        setTitleFilter={setTitleFilter}
+        ijazaFilter={ijazaFilter}
+        setIjazaFilter={setIjazaFilter}
+        totalCount={teachers.length}
+        filteredCount={filteredTeachers.length}
+        onRefresh={fetchStaff}
+        t={t}
+      />
+
+      {/* 4. إدارة المواعيد والتفرغ */}
       {selectedTeacherForAvailability && (
-        <div className={`${UI.card} relative border-semantic-actionPrimary/40 animate-fade-in`}>
+        <div className="bg-semantic-surfaceCard border border-semantic-actionPrimary/40 rounded-2xl p-4 relative animate-fade-in">
           <button 
             onClick={() => setSelectedTeacherForAvailability(null)}
-            className="absolute top-4 end-4 text-xs font-bold text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderCard transition-colors"
+            className="absolute top-4 end-4 text-xs font-bold text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderCard"
           >
             ✕ {t('common.close', 'إغلاق')}
           </button>
@@ -159,21 +134,30 @@ export default function Teachers({
         </div>
       )}
 
-      {/* 5. شبكة عرض بطاقات الكادر */}
+      {/* 5. شبكة البطاقات في مكون مستقل */}
       <TeacherGrid 
-        teachers={filteredStaff}
+        teachers={filteredTeachers}
+        loading={loading}
         onToggleStatus={toggleStatus}
         onManageAvailability={(id) => setSelectedTeacherForAvailability(id)}
+        onResetFilters={() => {
+          setSearchQuery('');
+          setStatusFilter('all');
+          setTitleFilter('all');
+          setIjazaFilter('all');
+        }}
         t={t}
       />
 
-      {/* 6. نافذة إضافة كادر جديد */}
-      <AddStaffModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchStaff}
-        academyId={academyId}
-      />
-    </PageLayout>
+      {/* 6. نافذة الإضافة */}
+      {isAddModalOpen && (
+        <AddStaffModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          academyId={academyId}
+          onSuccess={fetchStaff}
+        />
+      )}
+    </div>
   );
 }
