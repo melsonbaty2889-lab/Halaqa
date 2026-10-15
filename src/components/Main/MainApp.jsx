@@ -533,7 +533,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             academyId={academyId} 
             halaqas={enrichedHalaqas} 
             onDeleteStudent={handleDeleteStudent}
-            onRefresh={fetchStudentsData}
+            onRefresh={() => fetchSubResources(academyId, true)}
           />
         ) : (
           <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />
