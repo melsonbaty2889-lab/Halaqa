@@ -26,7 +26,7 @@ export default function PageLayout({
   hasActiveFilters = false,
   onResetFilters,
   onRefresh,
-  countUnitText = 'عنصر',
+  countUnitText = 'طالب', // يمكن تمرير: 'طالب' أو 'فرد' أو 'حلقة' أو 'ولي أمر'
 
   // 5. المحتوى والتحكم
   children,
@@ -88,7 +88,7 @@ export default function PageLayout({
           {filtersChildren}
         </div>
 
-        {/* سطر التذييل القياسي للنتائج وإلغاء الفلاتر */}
+        {/* سطر التذييل الموحد المتناسق */}
         <div className="flex items-center justify-between text-xs text-semantic-textSecondary pt-2 px-1 border-t border-semantic-borderCard/40 relative z-0">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-semantic-actionPrimary" />
