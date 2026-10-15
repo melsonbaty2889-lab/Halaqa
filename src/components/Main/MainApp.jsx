@@ -451,7 +451,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
-      case 'halaqas':
+        
+            case 'halaqas':
       case 'active-halaqas':
       case 'classes':
         return isTeacher ? (
@@ -462,7 +463,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             academyId={academyId}
             filters={filters}
             setFilters={setFilters}
-            isLoading={loadingData} 
+            isLoading={false}
+            onRefresh={() => fetchSubResources(academyId, true)}
             error={null} 
             isRtl={isRtl} 
             isMobile={isMobile} 
@@ -496,7 +498,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             onToggleArchiveHalaqa={async (halaqaId, currentArchived) => {
               const res = await toggleArchiveHalaqa(halaqaId, currentArchived);
               if (res && res.success !== false) {
-                // تحديث الحالة المحلية فوراً وانتقال الحلقة للتبويب الآخر لحظياً
                 setHalaqas(prev =>
                   prev.map(h =>
                     h.id === halaqaId ? { ...h, is_archived: !currentArchived } : h
@@ -511,6 +512,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             }}
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
+        
       case 'attendance':
         return isTeacher ? <Attendance students={students} academyId={academyId} timezone={timezone} halaqas={enrichedHalaqas} selectedHalaqaId={selectedHalaqaId} /> : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
       case 'exams':
@@ -528,7 +530,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
         
-            case 'students':
+                  case 'students':
       case 'student-profile':
       case 'students-management':
         return isTeacher ? (
