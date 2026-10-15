@@ -88,12 +88,12 @@ export default function PageLayout({
           {filtersChildren}
         </div>
 
-        {/* سطر التذييل الموحد المتناسق */}
+        {/* سطر التذييل الموحد والأسهل بدون الاعتماد على مفاتيح ترجمة قديمة */}
         <div className="flex items-center justify-between text-xs text-semantic-textSecondary pt-2 px-1 border-t border-semantic-borderCard/40 relative z-0">
           <span className="flex items-center gap-1.5">
             <ListFilter className="w-3.5 h-3.5 text-semantic-actionPrimary" />
             <span>
-              {t('common.results_count', `عرض ${filteredCount} من إجمالي ${totalCount} ${countUnitText}`)}
+              {`عرض ${filteredCount} من إجمالي ${totalCount} ${countUnitText}`}
             </span>
           </span>
 
