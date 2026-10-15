@@ -6,7 +6,7 @@ import { Users, Plus, UserCheck, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import PageLayout from '@/components/UI/PageLayout'; 
- 
+
 import AddStaffModal from './AddStaffModal';
 import TeacherCard from './TeacherCard';
 import TeacherFilter from './TeacherFilter';
@@ -99,44 +99,62 @@ export default function Teachers({
     </button>
   );
 
-  // 2. بطاقات الإحصائيات الثلاثية الممررة للقالب
+  // 2. بطاقات الإحصائيات المدمجة والتفاعلية (تغير الفلتر عند الضغط عليها)
   const statsGrid = (
     <>
-      <div className={`${UI.card} flex items-center justify-between`}>
+      <button
+        type="button"
+        onClick={() => setSelectedTitle('all')}
+        className={`${UI.card} !p-3 flex items-center justify-between text-start cursor-pointer transition-all hover:scale-[1.02] ${
+          selectedTitle === 'all' ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary/40' : ''
+        }`}
+      >
         <div>
-          <p className="text-xs text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
-          <p className="text-2xl font-extrabold text-semantic-textPrimary mt-1">
+          <p className="text-[11px] text-semantic-textSecondary">{t('teachers.totalStaff', 'إجمالي الكادر')}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-semantic-textPrimary mt-0.5">
             <bdi>{teachers.length}</bdi>
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
-          <Users className="w-6 h-6" />
+        <div className="p-2 sm:p-2.5 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary shrink-0">
+          <Users className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-      </div>
+      </button>
 
-      <div className={`${UI.card} flex items-center justify-between`}>
+      <button
+        type="button"
+        onClick={() => setSelectedTitle('quran_teacher')}
+        className={`${UI.card} !p-3 flex items-center justify-between text-start cursor-pointer transition-all hover:scale-[1.02] ${
+          selectedTitle === 'quran_teacher' ? 'border-semantic-success ring-1 ring-semantic-success/40' : ''
+        }`}
+      >
         <div>
-          <p className="text-xs text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون للحلقات')}</p>
-          <p className="text-2xl font-extrabold text-semantic-success mt-1">
+          <p className="text-[11px] text-semantic-textSecondary">{t('teachers.activeTeaching', 'المعلمون المباشرون')}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-semantic-success mt-0.5">
             <bdi>{teachers.filter(s => s.is_teaching).length}</bdi>
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-semantic-successBg text-semantic-success border border-semantic-successBorder/40">
-          <UserCheck className="w-6 h-6" />
+        <div className="p-2 sm:p-2.5 rounded-xl bg-semantic-successBg text-semantic-success shrink-0">
+          <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-      </div>
+      </button>
 
-      <div className={`${UI.card} flex items-center justify-between`}>
+      <button
+        type="button"
+        onClick={() => setSelectedTitle('admin')}
+        className={`${UI.card} !p-3 flex items-center justify-between text-start cursor-pointer transition-all hover:scale-[1.02] col-span-2 sm:col-span-1 ${
+          selectedTitle === 'admin' ? 'border-sky-400 ring-1 ring-sky-400/40' : ''
+        }`}
+      >
         <div>
-          <p className="text-xs text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
-          <p className="text-2xl font-extrabold text-sky-400 mt-1">
+          <p className="text-[11px] text-semantic-textSecondary">{t('teachers.activeAccounts', 'الحسابات النشطة')}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-sky-400 mt-0.5">
             <bdi>{teachers.filter(s => s.is_active).length}</bdi>
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
-          <ShieldCheck className="w-6 h-6" />
+        <div className="p-2 sm:p-2.5 rounded-xl bg-sky-500/10 text-sky-400 shrink-0">
+          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-      </div>
+      </button>
     </>
   );
 
