@@ -24,10 +24,15 @@ export default function HalaqasManager({ academyId, onRefresh }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
-  // جلب البيانات من Supabase
-  const fetchData = useCallback(async () => {
+  // جلب البيانات من Supabase مع دعم التحديث الصامت في الخلفية
+  const fetchData = useCallback(async (isBackground = false) => {
     if (!academyId) return;
-    setLoading(true);
+    
+    // 💡 لا تفعل حالة التحميل الكامل إذا كان التحديث في الخلفية
+    if (!isBackground) {
+      setLoading(true);
+    }
+
     try {
       const [halaqasRes, teachersRes] = await Promise.all([
         supabase.from('halaqas').select('*, teacher:teachers(id, name)').eq('academy_id', academyId),
@@ -48,7 +53,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
   }, [academyId, onRefresh]);
 
   useEffect(() => {
-    fetchData();
+    fetchData(false); // أول تحميل فقط يظهر الهيكل العظمي/التحميل
   }, [fetchData]);
 
   // حساب الإحصائيات
@@ -153,7 +158,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
         filteredCount={filteredHalaqas.length}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetFilters}
-        onRefresh={fetchData}
+        onRefresh={() => fetchData(true)} // 👈 تحديث صامت في الخلفية
         countUnitText="حلقة"
         isLoading={loading}
         isRtl={isRtl}
@@ -177,7 +182,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
                   setEditingHalaqa(item);
                   setIsAddModalOpen(true);
                 }}
-                onRefresh={fetchData}
+                onRefresh={() => fetchData(true)} // 👈 تحديث صامت في الخلفية
               />
             ))}
           </div>
@@ -195,7 +200,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
           halaqaToEdit={editingHalaqa}
           academyId={academyId}
           teachers={teachers}
-          onSuccess={fetchData}
+          onSuccess={() => fetchData(true)}
         />
       )}
     </>
