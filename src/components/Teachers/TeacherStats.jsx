@@ -4,13 +4,19 @@ import React from 'react';
 import { Users, UserCheck, ShieldCheck } from 'lucide-react';
 import { UI } from '@/theme/styles';
 
-export default function TeacherStats({ teachers, selectedTitle, setSelectedTitle, t }) {
+export default function TeacherStats({ teachers = [], selectedTitle, setSelectedTitle, t }) {
+  // 1. إجمالي الكادر المسجل في الأكاديمية
   const totalCount = teachers.length;
-  const teachingCount = teachers.filter(s => s.is_teaching).length;
-  const activeCount = teachers.filter(s => s.is_active).length;
+
+  // 2. المعلمون المباشرون المكلفون بالتعليم (حسب حقل is_teaching)
+  const teachingCount = teachers.filter(s => s.is_teaching === true).length;
+
+  // 3. الحسابات النشطة والمفعلة للنظام (حسب حقل is_active)
+  const activeCount = teachers.filter(s => s.is_active === true).length;
 
   return (
-    <>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* إجمالي الكادر */}
       <button
         type="button"
         onClick={() => setSelectedTitle('all')}
@@ -29,6 +35,7 @@ export default function TeacherStats({ teachers, selectedTitle, setSelectedTitle
         </div>
       </button>
 
+      {/* المعلمون المباشرون بالحلقات */}
       <button
         type="button"
         onClick={() => setSelectedTitle('quran_teacher')}
@@ -47,11 +54,12 @@ export default function TeacherStats({ teachers, selectedTitle, setSelectedTitle
         </div>
       </button>
 
+      {/* الحسابات النشطة والمفعلة */}
       <button
         type="button"
-        onClick={() => setSelectedTitle('admin')}
+        onClick={() => setSelectedTitle('active')}
         className={`${UI.card} !p-3 flex items-center justify-between text-start cursor-pointer transition-all hover:scale-[1.02] col-span-2 sm:col-span-1 ${
-          selectedTitle === 'admin' ? 'border-sky-400 ring-1 ring-sky-400/40' : ''
+          selectedTitle === 'active' ? 'border-sky-400 ring-1 ring-sky-400/40' : ''
         }`}
       >
         <div>
@@ -64,6 +72,6 @@ export default function TeacherStats({ teachers, selectedTitle, setSelectedTitle
           <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </button>
-    </>
+    </div>
   );
 }
