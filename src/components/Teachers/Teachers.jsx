@@ -2,14 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import PageLayout from '@/components/UI/PageLayout';
+import Select from '@/components/UI/Select';
 
 import TeacherStats from './TeacherStats';
 import TeacherFilter from './TeacherFilter';
 import TeacherGrid from './TeacherGrid';
 import AddStaffModal from './AddStaffModal';
 import TeacherAvailabilityManager from './TeacherAvailabilityManager';
+import { getStaffTitles } from '@/constants/staffTitles';
+import { getIjazatOptions } from '@/constants/ijazat';
 
 export default function Teachers({ academyId, teachers = [], setTeachers, onRefresh }) {
   const { t, i18n } = useTranslation();
@@ -69,87 +73,94 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
     return matchesSearch && matchesStatus && matchesTitle && matchesIjaza;
   });
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setTitleFilter('all');
+    setIjazaFilter('all');
+  };
+
+  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all' || titleFilter !== 'all' || ijazaFilter !== 'all';
+
+  const titlesList = getStaffTitles(t);
+  const titleOptions = [
+    { label: t('teachers.allTitles', 'جميع المسميات'), value: 'all' },
+    ...titlesList.map(item => ({ value: item.value, label: item.label }))
+  ];
+
+  const ijazatOptions = getIjazatOptions(t);
+  const ijazaOptions = [
+    { label: t('teachers.allIjazat', 'جميع الإجازات'), value: 'all' },
+    ...ijazatOptions.map(item => ({ value: item.id, label: item.label }))
+  ];
+
+  const statusOptions = [
+    { label: t('teachers.filter_status', 'جميع الحالات'), value: 'all' },
+    { label: t('status_active', 'حسابات نشطة'), value: 'active' },
+    { label: t('teachers.activeTeaching', 'معلمون مباشرون'), value: 'teaching' },
+  ];
+
   return (
-    <div className="space-y-4 text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* 1. الترويسة الرئيسية */}
-      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-3 text-start w-full sm:w-auto">
-          <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-semantic-textPrimary leading-snug">
-              {t('teachers.title', 'الكادر التعليمي والإداري')}
-            </h1>
-            <p className="text-xs text-semantic-textSecondary">
-              {t('teachers.subtitle', 'إدارة وتنظيم بيانات المعلمين والمشرفين')}
-            </p>
-          </div>
-        </div>
-
-        <button 
-          type="button"
-          onClick={() => setIsAddModalOpen(true)} 
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-semantic-actionPrimary text-white font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('teachers.addStaff', 'إضافة كادر جديد')}</span>
-        </button>
-      </div>
-
-      {/* 2. الإحصائيات في مكون مستقل */}
-      <TeacherStats 
-        teachers={teachers} 
-        statusFilter={statusFilter} 
-        setStatusFilter={setStatusFilter} 
-        t={t} 
-      />
-
-      {/* 3. الفلترة في مكون مستقل */}
-      <TeacherFilter 
+    <>
+      <PageLayout
+        title={t('teachers.title', 'الكادر التعليمي والإداري')}
+        subtitle={t('teachers.subtitle', 'إدارة وتنظيم بيانات المعلمين والمشرفين')}
+        icon={Users}
+        actionButtonText={t('teachers.addStaff', 'إضافة كادر جديد')}
+        onActionButtonClick={() => setIsAddModalOpen(true)}
+        statsGrid={
+          <TeacherStats 
+            teachers={teachers} 
+            statusFilter={statusFilter} 
+            setStatusFilter={setStatusFilter} 
+            t={t} 
+          />
+        }
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        titleFilter={titleFilter}
-        setTitleFilter={setTitleFilter}
-        ijazaFilter={ijazaFilter}
-        setIjazaFilter={setIjazaFilter}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={t('teachers.searchPlaceholder', 'البحث بالاسم، الهاتف...')}
+        filtersChildren={
+          <>
+            <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder={t('teachers.filter_status', 'حالة الحساب')} />
+            <Select value={titleFilter} onChange={setTitleFilter} options={titleOptions} placeholder={t('teachers.allTitles', 'جميع المسميات')} />
+            <Select value={ijazaFilter} onChange={setIjazaFilter} options={ijazaOptions} placeholder={t('teachers.allIjazat', 'جميع الإجازات')} />
+          </>
+        }
         totalCount={teachers.length}
         filteredCount={filteredTeachers.length}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={resetFilters}
         onRefresh={fetchStaff}
+        countUnitText="فرد"
+        isLoading={loading}
+        isRtl={isRtl}
         t={t}
-      />
+      >
+        {/* قسم إدارة أوقات التفرغ */}
+        {selectedTeacherForAvailability && (
+          <div className="bg-semantic-surfaceCard border border-semantic-actionPrimary/40 rounded-2xl p-4 relative animate-fade-in mb-4">
+            <button 
+              onClick={() => setSelectedTeacherForAvailability(null)}
+              className="absolute top-4 end-4 text-xs font-bold text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderCard"
+            >
+              ✕ {t('common.close', 'إغلاق')}
+            </button>
+            <TeacherAvailabilityManager teacherId={selectedTeacherForAvailability} />
+          </div>
+        )}
 
-      {/* 4. إدارة المواعيد والتفرغ */}
-      {selectedTeacherForAvailability && (
-        <div className="bg-semantic-surfaceCard border border-semantic-actionPrimary/40 rounded-2xl p-4 relative animate-fade-in">
-          <button 
-            onClick={() => setSelectedTeacherForAvailability(null)}
-            className="absolute top-4 end-4 text-xs font-bold text-semantic-textSecondary hover:text-semantic-textPrimary cursor-pointer bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderCard"
-          >
-            ✕ {t('common.close', 'إغلاق')}
-          </button>
-          <TeacherAvailabilityManager teacherId={selectedTeacherForAvailability} />
-        </div>
-      )}
+        {/* شبكة عرض البطاقات */}
+        <TeacherGrid 
+          teachers={filteredTeachers}
+          loading={loading}
+          onToggleStatus={toggleStatus}
+          onManageAvailability={(id) => setSelectedTeacherForAvailability(id)}
+          onResetFilters={resetFilters}
+          t={t}
+        />
+      </PageLayout>
 
-      {/* 5. شبكة البطاقات في مكون مستقل */}
-      <TeacherGrid 
-        teachers={filteredTeachers}
-        loading={loading}
-        onToggleStatus={toggleStatus}
-        onManageAvailability={(id) => setSelectedTeacherForAvailability(id)}
-        onResetFilters={() => {
-          setSearchQuery('');
-          setStatusFilter('all');
-          setTitleFilter('all');
-          setIjazaFilter('all');
-        }}
-        t={t}
-      />
-
-      {/* 6. نافذة الإضافة */}
+      {/* نافذة إضافة كادر جديد */}
       {isAddModalOpen && (
         <AddStaffModal
           isOpen={isAddModalOpen}
@@ -158,6 +169,6 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
           onSuccess={fetchStaff}
         />
       )}
-    </div>
+    </>
   );
 }
