@@ -1,13 +1,12 @@
 // src/components/Header/Header.jsx
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext';
-import { getMenuSections } from '@/constants/sidebarMenu';
 import { useNotifications } from '@/hooks/useNotifications';
 
 import NotificationMenu from './NotificationMenu';
@@ -15,8 +14,6 @@ import ProfileMenu from './ProfileMenu';
 import EditProfileModal from './EditProfileModal';
 
 export default function Header({ 
-  activeTab, 
-  setActiveTab,
   sidebarOpen, 
   setSidebarOpen, 
   isRtl,
@@ -29,9 +26,19 @@ export default function Header({
   const isAr = currentLanguage.startsWith('ar');
   const activeRtl = isRtl !== undefined ? isRtl : isAr;
 
+  // جلب بيانات الأكاديمية المسجلة حالياً من Context
   const { academy, currentAcademy } = useAcademy();
   const activeAcademy = academy || currentAcademy;
   const academyId = activeAcademy?.id || null;
+
+  // استخراج اسم الأكاديمية من قاعدة البيانات
+  const academyName = useMemo(() => {
+    if (!activeAcademy) return t('app.name', 'Smart Halaqa Pro');
+    if (typeof activeAcademy.name === 'object') {
+      return activeAcademy.name[currentLanguage] || activeAcademy.name.ar || activeAcademy.name.en || '';
+    }
+    return activeAcademy.name || t('app.name', 'Smart Halaqa Pro');
+  }, [activeAcademy, currentLanguage, t]);
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -282,49 +289,6 @@ export default function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  let pathname = '';
-  try {
-    const location = useLocation();
-    pathname = location.pathname;
-  } catch (e) {
-    pathname = '';
-  }
-
-  // 🟢 استدعاء قائمة الأقسام مع تمرير دالة الترجمة t وليس قيمة activeRtl
-  const menuSections = useMemo(() => getMenuSections(t, userRole), [t, userRole]);
-
-  // 🟢 استخراج معرف الصفحة النشط دون الخلط مع slug الأكاديمية
-  const activeKey = useMemo(() => {
-    if (activeTab && typeof activeTab === 'string') {
-      return activeTab.split('/')[0].trim();
-    }
-    
-    if (!pathname) return 'dashboard';
-    
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 0) return 'dashboard';
-
-    for (let i = segments.length - 1; i >= 0; i--) {
-      const seg = segments[i].trim();
-      const matchesItem = menuSections.some(sec => 
-        sec.items?.some(item => item.id === seg)
-      );
-      if (matchesItem) return seg;
-    }
-
-    return segments[segments.length - 1] || 'dashboard';
-  }, [activeTab, pathname, menuSections]);
-
-  const pageTitle = useMemo(() => {
-    for (const section of menuSections) {
-      const foundItem = section.items.find(item => item.id === activeKey);
-      if (foundItem) {
-        return foundItem.label;
-      }
-    }
-    return t(`nav.${activeKey}`, activeKey);
-  }, [menuSections, activeKey, t]);
-
   const formattedNotifications = useMemo(() => {
     return rawNotifications.map((item) => ({
       ...item,
@@ -372,8 +336,8 @@ export default function Header({
       className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-2.5 shadow-xl w-full transition-all" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      {/* القسم الأيمن: زر القائمة وعنوان الصفحة */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      {/* القسم الأيمن: زر القائمة واسم الأكاديمية المسجل من داتابيز */}
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <button
           type="button"
           onClick={handleToggleSidebar}
@@ -384,8 +348,8 @@ export default function Header({
         </button>
 
         <div className="flex flex-col min-w-0 flex-1">
-          <h1 className="m-0 text-sm sm:text-base font-extrabold text-[var(--text-main)] truncate leading-tight select-none">
-            {pageTitle}
+          <h1 className="m-0 text-xs sm:text-sm font-extrabold text-[var(--text-main)] truncate leading-tight select-none">
+            {academyName}
           </h1>
           <span className="text-[10px] text-[var(--text-sub)] font-medium flex items-center gap-1.5 hidden sm:flex">
             <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[var(--emerald-text)] shadow-[0_0_6px_var(--emerald-text)]' : 'bg-[var(--error)]'}`} />
@@ -424,7 +388,7 @@ export default function Header({
               setShowProfileMenu(!showProfileMenu);
               setShowNotifMenu(false);
             }}
-            userName={currentUserName || activeAcademy?.owner_name || activeAcademy?.name}
+            userName={currentUserName || activeAcademy?.owner_name || academyName}
             userEmail={currentUserEmail}
             userRole={userRole}
             onLogout={handleLogout}
@@ -439,7 +403,7 @@ export default function Header({
         isOpen={showEditProfileModal}
         onClose={() => setShowEditProfileModal(false)}
         currentUser={{
-          name: currentUserName || activeAcademy?.owner_name || activeAcademy?.name || '',
+          name: currentUserName || activeAcademy?.owner_name || academyName || '',
           email: currentUserEmail || '',
           phone: currentUserPhone || '',
           gender: currentUserGender || ''
