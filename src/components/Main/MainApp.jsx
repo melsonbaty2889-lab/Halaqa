@@ -452,7 +452,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
         
-            case 'halaqas':
+      case 'halaqas':           
       case 'active-halaqas':
       case 'classes':
         return isTeacher ? (
