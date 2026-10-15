@@ -523,7 +523,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
         
-      case 'students':
+            case 'students':
       case 'student-profile':
       case 'students-management':
         return isTeacher ? (
@@ -533,12 +533,11 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             academyId={academyId} 
             halaqas={enrichedHalaqas} 
             onDeleteStudent={handleDeleteStudent}
-            academySettings={academySettings}
             onRefresh={fetchStudentsData}
           />
         ) : (
           <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />
-        );    
+        );
         
       case 'parents':
       case 'parents-guardians':
