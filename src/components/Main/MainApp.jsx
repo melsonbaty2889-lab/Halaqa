@@ -522,19 +522,25 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             isRtl={isRtl} 
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
+        
       case 'students':
-case 'student-profile':
-case 'students-management':
-  return isTeacher ? (
-    <Students 
-      students={students} 
-      setStudents={setStudents} 
-      academyId={academyId} 
-      halaqas={enrichedHalaqas} 
-      onDeleteStudent={handleDeleteStudent}
-      academySettings={academySettings}
-      onRefresh={fetchStudentsData}
-  ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;      case 'parents':
+      case 'student-profile':
+      case 'students-management':
+        return isTeacher ? (
+          <Students 
+            students={students} 
+            setStudents={setStudents} 
+            academyId={academyId} 
+            halaqas={enrichedHalaqas} 
+            onDeleteStudent={handleDeleteStudent}
+            academySettings={academySettings}
+            onRefresh={fetchStudentsData}
+          />
+        ) : (
+          <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />
+        );    
+        
+      case 'parents':
       case 'parents-guardians':
       case 'parents-management':
         return isParent ? (
