@@ -112,7 +112,10 @@ export default function PageLayout({
             {onRefresh && (
               <button
                 type="button"
-                onClick={onRefresh}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onRefresh();
+                }}
                 className="flex items-center gap-1 text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer p-1 rounded-lg hover:bg-semantic-surfaceInput"
                 title={t('common.refresh', 'تحديث البيانات')}
               >
