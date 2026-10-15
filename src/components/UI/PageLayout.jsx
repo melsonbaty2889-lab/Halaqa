@@ -101,7 +101,11 @@ export default function PageLayout({
             {hasActiveFilters && onResetFilters && (
               <button
                 type="button"
-                onClick={onResetFilters}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onResetFilters();
+                }}
                 className="flex items-center gap-1 text-semantic-actionPrimary hover:underline font-medium transition-colors cursor-pointer"
               >
                 <FilterX className="w-3.5 h-3.5" />
@@ -114,6 +118,7 @@ export default function PageLayout({
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation(); // 👈 منع انتشار الحدث لأي نموذج أب وتفادي إعادة التحميل الكامل
                   onRefresh();
                 }}
                 className="flex items-center gap-1 text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer p-1 rounded-lg hover:bg-semantic-surfaceInput"
