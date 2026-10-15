@@ -1055,6 +1055,9 @@
     "day": "اليوم",
     "defaultTitle": "معلّم / مقرئ",
     "description": "إدارة المعلمين والمشرفين ومدراء الأكاديمية",
+    "fields": {
+      "title": "المسمى"
+    },
     "fromTime": "من الساعة",
     "ijazatTitle": "الإجازات القرآنية",
     "manageAvailability": "إدارة المواعيد",
