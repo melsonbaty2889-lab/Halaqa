@@ -1,70 +1,135 @@
 /* src/components/UI/PageLayout.jsx */
 
 import React from 'react';
-import { UI } from '@/theme/styles';
+import { ListFilter, FilterX, RefreshCw } from 'lucide-react';
 
 export default function PageLayout({
+  // 1. ترويسة الصفحة
   title,
-  description,
+  subtitle,
   icon: Icon,
-  actionButton,
+  actionButtonText,
+  onActionButtonClick,
+
+  // 2. كروت الإحصائيات التفاعلية
   statsGrid,
-  filterBar,
+
+  // 3. الفلاتر والبحث
+  searchQuery,
+  onSearchChange,
+  searchPlaceholder,
+  filtersChildren,
+
+  // 4. تذييل النتائج وحالة الفلاتر
+  totalCount = 0,
+  filteredCount = 0,
+  hasActiveFilters = false,
+  onResetFilters,
+  onRefresh,
+  countUnitText = 'عنصر',
+
+  // 5. المحتوى والتحكم
   children,
-  loading,
-  isRtl,
-  t
+  isLoading = false,
+  isRtl = true,
+  t = (s) => s
 }) {
   return (
-    <div className={`px-3 sm:px-5 lg:px-6 space-y-4 sm:space-y-5 ${isRtl ? 'text-right' : 'text-left'} font-cairo pb-16`} dir={isRtl ? 'rtl' : 'ltr'}>
-      
-      {/* 1. الترويسة الرئيسية المدمجة */}
-      <div className="card-surface bg-gradient-to-r from-semantic-surfaceCard via-semantic-surfaceSecondary to-semantic-surfaceCard p-3.5 sm:p-5 rounded-2xl">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div className="space-y-0.5 w-full sm:w-auto">
-            <div className="flex items-center gap-2">
-              {Icon && (
-                <span className="p-1.5 sm:p-2 rounded-xl bg-semantic-actionPrimary/15 text-semantic-actionPrimary border border-semantic-actionPrimary/30 shrink-0">
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                </span>
-              )}
-              <h2 className={`${UI.title} text-base sm:text-xl truncate`}>{title}</h2>
-            </div>
-            {description && <p className={`${UI.subtitle} text-xs sm:text-sm`}>{description}</p>}
-          </div>
-
-          {actionButton && (
-            <div className="w-full sm:w-auto shrink-0">
-              {actionButton}
+    <div className="space-y-4 text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* 1. رأس الصفحة القياسي */}
+      <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3 text-start w-full sm:w-auto">
+          {Icon && (
+            <div className="flex shrink-0 items-center justify-center w-11 h-11 rounded-xl bg-semantic-actionPrimary/10 text-semantic-actionPrimary border border-semantic-actionPrimary/20">
+              <Icon className="w-5 h-5" />
             </div>
           )}
+          <div>
+            <h1 className="text-lg font-bold text-semantic-textPrimary leading-snug">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-xs text-semantic-textSecondary">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {actionButtonText && (
+          <button 
+            type="button"
+            onClick={onActionButtonClick} 
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-semantic-actionPrimary text-white font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+          >
+            <span>{actionButtonText}</span>
+          </button>
+        )}
+      </div>
+
+      {/* 2. شبكة كروت الإحصائيات */}
+      {statsGrid}
+
+      {/* 3. شريط البحث والفلترة الموحد */}
+      <div className="bg-semantic-surfaceCard/60 p-3 sm:p-4 rounded-2xl border border-semantic-borderCard space-y-3 shadow-md relative z-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {onSearchChange && (
+            <div className="relative w-full col-span-2 md:col-span-1 z-10">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder={searchPlaceholder || t('common.search', 'البحث...')}
+                className="w-full bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl px-3 py-2 text-xs sm:text-sm text-semantic-textPrimary placeholder-semantic-textSecondary focus:outline-none focus:border-semantic-actionPrimary transition-colors"
+              />
+            </div>
+          )}
+
+          {filtersChildren}
+        </div>
+
+        {/* سطر التذييل القياسي للنتائج وإلغاء الفلاتر */}
+        <div className="flex items-center justify-between text-xs text-semantic-textSecondary pt-2 px-1 border-t border-semantic-borderCard/40 relative z-0">
+          <span className="flex items-center gap-1.5">
+            <ListFilter className="w-3.5 h-3.5 text-semantic-actionPrimary" />
+            <span>
+              {t('common.results_count', `عرض ${filteredCount} من إجمالي ${totalCount} ${countUnitText}`)}
+            </span>
+          </span>
+
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && onResetFilters && (
+              <button
+                type="button"
+                onClick={onResetFilters}
+                className="flex items-center gap-1 text-semantic-actionPrimary hover:underline font-medium transition-colors cursor-pointer"
+              >
+                <FilterX className="w-3.5 h-3.5" />
+                <span>{t('common.reset_filters', 'إلغاء الفلاتر')}</span>
+              </button>
+            )}
+
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="flex items-center gap-1 text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer"
+                title={t('common.refresh', 'تحديث البيانات')}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 2. شبكة الإحصائيات المدمجة (Compact Grid 2x2 في الموبايل) */}
-      {statsGrid && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          {statsGrid}
-        </div>
-      )}
-
-      {/* 3. شريط الفلترة والبحث */}
-      {filterBar && (
-        <div className="w-full">
-          {filterBar}
-        </div>
-      )}
-
-      {/* 4. محتوى الصفحة الرئيسي */}
-      {loading ? (
-        <div className="text-center py-16 text-semantic-textSecondary text-xs flex flex-col items-center justify-center gap-2.5">
-          <div className="w-7 h-7 rounded-full border-2 border-semantic-actionPrimary border-t-transparent animate-spin"></div>
-          <span>{t ? t('common.loading', 'جاري تحميل البيانات...') : 'جاري تحميل البيانات...'}</span>
+      {/* 4. محتوى الصفحة أو حالة التحميل */}
+      {isLoading ? (
+        <div className="text-center py-12 text-sm text-semantic-textSecondary">
+          {t('loading', 'جاري تحميل البيانات...')}
         </div>
       ) : (
-        <div className="w-full">
-          {children}
-        </div>
+        children
       )}
     </div>
   );
