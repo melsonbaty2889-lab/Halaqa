@@ -26,7 +26,7 @@ export default function PageLayout({
   hasActiveFilters = false,
   onResetFilters,
   onRefresh,
-  countUnitText = 'طالب', // يمكن تمرير: 'طالب' أو 'فرد' أو 'حلقة' أو 'ولي أمر'
+  countUnitText = 'عنصر', // 'طالب' | 'فرد' | 'حلقة' | 'ولي أمر'
 
   // 5. المحتوى والتحكم
   children,
@@ -88,9 +88,9 @@ export default function PageLayout({
           {filtersChildren}
         </div>
 
-        {/* سطر التذييل الموحد والأسهل بدون الاعتماد على مفاتيح ترجمة قديمة */}
+        {/* سطر التذييل الموحد القياسي بنسبة 100% لجميع الشاشات */}
         <div className="flex items-center justify-between text-xs text-semantic-textSecondary pt-2 px-1 border-t border-semantic-borderCard/40 relative z-0">
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 font-medium">
             <ListFilter className="w-3.5 h-3.5 text-semantic-actionPrimary" />
             <span>
               {`عرض ${filteredCount} من إجمالي ${totalCount} ${countUnitText}`}
@@ -113,7 +113,7 @@ export default function PageLayout({
               <button
                 type="button"
                 onClick={onRefresh}
-                className="flex items-center gap-1 text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-semantic-textSecondary hover:text-semantic-textPrimary transition-colors cursor-pointer p-1 rounded-lg hover:bg-semantic-surfaceInput"
                 title={t('common.refresh', 'تحديث البيانات')}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
