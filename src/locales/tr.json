@@ -728,6 +728,16 @@
   "halaqaName": "اسم الحلقة",
   "halaqaNameLabel": "اسم الحلقة",
   "halaqaNamePlaceholder": "مثال: حلقة الإمام الشاطبي",
+  "halaqas": {
+    "active": "الحلقات النشطة",
+    "add_new": "إنشاء حلقة جديدة",
+    "all_status": "حالة الحلقة",
+    "no_teacher": "بدون معلم",
+    "search_placeholder": "ابحث باسم الحلقة...",
+    "subtitle": "تنظيم وتوزيع الطلاب والمعلمين على الحلقات",
+    "title": "إدارة الحلقات والفصول",
+    "total": "إجمالي الحلقات"
+  },
   "halaqasManagementTitle": "إدارة الحلقات والفصول",
   "halaqasManager": "منصة إدارة الحلقات القرآنية والأكاديمية",
   "halaqasManagerSub": "تنظيم ومتابعة الحلقات الدراسية والمعلمين بسهولة",

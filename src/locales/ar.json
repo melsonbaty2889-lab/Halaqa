@@ -587,6 +587,16 @@
   },
   "halaqaNameLabel": "اسم الحلقة",
   "halaqaNamePlaceholder": "أدخل اسم الحلقة",
+  "halaqas": {
+    "active": "الحلقات النشطة",
+    "add_new": "إنشاء حلقة جديدة",
+    "all_status": "حالة الحلقة",
+    "no_teacher": "بدون معلم",
+    "search_placeholder": "ابحث باسم الحلقة...",
+    "subtitle": "تنظيم وتوزيع الطلاب والمعلمين على الحلقات",
+    "title": "إدارة الحلقات والفصول",
+    "total": "إجمالي الحلقات"
+  },
   "halaqasManagerSub": "متابعة وتنظيم الحلقات التعليمية",
   "halaqasManagerTitle": "إدارة الحلقات والفصول",
   "halaqaTypeLabel": "نمط انعقاد الحلقة",
