@@ -1263,6 +1263,7 @@
     "fields": {
       "title": "المسمى"
     },
+    "filter_status": "حالة الحساب",
     "financialSystem": "التعاقد والماليات",
     "financialSystemLabel": "نظام التعاقد والمستحقات",
     "fromTime": "من الساعة",

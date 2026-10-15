@@ -1060,6 +1060,7 @@
     "fields": {
       "title": "المسمى"
     },
+    "filter_status": "حالة الحساب",
     "fromTime": "من الساعة",
     "ijazatTitle": "الإجازات القرآنية",
     "manageAvailability": "إدارة المواعيد",
