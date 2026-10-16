@@ -1086,6 +1086,7 @@
     "ijazatTitle": "الإجازات القرآنية",
     "inactive_accounts": "غير النشطين",
     "inactiveAccounts": "غير النشطين",
+    "invalidTimeRange": "وقت النهاية يجب أن يكون بعد وقت البداية.",
     "manageAvailability": "إدارة المواعيد",
     "noSlotsFound": "لا توجد مواعيد توفر مسجلة لهذا المعلم.",
     "noTeachersFound": "لا توجد نتائج تطابق خيارات البحث",

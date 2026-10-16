@@ -1047,6 +1047,7 @@
     "ijazatTitle": "الإجازة",
     "inactive_accounts": "غير النشطين",
     "inactiveAccounts": "غير النشطين",
+    "invalidTimeRange": "وقت النهاية يجب أن يكون بعد وقت البداية.",
     "noSlotsFound": "لا توجد مواعيد توفر مسجلة لهذا المعلم.",
     "registeredSlots": "جدول المواعيد المسجلة",
     "saveSlot": "حفظ موعد التوفر",

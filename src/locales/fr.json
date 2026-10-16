@@ -1296,6 +1296,7 @@
     "ijazatTitle": "الإجازات القرآنية",
     "inactive_accounts": "غير النشطين",
     "inactiveAccounts": "غير النشطين",
+    "invalidTimeRange": "وقت النهاية يجب أن يكون بعد وقت البداية.",
     "jobTitle": "المسمى الوظيفي",
     "jobTitleLabel": "المسمى الوظيفي",
     "manageAvailability": "إدارة المواعيد",
