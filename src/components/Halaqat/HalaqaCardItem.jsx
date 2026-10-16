@@ -1,7 +1,7 @@
 /* src/components/Halaqat/HalaqaCardItem.jsx */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar, Users, Globe, Building2 } from 'lucide-react';
+import { User, Clock, Video, AlertCircle, Edit3, ChevronDown, Check, Calendar, Users, Globe, Building2, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { getLocalizedContent, getTrackOptions, getTargetAudienceOptions } from './HalaqaConstants';
@@ -102,64 +102,70 @@ export default function HalaqaCardItem({
 
   return (
     <div 
-      className={`${UI.card} flex flex-col justify-between gap-3 p-4 hover:border-semantic-borderHover transition-all w-full max-w-full relative shadow-sm hover:shadow-md text-right`} 
+      className={`${UI.card} flex flex-col justify-between gap-3 p-3.5 hover:border-semantic-actionPrimary/40 transition-all w-full max-w-full relative shadow-sm hover:shadow-md text-right`} 
       dir="rtl"
     >
       <div>
-        {/* الترويسة: اسم الحلقة والشارات */}
-        <div className="flex flex-col gap-2 mb-2.5">
-          <div className="flex justify-between items-center gap-2">
-            <h4 className="text-sm font-black text-semantic-textPrimary m-0 line-clamp-1">
-              {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
-            </h4>
-            
-            <div className="flex items-center gap-1.5 shrink-0">
-              {isOnline ? (
-                <span className="p-1 rounded-full bg-semantic-actionPrimary/15 text-semantic-actionPrimary" title={t('onlineHalaqa', 'حلقة عن بُعد')}>
-                  <Globe size={13} />
-                </span>
-              ) : (
-                <span className="p-1 rounded-full bg-semantic-surfaceInput text-semantic-textMuted" title={t('offlineHalaqa', 'حلقة حضورية')}>
-                  <Building2 size={13} />
-                </span>
-              )}
+        {/* الترويسة المدمجة: الأيقونة + اسم الحلقة + شارة النوع والحالة */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/20 flex items-center justify-center shrink-0 text-semantic-actionPrimary">
+              <BookOpen className="w-4 h-4" />
+            </div>
 
-              {isArchived ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold">
-                  {t('archived', 'مؤرشفة')}
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold">
-                  {t('activeSession', 'نشطة')}
-                </span>
+            <div className="min-w-0">
+              <h4 className="text-sm font-bold text-semantic-textPrimary m-0 truncate leading-tight">
+                {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
+              </h4>
+
+              {/* المسار التعليمي والفئة المستهدفة */}
+              {(currentTrack?.label || currentAudience?.label) && (
+                <div className="flex flex-wrap items-center gap-1 pt-1">
+                  {currentTrack?.label && (
+                    <span className="px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard">
+                      {currentTrack.label}
+                    </span>
+                  )}
+                  {currentAudience?.label && (
+                    <span className="px-1.5 py-0.2 rounded-md text-[10px] font-medium bg-semantic-surfaceInput/60 text-semantic-textMuted border border-semantic-borderCard/50">
+                      {currentAudience.label}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
 
-          {/* المسار التعليمي والفئة المستهدفة */}
-          {(currentTrack?.label || currentAudience?.label) && (
-            <div className="flex flex-wrap items-center gap-1.5 justify-start">
-              {currentTrack?.label && (
-                <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-semantic-surfaceInput text-semantic-textPrimary border border-semantic-borderCard/80">
-                  {currentTrack.label}
-                </span>
-              )}
-              {currentAudience?.label && (
-                <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-semantic-surfaceInput/50 text-semantic-textMuted border border-semantic-borderCard/40">
-                  {currentAudience.label}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-1 shrink-0 pt-0.5">
+            {isOnline ? (
+              <span className="p-1 rounded-md bg-semantic-actionPrimary/15 text-semantic-actionPrimary" title={t('onlineHalaqa', 'عن بُعد')}>
+                <Globe size={12} />
+              </span>
+            ) : (
+              <span className="p-1 rounded-md bg-semantic-surfaceInput text-semantic-textMuted" title={t('offlineHalaqa', 'حضورية')}>
+                <Building2 size={12} />
+              </span>
+            )}
+
+            {isArchived ? (
+              <span className="px-2 py-0.5 rounded-md text-[10px] bg-semantic-surfaceInput text-semantic-textMuted border border-semantic-borderCard font-bold">
+                {t('archived', 'مؤرشفة')}
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-md text-[10px] bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30 font-bold">
+                {t('activeSession', 'نشطة')}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* قائمة المعلم */}
-        <div className="relative mb-2.5" ref={dropdownRef}>
+        {/* قائمة المعلم المدمجة */}
+        <div className="relative mb-2" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setIsTeacherDropdownOpen((prev) => !prev)}
             disabled={isUpdatingTeacher}
-            className={`w-full flex items-center justify-between gap-1.5 text-xs p-1.5 rounded-lg transition-colors border cursor-pointer ${
+            className={`w-full flex items-center justify-between gap-1 text-xs p-1.5 rounded-lg transition-colors border cursor-pointer ${
               hasTeacher 
                 ? 'text-semantic-textSecondary bg-semantic-surfaceInput/40 border-semantic-borderCard hover:border-semantic-actionPrimary/40' 
                 : 'text-semantic-actionPrimary bg-semantic-actionPrimary/10 border-semantic-actionPrimary/20 hover:bg-semantic-actionPrimary/20'
@@ -168,7 +174,7 @@ export default function HalaqaCardItem({
             <div className="flex items-center gap-1.5 truncate">
               {hasTeacher ? (
                 <>
-                  <User size={14} className="text-semantic-actionPrimary shrink-0" />
+                  <User size={13} className="text-semantic-actionPrimary shrink-0" />
                   <span className="truncate font-semibold">{teacherName || t('unnamedTeacher', 'معلم غير محدد')}</span>
                 </>
               ) : (
@@ -178,7 +184,7 @@ export default function HalaqaCardItem({
                 </>
               )}
             </div>
-            <ChevronDown size={13} className={`shrink-0 transition-transform ${isTeacherDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`shrink-0 transition-transform ${isTeacherDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isTeacherDropdownOpen && (
@@ -219,11 +225,11 @@ export default function HalaqaCardItem({
           )}
         </div>
 
-        {/* المواعيد والأيام والحد الأقصى */}
-        <div className="space-y-1">
+        {/* المواعيد والأيام والحد الأقصى في صندوق مدمج */}
+        <div className="space-y-1 text-[11px] text-semantic-textSecondary bg-semantic-surfaceInput/50 p-2 rounded-lg border border-semantic-borderInput/40">
           {formattedTimeRange && (
-            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
-              <Clock size={13} className="text-semantic-textMuted shrink-0" />
+            <div className="flex items-center gap-1.5 truncate">
+              <Clock size={12} className="text-semantic-textMuted shrink-0" />
               <span className="font-semibold truncate">
                 {formattedTimeRange}
               </span>
@@ -231,36 +237,34 @@ export default function HalaqaCardItem({
           )}
 
           {formattedDays && (
-            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textSecondary">
-              <Calendar size={13} className="text-semantic-actionPrimary shrink-0" />
+            <div className="flex items-center gap-1.5 truncate">
+              <Calendar size={12} className="text-semantic-actionPrimary shrink-0" />
               <span className="font-semibold truncate text-semantic-textPrimary">
                 {formattedDays}
               </span>
             </div>
           )}
 
-          {halaqa?.max_students && (
-            <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted pt-0.5">
+          <div className="flex items-center justify-between gap-1 pt-0.5">
+            <div className="flex items-center gap-1.5 text-semantic-textMuted">
               <Users size={12} className="shrink-0" />
-              <span>
-                {t('maxStudentsShort', 'الحد الأقصى:')}{' '}
-                <span className="font-bold text-semantic-textSecondary">
-                  {halaqa.max_students}
-                </span>
-              </span>
+              <span>{t('maxStudentsShort', 'الحد الأقصى:')}</span>
             </div>
-          )}
+            <span className="font-bold text-semantic-textSecondary">
+              <bdi>{halaqa.max_students || 15}</bdi>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* أزرار العمليات */}
-      <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-3 mt-1 w-full">
+      {/* أزرار العمليات في الفوتر */}
+      <div className="grid grid-cols-12 items-center gap-1.5 border-t border-semantic-borderCard pt-2.5 mt-1 w-full">
         {isArchived ? (
           <>
             <button 
               type="button"
               onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-              className={`${UI.btnEmerald} col-span-9 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
+              className={`${UI.btnEmerald} col-span-9 py-1.5 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
             >
               <span className="truncate">{t('activate', 'تنشيط')}</span>
             </button>
@@ -268,10 +272,10 @@ export default function HalaqaCardItem({
               <button
                 type="button"
                 onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} col-span-3 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
+                className={`${UI.btnSecondary} col-span-3 py-1.5 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
                 title={t('edit', 'تعديل')}
               >
-                <Edit3 size={14} />
+                <Edit3 size={13} />
               </button>
             )}
           </>
@@ -280,10 +284,10 @@ export default function HalaqaCardItem({
             <button 
               type="button"
               onClick={() => onNavigateToAttendance?.(halaqa?.id)} 
-              className={`${UI.btnEmerald} col-span-7 py-2 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
+              className={`${UI.btnEmerald} col-span-7 py-1.5 px-2 text-xs font-extrabold flex items-center justify-center gap-1 min-w-0 cursor-pointer`}
               title={t('goToAttendance', 'الجلسة المباشرة')}
             >
-              <Video size={13} className="shrink-0" />
+              <Video size={12} className="shrink-0" />
               <span className="truncate">{t('goToAttendance', 'الجلسة')}</span>
             </button>
 
@@ -291,17 +295,17 @@ export default function HalaqaCardItem({
               <button
                 type="button"
                 onClick={() => onEditHalaqa(halaqa)}
-                className={`${UI.btnSecondary} col-span-2 py-2 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
+                className={`${UI.btnSecondary} col-span-2 py-1.5 px-0 flex items-center justify-center text-xs font-bold rounded-xl cursor-pointer`}
                 title={t('edit', 'تعديل')}
               >
-                <Edit3 size={14} />
+                <Edit3 size={13} />
               </button>
             )}
 
             <button 
               type="button"
               onClick={() => onToggleArchiveHalaqa?.(halaqa?.id, isArchived)} 
-              className={`${UI.btnSecondary} col-span-3 py-2 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate text-semantic-textMuted hover:text-semantic-danger cursor-pointer`}
+              className={`${UI.btnSecondary} col-span-3 py-1.5 px-1 text-[11px] font-bold flex items-center justify-center rounded-xl truncate text-semantic-textMuted hover:text-semantic-danger cursor-pointer`}
               title={t('archive', 'أرشفة')}
             >
               <span className="truncate">{t('archive', 'أرشفة')}</span>
