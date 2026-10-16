@@ -54,7 +54,6 @@ export default function HalaqasManager({
 
   const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all';
 
-  // خيارات الفلترة المحدثة والموحدة
   const statusOptions = [
     { label: t('halaqas.all_status', 'جميع الحلقات'), value: 'all' },
     { label: t('halaqas.active', 'الحلقات النشطة'), value: 'active' },
@@ -62,7 +61,6 @@ export default function HalaqasManager({
     { label: t('common.archived', 'المؤرشفة'), value: 'archived' }
   ];
 
-  // رسائل الحالة الفارغة المخصصة لكل فلتر
   const getEmptyStateMessage = () => {
     if (searchQuery.trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
     if (statusFilter === 'no_teacher') return t('halaqas.no_unassigned_halaqas', 'لا توجد حلقات بدون معلم حالياً.');
@@ -127,10 +125,11 @@ export default function HalaqasManager({
         filtersChildren={
           <div className="relative z-30 col-span-2 md:col-span-1">
             <Select
+              title={t('halaqas.filter_status_title', 'حالة الحلقة')}
               value={statusFilter}
               onChange={setStatusFilter}
               options={statusOptions}
-              placeholder={t('halaqas.select_status_placeholder', 'تصفية بحسب الحالة')}
+              placeholder={t('halaqas.select_status', 'جميع الحلقات')}
             />
           </div>
         }
@@ -144,7 +143,6 @@ export default function HalaqasManager({
         isRtl={isRtl}
         t={t}
       >
-        {/* قائمة بطاقات الحلقات مع تحسين الحالة الفارغة */}
         {filteredHalaqas.length === 0 ? (
           <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-3">
             <BookOpen className="w-12 h-12 text-semantic-textSecondary opacity-60 mx-auto" />
@@ -171,7 +169,6 @@ export default function HalaqasManager({
         )}
       </PageLayout>
 
-      {/* نافذة إنشاء/تعديل حلقة */}
       {isAddModalOpen && (
         <HalaqaFormModal
           isOpen={isAddModalOpen}
