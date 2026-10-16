@@ -1,22 +1,27 @@
 // src/components/Halaqat/HalaqasManager.jsx
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Plus, CheckCircle, Users, Archive, Layers } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { BookOpen } from 'lucide-react';
 import PageLayout from '@/components/UI/PageLayout';
 import Select from '@/components/UI/Select';
 
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
 
-export default function HalaqasManager({ academyId, onRefresh }) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
-
-  const [halaqas, setHalaqas] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(false);
+export default function HalaqasManager({ 
+  halaqas = [], 
+  teachers = [], 
+  academyId, 
+  onRefresh, 
+  isRtl, 
+  isMobile,
+  onCreateHalaqa,
+  onUpdateHalaqa,
+  onToggleArchiveHalaqa,
+  onNavigateToAttendance
+}) {
+  const { t } = useTranslation();
 
   // حالات الفلترة والبحث
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,48 +29,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
-  // لمنع التكرار اللانهائي والحلقة المفرغة
-  const isFetchingRef = useRef(false);
-
-  // جلب البيانات من Supabase مع دعم التحديث الصامت في الخلفية
-  const fetchData = useCallback(async (isBackground = false) => {
-    if (!academyId || isFetchingRef.current) return;
-    
-    isFetchingRef.current = true;
-    if (!isBackground) {
-      setLoading(true);
-    }
-
-    try {
-      const [halaqasRes, teachersRes] = await Promise.all([
-        supabase.from('halaqas').select('*, teacher:teachers(id, name)').eq('academy_id', academyId),
-        supabase.from('teachers').select('id, name').eq('academy_id', academyId)
-      ]);
-
-      if (halaqasRes.error) throw halaqasRes.error;
-      if (teachersRes.error) throw teachersRes.error;
-
-      setHalaqas(halaqasRes.data || []);
-      setTeachers(teachersRes.data || []);
-    } catch (err) {
-      console.error('🚨 Error fetching halaqas data:', err);
-    } finally {
-      setLoading(false);
-      isFetchingRef.current = false;
-    }
-  }, [academyId]);
-
-  useEffect(() => {
-    fetchData(false);
-  }, [academyId, fetchData]);
-
-  // زر التحديث اليدوي
-  const handleManualRefresh = async () => {
-    await fetchData(true);
-    if (onRefresh) onRefresh();
-  };
-
-  // حساب الإحصائيات
+  // حساب الإحصائيات فوراً من البيانات الممررة (بدون أي تأخير)
   const stats = {
     total: halaqas.length,
     active: halaqas.filter(h => h.is_active !== false && !h.is_archived).length,
@@ -167,9 +131,9 @@ export default function HalaqasManager({ academyId, onRefresh }) {
         filteredCount={filteredHalaqas.length}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetFilters}
-        onRefresh={handleManualRefresh}
+        onRefresh={onRefresh}
         countUnitText="حلقة"
-        isLoading={loading}
+        isLoading={false}
         isRtl={isRtl}
         t={t}
       >
@@ -191,7 +155,9 @@ export default function HalaqasManager({ academyId, onRefresh }) {
                   setEditingHalaqa(item);
                   setIsAddModalOpen(true);
                 }}
-                onRefresh={() => fetchData(true)}
+                onRefresh={onRefresh}
+                onToggleArchiveHalaqa={onToggleArchiveHalaqa}
+                onNavigateToAttendance={onNavigateToAttendance}
               />
             ))}
           </div>
@@ -209,7 +175,9 @@ export default function HalaqasManager({ academyId, onRefresh }) {
           halaqaToEdit={editingHalaqa}
           academyId={academyId}
           teachers={teachers}
-          onSuccess={() => fetchData(true)}
+          onSuccess={onRefresh}
+          onCreateHalaqa={onCreateHalaqa}
+          onUpdateHalaqa={onUpdateHalaqa}
         />
       )}
     </>
