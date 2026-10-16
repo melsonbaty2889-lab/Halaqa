@@ -11,6 +11,7 @@ export default function HalaqaCardItem({
   teachers = [],
   getLocalizedText, 
   onSelectHalaqa,
+  onEdit,
   onNavigateToAttendance 
 }) {
   const { t, i18n } = useTranslation();
@@ -42,16 +43,20 @@ export default function HalaqaCardItem({
 
   return (
     <div
-      onClick={() => onSelectHalaqa ? onSelectHalaqa(halaqa) : onNavigateToAttendance?.(halaqa?.id)}
+      onClick={() => {
+        if (onEdit) onEdit(halaqa);
+        else if (onSelectHalaqa) onSelectHalaqa(halaqa);
+        else onNavigateToAttendance?.(halaqa?.id);
+      }}
       className="bg-semantic-surfaceCard border border-semantic-borderCard hover:border-semantic-actionPrimary/50 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden"
       dir="rtl"
     >
       <div className="flex items-center justify-between gap-2.5 sm:gap-4">
         {/* معلومات الحلقة الأساسية */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* أيقونة الكتاب/الحلقة المطابقة للحاوية الرمزية */}
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-semantic-actionPrimary/10 border border-semantic-actionPrimary/20 flex items-center justify-center text-semantic-actionPrimary group-hover:bg-semantic-actionPrimary group-hover:text-white transition-colors shrink-0 overflow-hidden">
-            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
+          {/* الحاوية الرمزية الموحدة المطابقة للطالب والمعلم */}
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary group-hover:border-semantic-actionPrimary/50 group-hover:text-semantic-actionPrimary transition-colors shrink-0 overflow-hidden">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-semantic-actionPrimary" />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -62,10 +67,15 @@ export default function HalaqaCardItem({
             </div>
 
             <div className="flex items-center gap-x-3 gap-y-1 text-xs text-semantic-textSecondary mt-1.5 flex-wrap">
-              {teacherName && (
+              {teacherName ? (
                 <span className="flex items-center gap-1 font-medium text-semantic-textSecondary">
                   <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
                   <span className="truncate">{teacherName}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 font-medium text-amber-500">
+                  <User className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{t('unassigned', 'بدون معلم')}</span>
                 </span>
               )}
 
