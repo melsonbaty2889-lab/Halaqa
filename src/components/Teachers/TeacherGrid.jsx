@@ -1,10 +1,10 @@
-// src/components/Teachers/TeacherGrid.jsx
+/* src/components/Teachers/TeacherGrid.jsx */
 
 import React from 'react';
 import { Users, FilterX } from 'lucide-react';
 import TeacherCard from './TeacherCard';
 
-export default function TeacherGrid({ teachers = [], loading, onToggleStatus, onManageAvailability, onResetFilters, t }) {
+export default function TeacherGrid({ teachers = [], loading, onSelectTeacher, onToggleStatus, onResetFilters, t }) {
   if (loading) {
     return (
       <div className="text-center py-12 text-sm text-semantic-textSecondary">
@@ -37,9 +37,8 @@ export default function TeacherGrid({ teachers = [], loading, onToggleStatus, on
         <TeacherCard
           key={person.id}
           person={person}
+          onClick={onSelectTeacher}
           onToggleStatus={onToggleStatus}
-          onManageAvailability={onManageAvailability}
-          t={t}
         />
       ))}
     </div>
