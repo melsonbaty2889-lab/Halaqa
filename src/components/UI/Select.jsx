@@ -12,7 +12,6 @@ const getTextSub = () => 'var(--color-text-secondary)';
 const getDanger = () => 'var(--color-danger)';
 const getCardBg = () => 'var(--color-surface-card)';
 
-// سجل عام لمنع فتح أكثر من قائمة منسدلة معاً في كامل التطبيق
 const selectRegistry = new Map();
 
 const closeOtherSelects = (currentId) => {
@@ -43,7 +42,6 @@ export const Select = forwardRef(({
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeIndex, setActiveIndex] = useState(-1);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, openUpward: false });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -55,14 +53,12 @@ export const Select = forwardRef(({
   const safeValue = value !== undefined && value !== null ? String(value) : '';
   const selectedOption = options.find(o => o && o.value !== undefined && String(o.value) === safeValue);
 
-  // التسجيل في السجل المركزي للإغلاق المتبادل
   useEffect(() => {
     const closeMe = () => setIsOpen(false);
     selectRegistry.set(selectId, closeMe);
     return () => selectRegistry.delete(selectId);
   }, [selectId]);
 
-  // الكشف المباشر عن نوع الشاشة (جوال أم سطح مكتب)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -72,7 +68,6 @@ export const Select = forwardRef(({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // حساب الموضع الذكي لشاشات سطح المكتب وتفادي انقطاع القائمة
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
@@ -109,7 +104,6 @@ export const Select = forwardRef(({
     }
   }, [isOpen, isMobile, updatePosition]);
 
-  // قفل تمرير الشاشة في الجوال عند فتح القائمة المنبثقة
   useEffect(() => {
     if (isOpen && isMobile) {
       const originalOverflow = document.body.style.overflow;
@@ -140,7 +134,6 @@ export const Select = forwardRef(({
       closeOtherSelects(selectId);
     }
     setSearchTerm('');
-    setActiveIndex(-1);
     setIsOpen(prev => !prev);
   }, [isOpen, disabled, updatePosition, selectId]);
 
@@ -220,10 +213,8 @@ export const Select = forwardRef(({
         </span>
       )}
 
-      {/* العرض الهجين التكيفي الذكي عالمياً */}
       {isOpen && typeof window !== 'undefined' && createPortal(
         isMobile ? (
-          /* وضع الجوال المحمول الاحترافي (Modal Sheet) */
           <div 
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150"
             onClick={() => setIsOpen(false)}
@@ -235,7 +226,7 @@ export const Select = forwardRef(({
             >
               <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40 shrink-0">
                 <h3 className="text-sm font-bold m-0 text-semantic-textPrimary">
-                  {title || label || placeholder}
+                  {title || label || t('common.select_status', 'تصفية بحسب الحالة')}
                 </h3>
                 <button
                   type="button"
@@ -291,7 +282,6 @@ export const Select = forwardRef(({
             </div>
           </div>
         ) : (
-          /* وضع الشاشات الكبيرة الذكي (Desktop Dropdown with Smart Position) */
           <>
             <div 
               style={{ position: "fixed", inset: 0, zIndex: 9998 }} 
