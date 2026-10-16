@@ -1,4 +1,4 @@
-// src/components/Halaqat/HalaqasManager.jsx
+/* src/components/Halaqat/HalaqasManager.jsx */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,7 @@ export default function HalaqasManager({
   const { t } = useTranslation();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // الافتراضي عرض جميع الحلقات
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
@@ -156,12 +156,11 @@ export default function HalaqasManager({
               <HalaqaCardItem
                 key={halaqa.id}
                 halaqa={halaqa}
+                teachers={teachers}
                 onEdit={(item) => {
                   setEditingHalaqa(item);
                   setIsAddModalOpen(true);
                 }}
-                onRefresh={onRefresh}
-                onToggleArchiveHalaqa={onToggleArchiveHalaqa}
                 onNavigateToAttendance={onNavigateToAttendance}
               />
             ))}
