@@ -25,7 +25,7 @@ export default function HalaqaCardItem({
   let teacherName = '';
 
   if (typeof rawTeacher === 'object' && rawTeacher !== null) {
-    teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, currentLang, getLocalizedText) || rawTeacher.email;
+    teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, getLocalizedText) || rawTeacher.email;
   } else if (typeof rawTeacher === 'string') {
     teacherName = rawTeacher;
   }
@@ -33,7 +33,7 @@ export default function HalaqaCardItem({
   if (!teacherName && halaqa?.teacher_id && Array.isArray(teachers)) {
     const foundTeacher = teachers.find(t => String(t.id) === String(halaqa.teacher_id));
     if (foundTeacher) {
-      teacherName = getLocalizedContent(foundTeacher.name || foundTeacher.full_name, currentLang, getLocalizedText) || foundTeacher.email;
+      teacherName = getLocalizedContent(foundTeacher.name || foundTeacher.full_name, getLocalizedText) || foundTeacher.email;
     }
   }
 
@@ -41,20 +41,26 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
+  // التعامل مع النقر لفتح التفاصيل أو الجلسة المباشرة بدلاً من نموذج التعديل
+  const handleClick = () => {
+    if (onNavigateToAttendance) {
+      onNavigateToAttendance(halaqa?.id);
+    } else if (onSelectHalaqa) {
+      onSelectHalaqa(halaqa);
+    } else if (onEdit) {
+      onEdit(halaqa);
+    }
+  };
+
   return (
     <div
-      onClick={() => {
-        if (onEdit) onEdit(halaqa);
-        else if (onSelectHalaqa) onSelectHalaqa(halaqa);
-        else onNavigateToAttendance?.(halaqa?.id);
-      }}
+      onClick={handleClick}
       className="bg-semantic-surfaceCard border border-semantic-borderCard hover:border-semantic-actionPrimary/50 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden"
       dir="rtl"
     >
       <div className="flex items-center justify-between gap-2.5 sm:gap-4">
         {/* معلومات الحلقة الأساسية */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* الحاوية الرمزية الموحدة المطابقة للطالب والمعلم */}
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary group-hover:border-semantic-actionPrimary/50 group-hover:text-semantic-actionPrimary transition-colors shrink-0 overflow-hidden">
             <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-semantic-actionPrimary" />
           </div>
