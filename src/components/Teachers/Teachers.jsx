@@ -94,8 +94,9 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
     ...ijazatOptions.map(item => ({ value: item.id, label: item.label }))
   ];
 
+  // موحدة ومضبوطة بوضوح
   const statusOptions = [
-    { label: t('teachers.filter_status', 'جميع الحالات'), value: 'all' },
+    { label: t('teachers.filter_status_all', 'جميع الحالات'), value: 'all' },
     { label: t('status_active', 'حسابات نشطة'), value: 'active' },
     { label: t('teachers.activeTeaching', 'معلمون مباشرون'), value: 'teaching' },
   ];
@@ -121,9 +122,27 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
         searchPlaceholder={t('teachers.searchPlaceholder', 'البحث بالاسم، الهاتف...')}
         filtersChildren={
           <>
-            <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder={t('teachers.filter_status', 'حالة الحساب')} />
-            <Select value={titleFilter} onChange={setTitleFilter} options={titleOptions} placeholder={t('teachers.allTitles', 'جميع المسميات')} />
-            <Select value={ijazaFilter} onChange={setIjazaFilter} options={ijazaOptions} placeholder={t('teachers.allIjazat', 'جميع الإجازات')} />
+            <Select 
+              title={t('teachers.status_title', 'حالة الحساب')}
+              value={statusFilter} 
+              onChange={setStatusFilter} 
+              options={statusOptions} 
+              placeholder={t('teachers.filter_status_all', 'جميع الحالات')} 
+            />
+            <Select 
+              title={t('teachers.title_filter_title', 'المسمى الوظيفي')}
+              value={titleFilter} 
+              onChange={setTitleFilter} 
+              options={titleOptions} 
+              placeholder={t('teachers.allTitles', 'جميع المسميات')} 
+            />
+            <Select 
+              title={t('teachers.ijaza_filter_title', 'الإجازات')}
+              value={ijazaFilter} 
+              onChange={setIjazaFilter} 
+              options={ijazaOptions} 
+              placeholder={t('teachers.allIjazat', 'جميع الإجازات')} 
+            />
           </>
         }
         totalCount={teachers.length}
