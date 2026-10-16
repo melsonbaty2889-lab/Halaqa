@@ -95,10 +95,11 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
   ];
 
   // موحدة ومضبوطة بوضوح
-  const statusOptions = [
+    const statusOptions = [
     { label: t('teachers.filter_status_all', 'جميع الحالات'), value: 'all' },
-    { label: t('status_active', 'حسابات نشطة'), value: 'active' },
+    { label: t('teachers.active_accounts', 'حسابات نشطة'), value: 'active' },
     { label: t('teachers.activeTeaching', 'معلمون مباشرون'), value: 'teaching' },
+    { label: t('teachers.inactive_accounts', 'غير النشطين'), value: 'inactive' }
   ];
 
   return (
