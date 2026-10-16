@@ -23,13 +23,11 @@ export default function HalaqasManager({
 }) {
   const { t } = useTranslation();
 
-  // حالات الفلترة والبحث
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active'); // active, no_teacher, archived, all
+  const [statusFilter, setStatusFilter] = useState('all'); // الافتراضي عرض جميع الحلقات
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
-  // حساب الإحصائيات فوراً من البيانات الممررة (بدون أي تأخير)
   const stats = {
     total: halaqas.length,
     active: halaqas.filter(h => h.is_active !== false && !h.is_archived).length,
@@ -37,7 +35,6 @@ export default function HalaqasManager({
     archived: halaqas.filter(h => h.is_archived === true).length
   };
 
-  // تصفية الحلقات
   const filteredHalaqas = halaqas.filter(item => {
     const name = typeof item.name === 'object' ? (isRtl ? item.name?.ar : item.name?.en) : item.name || '';
     const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -57,12 +54,22 @@ export default function HalaqasManager({
 
   const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all';
 
+  // خيارات الفلترة المحدثة والموحدة
   const statusOptions = [
     { label: t('halaqas.all_status', 'جميع الحلقات'), value: 'all' },
     { label: t('halaqas.active', 'الحلقات النشطة'), value: 'active' },
     { label: t('halaqas.no_teacher', 'بدون معلم'), value: 'no_teacher' },
     { label: t('common.archived', 'المؤرشفة'), value: 'archived' }
   ];
+
+  // رسائل الحالة الفارغة المخصصة لكل فلتر
+  const getEmptyStateMessage = () => {
+    if (searchQuery.trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
+    if (statusFilter === 'no_teacher') return t('halaqas.no_unassigned_halaqas', 'لا توجد حلقات بدون معلم حالياً.');
+    if (statusFilter === 'archived') return t('halaqas.no_archived_halaqas', 'لا توجد حلقات مؤرشفة.');
+    if (statusFilter === 'active') return t('halaqas.no_active_halaqas', 'لا توجد حلقات نشطة حالياً.');
+    return t('halaqas.no_halaqas', 'لا توجد حلقات مضافة بعد.');
+  };
 
   return (
     <>
@@ -117,7 +124,7 @@ export default function HalaqasManager({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={t('halaqas.search_placeholder', 'ابحث باسم الحلقة...')}
-                filtersChildren={
+        filtersChildren={
           <div className="relative z-30 col-span-2 md:col-span-1">
             <Select
               value={statusFilter}
@@ -137,12 +144,12 @@ export default function HalaqasManager({
         isRtl={isRtl}
         t={t}
       >
-        {/* قائمة بطاقات الحلقات */}
+        {/* قائمة بطاقات الحلقات مع تحسين الحالة الفارغة */}
         {filteredHalaqas.length === 0 ? (
-          <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-2">
-            <BookOpen className="w-10 h-10 text-semantic-textSecondary mx-auto" />
-            <p className="text-semantic-textPrimary font-medium text-sm">
-              {t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.')}
+          <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-3">
+            <BookOpen className="w-12 h-12 text-semantic-textSecondary opacity-60 mx-auto" />
+            <p className="text-semantic-textSecondary font-medium text-sm">
+              {getEmptyStateMessage()}
             </p>
           </div>
         ) : (
