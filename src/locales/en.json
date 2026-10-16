@@ -1115,7 +1115,8 @@
     "totalStaff": "إجمالي الكادر",
     "toTime": "إلى الساعة",
     "volunteer": "تطوع / احتساب",
-    "yearsExp": "سنوات خبرة"
+    "yearsExp": "سنوات خبرة",
+    "yearsExpShort": "سنوات"
   },
   "termsModal": {
     "acceptBtn": "موافقة ومتابعة",
