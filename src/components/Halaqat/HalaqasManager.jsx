@@ -117,13 +117,13 @@ export default function HalaqasManager({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={t('halaqas.search_placeholder', 'ابحث باسم الحلقة...')}
-        filtersChildren={
+                filtersChildren={
           <div className="relative z-30 col-span-2 md:col-span-1">
             <Select
               value={statusFilter}
               onChange={setStatusFilter}
               options={statusOptions}
-              placeholder={t('halaqas.all_status', 'حالة الحلقة')}
+              placeholder={t('halaqas.select_status_placeholder', 'تصفية بحسب الحالة')}
             />
           </div>
         }
