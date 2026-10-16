@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Clock, Plus, Save, Trash2, CheckCircle2, AlertCircle, User } from 'lucide-react';
+import { Calendar, Clock, Plus, Save, Trash2, CheckCircle2, AlertCircle, Power } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { Select } from '@/components/UI';
+import CustomTimePicker from '@/components/UI/CustomTimePicker';
 
 export default function TeacherAvailabilityManager({ teacherId }) {
   const { t, i18n } = useTranslation();
@@ -34,14 +35,17 @@ export default function TeacherAvailabilityManager({ teacherId }) {
   ];
 
   useEffect(() => {
-    fetchTeachers();
-  }, []);
+    if (!teacherId) {
+      fetchTeachers();
+    }
+  }, [teacherId]);
 
   useEffect(() => {
-    if (selectedTeacher) {
-      fetchAvailability(selectedTeacher);
+    const targetId = teacherId || selectedTeacher;
+    if (targetId) {
+      fetchAvailability(targetId);
     }
-  }, [selectedTeacher]);
+  }, [teacherId, selectedTeacher]);
 
   const fetchTeachers = async () => {
     try {
@@ -52,7 +56,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
       if (error) throw error;
       if (data && data.length > 0) {
         setTeachers(data);
-        if (!selectedTeacher) setSelectedTeacher(data[0].id);
+        if (!selectedTeacher && !teacherId) setSelectedTeacher(data[0].id);
       }
     } catch (err) {
       console.error('خطأ في جلب قائمة المعلمين:', err.message);
@@ -65,7 +69,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         .from('teacher_availability')
         .select('*')
         .eq('teacher_id', tId)
-        .order('created_at', { ascending: false });
+        .order('day_of_week', { ascending: true });
 
       if (error) throw error;
       setAvailabilityList(data || []);
@@ -76,8 +80,15 @@ export default function TeacherAvailabilityManager({ teacherId }) {
 
   const handleAddAvailability = async (e) => {
     e.preventDefault();
-    if (!selectedTeacher) {
+    const targetTeacher = teacherId || selectedTeacher;
+    
+    if (!targetTeacher) {
       setMessage({ type: 'error', text: t('teachers.selectTeacherFirst', 'يرجى اختيار المعلم أولاً.') });
+      return;
+    }
+
+    if (startTime >= endTime) {
+      setMessage({ type: 'error', text: t('teachers.invalidTimeRange', 'وقت النهاية يجب أن يكون بعد وقت البداية.') });
       return;
     }
 
@@ -89,7 +100,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         .from('teacher_availability')
         .insert([
           {
-            teacher_id: selectedTeacher,
+            teacher_id: targetTeacher,
             day_of_week: dayOfWeek,
             start_time: startTime,
             end_time: endTime,
@@ -101,7 +112,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
       if (error) throw error;
 
       setMessage({ type: 'success', text: t('teachers.availabilityAddedSuccess', 'تم إضافة الموعد بنجاح!') });
-      fetchAvailability(selectedTeacher);
+      fetchAvailability(targetTeacher);
     } catch (err) {
       setMessage({ type: 'error', text: t('common.errorOccurred', 'حدث خطأ أثناء الحفظ: ') + err.message });
     } finally {
@@ -109,7 +120,23 @@ export default function TeacherAvailabilityManager({ teacherId }) {
     }
   };
 
+  const handleToggleSlotStatus = async (id, currentStatus) => {
+    const targetTeacher = teacherId || selectedTeacher;
+    try {
+      const { error } = await supabase
+        .from('teacher_availability')
+        .update({ is_available: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchAvailability(targetTeacher);
+    } catch (err) {
+      console.error('خطأ في تحديث حالة الموعد:', err.message);
+    }
+  };
+
   const handleDelete = async (id) => {
+    const targetTeacher = teacherId || selectedTeacher;
     try {
       const { error } = await supabase
         .from('teacher_availability')
@@ -117,7 +144,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         .eq('id', id);
 
       if (error) throw error;
-      fetchAvailability(selectedTeacher);
+      fetchAvailability(targetTeacher);
     } catch (err) {
       console.error('خطأ في الحذف:', err.message);
     }
@@ -137,11 +164,13 @@ export default function TeacherAvailabilityManager({ teacherId }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-semantic-borderCard pb-4">
         <div className="flex items-center gap-2.5">
           <Calendar className="w-6 h-6 text-semantic-actionPrimary" />
-          <h2 className="text-lg font-bold text-semantic-textPrimary">{t('teachers.availabilityManagerTitle', 'إدارة مواعيد توفر المعلمين')}</h2>
+          <h2 className="text-lg font-bold text-semantic-textPrimary">
+            {t('teachers.availabilityManagerTitle', 'إدارة مواعيد توفر المعلمين')}
+          </h2>
         </div>
 
-        {/* اختيار المعلم باستخدام مكون Select الموحد */}
-        {teachers.length > 0 && (
+        {/* اختيار المعلم إذا لم يتم تمريره كـ prop */}
+        {!teacherId && teachers.length > 0 && (
           <div className="w-full sm:w-64">
             <Select
               title={t('teachers.selectTeacher', 'اختر المعلم')}
@@ -160,7 +189,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
             ? 'bg-semantic-successBg text-semantic-success border border-semantic-successBorder/30' 
             : 'bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
           <span>{message.text}</span>
         </div>
       )}
@@ -186,25 +215,17 @@ export default function TeacherAvailabilityManager({ teacherId }) {
 
           <div>
             <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.fromTime', 'من الساعة')}</label>
-            <input
-              type="time"
+            <CustomTimePicker
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className={`${UI.input} text-start`}
-              dir="ltr"
-              required
+              onChange={setStartTime}
             />
           </div>
 
           <div>
             <label className="block text-xs text-semantic-textSecondary mb-1">{t('teachers.toTime', 'إلى الساعة')}</label>
-            <input
-              type="time"
+            <CustomTimePicker
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className={`${UI.input} text-start`}
-              dir="ltr"
-              required
+              onChange={setEndTime}
             />
           </div>
         </div>
@@ -212,7 +233,7 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         <button
           type="submit"
           disabled={loading}
-          className={`${UI.btnPrimary} flex items-center justify-center gap-1.5 cursor-pointer`}
+          className={`${UI.btnPrimary} flex items-center justify-center gap-1.5 cursor-pointer w-full sm:w-auto px-6`}
         >
           <Save className="w-4 h-4" />
           <span>{loading ? t('common.saving', 'جاري الحفظ...') : t('teachers.saveSlot', 'حفظ موعد التوفر')}</span>
@@ -226,14 +247,19 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {availabilityList.length === 0 ? (
-            <p className="text-xs text-semantic-textMuted py-4 col-span-2 text-center">
+            <p className="text-xs text-semantic-textMuted py-6 col-span-2 text-center bg-semantic-surfaceCard rounded-xl border border-semantic-borderCard">
               {t('teachers.noSlotsFound', 'لا توجد مواعيد توفر مسجلة لهذا المعلم.')}
             </p>
           ) : (
             availabilityList.map((item) => (
-              <div key={item.id} className="p-3.5 card-surface border-semantic-borderCard flex items-center justify-between">
+              <div 
+                key={item.id} 
+                className={`p-3.5 bg-semantic-surfaceCard rounded-xl border border-semantic-borderCard flex items-center justify-between transition-opacity ${
+                  item.is_available === false ? 'opacity-60' : 'opacity-100'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-semantic-actionPrimary/10 text-semantic-actionPrimary">
+                  <div className={`p-2 rounded-lg ${item.is_available !== false ? 'bg-semantic-actionPrimary/10 text-semantic-actionPrimary' : 'bg-semantic-surfaceInput text-semantic-textSecondary'}`}>
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -246,14 +272,31 @@ export default function TeacherAvailabilityManager({ teacherId }) {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item.id)}
-                  className="p-1.5 rounded-lg bg-semantic-dangerBg text-semantic-danger hover:bg-semantic-danger/20 transition-colors cursor-pointer"
-                  title={t('common.delete', 'حذف')}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* زر تفعيل/تعطيل الموعد */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSlotStatus(item.id, item.is_available)}
+                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                      item.is_available !== false 
+                        ? 'bg-semantic-successBg text-semantic-success hover:bg-semantic-success/20' 
+                        : 'bg-semantic-surfaceInput text-semantic-textSecondary hover:bg-semantic-borderCard'
+                    }`}
+                    title={item.is_available !== false ? t('common.active', 'نشط') : t('common.inactive', 'غير نشط')}
+                  >
+                    <Power className="w-4 h-4" />
+                  </button>
+
+                  {/* زر الحذف */}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    className="p-1.5 rounded-lg bg-semantic-dangerBg text-semantic-danger hover:bg-semantic-danger/20 transition-colors cursor-pointer"
+                    title={t('common.delete', 'حذف')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))
           )}
