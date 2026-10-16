@@ -129,7 +129,7 @@ export default function HalaqasManager({
               value={statusFilter}
               onChange={setStatusFilter}
               options={statusOptions}
-              placeholder={t('halaqas.select_status', 'جميع الحلقات')}
+              placeholder={t('halaqas.select_status', 'اختر الحالة...')}
             />
           </div>
         }
