@@ -1,27 +1,22 @@
 /* src/components/Teachers/TeacherCard.jsx */
 
 import React from 'react';
-import { Award, CheckCircle2, XCircle, Phone, Clock, Briefcase, Globe, Calendar, MessageCircle, Star } from 'lucide-react';
+import { Award, CheckCircle2, XCircle, Phone, Briefcase, Globe, Calendar, MessageCircle, Star } from 'lucide-react';
 import { getStaffTitleLabel } from '@/constants/staffTitles';
 import { getIjazaLabel } from '@/constants/ijazat';
 
 export default function TeacherCard({ person, onToggleStatus, onManageAvailability, t = (key, fallback) => fallback || key }) {
-  // 1. ترجمة المسمى الوظيفي والإجازات
   const titleLabel = getStaffTitleLabel(person.title, t);
-  
-  // 2. معالجة ونظافة رقم الهاتف
   const cleanPhone = person.phone ? person.phone.replace(/[^0-9+]/g, '') : '';
   const displayPhone = person.phone ? person.phone.replace(/^EG/i, '+20 ') : '';
 
-  // 3. تنسيق نوع أسلوب التدريس
   const getTeachingModeText = (mode) => {
     if (mode === 'online') return t('teachers.mode_online', 'عن بُعد');
     if (mode === 'onsite' || mode === 'in_person') return t('teachers.mode_onsite', 'حضوري');
-    if (mode === 'both') return t('teachers.mode_both', 'هجين (حضوري وعن بُعد)');
+    if (mode === 'both') return t('teachers.mode_both', 'هجين');
     return mode || t('teachers.mode_online', 'عن بُعد');
   };
 
-  // 4. تنسيق نوع الراتب والعقد
   const renderSalaryBadge = () => {
     if (person.employment_type === 'volunteer') {
       return t('teachers.volunteer', 'متطوع');
@@ -32,6 +27,8 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
     return `${amount} / ${unit}`;
   };
 
+  const hasExperience = Number(person.experience_years) > 0;
+
   return (
     <div className={`bg-semantic-surfaceCard rounded-2xl border p-4 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-md ${
       person.is_active !== false 
@@ -39,7 +36,7 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
         : 'border-semantic-danger/30 opacity-75'
     }`}>
       <div className="space-y-3">
-        {/* الهيدر: الاسم، التقييم، التفعيل، والمسمى الوظيفي */}
+        {/* الهيدر */}
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -54,7 +51,6 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
               )}
             </div>
 
-            {/* المسمى الوظيفي والتخصص */}
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-semantic-actionPrimary/15 text-semantic-actionPrimary border border-semantic-actionPrimary/30">
                 {titleLabel}
@@ -67,7 +63,6 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
             </div>
           </div>
 
-          {/* زر تبديل حالة الحساب (نشط / غير نشط) */}
           <button 
             type="button"
             onClick={() => onToggleStatus && onToggleStatus(person.id, person.is_active)}
@@ -82,32 +77,29 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
           </button>
         </div>
 
-        {/* شبكة التفاصيل والمواصفات */}
-        <div className="grid grid-cols-2 gap-2 text-xs text-semantic-textSecondary bg-semantic-surfaceInput/40 p-2.5 rounded-xl border border-semantic-borderInput/60">
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-3.5 h-3.5 text-semantic-textMuted shrink-0" /> 
-            <span><bdi>{person.experience_years || 0}</bdi> {t('teachers.yearsExp', 'سنوات خبرة')}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
+        {/* معلومات سريعة ومختصرة */}
+        <div className="flex items-center justify-between text-xs text-semantic-textSecondary bg-semantic-surfaceInput/40 p-2.5 rounded-xl border border-semantic-borderInput/60 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5 text-semantic-textMuted shrink-0" /> 
             <span>{getTeachingModeText(person.teaching_mode)}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-semantic-textMuted shrink-0" /> 
-            <span className="truncate" title={person.timezone || 'UTC'}>{person.timezone || 'UTC'}</span>
-          </div>
+          {hasExperience && (
+            <div className="flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5 text-semantic-textMuted shrink-0" /> 
+              <span><bdi>{person.experience_years}</bdi> {t('teachers.yearsExp', 'سنوات خبرة')}</span>
+            </div>
+          )}
 
           {person.phone && (
-            <div className="flex items-center gap-2 min-w-0" dir="ltr">
+            <div className="flex items-center gap-1.5" dir="ltr">
               <Phone className="w-3.5 h-3.5 text-semantic-textMuted shrink-0" /> 
-              <span className="truncate text-start font-medium">{displayPhone}</span>
+              <span className="font-medium">{displayPhone}</span>
             </div>
           )}
         </div>
 
-        {/* الإجازات المترجمة */}
+        {/* الإجازات المترجمة والمبسطة */}
         {person.ijazas && person.ijazas.length > 0 && (
           <div className="space-y-1.5 pt-1">
             <p className="text-[11px] text-semantic-textSecondary m-0 flex items-center gap-1.5 font-bold">
@@ -128,7 +120,7 @@ export default function TeacherCard({ person, onToggleStatus, onManageAvailabili
         )}
       </div>
 
-      {/* الفوتر: نوع الأجر والتواصل عبر الواتساب واختيار المواعيد */}
+      {/* الفوتر */}
       <div className="pt-3 mt-3 border-t border-semantic-borderCard flex items-center justify-between gap-2">
         <span className="text-[11px] text-semantic-textPrimary font-bold bg-semantic-surfaceInput px-2.5 py-1 rounded-lg border border-semantic-borderInput">
           <bdi>{renderSalaryBadge()}</bdi>
