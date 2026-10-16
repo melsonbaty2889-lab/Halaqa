@@ -1,6 +1,6 @@
 // src/components/Halaqat/HalaqasManager.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Plus, CheckCircle, Users, Archive, Layers } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -24,11 +24,14 @@ export default function HalaqasManager({ academyId, onRefresh }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
+  // لمنع التكرار اللانهائي والحلقة المفرغة
+  const isFetchingRef = useRef(false);
+
   // جلب البيانات من Supabase مع دعم التحديث الصامت في الخلفية
   const fetchData = useCallback(async (isBackground = false) => {
-    if (!academyId) return;
+    if (!academyId || isFetchingRef.current) return;
     
-    // 💡 لا تفعل حالة التحميل الكامل إذا كان التحديث في الخلفية
+    isFetchingRef.current = true;
     if (!isBackground) {
       setLoading(true);
     }
@@ -44,17 +47,23 @@ export default function HalaqasManager({ academyId, onRefresh }) {
 
       setHalaqas(halaqasRes.data || []);
       setTeachers(teachersRes.data || []);
-      if (onRefresh) onRefresh();
     } catch (err) {
       console.error('🚨 Error fetching halaqas data:', err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [academyId, onRefresh]);
+  }, [academyId]);
 
   useEffect(() => {
-    fetchData(false); // أول تحميل فقط يظهر الهيكل العظمي/التحميل
-  }, [fetchData]);
+    fetchData(false);
+  }, [academyId, fetchData]);
+
+  // زر التحديث اليدوي
+  const handleManualRefresh = async () => {
+    await fetchData(true);
+    if (onRefresh) onRefresh();
+  };
 
   // حساب الإحصائيات
   const stats = {
@@ -158,7 +167,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
         filteredCount={filteredHalaqas.length}
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetFilters}
-        onRefresh={() => fetchData(true)} // 👈 تحديث صامت في الخلفية
+        onRefresh={handleManualRefresh}
         countUnitText="حلقة"
         isLoading={loading}
         isRtl={isRtl}
@@ -182,7 +191,7 @@ export default function HalaqasManager({ academyId, onRefresh }) {
                   setEditingHalaqa(item);
                   setIsAddModalOpen(true);
                 }}
-                onRefresh={() => fetchData(true)} // 👈 تحديث صامت في الخلفية
+                onRefresh={() => fetchData(true)}
               />
             ))}
           </div>
