@@ -1079,7 +1079,9 @@
       "title": "المسمى"
     },
     "filter_status": "حالة الحساب",
+    "filter_status_all": "جميع الحالات",
     "fromTime": "من الساعة",
+    "ijaza_filter_title": "الإجازات",
     "ijazatTitle": "الإجازات القرآنية",
     "inactiveAccounts": "غير النشطين",
     "manageAvailability": "إدارة المواعيد",
@@ -1090,8 +1092,10 @@
     "searchPlaceholder": "البحث بالاسم أو رقم الهاتف...",
     "selectTeacher": "اختر المعلم",
     "selectTeacherFirst": "يرجى اختيار المعلم أولاً.",
+    "status_title": "حالة الحساب",
     "subtitle": "إدارة وتنظيم بيانات المعلمين والمشرفين",
     "title": "الكادر التعليمي والإداري",
+    "title_filter_title": "المسمى الوظيفي",
     "titles": {
       "admin": "مدير أكاديمية",
       "supervisor": "مشرف تعليمي",
