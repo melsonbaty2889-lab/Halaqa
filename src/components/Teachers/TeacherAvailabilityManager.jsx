@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { UI } from '@/theme/styles';
 import { Select } from '@/components/UI';
 import CustomTimePicker from '@/components/UI/CustomTimePicker';
+import { getDaysOptions } from '@/constants/days'; // استيراد الأيام من الملف المستقل
 
 export default function TeacherAvailabilityManager({ teacherId }) {
   const { t, i18n } = useTranslation();
@@ -24,15 +25,8 @@ export default function TeacherAvailabilityManager({ teacherId }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
-  const daysOptions = [
-    { value: 'Saturday', label: t('days.saturday', 'السبت') },
-    { value: 'Sunday', label: t('days.sunday', 'الأحد') },
-    { value: 'Monday', label: t('days.monday', 'الإثنين') },
-    { value: 'Tuesday', label: t('days.tuesday', 'الثلاثاء') },
-    { value: 'Wednesday', label: t('days.wednesday', 'الأربعاء') },
-    { value: 'Thursday', label: t('days.thursday', 'الخميس') },
-    { value: 'Friday', label: t('days.friday', 'الجمعة') },
-  ];
+  // استخدام الدالة المستقلة
+  const daysOptions = getDaysOptions(t);
 
   useEffect(() => {
     if (!teacherId) {
@@ -160,7 +154,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
       dir={isRtl ? 'rtl' : 'ltr'} 
       className={`${UI.card} w-full max-w-4xl flex flex-col gap-6`}
     >
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-semantic-borderCard pb-4">
         <div className="flex items-center gap-2.5">
           <Calendar className="w-6 h-6 text-semantic-actionPrimary" />
@@ -169,7 +162,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
           </h2>
         </div>
 
-        {/* اختيار المعلم إذا لم يتم تمريره كـ prop */}
         {!teacherId && teachers.length > 0 && (
           <div className="w-full sm:w-64">
             <Select
@@ -194,7 +186,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleAddAvailability} className="bg-semantic-surfaceInput/40 p-4 rounded-xl border border-semantic-borderCard space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-semantic-actionPrimary">
           <Plus className="w-4 h-4" />
@@ -240,7 +231,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
         </button>
       </form>
 
-      {/* Grid view of availability */}
       <div className="flex flex-col gap-3">
         <h3 className="text-xs font-bold text-semantic-textSecondary">
           {t('teachers.registeredSlots', 'جدول المواعيد المسجلة')} (<bdi>{availabilityList.length}</bdi>)
@@ -273,7 +263,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* زر تفعيل/تعطيل الموعد */}
                   <button
                     type="button"
                     onClick={() => handleToggleSlotStatus(item.id, item.is_available)}
@@ -287,7 +276,6 @@ export default function TeacherAvailabilityManager({ teacherId }) {
                     <Power className="w-4 h-4" />
                   </button>
 
-                  {/* زر الحذف */}
                   <button
                     type="button"
                     onClick={() => handleDelete(item.id)}
