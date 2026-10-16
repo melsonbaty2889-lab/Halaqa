@@ -1244,6 +1244,7 @@
   },
   "teacherLabel": "المعلم المسؤول",
   "teachers": {
+    "active_accounts": "حسابات نشطة",
     "activeAccounts": "الحسابات النشطة",
     "activeTeaching": "المعلمون المباشرون للحلقات",
     "addNewSlot": "إضافة فترات توفر جديدة",
@@ -1287,6 +1288,7 @@
     "ijazat": "الإجازات القرآنية",
     "ijazatLabel": "الإجازات والسند القرآني",
     "ijazatTitle": "الإجازات القرآنية",
+    "inactive_accounts": "غير النشطين",
     "inactiveAccounts": "غير النشطين",
     "jobTitle": "المسمى الوظيفي",
     "jobTitleLabel": "المسمى الوظيفي",

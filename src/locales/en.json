@@ -1064,6 +1064,7 @@
   },
   "teacherLabel": "المعلم المسؤول",
   "teachers": {
+    "active_accounts": "حسابات نشطة",
     "activeAccounts": "الحسابات النشطة",
     "activeTeaching": "المعلمون المباشرون للحلقات",
     "addNewSlot": "إضافة فترات توفر جديدة",
@@ -1083,6 +1084,7 @@
     "fromTime": "من الساعة",
     "ijaza_filter_title": "الإجازات",
     "ijazatTitle": "الإجازات القرآنية",
+    "inactive_accounts": "غير النشطين",
     "inactiveAccounts": "غير النشطين",
     "manageAvailability": "إدارة المواعيد",
     "noSlotsFound": "لا توجد مواعيد توفر مسجلة لهذا المعلم.",
