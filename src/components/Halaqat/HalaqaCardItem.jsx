@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronLeft, ChevronRight, User, Clock } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3 } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 
@@ -25,7 +25,7 @@ export default function HalaqaCardItem({
   let teacherName = '';
 
   if (typeof rawTeacher === 'object' && rawTeacher !== null) {
-    teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, getLocalizedText) || rawTeacher.email;
+    teacherName = getLocalizedContent(rawTeacher.name || rawTeacher.full_name, currentLang, getLocalizedText) || rawTeacher.email;
   } else if (typeof rawTeacher === 'string') {
     teacherName = rawTeacher;
   }
@@ -33,7 +33,7 @@ export default function HalaqaCardItem({
   if (!teacherName && halaqa?.teacher_id && Array.isArray(teachers)) {
     const foundTeacher = teachers.find(t => String(t.id) === String(halaqa.teacher_id));
     if (foundTeacher) {
-      teacherName = getLocalizedContent(foundTeacher.name || foundTeacher.full_name, getLocalizedText) || foundTeacher.email;
+      teacherName = getLocalizedContent(foundTeacher.name || foundTeacher.full_name, currentLang, getLocalizedText) || foundTeacher.email;
     }
   }
 
@@ -41,20 +41,18 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // التعامل مع النقر لفتح التفاصيل أو الجلسة المباشرة بدلاً من نموذج التعديل
-  const handleClick = () => {
+  // عند الضغط على الكارت تفتح صفحة متابعة الجلسة والتحصيل مباشرة
+  const handleCardClick = () => {
     if (onNavigateToAttendance) {
       onNavigateToAttendance(halaqa?.id);
     } else if (onSelectHalaqa) {
       onSelectHalaqa(halaqa);
-    } else if (onEdit) {
-      onEdit(halaqa);
     }
   };
 
   return (
     <div
-      onClick={handleClick}
+      onClick={handleCardClick}
       className="bg-semantic-surfaceCard border border-semantic-borderCard hover:border-semantic-actionPrimary/50 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden"
       dir="rtl"
     >
@@ -95,7 +93,7 @@ export default function HalaqaCardItem({
           </div>
         </div>
 
-        {/* شارة حالة الحلقة والسهم */}
+        {/* شارة الحالة، زر التعديل السريع، والسهم */}
         <div className="flex items-center gap-2 shrink-0">
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
             isArchived
@@ -104,6 +102,21 @@ export default function HalaqaCardItem({
           }`}>
             {isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}
           </span>
+
+          {/* زر تعديل بيانات الحلقة المنفصل عن الضغط الكلي */}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation(); // منع فتح الجلسة عند رغبة المستخدم في التعديل فقط
+                onEdit(halaqa);
+              }}
+              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors"
+              title={t('common.edit', 'تعديل')}
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
         </div>
