@@ -66,6 +66,7 @@ export default function Teachers({ academyId, teachers = [], setTeachers, onRefr
     let matchesStatus = true;
     if (statusFilter === 'active') matchesStatus = person.is_active === true;
     if (statusFilter === 'teaching') matchesStatus = person.is_teaching === true;
+    if (statusFilter === 'inactive') matchesStatus = person.is_active === false;
 
     const matchesTitle = titleFilter === 'all' || person.title === titleFilter;
     const matchesIjaza = ijazaFilter === 'all' || (person.ijazas && person.ijazas.includes(ijazaFilter));
