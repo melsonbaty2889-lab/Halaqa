@@ -783,7 +783,9 @@
     "uploadBtn": ""
   },
   "ijazat": {
+    "duriAbiAmr": "الدوري عن أبي عمرو",
     "duriAbuAmr": "الدوري عن أبي عمرو / Al-Duri an Abu Amr",
+    "generalSanad": "إجازة عامة في الحديث والسنة",
     "hafsAsim": "حفص عن عاصم / Hafs an Asim",
     "jazariyyah": "إجازة بمتن المقدمة الجزرية",
     "kubra10": "القراءات العشر الكبرى / The Ten Major Qiraat",
@@ -795,6 +797,7 @@
     "qiraatAshrKubra": "إجازة بالقراءات العشر الكبرى",
     "qiraatAshrSughra": "إجازة بالقراءات العشر الصغرى",
     "qiraatSab": "إجازة بالقراءات السبع",
+    "shatibiyyah": "متن الشاطبية",
     "sughra10": "القراءات العشر الصغرى / The Ten Minor Qiraat",
     "tajweed": "إجازة في التجويد",
     "tuhfatAtfal": "إجازة بمتن تحفة الأطفال",

@@ -625,6 +625,8 @@
     "uploadBtn": "uploadBtn"
   },
   "ijazat": {
+    "duriAbiAmr": "الدوري عن أبي عمرو",
+    "generalSanad": "إجازة عامة في الحديث والسنة",
     "hafsAsim": "إجازة برواية حفص عن عاصم",
     "jazariyyah": "إجازة بمتن المقدمة الجزرية",
     "otherIjazah": "إجازة أخرى",
@@ -634,6 +636,7 @@
     "qiraatAshrKubra": "إجازة بالقراءات العشر الكبرى",
     "qiraatAshrSughra": "إجازة بالقراءات العشر الصغرى",
     "qiraatSab": "إجازة بالقراءات السبع",
+    "shatibiyyah": "متن الشاطبية",
     "tajweed": "إجازة في التجويد",
     "tuhfatAtfal": "إجازة بمتن تحفة الأطفال",
     "warshNafi": "إجازة برواية ورش عن نافع"
