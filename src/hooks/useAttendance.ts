@@ -5,16 +5,6 @@ import { supabase } from '@/lib/supabase';
 
 // ── Constants ───────────────────────────────────────────────────
 
-export const DAY_NAMES = [
-  'sunday',
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-] as const;
-
 export const DEFAULT_STATS = {
   total: 0,
   present: 0,
@@ -43,13 +33,16 @@ export interface Student {
   id: string;
   name: string | StudentNameObject;
   halaqa_id?: string;
-  current_quarter_index?: number;
+  educational_track?: string;
+  track?: string;
+  phone?: string;
   [key: string]: any;
 }
 
 export interface Halaqa {
   id: string;
   name?: string | Record<string, string>;
+  educational_track?: string;
   [key: string]: any;
 }
 
@@ -58,8 +51,8 @@ export interface AttendanceEntry {
   notes: string;
   new_memorization: string;
   retention_assignment: string;
+  lesson_activity: string; // حقل الدرس التربوي للمسار الشامل
   session_grade: number;
-  quarter_index: number;
 }
 
 export interface AttendanceRecordPayload {
@@ -68,13 +61,12 @@ export interface AttendanceRecordPayload {
   halaqa_id: string;
   date: string;
   status: AttendanceStatus;
-  notes: string;
-  new_memorization: string;
-  retention_assignment: string;
+  notes: string | null;
+  new_memorization: string | null;
+  retention_assignment: string | null;
+  lesson_activity: string | null;
   session_grade: number | null;
-  quarter_index: number;
-  juz: number;
-  quarter_in_hizb: number;
+  updated_at?: string;
 }
 
 export interface MessageState {
@@ -86,7 +78,7 @@ export interface UseAttendanceProps {
   students?: Student[];
   academyId?: string;
   halaqas?: Halaqa[];
-  t?: (key: string) => string;
+  t?: (key: string, fallback?: string) => string;
   i18n?: {
     language?: string;
     exists?: (key: string) => boolean;
@@ -115,41 +107,22 @@ export function useAttendance({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<MessageState>({ text: '', type: '' });
 
-  // 🛠️ دالة الترجمة النصية لجميع اللغات
+  // 🛠️ دالة ترجمة مساعدة
   const translateText = useCallback(
     (key: string, defaultText: string): string => {
       try {
-        if (i18n && typeof i18n.exists === 'function' && i18n.exists(key) && typeof t === 'function') {
-          return t(key);
+        if (typeof t === 'function') {
+          return t(key, defaultText);
         }
       } catch (err) {
         console.warn('Translation lookup failed:', err);
       }
       return defaultText;
     },
-    [i18n, t]
+    [t]
   );
 
-  // 🛠️ استخراج الاسم نصياً للبحث والعرْض عبر اللغات
-  const getStudentName = useCallback(
-    (nameData: string | StudentNameObject | undefined): string => {
-      if (!nameData) return '';
-      if (typeof nameData === 'string') return nameData;
-      if (typeof nameData === 'object') {
-        return (
-          nameData[currentLang] ||
-          nameData.ar ||
-          nameData.en ||
-          nameData.full_name ||
-          Object.values(nameData).find(Boolean) ||
-          ''
-        );
-      }
-      return String(nameData);
-    },
-    [currentLang]
-  );
-
+  // 🔍 استخراج النص القابل للبحث
   const getSearchableName = useCallback((nameData: string | StudentNameObject | undefined): string => {
     if (!nameData) return '';
     if (typeof nameData === 'string') return nameData;
@@ -159,7 +132,7 @@ export function useAttendance({
     return String(nameData);
   }, []);
 
-  // 🔍 فلترة الطلاب
+  // 🔍 فلترة الطلاب بحسب الحلقة المحددة والنص
   const filteredStudents = useMemo(() => {
     if (!Array.isArray(students)) return [];
 
@@ -196,7 +169,7 @@ export function useAttendance({
     return { total, present, absent, late, excused, rate };
   }, [filteredStudents, attendanceData]);
 
-  // 🔄 جلب البيانات لليوم المحدد من Supabase
+  // 🔄 جلب سجل الحضور لليوم المحدد من Supabase
   const fetchAttendance = useCallback(async () => {
     if (!academyId || !selectedDate) {
       setAttendanceData({});
@@ -230,8 +203,8 @@ export function useAttendance({
               notes: record.notes || '',
               new_memorization: record.new_memorization || '',
               retention_assignment: record.retention_assignment || '',
+              lesson_activity: record.lesson_activity || '',
               session_grade: record.session_grade ?? 10,
-              quarter_index: record.quarter_index || 1,
             };
           }
         });
@@ -240,7 +213,7 @@ export function useAttendance({
     } catch (error: any) {
       console.warn('Attendance fetch error:', error?.message || error);
       setMessage({
-        text: translateText('fetchFailed', 'Failed to retrieve attendance logs for this date.'),
+        text: translateText('fetchFailed', 'تعذر استرجاع سجلات الحضور لهذا اليوم.'),
         type: 'error',
       });
       setAttendanceData({});
@@ -253,7 +226,7 @@ export function useAttendance({
     fetchAttendance();
   }, [fetchAttendance]);
 
-  // ⚡ تحديث حقل طالب
+  // ⚡ تحديث حقل طالب محدد
   const updateStudentField = useCallback(
     (studentId: string, field: keyof AttendanceEntry, value: any) => {
       setAttendanceData((prev) => ({
@@ -264,8 +237,8 @@ export function useAttendance({
             notes: '',
             new_memorization: '',
             retention_assignment: '',
+            lesson_activity: '',
             session_grade: 10,
-            quarter_index: 1,
           }),
           [field]: value,
         },
@@ -274,7 +247,7 @@ export function useAttendance({
     []
   );
 
-  // 🚀 تحضير الكل "حضور"
+  // 🚀 تسجيل الجميع حضوراً بضغطة واحدة
   const handleMarkAllPresent = useCallback(() => {
     if (filteredStudents.length === 0) return;
     setAttendanceData((prev) => {
@@ -286,8 +259,8 @@ export function useAttendance({
               notes: '',
               new_memorization: '',
               retention_assignment: '',
+              lesson_activity: '',
               session_grade: 10,
-              quarter_index: 1,
             }),
             status: 'present',
           };
@@ -296,7 +269,7 @@ export function useAttendance({
       return updated;
     });
     setMessage({
-      text: translateText('allMarkedPresent', 'All displayed students marked as present 🟢'),
+      text: translateText('allMarkedPresent', 'تم تحديد جميع الطلاب المعروضين كحضور 🟢'),
       type: 'success',
     });
   }, [filteredStudents, translateText]);
@@ -304,12 +277,12 @@ export function useAttendance({
   // 🔥 الحفظ المجمع في Supabase
   const handleSaveAttendance = async () => {
     if (!academyId) {
-      setMessage({ text: translateText('errorLoading', 'Error in academy ID'), type: 'error' });
+      setMessage({ text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية'), type: 'error' });
       return;
     }
 
     if (filteredStudents.length === 0) {
-      setMessage({ text: translateText('noStudentsToSave', 'No students available to save'), type: 'error' });
+      setMessage({ text: translateText('noStudentsToSave', 'لا يوجد طلاب متاحين للحفظ'), type: 'error' });
       return;
     }
 
@@ -330,17 +303,11 @@ export function useAttendance({
           currentRecord.status === 'present' ||
           currentRecord.status === 'late';
 
-        const qIndex = Number(
-          currentRecord?.quarter_index || student.current_quarter_index || 1
-        );
-        const juzNum = Math.ceil(qIndex / 8) || 1;
-        const qInHizb = ((qIndex - 1) % 4) + 1 || 1;
-
         const targetHalaqaId =
           student.halaqa_id || (selectedHalaqaId !== '' ? selectedHalaqaId : fallbackHalaqaId);
 
         if (!targetHalaqaId) {
-          throw new Error(translateText('noHalaqaError', 'No halaqa associated with this student.'));
+          throw new Error(translateText('noHalaqaError', 'تعذر تحديد الحلقة التابع لها الطالب.'));
         }
 
         attendanceRecords.push({
@@ -349,35 +316,35 @@ export function useAttendance({
           halaqa_id: targetHalaqaId,
           date: selectedDate,
           status: currentRecord?.status || 'present',
-          notes: (currentRecord?.notes || '').trim(),
-          new_memorization: isPresent ? (currentRecord?.new_memorization || '').trim() : '',
-          retention_assignment: isPresent ? (currentRecord?.retention_assignment || '').trim() : '',
+          notes: (currentRecord?.notes || '').trim() || null,
+          new_memorization: isPresent ? (currentRecord?.new_memorization || '').trim() || null : null,
+          retention_assignment: isPresent ? (currentRecord?.retention_assignment || '').trim() || null : null,
+          lesson_activity: isPresent ? (currentRecord?.lesson_activity || '').trim() || null : null,
           session_grade: isPresent ? Number(currentRecord?.session_grade ?? 10) : null,
-          quarter_index: qIndex,
-          juz: juzNum,
-          quarter_in_hizb: qInHizb,
+          updated_at: new Date().toISOString(),
         });
       }
 
       if (attendanceRecords.length === 0) {
-        setMessage({ text: translateText('noStudentsToSave', 'No students available to save'), type: 'error' });
+        setMessage({ text: translateText('noStudentsToSave', 'لا يوجد طلاب للحفظ'), type: 'error' });
         return;
       }
 
+      // 🎯 التصحيح المحوري: الحفظ بحسب المفتاح الفريد لـ Supabase (student_id, date)
       const { error } = await supabase
         .from('attendance')
-        .upsert(attendanceRecords, { onConflict: 'academy_id,student_id,date' });
+        .upsert(attendanceRecords, { onConflict: 'student_id,date' });
 
       if (error) throw error;
 
       setMessage({
-        text: translateText('attendanceSavedSuccess', 'Attendance and daily recitation sheet saved successfully! 🎉'),
+        text: translateText('attendanceSavedSuccess', 'تم توثيق واعتماد سجل الحضور والتسميع اليومي بنجاح! 🎉'),
         type: 'success',
       });
     } catch (error: any) {
       console.warn('Save error:', error?.message || error);
       setMessage({
-        text: `${translateText('saveFailed', 'Save failed:')} ${error?.message || ''}`,
+        text: `${translateText('saveFailed', 'فشل الحفظ:')} ${error?.message || ''}`,
         type: 'error',
       });
     } finally {
@@ -403,7 +370,6 @@ export function useAttendance({
     updateStudentField,
     handleMarkAllPresent,
     handleSaveAttendance,
-    getStudentName,
     translateText,
     refetchAttendance: fetchAttendance,
   };
