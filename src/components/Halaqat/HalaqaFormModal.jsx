@@ -8,16 +8,7 @@ import { UI } from '@/theme/styles';
 import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 import { isStartTimeBeforeEndTime } from '@/utils/dateUtils';
-
-const DAYS_LIST = [
-  { id: 'sat', labelKey: 'days.sat', defaultLabel: 'السبت' },
-  { id: 'sun', labelKey: 'days.sun', defaultLabel: 'الأحد' },
-  { id: 'mon', labelKey: 'days.mon', defaultLabel: 'الإثنين' },
-  { id: 'tue', labelKey: 'days.tue', defaultLabel: 'الثلاثاء' },
-  { id: 'wed', labelKey: 'days.wed', defaultLabel: 'الأربعاء' },
-  { id: 'thu', labelKey: 'days.thu', defaultLabel: 'الخميس' },
-  { id: 'fri', labelKey: 'days.fri', defaultLabel: 'الجمعة' }
-];
+import { getDaysOptions } from '@/constants/days';
 
 export default function HalaqaFormModal({ 
   isOpen,
@@ -36,6 +27,8 @@ export default function HalaqaFormModal({
   
   const [timeError, setTimeError] = useState('');
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+  const daysOptions = getDaysOptions(t);
 
   const getStoredAcademyId = () => {
     try {
@@ -88,12 +81,16 @@ export default function HalaqaFormModal({
     }));
   };
 
-  const toggleDay = (dayId) => {
+  const toggleDay = (dayValue) => {
     setFormData((prev) => {
       const currentDays = Array.isArray(prev?.days_of_week) ? prev.days_of_week : [];
-      const updatedDays = currentDays.includes(dayId)
-        ? currentDays.filter((d) => d !== dayId)
-        : [...currentDays, dayId];
+      // الفحص بغض النظر عن حالة الأحرف لضمان عدم تكرار الأيام
+      const exists = currentDays.some(d => String(d).toLowerCase() === String(dayValue).toLowerCase());
+      
+      const updatedDays = exists
+        ? currentDays.filter((d) => String(d).toLowerCase() !== String(dayValue).toLowerCase())
+        : [...currentDays, dayValue];
+        
       return { ...prev, days_of_week: updatedDays };
     });
   };
@@ -224,27 +221,33 @@ export default function HalaqaFormModal({
             />
           </div>
 
-          {/* أيام الانعقاد */}
+          {/* أيام الانعقاد - استخدام الأيام الكاملة والربط بالمرجع الموحد */}
           <div>
             <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5 flex items-center gap-1.5">
               <Calendar size={13} className="text-semantic-actionPrimary" />
               <span>{t('daysOfWeekLabel', 'أيام انعقاد الحلقة')}</span>
             </label>
             <div className="flex flex-wrap gap-1.5 justify-start">
-              {DAYS_LIST.map((day) => {
-                const isSelected = selectedDays.includes(day.id);
+              {daysOptions.map((day) => {
+                const isSelected = selectedDays.some(d => 
+                  String(d).toLowerCase() === day.value.toLowerCase() || 
+                  String(d).toLowerCase() === day.short.toLowerCase() ||
+                  String(d).toLowerCase() === day.label.toLowerCase()
+                );
+                
                 return (
                   <button
-                    key={day.id}
+                    key={day.value}
                     type="button"
-                    onClick={() => toggleDay(day.id)}
+                    onClick={() => toggleDay(day.value)}
                     className={`py-1.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer border ${
                       isSelected
                         ? 'bg-semantic-actionPrimary text-white border-semantic-actionPrimary shadow-md'
                         : 'bg-semantic-surfaceCard text-semantic-textSecondary border-semantic-borderCard hover:border-semantic-actionPrimary/50 hover:text-semantic-textPrimary'
                     }`}
                   >
-                    {t(day.labelKey, day.defaultLabel)}
+                    {/* عرض الاسم الكامل بدقة (السبت، الأحد، الإثنين...) */}
+                    {day.label}
                   </button>
                 );
               })}
