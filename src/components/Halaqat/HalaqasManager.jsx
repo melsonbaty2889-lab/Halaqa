@@ -62,7 +62,6 @@ export default function HalaqasManager({
     { label: t('common.archived', 'المؤرشفة'), value: 'archived' }
   ];
 
-  // دالة تجهيز بيانات الحلقة للتعديل بشكل كامل
   const handleEditHalaqa = (item) => {
     const nameText = typeof item?.name === 'object' 
       ? (item.name?.[currentLang] || item.name?.ar || item.name?.en || '') 
@@ -117,38 +116,66 @@ export default function HalaqasManager({
         }}
         statsGrid={
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            {/* إجمالي الحلقات */}
             <div 
               onClick={() => setStatusFilter('all')}
-              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'all' ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'all' 
+                  ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
             >
-              <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-actionPrimary"></div>
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'all' ? 'bg-semantic-actionPrimary' : 'bg-transparent'
+              }`}></div>
               <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.total', 'إجمالي الحلقات')}</p>
               <p className="text-base sm:text-xl font-bold text-semantic-textPrimary mt-1">{stats.total}</p>
             </div>
 
+            {/* الحلقات النشطة */}
             <div 
               onClick={() => setStatusFilter('active')}
-              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'active' ? 'border-semantic-success ring-1 ring-semantic-success' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'active' 
+                  ? 'border-semantic-success ring-1 ring-semantic-success' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
             >
-              <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-success"></div>
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'active' ? 'bg-semantic-success' : 'bg-transparent'
+              }`}></div>
               <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.active', 'الحلقات النشطة')}</p>
               <p className="text-base sm:text-xl font-bold text-semantic-success mt-1">{stats.active}</p>
             </div>
 
+            {/* بدون معلم */}
             <div 
               onClick={() => setStatusFilter('no_teacher')}
-              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'no_teacher' ? 'border-semantic-warning ring-1 ring-semantic-warning' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'no_teacher' 
+                  ? 'border-semantic-warning ring-1 ring-semantic-warning' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
             >
-              <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-warning"></div>
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'no_teacher' ? 'bg-semantic-warning' : 'bg-transparent'
+              }`}></div>
               <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.no_teacher', 'بدون معلم')}</p>
               <p className="text-base sm:text-xl font-bold text-semantic-warning mt-1">{stats.noTeacher}</p>
             </div>
 
+            {/* المؤرشفة */}
             <div 
               onClick={() => setStatusFilter('archived')}
-              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${statusFilter === 'archived' ? 'border-semantic-error ring-1 ring-semantic-error' : 'border-semantic-borderCard hover:border-semantic-borderCard/80'}`}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'archived' 
+                  ? 'border-semantic-error ring-1 ring-semantic-error' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
             >
-              <div className="absolute top-0 start-0 end-0 h-1 bg-semantic-error"></div>
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'archived' ? 'bg-semantic-error' : 'bg-transparent'
+              }`}></div>
               <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('common.archived', 'المؤرشفة')}</p>
               <p className="text-base sm:text-xl font-bold text-semantic-error mt-1">{stats.archived}</p>
             </div>
