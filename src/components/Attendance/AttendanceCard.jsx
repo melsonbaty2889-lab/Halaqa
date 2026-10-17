@@ -22,7 +22,6 @@ const AttendanceCard = ({
   const rating = Math.round(grade / 2) || 5;
   const notes = data.notes || '';
 
-  // تحديد نوع المسار التعليمي (الافتراضي hifz أو general)
   const track = student.track || student.halaqa_track || 'hifz';
 
   const handleStatusChange = (newStatus) => {
@@ -60,7 +59,6 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
     window.open(url, '_blank');
   };
 
-  // عرض الحقول ديناميكياً حسب المسار
   const renderTrackFields = () => {
     switch (track) {
       case 'muraja':
@@ -74,7 +72,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               type="text"
               value={review}
               onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-              placeholder="مثال: من سورة النساء إلى سورة المائدة"
+              placeholder={t('attendance.enterReviewAmount', 'أدخل نطاق المراجعة والتثبيت...')}
               className={UI.input}
             />
           </div>
@@ -91,7 +89,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               type="text"
               value={memorization}
               onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-              placeholder="مثال: سورة الكهف (الآيات 1 - 45)"
+              placeholder={t('attendance.enterTilawahAmount', 'أدخل مقدار التلاوة والصفحات...')}
               className={UI.input}
             />
           </div>
@@ -112,7 +110,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
                   type="text"
                   value={memorization}
                   onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-                  placeholder="مثال: سورة البقرة (1-15)"
+                  placeholder={t('attendance.enterMemorizationAmount', 'أدخل مقدار الحفظ الجديد...')}
                   className={UI.input}
                 />
               </div>
@@ -125,13 +123,12 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
                   type="text"
                   value={review}
                   onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-                  placeholder="مثال: الجزء الأول كاملاً"
+                  placeholder={t('attendance.enterReviewAmount', 'أدخل نطاق المراجعة والتثبيت...')}
                   className={UI.input}
                 />
               </div>
             </div>
 
-            {/* حقل إضافي يظهر خصيصاً في المسار الشامل (للكتاتيب والدروس المساندة) */}
             {track === 'general' && (
               <div>
                 <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
@@ -142,7 +139,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
                   type="text"
                   value={lessonActivity}
                   onChange={(e) => onChangeField(student.id, 'lesson_activity', e.target.value)}
-                  placeholder="مثال: آداب الاستئذان + حفظ حديث أركان الإسلام"
+                  placeholder={t('attendance.enterLessonActivity', 'أدخل تفاصيل الدرس التربوي أو المساند...')}
                   className={UI.input}
                 />
               </div>
@@ -157,7 +154,6 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
       status === 'present' ? 'border-semantic-successBorder/40' : status === 'absent' ? 'border-semantic-danger/30' : 'border-amber-500/30'
     }`} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* هيدر الطالب وأزرار الحالة */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0 shadow-inner">
@@ -175,7 +171,6 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
           </div>
         </div>
 
-        {/* أزرار الحضور */}
         <div className="flex items-center gap-1.5 bg-semantic-surfaceInput p-1.5 rounded-2xl border border-semantic-borderInput w-full sm:w-auto justify-between sm:justify-start">
           <button
             type="button"
@@ -218,12 +213,10 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
         </div>
       </div>
 
-      {/* حقول التسميع الديناميكية */}
       {status === 'present' ? (
         <div className="space-y-3 pt-3">
           {renderTrackFields()}
 
-          {/* التقييم بالنجوم والملاحظات */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <div className="flex items-center gap-2 shrink-0 bg-semantic-surfaceInput/50 px-3 py-2 rounded-xl border border-semantic-borderInput">
               <span className="text-xs font-semibold text-semantic-textSecondary">{t('attendance.dailyRating', 'التقييم')}:</span>
@@ -269,7 +262,6 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
           </div>
         </div>
       ) : (
-        /* في حالة الغياب أو الاستئذان */
         <div className="flex items-center gap-2.5 pt-3">
           <div className="flex-1">
             <input
