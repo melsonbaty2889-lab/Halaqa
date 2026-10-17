@@ -1,15 +1,16 @@
 // src/components/Attendance/Attendance.jsx
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Loader2, Search, Archive, Lock } from 'lucide-react';
+import { Save, Loader2, GraduationCap } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
 import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
-import Input from '@/components/UI/Input';
 import PageLayout from '@/components/UI/PageLayout';
 
 import AttendanceHeader from './AttendanceHeader';
 import AttendanceStats from './AttendanceStats';
+import AttendanceFilterBar from './AttendanceFilterBar';
+import ArchivedNoticeBar from './ArchivedNoticeBar';
 
 export default function Attendance({ 
   students = [], 
@@ -47,7 +48,6 @@ export default function Attendance({
   const selectedHalaqa = halaqas.find(h => String(h.id) === String(selectedHalaqaId));
   const isArchived = Boolean(selectedHalaqa?.is_archived);
 
-  // فحص هل التاريخ الحالي يوافق يوم مجدول للحلقة
   const checkIsScheduledDay = () => {
     if (!selectedHalaqa || !selectedHalaqa.days_of_week || !selectedDate) return false;
     const dateObj = new Date(selectedDate);
@@ -62,7 +62,6 @@ export default function Attendance({
   const formatHalaqaName = useCallback((halaqa) => {
     if (!halaqa) return '';
     const currentLang = i18n?.language || 'ar';
-    
     const nameData = halaqa.name;
     if (typeof nameData === 'object' && nameData !== null) {
       return nameData[currentLang] || nameData.ar || nameData.en || Object.values(nameData)[0] || '';
@@ -70,52 +69,67 @@ export default function Attendance({
     return halaqa.name_ar || halaqa.name_en || halaqa.name || String(nameData || '');
   }, [i18n?.language]);
 
+  const halaqaOptions = [
+    { value: '', label: t('attendance.allHalaqas', 'جميع الحلقات والمجموعات') },
+    ...halaqas.map(h => ({
+      value: h.id,
+      label: `${formatHalaqaName(h)} ${h.is_archived ? `(${t('common.archived', 'مؤرشفة')})` : ''}`
+    }))
+  ];
+
+  // 1. شبكة الإحصائيات لتمريرها لـ PageLayout
+  const statsGridComponent = (
+    <AttendanceStats
+      stats={stats}
+    />
+  );
+
+  // 2. الفلاتر (البحث + الحلقة + التاريخ) لتمريرها لـ PageLayout
+  const filtersComponent = (
+    <AttendanceFilterBar
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      selectedHalaqaId={selectedHalaqaId}
+      setSelectedHalaqaId={setSelectedHalaqaId}
+      halaqaOptions={halaqaOptions}
+      selectedDate={selectedDate}
+      setSelectedDate={setSelectedDate}
+      isOfficialScheduleDay={isOfficialScheduleDay}
+      t={t}
+    />
+  );
+
   return (
-    <PageLayout dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="text-semantic-textPrimary p-1 font-cairo leading-relaxed pb-28 relative select-none">
+    <PageLayout
+      title={t('attendance.title', 'متابعة الجلسات والتحصيل')}
+      subtitle={t('attendance.subtitle', 'إدارة وتوثيق سجلات التسميع والمراجعة والتقييم للطلاب')}
+      icon={GraduationCap}
+      actionButtonText={t('attendance.markAllPresent', 'تسجيل حضور القائمة')}
+      onActionButtonClick={handleMarkAllPresent}
+      statsGrid={statsGridComponent}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder={t('attendance.searchPlaceholder', 'البحث باسم الطالب أو المعرف...')}
+      filtersChildren={filtersComponent}
+      totalCount={students.length}
+      filteredCount={filteredStudents.length}
+      countUnitText={t('common.studentUnit', 'طالب')}
+      hasActiveFilters={Boolean(searchQuery || selectedHalaqaId)}
+      onResetFilters={() => {
+        setSearchQuery('');
+        setSelectedHalaqaId('');
+      }}
+      isRtl={isRtl}
+      t={t}
+    >
+      <div className="text-semantic-textPrimary pb-20 relative select-none" dir={isRtl ? 'rtl' : 'ltr'}>
         
-        {/* 1️⃣ الترويسة وشريط اختيار الحلقة والتاريخ الموحد */}
-        <AttendanceHeader
-          halaqas={halaqas}
-          selectedHalaqaId={selectedHalaqaId}
-          setSelectedHalaqaId={setSelectedHalaqaId}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          formatHalaqaName={formatHalaqaName}
-          isOfficialScheduleDay={isOfficialScheduleDay}
-        />
+        {/* شريط تنبيه الأرشفة */}
+        {isArchived && <ArchivedNoticeBar />}
 
-        {/* 2️⃣ تنبيه الحلقة المؤرشفة (في حال اختيار حلقة مؤرشفة) */}
-        {isArchived && (
-          <div className="p-3.5 rounded-xl mb-5 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textSecondary text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
-            <Archive className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
-            <span>
-              {t('attendance.archivedNotice', 'هذه الحلقة مؤرشفة حالياً. يمكنك استعراض السجلات القديمة فقط، وتم إيقاف إمكانية تعديل الحضور أو تسجيل التسميع.')}
-            </span>
-          </div>
-        )}
-
-        {/* 3️⃣ لوحة الإحصائيات والتحضير السريع */}
-        <AttendanceStats
-          stats={stats}
-          handleMarkAllPresent={handleMarkAllPresent}
-          disabledMarkAll={filteredStudents.length === 0 || isArchived}
-        />
-
-        {/* 4️⃣ حقل البحث الموحد */}
-        <div className="mb-5">
-          <Input 
-            type="text"
-            icon={Search}
-            placeholder={t('attendance.searchPlaceholder', 'البحث عن طالب بالنص أو المعرف...')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* رسائل التنبيهات */}
+        {/* رسائل النظام والتنبيهات */}
         {message.text && (
-          <div className={`p-3.5 rounded-xl mb-5 text-xs font-bold border backdrop-blur-md animate-fade-in ${
+          <div className={`p-3.5 rounded-xl mb-4 text-xs font-bold border backdrop-blur-md animate-fade-in ${
             message.type === 'success' 
               ? 'bg-semantic-successBg text-semantic-success border-semantic-successBorder' 
               : 'bg-semantic-dangerBg text-semantic-danger border-semantic-danger/30'
@@ -124,16 +138,16 @@ export default function Attendance({
           </div>
         )}
 
-        {/* 5️⃣ قائمة بطاقات الطلاب والتسميع */}
+        {/* قائمة الطلاب وبطاقات التسميع */}
         {loadingFetch ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <Loader2 className="w-8 h-8 animate-spin text-semantic-actionPrimary" />
-            <span className="text-xs text-semantic-textSecondary font-bold">{t('attendance.loadingData', 'جاري استرداد سجلات التسميع والحضور...')}</span>
+            <span className="text-xs text-semantic-textSecondary font-bold">{t('attendance.loadingData', 'جاري استرداد البيانات...')}</span>
           </div>
         ) : (
           <div className="flex flex-col gap-3.5 mb-6">
             {filteredStudents.length === 0 ? (
-              <div className="card-surface rounded-2xl p-8 text-center">
+              <div className="bg-semantic-surfaceCard rounded-2xl p-8 text-center border border-semantic-borderCard">
                 <p className="text-xs text-semantic-textSecondary font-bold m-0">
                   {t('attendance.noStudentsFound', 'لا توجد بيانات مطابقة لمعايير البحث الحالية.')}
                 </p>
@@ -156,25 +170,27 @@ export default function Attendance({
           </div>
         )}
 
-        {/* 6️⃣ الشريط الثابت للحفظ والتوثيق النهائي */}
+        {/* الشريط الثابت بالأسفل للاعتماد والحفظ */}
         {!loadingFetch && filteredStudents.length > 0 && (
           <div className="sticky bottom-4 z-20 mt-6 backdrop-blur-lg bg-semantic-bgPage/85 p-2 rounded-2xl border border-semantic-borderCard shadow-xl">
             {isArchived ? (
               <div className="p-3.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-center text-xs text-semantic-textMuted font-extrabold flex items-center justify-center gap-2">
-                <Lock className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
                 <span>{t('attendance.archivedReadOnlyBtn', 'الحلقة مؤرشفة - السجل متاح للعرض فقط')}</span>
               </div>
             ) : (
               <button 
+                type="button"
                 onClick={handleSaveAttendance}
                 disabled={isSaving}
-                className="btn-primary"
+                className="w-full py-3 bg-semantic-actionPrimary hover:opacity-90 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
               >
                 {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} 
-                {isSaving 
-                  ? t('attendance.saving', 'جاري توثيق واعتماد البيانات...') 
-                  : t('attendance.saveBtn', 'اعتماد وحفظ السجل اليومي الشامل للمجموعة')
-                }
+                <span>
+                  {isSaving 
+                    ? t('attendance.saving', 'جاري توثيق واعتماد البيانات...') 
+                    : t('attendance.saveBtn', 'اعتماد وحفظ السجل اليومي الشامل للمجموعة')
+                  }
+                </span>
               </button>
             )}
           </div>
