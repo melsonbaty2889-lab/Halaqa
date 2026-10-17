@@ -84,7 +84,6 @@ export default function HalaqaFormModal({
   const toggleDay = (dayValue) => {
     setFormData((prev) => {
       const currentDays = Array.isArray(prev?.days_of_week) ? prev.days_of_week : [];
-      // الفحص بغض النظر عن حالة الأحرف لضمان عدم تكرار الأيام
       const exists = currentDays.some(d => String(d).toLowerCase() === String(dayValue).toLowerCase());
       
       const updatedDays = exists
@@ -205,11 +204,11 @@ export default function HalaqaFormModal({
       title={formData?.id ? t('editHalaqaTitle', 'تعديل بيانات الحلقة') : t('createHalaqaTitle', 'إنشاء حلقة جديدة')}
     >
       <form onSubmit={onSubmitForm} className={`flex flex-col flex-1 min-h-0 ${isRtl ? 'text-right' : 'text-left'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3">
+        <div className="space-y-3.5 p-1 overflow-y-auto flex-1 pb-3 text-start">
           
           {/* اسم الحلقة */}
           <div>
-            <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
               {t('halaqaNameLabel', 'اسم الحلقة')} <span className="text-semantic-actionPrimary">*</span>
             </label>
             <Input
@@ -221,13 +220,13 @@ export default function HalaqaFormModal({
             />
           </div>
 
-          {/* أيام الانعقاد - استخدام الأيام الكاملة والربط بالمرجع الموحد */}
+          {/* أيام الانعقاد */}
           <div>
-            <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5 flex items-center gap-1.5">
-              <Calendar size={13} className="text-semantic-actionPrimary" />
+            <label className="block text-xs font-bold text-semantic-textPrimary mb-1.5 flex items-center gap-1.5 text-start">
+              <Calendar size={13} className="text-semantic-actionPrimary shrink-0" />
               <span>{t('daysOfWeekLabel', 'أيام انعقاد الحلقة')}</span>
             </label>
-            <div className="flex flex-wrap gap-1.5 justify-start">
+            <div className={`flex flex-wrap gap-1.5 ${isRtl ? 'justify-start' : 'justify-start'}`}>
               {daysOptions.map((day) => {
                 const isSelected = selectedDays.some(d => 
                   String(d).toLowerCase() === day.value.toLowerCase() || 
@@ -246,7 +245,6 @@ export default function HalaqaFormModal({
                         : 'bg-semantic-surfaceCard text-semantic-textSecondary border-semantic-borderCard hover:border-semantic-actionPrimary/50 hover:text-semantic-textPrimary'
                     }`}
                   >
-                    {/* عرض الاسم الكامل بدقة (السبت، الأحد، الإثنين...) */}
                     {day.label}
                   </button>
                 );
@@ -256,7 +254,7 @@ export default function HalaqaFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
                 {t('trackLabel', 'المسار التعليمي')}
               </label>
               <Select
@@ -269,7 +267,7 @@ export default function HalaqaFormModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
                 {t('teacherLabel', 'المعلم المسؤول')}
               </label>
               <Select
@@ -284,7 +282,7 @@ export default function HalaqaFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
                 {t('targetAudienceLabel', 'الفئة المستهدفة')}
               </label>
               <Select
@@ -297,7 +295,7 @@ export default function HalaqaFormModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
                 {t('halaqaTypeLabel', 'نمط انعقاد الحلقة')}
               </label>
               <Select
@@ -328,7 +326,7 @@ export default function HalaqaFormModal({
             />
 
             <div>
-              <label className="block text-xs font-bold text-semantic-textPrimary mb-1">
+              <label className="block text-xs font-bold text-semantic-textPrimary mb-1 text-start">
                 {t('maxStudentsLabel', 'الحد الأقصى للطلاب')}
               </label>
               <Input
@@ -343,7 +341,7 @@ export default function HalaqaFormModal({
           </div>
 
           {timeError && (
-            <div className="p-2 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in">
+            <div className="p-2 rounded-xl bg-semantic-dangerBg text-semantic-danger text-xs flex items-center gap-2 border border-semantic-danger/30 animate-fade-in text-start">
               <AlertCircle size={15} className="shrink-0 text-semantic-danger" />
               <span className="font-semibold">{timeError}</span>
             </div>
