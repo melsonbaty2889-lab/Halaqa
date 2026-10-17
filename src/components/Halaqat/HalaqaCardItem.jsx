@@ -51,10 +51,10 @@ export default function HalaqaCardItem({
       if (!dayVal) return '';
       const safeVal = String(dayVal).toLowerCase();
       const found = daysOptions.find(d => 
-        d.value.toLowerCase() === safeVal || 
-        d.label.toLowerCase() === safeVal ||
-        d.short.toLowerCase() === safeVal ||
-        d.value.toLowerCase().startsWith(safeVal)
+        (d?.value || '').toLowerCase() === safeVal || 
+        (d?.label || '').toLowerCase() === safeVal ||
+        (d?.short || '').toLowerCase() === safeVal ||
+        (d?.value || '').toLowerCase().startsWith(safeVal)
       );
       return found ? found.label : dayVal;
     }).filter(Boolean).join(isRtl ? '، ' : ', ');
@@ -128,10 +128,12 @@ export default function HalaqaCardItem({
           </span>
         </div>
 
-        {/* عدد الطلاب */}
+        {/* عدد الطلاب بربط ترجمة ديناميكي */}
         <div className="flex items-center gap-1 text-[11px] font-bold text-semantic-textMuted bg-semantic-surfaceInput/60 px-2 py-0.5 rounded-lg border border-semantic-borderInput/50 shrink-0">
           <Users className="w-3 h-3 shrink-0 text-semantic-actionPrimary" />
-          <span><bdi>{studentsCount}</bdi>/<bdi>{maxStudents}</bdi> {t('students_unit', 'طالب')}</span>
+          <span>
+            <bdi>{studentsCount}</bdi>/<bdi>{maxStudents}</bdi> {studentsCount === 1 ? t('students_unit', 'طالب') : t('students_plural', 'طلاب')}
+          </span>
         </div>
       </div>
 
