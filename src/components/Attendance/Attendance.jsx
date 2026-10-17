@@ -1,7 +1,7 @@
 // src/components/Attendance/Attendance.jsx
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon } from 'lucide-react';
+import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon, Archive, Lock } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
 import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
@@ -10,7 +10,6 @@ import Select from '@/components/UI/Select';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
 
 import AttendanceStats from './AttendanceStats';
-import ArchivedNoticeBar from './ArchivedNoticeBar';
 
 export default function Attendance({ 
   students = [], 
@@ -83,7 +82,7 @@ export default function Attendance({
     <AttendanceStats stats={stats} />
   );
 
-  // 2️⃣ الفلاتر المباشرة داخل PageLayout دون ملف منفصل
+  // 2️⃣ الفلاتر المباشرة داخل PageLayout
   const filtersComponent = (
     <>
       <div className="col-span-2 md:col-span-1">
@@ -145,8 +144,18 @@ export default function Attendance({
     >
       <div className="text-semantic-textPrimary pb-20 relative select-none" dir={isRtl ? 'rtl' : 'ltr'}>
         
-        {/* تنبيه الحلقة المؤرشفة */}
-        {isArchived && <ArchivedNoticeBar />}
+        {/* شريط تنبيه الحلقة المؤرشفة (مدمج مباشرة) */}
+        {isArchived && (
+          <div className="p-3.5 rounded-xl mb-4 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textSecondary text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
+            <Archive className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
+            <span>
+              {t(
+                'attendance.archivedNotice', 
+                'هذه الحلقة مؤرشفة حالياً. يمكنك استعراض السجلات القديمة فقط، وتم إيقاف إمكانية تعديل الحضور أو تسجيل التسميع.'
+              )}
+            </span>
+          </div>
+        )}
 
         {/* رسائل التنبيه والنتائج */}
         {message.text && (
@@ -196,6 +205,7 @@ export default function Attendance({
           <div className="sticky bottom-4 z-20 mt-6 backdrop-blur-lg bg-semantic-bgPage/85 p-2 rounded-2xl border border-semantic-borderCard shadow-xl">
             {isArchived ? (
               <div className="p-3.5 rounded-xl bg-semantic-surfaceInput border border-semantic-borderCard text-center text-xs text-semantic-textMuted font-extrabold flex items-center justify-center gap-2">
+                <Lock className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
                 <span>{t('attendance.archivedReadOnlyBtn', 'الحلقة مؤرشفة - السجل متاح للعرض فقط')}</span>
               </div>
             ) : (
