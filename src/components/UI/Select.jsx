@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useId, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, X, Check, ChevronDown } from 'lucide-react';
 
 const getPrimary = () => 'var(--color-action-primary)';
@@ -36,10 +37,18 @@ export const Select = forwardRef(({
   style = {}, 
   id: customId,
   title,
-  dir = 'rtl',
-  t = (key, fallback) => fallback,
+  dir: customDir,
+  t: customT,
   ...props 
 }, ref) => {
+  const { t: i18nT, i18n } = useTranslation();
+  const t = customT || i18nT;
+  const currentLang = i18n?.language || 'ar';
+  
+  // تحديد اتجاه اللغة ديناميكياً (افتراضاً RTL للعربية والأوردو و LTR لباقي اللغات)
+  const isRtl = ['ar', 'ur'].includes(currentLang);
+  const dir = customDir || (isRtl ? 'rtl' : 'ltr');
+
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, openUpward: false });
@@ -182,6 +191,7 @@ export const Select = forwardRef(({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          textAlign: "start",
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
           boxSizing: "border-box",
@@ -191,7 +201,7 @@ export const Select = forwardRef(({
         }}
         {...props}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "start", flex: 1 }}>
           {selectedOption?.label || placeholder || t('common.select', 'اختر...')}
         </span>
         <ChevronDown 
@@ -201,8 +211,7 @@ export const Select = forwardRef(({
             transition: "transform 0.2s", 
             color: isOpen ? getPrimary() : getTextSub(),
             flexShrink: 0,
-            marginRight: dir === 'rtl' ? 0 : 8,
-            marginLeft: dir === 'rtl' ? 8 : 0
+            [dir === 'rtl' ? 'marginRight' : 'marginLeft']: 8
           }} 
         />
       </button>
@@ -223,9 +232,10 @@ export const Select = forwardRef(({
             <div 
               className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-semantic-borderCard bg-semantic-surfaceCard text-semantic-textPrimary"
               onClick={(e) => e.stopPropagation()}
+              dir={dir}
             >
               <div className="flex items-center justify-between p-3.5 border-b border-semantic-borderInput bg-semantic-surfaceInput/40 shrink-0">
-                <h3 className="text-sm font-bold m-0 text-semantic-textPrimary">
+                <h3 className="text-sm font-bold m-0 text-semantic-textPrimary text-start">
                   {title || label || t('common.select_status', 'تصفية بحسب الحالة')}
                 </h3>
                 <button
@@ -245,7 +255,7 @@ export const Select = forwardRef(({
                       placeholder={searchPlaceholder || t('common.search', 'بحث...')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full py-2 px-9 border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary rounded-xl text-xs outline-none transition focus:border-semantic-actionPrimary"
+                      className={`w-full py-2 px-9 border border-semantic-borderInput bg-semantic-surfaceInput text-semantic-textPrimary rounded-xl text-xs outline-none transition focus:border-semantic-actionPrimary text-start`}
                       autoFocus
                     />
                     <Search size={14} className={`absolute top-3 ${dir === 'rtl' ? 'right-3' : 'left-3'} text-semantic-textSecondary`} />
@@ -271,9 +281,10 @@ export const Select = forwardRef(({
                             ? 'bg-semantic-actionPrimary/15 text-semantic-actionPrimary font-bold border-semantic-actionPrimary/30'
                             : 'border-transparent text-semantic-textPrimary font-medium hover:bg-semantic-surfaceInput'
                         }`}
+                        dir={dir}
                       >
-                        <span>{option.label}</span>
-                        {isSelected && <Check size={16} className="shrink-0 ms-2 text-semantic-actionPrimary" />}
+                        <span className="text-start flex-1 truncate">{option.label}</span>
+                        {isSelected && <Check size={16} className={`shrink-0 ${dir === 'rtl' ? 'ms-2' : 'me-2'} text-semantic-actionPrimary`} />}
                       </button>
                     );
                   })
@@ -303,7 +314,8 @@ export const Select = forwardRef(({
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.4)",
-                backdropFilter: "blur(12px)"
+                backdropFilter: "blur(12px)",
+                textAlign: "start"
               }}
             >
               {shouldShowSearch && (
@@ -322,7 +334,8 @@ export const Select = forwardRef(({
                       border: `1px solid ${getBorder()}`,
                       background: getSurface(),
                       color: getTextTitle(),
-                      outline: "none"
+                      outline: "none",
+                      textAlign: "start"
                     }}
                   />
                 </div>
@@ -336,7 +349,8 @@ export const Select = forwardRef(({
                   listStyle: "none",
                   overflowY: "auto",
                   maxHeight: 180,
-                  overscrollBehavior: 'contain'
+                  overscrollBehavior: 'contain',
+                  textAlign: "start"
                 }}
               >
                 {filteredOptions.length === 0 ? (
@@ -367,8 +381,8 @@ export const Select = forwardRef(({
                           justifyContent: "space-between"
                         }}
                       >
-                        <span>{o.label}</span>
-                        {isSelected && <Check size={16} style={{ color: getPrimary() }} />}
+                        <span style={{ textAlign: "start", flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{o.label}</span>
+                        {isSelected && <Check size={16} style={{ color: getPrimary(), flexShrink: 0, [dir === 'rtl' ? 'marginRight' : 'marginLeft']: 8 }} />}
                       </li>
                     );
                   })
