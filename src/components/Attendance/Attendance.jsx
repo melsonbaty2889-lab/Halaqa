@@ -6,7 +6,7 @@ import { Save, Loader2, Search, Archive, Lock } from 'lucide-react';
 import { useAttendance } from '@/hooks/useAttendance';
 import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
 import Input from '@/components/UI/Input';
-import PageLayout from '@/components/UI/PageLayout'; // استيراد الهيكل العام الموحد
+import PageLayout from '@/components/UI/PageLayout';
 
 import AttendanceHeader from './AttendanceHeader';
 import AttendanceStats from './AttendanceStats';
@@ -47,6 +47,7 @@ export default function Attendance({
   const selectedHalaqa = halaqas.find(h => String(h.id) === String(selectedHalaqaId));
   const isArchived = Boolean(selectedHalaqa?.is_archived);
 
+  // فحص هل التاريخ الحالي يوافق يوم مجدول للحلقة
   const checkIsScheduledDay = () => {
     if (!selectedHalaqa || !selectedHalaqa.days_of_week || !selectedDate) return false;
     const dateObj = new Date(selectedDate);
@@ -71,9 +72,9 @@ export default function Attendance({
 
   return (
     <PageLayout dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="text-white p-1 font-cairo leading-relaxed pb-28 relative select-none">
+      <div className="text-semantic-textPrimary p-1 font-cairo leading-relaxed pb-28 relative select-none">
         
-        {/* 1. رأس الصفحة وضوابط التصفية */}
+        {/* 1️⃣ الترويسة وشريط اختيار الحلقة والتاريخ الموحد */}
         <AttendanceHeader
           halaqas={halaqas}
           selectedHalaqaId={selectedHalaqaId}
@@ -82,12 +83,11 @@ export default function Attendance({
           setSelectedDate={setSelectedDate}
           formatHalaqaName={formatHalaqaName}
           isOfficialScheduleDay={isOfficialScheduleDay}
-          isRtl={isRtl}
         />
 
-        {/* 2. شريط تنبيه الحلقة المؤرشفة */}
+        {/* 2️⃣ تنبيه الحلقة المؤرشفة (في حال اختيار حلقة مؤرشفة) */}
         {isArchived && (
-          <div className="p-3.5 rounded-xl mb-5 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textSecondary text-xs font-bold flex items-center gap-2.5 shadow-sm">
+          <div className="p-3.5 rounded-xl mb-5 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textSecondary text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
             <Archive className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
             <span>
               {t('attendance.archivedNotice', 'هذه الحلقة مؤرشفة حالياً. يمكنك استعراض السجلات القديمة فقط، وتم إيقاف إمكانية تعديل الحضور أو تسجيل التسميع.')}
@@ -95,14 +95,14 @@ export default function Attendance({
           </div>
         )}
 
-        {/* 3. الإحصائيات والتحضير السريع */}
+        {/* 3️⃣ لوحة الإحصائيات والتحضير السريع */}
         <AttendanceStats
           stats={stats}
           handleMarkAllPresent={handleMarkAllPresent}
           disabledMarkAll={filteredStudents.length === 0 || isArchived}
         />
 
-        {/* 4. حقل البحث الموحد */}
+        {/* 4️⃣ حقل البحث الموحد */}
         <div className="mb-5">
           <Input 
             type="text"
@@ -113,9 +113,9 @@ export default function Attendance({
           />
         </div>
 
-        {/* رسائل النظام */}
+        {/* رسائل التنبيهات */}
         {message.text && (
-          <div className={`p-3.5 rounded-xl mb-5 text-xs font-bold border backdrop-blur-md ${
+          <div className={`p-3.5 rounded-xl mb-5 text-xs font-bold border backdrop-blur-md animate-fade-in ${
             message.type === 'success' 
               ? 'bg-semantic-successBg text-semantic-success border-semantic-successBorder' 
               : 'bg-semantic-dangerBg text-semantic-danger border-semantic-danger/30'
@@ -124,7 +124,7 @@ export default function Attendance({
           </div>
         )}
 
-        {/* 5. القائمة والكروت */}
+        {/* 5️⃣ قائمة بطاقات الطلاب والتسميع */}
         {loadingFetch ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <Loader2 className="w-8 h-8 animate-spin text-semantic-actionPrimary" />
@@ -156,7 +156,7 @@ export default function Attendance({
           </div>
         )}
 
-        {/* 6. الشريط الثابت للحفظ والإقرار */}
+        {/* 6️⃣ الشريط الثابت للحفظ والتوثيق النهائي */}
         {!loadingFetch && filteredStudents.length > 0 && (
           <div className="sticky bottom-4 z-20 mt-6 backdrop-blur-lg bg-semantic-bgPage/85 p-2 rounded-2xl border border-semantic-borderCard shadow-xl">
             {isArchived ? (
