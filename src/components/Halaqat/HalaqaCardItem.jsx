@@ -42,7 +42,7 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // تنسيق أيام الانعقاد بالاعتماد على src/constants/days.js
+  // تنسيق أيام الانعقاد بأسماء الأيام الكاملة بالاعتماد على src/constants/days.js
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const daysOptions = getDaysOptions(t);
@@ -50,10 +50,12 @@ export default function HalaqaCardItem({
     return daysArray.map(dayVal => {
       const found = daysOptions.find(d => 
         d.value.toLowerCase() === String(dayVal || '').toLowerCase() || 
+        d.label.toLowerCase() === String(dayVal || '').toLowerCase() ||
         d.short.toLowerCase() === String(dayVal || '').toLowerCase() ||
         d.value.toLowerCase().startsWith(String(dayVal || '').toLowerCase())
       );
-      return found ? found.short : dayVal;
+      // استخدام d.label لعرض "السبت، الأحد" بدلاً من "سبت، أحد"
+      return found ? found.label : dayVal;
     }).join('، ');
   };
 
