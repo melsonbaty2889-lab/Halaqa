@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon, Archive, Lock } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
-
 import PageLayout from '@/components/UI/PageLayout';
 import Select from '@/components/UI/Select';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
+
 import AttendanceCard from './AttendanceCard';
 import AttendanceStats from './AttendanceStats';
 
@@ -185,14 +185,18 @@ export default function Attendance({
             ) : (
               filteredStudents.map(student => (
                 <div key={student.id} className={isArchived ? "pointer-events-none opacity-80" : ""}>
-                  <StudentAttendanceCard 
+                  <AttendanceCard 
                     student={student}
-                    record={attendanceData[student.id] || {}}
-                    updateStudentField={updateStudentField}
-                    selectedDate={selectedDate}
+                    initialData={attendanceData[student.id] || {}}
+                    onSaveAttendance={(data) => {
+                      updateStudentField(student.id, 'status', data.status);
+                      updateStudentField(student.id, 'new_memorization', data.memorization);
+                      updateStudentField(student.id, 'retention_assignment', data.review);
+                      updateStudentField(student.id, 'session_grade', data.rating * 2);
+                      updateStudentField(student.id, 'notes', data.notes);
+                    }}
                     isRtl={isRtl}
                     t={t}
-                    isReadOnly={isArchived}
                   />
                 </div>
               ))
