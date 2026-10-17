@@ -218,7 +218,7 @@ export default function HalaqasManager({
         hasActiveFilters={hasActiveFilters}
         onResetFilters={resetFilters}
         onRefresh={onRefresh}
-        countUnitText="حلقة"
+        countUnitText={t('common.halaqaUnit', 'حلقة')}
         isLoading={false}
         isRtl={isRtl}
         t={t}
