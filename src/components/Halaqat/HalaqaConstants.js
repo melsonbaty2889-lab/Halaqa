@@ -33,25 +33,25 @@ export const getLocalizedContent = (value, currentLang = 'ar', getLocalizedText 
     );
   }
 
-  return '';
+  return String(value);
 };
 
 /**
- * المسارات التعليمية الأساسية فقط (تستخدم في نماذج الإنشاء والتعديل)
+ * المسارات التعليمية الأساسية (تستخدم في نماذج الإنشاء والتعديل)
  */
 export const getTrackOptions = (t) => [
-  { value: 'hifz', label: t('trackHifz', 'حفظ القرآن الكريم وتجويده') },
-  { value: 'muraja', label: t('trackMuraja', 'المراجعة والتثبيت') },
-  { value: 'tilawah', label: t('trackTilawah', 'التلاوة وتصحيح القراءة') },
-  { value: 'ijazah', label: t('trackIjazah', 'الإجازة بالسند المتصل') },
-  { value: 'mutun', label: t('trackMutun', 'المتون العلمية والتجويد النظري') }
+  { value: 'hifz', label: typeof t === 'function' ? t('trackHifz', 'حفظ القرآن الكريم وتجويده') : 'حفظ القرآن الكريم وتجويده' },
+  { value: 'muraja', label: typeof t === 'function' ? t('trackMuraja', 'المراجعة والتثبيت') : 'المراجعة والتثبيت' },
+  { value: 'tilawah', label: typeof t === 'function' ? t('trackTilawah', 'التلاوة وتصحيح القراءة') : 'التلاوة وتصحيح القراءة' },
+  { value: 'ijazah', label: typeof t === 'function' ? t('trackIjazah', 'الإجازة بالسند المتصل') : 'الإجازة بالسند المتصل' },
+  { value: 'mutun', label: typeof t === 'function' ? t('trackMutun', 'المتون العلمية والتجويد النظري') : 'المتون العلمية والتجويد النظري' }
 ];
 
 /**
  * مسارات الفلترة (تستخدم في شريط الفلترة فقط عبر إضافة خيار "الكل")
  */
 export const getFilterTrackOptions = (t) => [
-  { value: 'all', label: t('allTracks', 'جميع المسارات التعليمية') },
+  { value: 'all', label: typeof t === 'function' ? t('allTracks', 'جميع المسارات التعليمية') : 'جميع المسارات التعليمية' },
   ...getTrackOptions(t)
 ];
 
@@ -59,16 +59,16 @@ export const getFilterTrackOptions = (t) => [
  * الفئات المستهدفة الأساسية (تستخدم في النماذج)
  */
 export const getTargetAudienceOptions = (t) => [
-  { value: 'kids', label: t('audienceKids', 'الأطفال') },
-  { value: 'males', label: t('audienceMales', 'الرجال / الذكور') },
-  { value: 'females', label: t('audienceFemales', 'النساء / الإناث') }
+  { value: 'kids', label: typeof t === 'function' ? t('audienceKids', 'الأطفال') : 'الأطفال' },
+  { value: 'males', label: typeof t === 'function' ? t('audienceMales', 'الرجال / الذكور') : 'الرجال / الذكور' },
+  { value: 'females', label: typeof t === 'function' ? t('audienceFemales', 'النساء / الإناث') : 'النساء / الإناث' }
 ];
 
 /**
  * فئات الفلترة المستهدفة (تستخدم في الفلاتر)
  */
 export const getFilterTargetAudienceOptions = (t) => [
-  { value: 'all', label: t('audienceAll', 'جميع الفئات') },
+  { value: 'all', label: typeof t === 'function' ? t('audienceAll', 'جميع الفئات') : 'جميع الفئات' },
   ...getTargetAudienceOptions(t)
 ];
 
@@ -76,6 +76,6 @@ export const getFilterTargetAudienceOptions = (t) => [
  * نمط انعقاد الحلقة (مطابق لشرط halaqas_teaching_type_check في قاعدة البيانات)
  */
 export const getHalaqaTypeOptions = (t) => [
-  { value: 'online', label: t('typeOnline', 'عن بُعد (أونلاين)') },
-  { value: 'offline', label: t('typeOffline', 'حضوري (في المقر / المسجد)') }
+  { value: 'online', label: typeof t === 'function' ? t('typeOnline', 'عن بُعد (أونلاين)') : 'عن بُعد (أونلاين)' },
+  { value: 'offline', label: typeof t === 'function' ? t('typeOffline', 'حضوري (في المقر / المسجد)') : 'حضوري (في المقر / المسجد)' }
 ];
