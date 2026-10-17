@@ -1,11 +1,13 @@
+// src/components/Attendance/AttendanceCard.jsx
 import React, { useState } from 'react';
 import { 
   User, CheckCircle2, XCircle, Clock, 
   Send, Save, BookOpen, Star 
 } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
+import UI from '@/theme/styles';
 
-const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
+const AttendanceCard = ({ student, onSaveAttendance, initialData = {}, t, isRtl }) => {
   const [status, setStatus] = useState(initialData.status || 'present');
   const [memorization, setMemorization] = useState(initialData.memorization || '');
   const [review, setReview] = useState(initialData.review || '');
@@ -38,23 +40,23 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
     const cleanPhone = student.phone.replace(/[^0-9]/g, '');
     const formattedPhone = cleanPhone.startsWith('0') ? `2${cleanPhone}` : cleanPhone;
     
-    const message = `تقرير الطالب: ${formatName(student.name)}
-حالة الحضور: ${status === 'present' ? 'حاضر ✅' : status === 'absent' ? 'غائب ❌' : 'مستأذن ⚠️'}
-الحفظ: ${memorization || 'لم يتم التحديد'}
-المراجعة: ${review || 'لم يتم التحديد'}
-التقييم: ${'⭐'.repeat(rating)}
-ملاحظات: ${notes || 'لا يوجد'}`;
+    const message = `${t('attendance.whatsappReportTitle', 'تقرير الطالب')}: ${formatName(student.name)}
+${t('attendance.statusLabel', 'حالة الحضور')}: ${status === 'present' ? 'حاضر ✅' : status === 'absent' ? 'غائب ❌' : 'مستأذن ⚠️'}
+${t('attendance.newMemorization', 'الحفظ الجديد')}: ${memorization || '-'}
+${t('attendance.review', 'المراجعة')}: ${review || '-'}
+${t('attendance.rating', 'التقييم')}: ${'⭐'.repeat(rating)}
+${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
 
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
   return (
-    <div className="bg-dark-card border border-appBorder-card rounded-2xl p-5 space-y-4 backdrop-blur-sm transition-all hover:border-appBorder-hover">
+    <div className={`${UI.card} space-y-4`} dir={isRtl ? 'rtl' : 'ltr'}>
       {/* هيدر الطالب */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-appBorder-card pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-dark-input border border-appBorder-input flex items-center justify-center text-appText-sub font-medium overflow-hidden shrink-0">
+          <div className="w-10 h-10 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0">
             {student.avatar_url ? (
               <img src={student.avatar_url} alt={student.name} className="w-full h-full object-cover" />
             ) : (
@@ -62,50 +64,50 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-appText-main">{formatName(student.name)}</h3>
-            <p className="text-xs text-appText-sub">{student.halaqa_name || 'حلقة غير محددة'}</p>
+            <h3 className="font-semibold text-semantic-textPrimary">{formatName(student.name)}</h3>
+            <p className="text-xs text-semantic-textSecondary">{student.halaqa_name || ''}</p>
           </div>
         </div>
 
         {/* خيارات تحديد الحضور والغياب */}
-        <div className="flex items-center gap-1.5 bg-dark-input/60 p-1 rounded-xl border border-appBorder-input">
+        <div className="flex items-center gap-1.5 bg-semantic-surfaceInput/60 p-1 rounded-xl border border-semantic-borderInput">
           <button
             type="button"
             onClick={() => setStatus('present')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
               status === 'present' 
-                ? 'bg-brandEmerald-bg text-brandEmerald border border-brandEmerald-border' 
-                : 'text-appText-sub hover:text-appText-main'
+                ? 'bg-semantic-successBg text-semantic-success border border-semantic-successBorder' 
+                : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            حاضر
+            {t('attendance.present', 'حاضر')}
           </button>
 
           <button
             type="button"
             onClick={() => setStatus('absent')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
               status === 'absent' 
-                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
-                : 'text-appText-sub hover:text-appText-main'
+                ? 'bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30' 
+                : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
             <XCircle className="w-3.5 h-3.5" />
-            غائب
+            {t('attendance.absent', 'غائب')}
           </button>
 
           <button
             type="button"
             onClick={() => setStatus('excused')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
               status === 'excused' 
                 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
-                : 'text-appText-sub hover:text-appText-main'
+                : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            مستأذن
+            {t('attendance.excused', 'مستأذن')}
           </button>
         </div>
       </div>
@@ -114,30 +116,30 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
       {status === 'present' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
           <div>
-            <label className="block text-xs text-appText-sub mb-1 flex items-center gap-1">
-              <BookOpen className="w-3.5 h-3.5 text-primary" />
-              الحفظ الجديد
+            <label className="block text-xs text-semantic-textSecondary mb-1 flex items-center gap-1">
+              <BookOpen className="w-3.5 h-3.5 text-semantic-actionPrimary" />
+              {t('attendance.newMemorization', 'الحفظ الجديد')}
             </label>
             <input
               type="text"
               value={memorization}
               onChange={(e) => setMemorization(e.target.value)}
-              placeholder="مثال: سورة البقرة من آية 1 إلى 15"
-              className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-xs placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+              placeholder=""
+              className={UI.input}
             />
           </div>
 
           <div>
-            <label className="block text-xs text-appText-sub mb-1 flex items-center gap-1">
+            <label className="block text-xs text-semantic-textSecondary mb-1 flex items-center gap-1">
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-              المراجعة
+              {t('attendance.review', 'المراجعة')}
             </label>
             <input
               type="text"
               value={review}
               onChange={(e) => setReview(e.target.value)}
-              placeholder="مثال: الجزء الأول كاملاً"
-              className="w-full px-3 py-2 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-xs placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+              placeholder=""
+              className={UI.input}
             />
           </div>
         </div>
@@ -146,17 +148,17 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
       {/* التقييم بالنجوم والملاحظات */}
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-appText-sub ml-2">التقييم:</span>
+          <span className="text-xs text-semantic-textSecondary ml-2">{t('attendance.rating', 'التقييم')}:</span>
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => setRating(star)}
-              className="p-0.5 focus:outline-none transition-transform active:scale-125"
+              className="p-0.5 focus:outline-none transition-transform active:scale-125 cursor-pointer"
             >
               <Star 
                 className={`w-4 h-4 ${
-                  star <= rating ? 'text-amber-400 fill-amber-400' : 'text-appText-muted'
+                  star <= rating ? 'text-amber-400 fill-amber-400' : 'text-semantic-textMuted'
                 }`} 
               />
             </button>
@@ -167,21 +169,21 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="ملاحظات حول أدائه اليوم..."
-          className="flex-1 w-full px-3 py-1.5 bg-dark-input border border-appBorder-input rounded-xl text-appText-main text-xs placeholder-appText-muted focus:outline-none focus:border-appBorder-hover transition-colors"
+          placeholder=""
+          className={`${UI.input} flex-1`}
         />
       </div>
 
       {/* أزرار الإجراءات */}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-appBorder-card">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-semantic-borderCard">
         {student.phone && (
           <button
             type="button"
             onClick={handleSendWhatsApp}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brandEmerald-bg text-brandEmerald hover:bg-brandEmerald/20 border border-brandEmerald-border rounded-xl text-xs font-medium transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-semantic-successBg text-semantic-success hover:bg-semantic-success/20 border border-semantic-successBorder rounded-xl text-xs font-medium transition-all cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
-            إرسال للواتساب
+            {t('attendance.sendWhatsApp', 'إرسال للواتساب')}
           </button>
         )}
 
@@ -189,10 +191,10 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary-hover text-appText-main rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-glow disabled:opacity-50"
+          className={`${UI.btnPrimary} !w-auto px-4 py-1.5 text-xs`}
         >
           <Save className="w-3.5 h-3.5" />
-          {isSaving ? 'جاري الحفظ...' : 'حفظ التقييم'}
+          {isSaving ? t('attendance.saving', 'جاري الحفظ...') : t('attendance.saveRating', 'حفظ التقييم')}
         </button>
       </div>
     </div>
