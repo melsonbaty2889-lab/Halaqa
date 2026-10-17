@@ -2,7 +2,7 @@
 import React from 'react';
 import { 
   User, CheckCircle2, XCircle, Clock, 
-  Send, BookOpen, Star, MessageSquare 
+  Send, BookOpen, Star 
 } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
 import UI from '@/theme/styles';
@@ -17,16 +17,14 @@ const AttendanceCard = ({
   const status = data.status || 'present';
   const memorization = data.new_memorization || '';
   const review = data.retention_assignment || '';
-  const grade = data.session_grade ?? 10; // من 10
-  const rating = Math.round(grade / 2) || 5; // تحويل الدرجة لنجوم (1-5)
+  const grade = data.session_grade ?? 10;
+  const rating = Math.round(grade / 2) || 5;
   const notes = data.notes || '';
 
-  // تحديث حالة الحضور
   const handleStatusChange = (newStatus) => {
     onChangeField(student.id, 'status', newStatus);
   };
 
-  // إرسال تقرير الواتساب
   const handleSendMessaging = () => {
     if (!student.phone) return;
     
@@ -51,7 +49,7 @@ ${status === 'present' ? `*${t('attendance.newMemorization', 'الحفظ الج�
 
   return (
     <div className={`${UI.card} space-y-3.5 transition-all duration-200`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* 1️⃣ هيدر الطالب + أزرار تحديد الحضور */}
+      {/* هيدر الطالب وأزرار الحضور */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0">
@@ -112,7 +110,7 @@ ${status === 'present' ? `*${t('attendance.newMemorization', 'الحفظ الج�
         </div>
       </div>
 
-      {/* 2️⃣ تفاصيل التسميع والورد (تظهر فقط للحاضرين) */}
+      {/* تفاصيل التسميع (تظهر فقط عند الحضور) */}
       {status === 'present' ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
@@ -145,7 +143,6 @@ ${status === 'present' ? `*${t('attendance.newMemorization', 'الحفظ الج�
             </div>
           </div>
 
-          {/* التقييم بالنجوم والملاحظات */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-[11px] font-semibold text-semantic-textSecondary">{t('attendance.dailyRating', 'التقييم')}:</span>
@@ -190,7 +187,7 @@ ${status === 'present' ? `*${t('attendance.newMemorization', 'الحفظ الج�
           </div>
         </>
       ) : (
-        /* 3️⃣ في حالة الغياب أو الاستئذان: إظهار حقل ملاحظات الغياب فقط */
+        /* في حالة الغياب أو الاستئذان: حقل ملاحظات خفيف فقط */
         <div className="flex items-center gap-2 pt-1">
           <div className="flex-1">
             <input
