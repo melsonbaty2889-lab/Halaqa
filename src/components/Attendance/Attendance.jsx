@@ -100,6 +100,7 @@ export default function Attendance({
         <CustomDatePicker
           value={selectedDate}
           onChange={setSelectedDate}
+          label={t('attendance.sessionDate', 'تاريخ الجلسة')}
           icon={CalendarIcon}
         />
         {selectedHalaqaId && selectedDate && (
