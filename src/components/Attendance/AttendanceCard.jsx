@@ -36,9 +36,9 @@ const AttendanceCard = ({
       status === 'absent' ? t('attendance.absent', 'غائب') : 
       t('attendance.excused', 'مستأذن');
 
-    const memText = memorization ? memorization : '-';
-    const revText = review ? review : '-';
-    const notesText = notes ? notes : '-';
+    const memText = memorization || '-';
+    const revText = review || '-';
+    const notesText = notes || '-';
     const starsStr = '⭐'.repeat(rating);
 
     const presentDetails = status === 'present' 
@@ -56,75 +56,76 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
   };
 
   return (
-    <div className={`${UI.card} space-y-3.5 transition-all duration-200`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* هيدر الطالب وأزرار الحضور */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0">
+    <div className={`${UI.card} space-y-4 transition-all duration-200 border-2 ${status === 'present' ? 'border-semantic-successBorder/40' : status === 'absent' ? 'border-semantic-danger/30' : 'border-amber-500/30'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      
+      {/* 1️⃣ هيدر الطالب وأزرار تحديد الحالة بوضوح تام */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0 shadow-inner">
             {student.avatar_url ? (
               <img src={student.avatar_url} alt={student.name} className="w-full h-full object-cover" />
             ) : (
-              <User className="w-4 h-4" />
+              <User className="w-5 h-5 text-semantic-textPrimary" />
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-semantic-textPrimary text-sm">{formatName(student.name)}</h3>
+            <h3 className="font-bold text-semantic-textPrimary text-base">{formatName(student.name)}</h3>
             {student.halaqa_name && (
-              <p className="text-[11px] text-semantic-textMuted">{student.halaqa_name}</p>
+              <p className="text-xs text-semantic-textSecondary">{student.halaqa_name}</p>
             )}
           </div>
         </div>
 
-        {/* خيارات تحديد الحضور والغياب */}
-        <div className="flex items-center gap-1 bg-semantic-surfaceInput/60 p-1 rounded-xl border border-semantic-borderInput">
+        {/* أزرار الحالة (أكبر وواضحة للمس) */}
+        <div className="flex items-center gap-1.5 bg-semantic-surfaceInput p-1.5 rounded-2xl border border-semantic-borderInput w-full sm:w-auto justify-between sm:justify-start">
           <button
             type="button"
             onClick={() => handleStatusChange('present')}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               status === 'present' 
-                ? 'bg-semantic-successBg text-semantic-success border border-semantic-successBorder' 
+                ? 'bg-semantic-successBg text-semantic-success border border-semantic-successBorder shadow-md' 
                 : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
+            <CheckCircle2 className="w-4 h-4" />
             {t('attendance.present', 'حاضر')}
           </button>
 
           <button
             type="button"
             onClick={() => handleStatusChange('absent')}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               status === 'absent' 
-                ? 'bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/30' 
+                ? 'bg-semantic-dangerBg text-semantic-danger border border-semantic-danger/40 shadow-md' 
                 : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
-            <XCircle className="w-3.5 h-3.5" />
+            <XCircle className="w-4 h-4" />
             {t('attendance.absent', 'غائب')}
           </button>
 
           <button
             type="button"
             onClick={() => handleStatusChange('excused')}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               status === 'excused' 
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-md' 
                 : 'text-semantic-textSecondary hover:text-semantic-textPrimary'
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4" />
             {t('attendance.excused', 'مستأذن')}
           </button>
         </div>
       </div>
 
-      {/* تفاصيل التسميع (تظهر فقط عند الحضور) */}
+      {/* 2️⃣ تفاصيل التسميع والمراجعة (تظهر فقط عند الحضور) */}
       {status === 'present' ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+        <div className="space-y-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-semantic-textSecondary mb-1 flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-semantic-actionPrimary" />
+              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-semantic-actionPrimary" />
                 {t('attendance.newMemorization', 'الحفظ الجديد')}
               </label>
               <input
@@ -137,8 +138,8 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-semantic-textSecondary mb-1 flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-amber-400" />
                 {t('attendance.retentionReview', 'المراجعة والتثبيت')}
               </label>
               <input
@@ -152,15 +153,15 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[11px] font-semibold text-semantic-textSecondary">{t('attendance.dailyRating', 'التقييم')}:</span>
+            <div className="flex items-center gap-2 shrink-0 bg-semantic-surfaceInput/50 px-3 py-2 rounded-xl border border-semantic-borderInput">
+              <span className="text-xs font-semibold text-semantic-textSecondary">{t('attendance.dailyRating', 'التقييم')}:</span>
               <div className="flex items-center gap-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => onChangeField(student.id, 'session_grade', star * 2)}
-                    className="p-0.5 focus:outline-none transition-transform active:scale-125 cursor-pointer"
+                    className="p-1 focus:outline-none transition-transform active:scale-125 cursor-pointer"
                   >
                     <Star 
                       className={`w-4 h-4 ${
@@ -172,12 +173,12 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               </div>
             </div>
 
-            <div className="flex-1 relative">
+            <div className="flex-1">
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => onChangeField(student.id, 'notes', e.target.value)}
-                placeholder={t('attendance.notesPlaceholder', 'ملاحظات الأداء اليومي...')}
+                placeholder={t('attendance.notesPlaceholder', 'ملاحظات الأداء اليومي والتوجه التربوي...')}
                 className={UI.input}
               />
             </div>
@@ -186,17 +187,18 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               <button
                 type="button"
                 onClick={handleSendMessaging}
-                title={t('attendance.shareReport', 'إرسال التقرير')}
-                className="self-end sm:self-center p-2 rounded-xl bg-semantic-successBg text-semantic-success hover:bg-semantic-success/20 border border-semantic-successBorder transition-all cursor-pointer shrink-0"
+                title={t('attendance.shareReport', 'إرسال التقرير لولي الأمر')}
+                className="self-end sm:self-center p-2.5 rounded-xl bg-semantic-successBg text-semantic-success hover:bg-semantic-success/20 border border-semantic-successBorder transition-all cursor-pointer shrink-0 flex items-center gap-1 text-xs font-bold"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
+                <span className="hidden md:inline">{t('attendance.whatsapp', 'واتساب')}</span>
               </button>
             )}
           </div>
-        </>
+        </div>
       ) : (
-        /* في حالة الغياب أو الاستئذان: حقل ملاحظات خفيف فقط */
-        <div className="flex items-center gap-2 pt-1">
+        /* 3️⃣ في حالة الغياب أو الاستئذان: حقل مخصص لسبب الغياب أو الإذن */
+        <div className="flex items-center gap-2.5 pt-1">
           <div className="flex-1">
             <input
               type="text"
@@ -204,8 +206,8 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               onChange={(e) => onChangeField(student.id, 'notes', e.target.value)}
               placeholder={
                 status === 'absent' 
-                  ? t('attendance.absentReasonPlaceholder', 'سبب الغياب (إن وجد)...')
-                  : t('attendance.excusedReasonPlaceholder', 'تفاصيل إذن الغياب...')
+                  ? t('attendance.absentReasonPlaceholder', 'أدخل سبب الغياب (اختياري)...')
+                  : t('attendance.excusedReasonPlaceholder', 'أدخل تفاصيل إذن الاستئذان...')
               }
               className={UI.input}
             />
@@ -215,9 +217,9 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
             <button
               type="button"
               onClick={handleSendMessaging}
-              className="p-2 rounded-xl bg-semantic-surfaceInput text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput transition-all cursor-pointer shrink-0"
+              className="p-2.5 rounded-xl bg-semantic-surfaceInput text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput transition-all cursor-pointer shrink-0 flex items-center gap-1 text-xs"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           )}
         </div>
