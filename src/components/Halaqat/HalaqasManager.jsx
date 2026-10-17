@@ -29,16 +29,32 @@ export default function HalaqasManager({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingHalaqa, setEditingHalaqa] = useState(null);
 
+  const safeHalaqas = Array.isArray(halaqas) ? halaqas : [];
+
   const stats = {
-    total: halaqas.length,
-    active: halaqas.filter(h => h.is_active !== false && !h.is_archived).length,
-    noTeacher: halaqas.filter(h => !h.teacher_id && !h.is_archived).length,
-    archived: halaqas.filter(h => h.is_archived === true).length
+    total: safeHalaqas.length,
+    active: safeHalaqas.filter(h => h && h.is_active !== false && !h.is_archived).length,
+    noTeacher: safeHalaqas.filter(h => h && !h.teacher_id && !h.is_archived).length,
+    archived: safeHalaqas.filter(h => h && h.is_archived === true).length
   };
 
-  const filteredHalaqas = halaqas.filter(item => {
-    const name = typeof item.name === 'object' ? (isRtl ? item.name?.ar : item.name?.en) : item.name || '';
-    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
+  // فلترة آمنة 100% تمنع خطأ toLowerCase
+  const filteredHalaqas = safeHalaqas.filter(item => {
+    if (!item) return false;
+
+    let rawName = '';
+    if (typeof item.name === 'object' && item.name !== null) {
+      rawName = item.name[currentLang] || item.name.ar || item.name.en || Object.values(item.name)[0] || '';
+    } else if (typeof item.name === 'string') {
+      rawName = item.name;
+    } else if (typeof item.name_text === 'string') {
+      rawName = item.name_text;
+    }
+
+    const safeSearchQuery = (searchQuery || '').toString().toLowerCase();
+    const safeName = (rawName || '').toString().toLowerCase();
+
+    const matchesSearch = safeName.includes(safeSearchQuery);
 
     let matchesStatus = true;
     if (statusFilter === 'active') matchesStatus = item.is_active !== false && !item.is_archived;
@@ -53,7 +69,7 @@ export default function HalaqasManager({
     setStatusFilter('all');
   };
 
-  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'all';
+  const hasActiveFilters = Boolean((searchQuery || '').trim()) || statusFilter !== 'all';
 
   const statusOptions = [
     { label: t('halaqas.all_status', 'جميع الحلقات'), value: 'all' },
@@ -63,8 +79,10 @@ export default function HalaqasManager({
   ];
 
   const handleEditHalaqa = (item) => {
-    const nameText = typeof item?.name === 'object' 
-      ? (item.name?.[currentLang] || item.name?.ar || item.name?.en || '') 
+    if (!item) return;
+
+    const nameText = typeof item?.name === 'object' && item?.name !== null
+      ? (item.name[currentLang] || item.name.ar || item.name.en || '') 
       : (item?.name || item?.name_text || '');
 
     setEditingHalaqa({
@@ -96,7 +114,7 @@ export default function HalaqasManager({
   };
 
   const getEmptyStateMessage = () => {
-    if (searchQuery.trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
+    if ((searchQuery || '').trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
     if (statusFilter === 'no_teacher') return t('halaqas.no_unassigned_halaqas', 'لا توجد حلقات بدون معلم حالياً.');
     if (statusFilter === 'archived') return t('halaqas.no_archived_halaqas', 'لا توجد حلقات مؤرشفة.');
     if (statusFilter === 'active') return t('halaqas.no_active_halaqas', 'لا توجد حلقات نشطة حالياً.');
@@ -216,7 +234,7 @@ export default function HalaqasManager({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-0">
             {filteredHalaqas.map((halaqa) => (
               <HalaqaCardItem
-                key={halaqa.id}
+                key={halaqa?.id || Math.random()}
                 halaqa={halaqa}
                 teachers={teachers}
                 onEdit={handleEditHalaqa}
