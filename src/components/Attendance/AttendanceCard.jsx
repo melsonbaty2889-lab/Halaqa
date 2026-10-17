@@ -2,7 +2,7 @@
 import React from 'react';
 import { 
   User, CheckCircle2, XCircle, Clock, 
-  Send, BookOpen, Star, FileText, Award 
+  Send, BookOpen, Star, FileText, Award, Sparkles 
 } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
 import UI from '@/theme/styles';
@@ -17,11 +17,12 @@ const AttendanceCard = ({
   const status = data.status || 'present';
   const memorization = data.new_memorization || '';
   const review = data.retention_assignment || '';
+  const lessonActivity = data.lesson_activity || '';
   const grade = data.session_grade ?? 10;
   const rating = Math.round(grade / 2) || 5;
   const notes = data.notes || '';
 
-  // تحديد نوع المسار التعليمي
+  // تحديد نوع المسار التعليمي (الافتراضي hifz أو general)
   const track = student.track || student.halaqa_track || 'hifz';
 
   const handleStatusChange = (newStatus) => {
@@ -41,11 +42,12 @@ const AttendanceCard = ({
 
     const memText = memorization || '-';
     const revText = review || '-';
+    const lessonText = lessonActivity ? `\n*${t('attendance.curriculumLesson', 'الدرس التربوي')}:* ${lessonActivity}` : '';
     const notesText = notes || '-';
     const starsStr = '⭐'.repeat(rating);
 
     const presentDetails = status === 'present' 
-      ? `*${t('attendance.performance', 'أداء الجلسة')}:* ${memText}\n*${t('attendance.review', 'المراجعة/التثبيت')}:* ${revText}\n*${t('attendance.dailyRating', 'التقييم')}:* ${starsStr} (${rating}/5)\n`
+      ? `*${t('attendance.newMemorization', 'الحفظ الجديد')}:* ${memText}\n*${t('attendance.retentionReview', 'المراجعة والتثبيت')}:* ${revText}${lessonText}\n*${t('attendance.dailyRating', 'التقييم')}:* ${starsStr} (${rating}/5)\n`
       : '';
 
     const message = `*${t('attendance.reportTitle', 'تقرير الأداء الأكاديمي')}*
@@ -58,7 +60,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
     window.open(url, '_blank');
   };
 
-  // دالة تصيير الحقول الديناميكية حسب المسار التعليمي
+  // عرض الحقول ديناميكياً حسب المسار
   const renderTrackFields = () => {
     switch (track) {
       case 'muraja':
@@ -72,7 +74,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               type="text"
               value={review}
               onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-              placeholder={t('attendance.murajaPlaceholder', 'مثال: من سورة النساء إلى سورة المائدة')}
+              placeholder="مثال: من سورة النساء إلى سورة المائدة"
               className={UI.input}
             />
           </div>
@@ -89,106 +91,62 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
               type="text"
               value={memorization}
               onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-              placeholder={t('attendance.tilawahPlaceholder', 'مثال: سورة الكهف (الآيات 1 - 45)')}
+              placeholder="مثال: سورة الكهف (الآيات 1 - 45)"
               className={UI.input}
             />
           </div>
         );
 
-      case 'ijazah':
-        return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-amber-400" />
-                {t('attendance.ijazahPosition', 'موضع العرض والإقراء')}
-              </label>
-              <input
-                type="text"
-                value={memorization}
-                onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-                placeholder={t('attendance.ijazahPlaceholder', 'مثال: الحزب الثالث من سورة البقرة')}
-                className={UI.input}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-semantic-actionPrimary" />
-                {t('attendance.ijazahNotes', 'ملاحظات الأداء والضغوط الصوتية')}
-              </label>
-              <input
-                type="text"
-                value={review}
-                onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-                placeholder={t('attendance.ijazahNotesPlaceholder', 'مثال: إتقان أحكام الراءات ومد الصلة')}
-                className={UI.input}
-              />
-            </div>
-          </div>
-        );
-
-      case 'mutun':
-        return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-purple-400" />
-                {t('attendance.mutunLesson', 'المتن والأبيات المقررة')}
-              </label>
-              <input
-                type="text"
-                value={memorization}
-                onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-                placeholder={t('attendance.mutunPlaceholder', 'مثال: تحفة الأطفال (أبيات 1 - 12)')}
-                className={UI.input}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-semantic-actionPrimary" />
-                {t('attendance.mutunReview', 'مراجعة المتون القديمة')}
-              </label>
-              <input
-                type="text"
-                value={review}
-                onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-                placeholder={t('attendance.mutunReviewPlaceholder', 'مثال: باب أحكام النون الساكنة والتنوين')}
-                className={UI.input}
-              />
-            </div>
-          </div>
-        );
-
+      case 'general':
       case 'hifz':
       default:
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-semantic-actionPrimary" />
-                {t('attendance.newMemorization', 'الحفظ الجديد')}
-              </label>
-              <input
-                type="text"
-                value={memorization}
-                onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
-                placeholder={t('attendance.memorizationPlaceholder', 'مثال: سورة البقرة (1-15)')}
-                className={UI.input}
-              />
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-semantic-actionPrimary" />
+                  {t('attendance.newMemorization', 'الحفظ الجديد')}
+                </label>
+                <input
+                  type="text"
+                  value={memorization}
+                  onChange={(e) => onChangeField(student.id, 'new_memorization', e.target.value)}
+                  placeholder="مثال: سورة البقرة (1-15)"
+                  className={UI.input}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-amber-400" />
+                  {t('attendance.retentionReview', 'المراجعة والتثبيت')}
+                </label>
+                <input
+                  type="text"
+                  value={review}
+                  onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
+                  placeholder="مثال: الجزء الأول كاملاً"
+                  className={UI.input}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-amber-400" />
-                {t('attendance.retentionReview', 'المراجعة والتثبيت')}
-              </label>
-              <input
-                type="text"
-                value={review}
-                onChange={(e) => onChangeField(student.id, 'retention_assignment', e.target.value)}
-                placeholder={t('attendance.reviewPlaceholder', 'مثال: الجزء الأول كاملاً')}
-                className={UI.input}
-              />
-            </div>
+
+            {/* حقل إضافي يظهر خصيصاً في المسار الشامل (للكتاتيب والدروس المساندة) */}
+            {track === 'general' && (
+              <div>
+                <label className="block text-xs font-semibold text-semantic-textSecondary mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  {t('attendance.curriculumLesson', 'المنهج المساند (سيرة / فقه / أذكار)')}
+                </label>
+                <input
+                  type="text"
+                  value={lessonActivity}
+                  onChange={(e) => onChangeField(student.id, 'lesson_activity', e.target.value)}
+                  placeholder="مثال: آداب الاستئذان + حفظ حديث أركان الإسلام"
+                  className={UI.input}
+                />
+              </div>
+            )}
           </div>
         );
     }
@@ -199,7 +157,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
       status === 'present' ? 'border-semantic-successBorder/40' : status === 'absent' ? 'border-semantic-danger/30' : 'border-amber-500/30'
     }`} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* 1️⃣ الهيدر وأزرار تحديد الحالة */}
+      {/* هيدر الطالب وأزرار الحالة */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0 shadow-inner">
@@ -217,7 +175,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
           </div>
         </div>
 
-        {/* أزرار الحضور والغياب والاستئذان */}
+        {/* أزرار الحضور */}
         <div className="flex items-center gap-1.5 bg-semantic-surfaceInput p-1.5 rounded-2xl border border-semantic-borderInput w-full sm:w-auto justify-between sm:justify-start">
           <button
             type="button"
@@ -260,7 +218,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
         </div>
       </div>
 
-      {/* 2️⃣ حقول التسميع التكيفية حسب مسار الحلقة */}
+      {/* حقول التسميع الديناميكية */}
       {status === 'present' ? (
         <div className="space-y-3 pt-3">
           {renderTrackFields()}
@@ -311,7 +269,7 @@ ${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم
           </div>
         </div>
       ) : (
-        /* 3️⃣ في حالة الغياب أو الاستئذان */
+        /* في حالة الغياب أو الاستئذان */
         <div className="flex items-center gap-2.5 pt-3">
           <div className="flex-1">
             <input
