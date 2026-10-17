@@ -1,5 +1,3 @@
-// src/components/Teacher/StudentAttendanceCard.jsx
-
 import React, { useState } from 'react';
 import { 
   User, CheckCircle2, XCircle, Clock, 
