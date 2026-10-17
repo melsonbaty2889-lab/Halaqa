@@ -187,14 +187,8 @@ export default function Attendance({
                 <div key={student.id} className={isArchived ? "pointer-events-none opacity-80" : ""}>
                   <AttendanceCard 
                     student={student}
-                    initialData={attendanceData[student.id] || {}}
-                    onSaveAttendance={(data) => {
-                      updateStudentField(student.id, 'status', data.status);
-                      updateStudentField(student.id, 'new_memorization', data.memorization);
-                      updateStudentField(student.id, 'retention_assignment', data.review);
-                      updateStudentField(student.id, 'session_grade', data.rating * 2);
-                      updateStudentField(student.id, 'notes', data.notes);
-                    }}
+                    data={attendanceData[student.id] || {}}
+                    onChangeField={updateStudentField}
                     isRtl={isRtl}
                     t={t}
                   />
