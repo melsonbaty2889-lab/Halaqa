@@ -36,12 +36,20 @@ const AttendanceCard = ({
       status === 'absent' ? t('attendance.absent', 'غائب') : 
       t('attendance.excused', 'مستأذن');
 
+    const memText = memorization ? memorization : '-';
+    const revText = review ? review : '-';
+    const notesText = notes ? notes : '-';
+    const starsStr = '⭐'.repeat(rating);
+
+    const presentDetails = status === 'present' 
+      ? `*${t('attendance.newMemorization', 'الحفظ الجديد')}:* ${memText}\n*${t('attendance.retentionReview', 'المراجعة والتثبيت')}:* ${revText}\n*${t('attendance.dailyRating', 'التقييم اليومي')}:* ${starsStr} (${rating}/5)\n`
+      : '';
+
     const message = `*${t('attendance.reportTitle', 'تقرير الأداء الأكاديمي')}*
 ----------------------------------
 *${t('attendance.studentName', 'الطالب')}:* ${formatName(student.name)}
 *${t('attendance.attendanceStatus', 'حالة الحضور')}:* ${statusText}
-${status === 'present' ? `*${t('attendance.newMemorization', 'الحفظ الجديد')}:* ${memorization \vert{}\vert{} '-'}\n*${t('attendance.retentionReview', 'المراجعة والتثبيت')}:* ${review \vert{}\vert{} '-'}\n*${t('attendance.dailyRating', 'التقييم اليومي')}:* ${'⭐'.repeat(rating)} (${rating}/5)` : ''}
-*${t('attendance.instructorNotes', 'ملاحظات المعلم')}:* ${notes || '-'}`;
+${presentDetails}*${t('attendance.instructorNotes', 'ملاحظات المعلم')}:* ${notesText}`;
 
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
