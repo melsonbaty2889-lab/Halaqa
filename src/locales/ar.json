@@ -958,6 +958,7 @@
     "unarchive_title": "إلغاء أرشفة الطالب"
   },
   "students_management_title": "شؤون الطلاب والمسار التعليمي",
+  "students_unit": "طالب",
   "subscription": {
     "attachReceipt": "إرفاق صورة إشعار التحويل:",
     "backToDashboard": "العودة إلى مركز التحكم والتحليلات",
