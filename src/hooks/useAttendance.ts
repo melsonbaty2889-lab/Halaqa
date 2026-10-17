@@ -1,5 +1,28 @@
+// src/hooks/useAttendance.ts
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+
+// ── Constants ───────────────────────────────────────────────────
+
+export const DAY_NAMES = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+] as const;
+
+export const DEFAULT_STATS = {
+  total: 0,
+  present: 0,
+  absent: 0,
+  late: 0,
+  excused: 0,
+  rate: 0,
+};
 
 // ── Types & Interfaces ──────────────────────────────────────────
 
@@ -157,7 +180,7 @@ export function useAttendance({
   // 📊 حساب الإحصائيات
   const stats = useMemo(() => {
     const total = filteredStudents.length;
-    if (total === 0) return { total: 0, present: 0, absent: 0, late: 0, excused: 0, rate: 0 };
+    if (total === 0) return DEFAULT_STATS;
 
     let present = 0, absent = 0, late = 0, excused = 0;
 
@@ -341,7 +364,6 @@ export function useAttendance({
         return;
       }
 
-      // 📌 إرسال البيانات مع معيار مطابقة القيد الفرعي المناسب للجدول
       const { error } = await supabase
         .from('attendance')
         .upsert(attendanceRecords, { onConflict: 'academy_id,student_id,date' });
