@@ -21,7 +21,8 @@ export default function HalaqasManager({
   onToggleArchiveHalaqa,
   onNavigateToAttendance
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -60,6 +61,40 @@ export default function HalaqasManager({
     { label: t('halaqas.no_teacher', 'بدون معلم'), value: 'no_teacher' },
     { label: t('common.archived', 'المؤرشفة'), value: 'archived' }
   ];
+
+  // دالة تجهيز بيانات الحلقة للتعديل بشكل كامل
+  const handleEditHalaqa = (item) => {
+    const nameText = typeof item?.name === 'object' 
+      ? (item.name?.[currentLang] || item.name?.ar || item.name?.en || '') 
+      : (item?.name || item?.name_text || '');
+
+    setEditingHalaqa({
+      ...item,
+      id: item.id,
+      name_text: nameText,
+      name: item.name,
+      days_of_week: Array.isArray(item.days_of_week) ? item.days_of_week : [],
+      educational_track: item.educational_track || 'hifz',
+      teaching_type: item.teaching_type || 'online',
+      target_audience: item.target_audience || 'kids',
+      teacher_id: item.teacher_id || '',
+      start_time: item.start_time || '',
+      end_time: item.end_time || '',
+      max_students: item.max_students || 15
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleModalSubmit = async (payload) => {
+    if (editingHalaqa?.id) {
+      if (onUpdateHalaqa) await onUpdateHalaqa(editingHalaqa.id, payload);
+    } else {
+      if (onCreateHalaqa) await onCreateHalaqa(payload);
+    }
+    setIsAddModalOpen(false);
+    setEditingHalaqa(null);
+    if (onRefresh) onRefresh();
+  };
 
   const getEmptyStateMessage = () => {
     if (searchQuery.trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
@@ -157,10 +192,7 @@ export default function HalaqasManager({
                 key={halaqa.id}
                 halaqa={halaqa}
                 teachers={teachers}
-                onEdit={(item) => {
-                  setEditingHalaqa(item);
-                  setIsAddModalOpen(true);
-                }}
+                onEdit={handleEditHalaqa}
                 onNavigateToAttendance={onNavigateToAttendance}
               />
             ))}
@@ -175,12 +207,11 @@ export default function HalaqasManager({
             setIsAddModalOpen(false);
             setEditingHalaqa(null);
           }}
-          halaqaToEdit={editingHalaqa}
-          academyId={academyId}
+          formData={editingHalaqa || {}}
+          setFormData={setEditingHalaqa}
+          handleSubmit={handleModalSubmit}
           teachers={teachers}
-          onSuccess={onRefresh}
-          onCreateHalaqa={onCreateHalaqa}
-          onUpdateHalaqa={onUpdateHalaqa}
+          academyId={academyId}
         />
       )}
     </>
