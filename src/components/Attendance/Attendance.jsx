@@ -54,6 +54,18 @@ export default function Attendance({
   const selectedHalaqa = halaqas.find(h => String(h.id) === String(selectedHalaqaId));
   const isArchived = Boolean(selectedHalaqa?.is_archived);
 
+  // التحقق مما إذا كان التاريخ المختار يوافق أيام الانعقاد المجدولة للحلقة
+  const checkIsScheduledDay = () => {
+    if (!selectedHalaqa || !selectedHalaqa.days_of_week || !selectedDate) return false;
+    const dateObj = new Date(selectedDate);
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const selectedDayName = dayNames[dateObj.getDay()];
+    
+    return selectedHalaqa.days_of_week.some(d => String(d).toLowerCase() === selectedDayName);
+  };
+
+  const isOfficialScheduleDay = checkIsScheduledDay();
+
   const formatHalaqaName = useCallback((halaqa) => {
     if (!halaqa) return '';
     const currentLang = i18n?.language || 'ar';
@@ -100,15 +112,30 @@ export default function Attendance({
             </select>
           </div>
 
-          {/* اختيار التاريخ */}
-          <div className="flex items-center gap-2.5 bg-semantic-surfaceInput border border-semantic-borderInput p-2.5 px-3 rounded-xl min-w-[150px] focus-within:border-semantic-actionPrimary transition-all">
-            <Calendar className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
-            <input 
-              type="date" 
-              value={selectedDate} 
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent border-none text-semantic-textPrimary text-xs font-bold outline-none cursor-pointer w-full font-cairo"
-            />
+          {/* اختيار التاريخ مع مؤشر اليوم الذكي */}
+          <div className="flex flex-col min-w-[150px]">
+            <div className="flex items-center gap-2.5 bg-semantic-surfaceInput border border-semantic-borderInput p-2.5 px-3 rounded-xl focus-within:border-semantic-actionPrimary transition-all">
+              <Calendar className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
+              <input 
+                type="date" 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent border-none text-semantic-textPrimary text-xs font-bold outline-none cursor-pointer w-full font-cairo"
+              />
+            </div>
+            {selectedHalaqaId && selectedDate && (
+              <div className="text-[10px] mt-1 font-semibold px-1 flex items-center gap-1">
+                {isOfficialScheduleDay ? (
+                  <span className="text-semantic-success flex items-center gap-1">
+                    ● {t('attendance.officialDay', 'يوم انعقاد مجدول لهذه الحلقة')}
+                  </span>
+                ) : (
+                  <span className="text-semantic-textMuted flex items-center gap-1">
+                    ○ {t('attendance.extraOrArchiveDay', 'جلسة استثنائية / استعراض أرشيف')}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
