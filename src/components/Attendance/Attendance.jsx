@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon, Archive, Lock } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
-import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
+
 import PageLayout from '@/components/UI/PageLayout';
 import Select from '@/components/UI/Select';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
-
+import AttendanceCard from './AttendanceCard';
 import AttendanceStats from './AttendanceStats';
 
 export default function Attendance({ 
