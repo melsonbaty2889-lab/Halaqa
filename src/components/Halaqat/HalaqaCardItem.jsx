@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users, Archive } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 import { getDaysOptions } from '@/constants/days';
@@ -65,39 +65,53 @@ export default function HalaqaCardItem({
   const maxStudents = halaqa?.max_students || 15;
 
   const handleCardClick = () => {
+    // يمكن الدخول على الحلقة لرؤية سجلات التسميع حتى لو كانت مؤرشفة
     if (onNavigateToAttendance) {
-      onNavigateToAttendance(halaqa?.id);
+      onNavigateToAttendance(halaqa?.id, { isArchived });
     } else if (onSelectHalaqa) {
       onSelectHalaqa(halaqa);
     }
   };
 
+  const hasTimeData = Boolean(formattedDays || formattedTimeRange);
+
   return (
     <div
       onClick={handleCardClick}
-      className="bg-semantic-surfaceCard border border-semantic-borderCard hover:border-semantic-actionPrimary/50 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start"
+      className={`bg-semantic-surfaceCard border rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start ${
+        isArchived 
+          ? 'border-semantic-borderCard/60 opacity-80 hover:opacity-100 bg-semantic-surfaceCard/60' 
+          : 'border-semantic-borderCard hover:border-semantic-actionPrimary/50'
+      }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       {/* 1. السطر العلوي: الأيقونة + اسم الحلقة + شارة الحالة وأزرار التحكم */}
       <div className="flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-actionPrimary group-hover:border-semantic-actionPrimary/50 transition-colors shrink-0">
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
+            isArchived 
+              ? 'border-semantic-borderCard text-semantic-textMuted' 
+              : 'border-semantic-borderInput text-semantic-actionPrimary group-hover:border-semantic-actionPrimary/50'
+          }`}>
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
 
-          <h3 className="font-extrabold text-semantic-textPrimary text-sm sm:text-base group-hover:text-semantic-actionPrimary transition-colors leading-snug m-0 truncate text-start">
-            {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-extrabold text-semantic-textPrimary text-sm sm:text-base group-hover:text-semantic-actionPrimary transition-colors leading-snug m-0 truncate text-start">
+              {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
+            </h3>
+          </div>
         </div>
 
         {/* الحاوية الجانبية لأزرار التحكم والشارة */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 flex items-center gap-1 ${
             isArchived
               ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
               : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30'
           }`}>
-            {isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}
+            {isArchived && <Archive size={10} className="shrink-0" />}
+            <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
           </span>
 
           {onEdit && (
@@ -124,7 +138,7 @@ export default function HalaqaCardItem({
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
           <span className="font-semibold text-semantic-textSecondary truncate">
-            {teacherName || <span className="text-amber-500 font-normal">{t('unassigned', 'بدون معلم')}</span>}
+            {teacherName || <span className="text-amber-500/90 font-normal">{t('unassigned', 'بدون معلم')}</span>}
           </span>
         </div>
 
@@ -137,8 +151,8 @@ export default function HalaqaCardItem({
         </div>
       </div>
 
-      {/* 3. السطر السفلي: المواعيد والأيام بوضوح تام */}
-      {(formattedDays || formattedTimeRange) && (
+      {/* 3. السطر السفلي: يظهر فقط إذا كانت هناك بيانات للمواعيد أو الأيام (يمنع الصندوق الفارغ) */}
+      {hasTimeData && (
         <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted bg-semantic-surfaceInput/30 p-2 rounded-xl border border-semantic-borderInput/30 mt-0.5">
           <Clock className="w-3 h-3 shrink-0 text-semantic-actionPrimary/80" />
           <div className="truncate flex-1 text-start">
