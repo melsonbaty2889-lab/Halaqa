@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3 } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 
@@ -41,7 +41,26 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // عند الضغط على الكارت تفتح صفحة متابعة الجلسة والتحصيل مباشرة
+  // تنسيق أيام الانعقاد
+  const formatDays = (daysArray) => {
+    if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
+    const dayLabels = {
+      sat: t('days.sat', 'سبت'),
+      sun: t('days.sun', 'أحد'),
+      mon: t('days.mon', 'إثنين'),
+      tue: t('days.tue', 'ثلاثاء'),
+      wed: t('days.wed', 'أربعاء'),
+      thu: t('days.thu', 'خميس'),
+      fri: t('days.fri', 'جمعة')
+    };
+    return daysArray.map(d => dayLabels[d] || d).join('، ');
+  };
+
+  const formattedDays = formatDays(halaqa?.days_of_week);
+  const studentsCount = halaqa?.students_count || halaqa?.student_count || 0;
+  const maxStudents = halaqa?.max_students || 15;
+
+  // عند الضغط على البطاقة تفتح صفحة متابعة الجلسة والتحصيل مباشرة
   const handleCardClick = () => {
     if (onNavigateToAttendance) {
       onNavigateToAttendance(halaqa?.id);
@@ -83,10 +102,19 @@ export default function HalaqaCardItem({
                 </span>
               )}
 
-              {formattedTimeRange && (
+              {/* عدد الطلاب */}
+              <span className="flex items-center gap-1 text-[11px] text-semantic-textMuted">
+                <Users className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
+                <span><bdi>{studentsCount}</bdi>/<bdi>{maxStudents}</bdi> {t('students_unit', 'طالب')}</span>
+              </span>
+
+              {/* الأيام والوقت */}
+              {(formattedTimeRange || formattedDays) && (
                 <span className="flex items-center gap-1 text-[11px] text-semantic-textMuted">
                   <Clock className="w-3 h-3 shrink-0" />
-                  <span>{formattedTimeRange}</span>
+                  <span className="truncate">
+                    {formattedDays ? `${formattedDays} • ` : ''}{formattedTimeRange}
+                  </span>
                 </span>
               )}
             </div>
@@ -94,7 +122,7 @@ export default function HalaqaCardItem({
         </div>
 
         {/* شارة الحالة، زر التعديل السريع، والسهم */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
             isArchived
               ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
@@ -108,10 +136,10 @@ export default function HalaqaCardItem({
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation(); // منع فتح الجلسة عند رغبة المستخدم في التعديل فقط
+                e.stopPropagation();
                 onEdit(halaqa);
               }}
-              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors"
+              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors cursor-pointer"
               title={t('common.edit', 'تعديل')}
             >
               <Edit3 className="w-3.5 h-3.5" />
