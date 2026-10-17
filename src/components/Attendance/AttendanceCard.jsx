@@ -29,23 +29,30 @@ const AttendanceCard = ({ student, onSaveAttendance, initialData = {}, t, isRtl 
       };
       await onSaveAttendance(attendanceData);
     } catch (error) {
-      console.error('Error saving attendance:', error);
+      console.error('Error saving attendance record:', error);
     }
     setIsSaving(false);
   };
 
-  const handleSendWhatsApp = () => {
+  const handleSendMessaging = () => {
     if (!student.phone) return;
     
     const cleanPhone = student.phone.replace(/[^0-9]/g, '');
     const formattedPhone = cleanPhone.startsWith('0') ? `2${cleanPhone}` : cleanPhone;
     
-    const message = `${t('attendance.whatsappReportTitle', 'تقرير الطالب')}: ${formatName(student.name)}
-${t('attendance.statusLabel', 'حالة الحضور')}: ${status === 'present' ? 'حاضر ✅' : status === 'absent' ? 'غائب ❌' : 'مستأذن ⚠️'}
-${t('attendance.newMemorization', 'الحفظ الجديد')}: ${memorization || '-'}
-${t('attendance.review', 'المراجعة')}: ${review || '-'}
-${t('attendance.rating', 'التقييم')}: ${'⭐'.repeat(rating)}
-${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
+    const statusText = 
+      status === 'present' ? t('attendance.present', 'حاضر') : 
+      status === 'absent' ? t('attendance.absent', 'غائب') : 
+      t('attendance.excused', 'مستأذن');
+
+    const message = `*${t('attendance.reportTitle', 'تقرير الأداء الأكاديمي')}*
+----------------------------------
+*${t('attendance.studentName', 'الطالب')}:* ${formatName(student.name)}
+*${t('attendance.attendanceStatus', 'حالة الحضور')}:* ${statusText}
+*${t('attendance.newMemorization', 'الحفظ الجديد')}:* ${memorization || '-'}
+*${t('attendance.retentionReview', 'المراجعة والتثبيت')}:* ${review || '-'}
+*${t('attendance.dailyRating', 'التقييم اليومي')}:* ${'⭐'.repeat(rating)} (${rating}/5)
+*${t('attendance.instructorNotes', 'ملاحظات المعلم')}:* ${notes || '-'}`;
 
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -53,7 +60,7 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
 
   return (
     <div className={`${UI.card} space-y-4`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* هيدر الطالب */}
+      {/* هيدر الطالب والمؤشرات */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-semantic-borderCard pb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary font-medium overflow-hidden shrink-0">
@@ -69,7 +76,7 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
           </div>
         </div>
 
-        {/* خيارات تحديد الحضور والغياب */}
+        {/* خيارات تحديد الحضور */}
         <div className="flex items-center gap-1.5 bg-semantic-surfaceInput/60 p-1 rounded-xl border border-semantic-borderInput">
           <button
             type="button"
@@ -112,7 +119,7 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
         </div>
       </div>
 
-      {/* تفاصيل الورد والتسميع (تظهر فقط عند الحضور) */}
+      {/* تفاصيل التسميع والورد اليومي (تظهر فقط عند الحضور) */}
       {status === 'present' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
           <div>
@@ -132,7 +139,7 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
           <div>
             <label className="block text-xs text-semantic-textSecondary mb-1 flex items-center gap-1">
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-              {t('attendance.review', 'المراجعة')}
+              {t('attendance.retentionReview', 'المراجعة والتثبيت')}
             </label>
             <input
               type="text"
@@ -145,10 +152,10 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
         </div>
       )}
 
-      {/* التقييم بالنجوم والملاحظات */}
+      {/* التقييم اليومي والملاحظات الإدارية */}
       <div className="flex flex-col md:flex-row items-center gap-4">
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-semantic-textSecondary ml-2">{t('attendance.rating', 'التقييم')}:</span>
+          <span className="text-xs text-semantic-textSecondary ml-2">{t('attendance.dailyRating', 'التقييم اليومي')}:</span>
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
@@ -174,16 +181,16 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
         />
       </div>
 
-      {/* أزرار الإجراءات */}
+      {/* أزرار الإجراءات واعتماد السجل */}
       <div className="flex items-center justify-end gap-2 pt-2 border-t border-semantic-borderCard">
         {student.phone && (
           <button
             type="button"
-            onClick={handleSendWhatsApp}
+            onClick={handleSendMessaging}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-semantic-successBg text-semantic-success hover:bg-semantic-success/20 border border-semantic-successBorder rounded-xl text-xs font-medium transition-all cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
-            {t('attendance.sendWhatsApp', 'إرسال للواتساب')}
+            {t('attendance.shareReport', 'إرسال التقرير')}
           </button>
         )}
 
@@ -194,7 +201,7 @@ ${t('attendance.notes', 'ملاحظات')}: ${notes || '-'}`;
           className={`${UI.btnPrimary} !w-auto px-4 py-1.5 text-xs`}
         >
           <Save className="w-3.5 h-3.5" />
-          {isSaving ? t('attendance.saving', 'جاري الحفظ...') : t('attendance.saveRating', 'حفظ التقييم')}
+          {isSaving ? t('attendance.saving', 'جاري الحفظ...') : t('attendance.saveRecord', 'حفظ السجل اليومي')}
         </button>
       </div>
     </div>
