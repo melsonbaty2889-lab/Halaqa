@@ -42,7 +42,7 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // تنسيق أيام الانعقاد بأسماء الأيام الكاملة بالاعتماد على src/constants/days.js
+  // تنسيق الأيام بالاسم الكامل
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const daysOptions = getDaysOptions(t);
@@ -54,7 +54,6 @@ export default function HalaqaCardItem({
         d.short.toLowerCase() === String(dayVal || '').toLowerCase() ||
         d.value.toLowerCase().startsWith(String(dayVal || '').toLowerCase())
       );
-      // استخدام d.label لعرض "السبت، الأحد" بدلاً من "سبت، أحد"
       return found ? found.label : dayVal;
     }).join('، ');
   };
@@ -63,7 +62,6 @@ export default function HalaqaCardItem({
   const studentsCount = halaqa?.students_count || halaqa?.student_count || 0;
   const maxStudents = halaqa?.max_students || 15;
 
-  // عند الضغط على البطاقة تفتح صفحة متابعة الجلسة والتحصيل مباشرة
   const handleCardClick = () => {
     if (onNavigateToAttendance) {
       onNavigateToAttendance(halaqa?.id);
@@ -78,23 +76,24 @@ export default function HalaqaCardItem({
       className="bg-semantic-surfaceCard border border-semantic-borderCard hover:border-semantic-actionPrimary/50 rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden"
       dir="rtl"
     >
-      <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+      <div className="flex items-center justify-between gap-3">
         {/* معلومات الحلقة الأساسية */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* حاوية الأيقونة الرمزية الموحدة */}
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-semantic-surfaceInput border border-semantic-borderInput flex items-center justify-center text-semantic-textSecondary group-hover:border-semantic-actionPrimary/50 group-hover:text-semantic-actionPrimary transition-colors shrink-0 overflow-hidden">
             <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-semantic-actionPrimary" />
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-semantic-textPrimary text-sm sm:text-base group-hover:text-semantic-actionPrimary transition-colors leading-tight m-0 truncate">
-                {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
-              </h3>
-            </div>
+            {/* اسم الحلقة */}
+            <h3 className="font-bold text-semantic-textPrimary text-sm sm:text-base group-hover:text-semantic-actionPrimary transition-colors leading-tight m-0 truncate">
+              {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
+            </h3>
 
-            <div className="flex items-center gap-x-3 gap-y-1 text-xs text-semantic-textSecondary mt-1.5 flex-wrap">
+            {/* تفاصيل المعلم وعدد الطلاب */}
+            <div className="flex items-center gap-x-3 gap-y-1 text-xs text-semantic-textSecondary mt-1 flex-wrap">
               {teacherName ? (
-                <span className="flex items-center gap-1 font-medium text-semantic-textSecondary">
+                <span className="flex items-center gap-1 font-medium text-semantic-textSecondary min-w-0 max-w-[180px] sm:max-w-[220px]">
                   <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
                   <span className="truncate">{teacherName}</span>
                 </span>
@@ -105,28 +104,27 @@ export default function HalaqaCardItem({
                 </span>
               )}
 
-              {/* عدد الطلاب */}
-              <span className="flex items-center gap-1 text-[11px] text-semantic-textMuted">
+              <span className="flex items-center gap-1 text-[11px] text-semantic-textMuted shrink-0">
                 <Users className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
                 <span><bdi>{studentsCount}</bdi>/<bdi>{maxStudents}</bdi> {t('students_unit', 'طالب')}</span>
               </span>
-
-              {/* الأيام والوقت */}
-              {(formattedTimeRange || formattedDays) && (
-                <span className="flex items-center gap-1 text-[11px] text-semantic-textMuted">
-                  <Clock className="w-3 h-3 shrink-0" />
-                  <span className="truncate">
-                    {formattedDays ? `${formattedDays} • ` : ''}{formattedTimeRange}
-                  </span>
-                </span>
-              )}
             </div>
+
+            {/* الأيام والوقت في سطر فرعي منفصل ناعم */}
+            {(formattedTimeRange || formattedDays) && (
+              <div className="flex items-center gap-1 text-[11px] text-semantic-textMuted mt-1">
+                <Clock className="w-3 h-3 shrink-0 text-semantic-actionPrimary/70" />
+                <span className="truncate">
+                  {formattedDays ? `${formattedDays} • ` : ''}{formattedTimeRange}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* شارة الحالة، زر التعديل السريع، والسهم */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+        {/* الطرف الأيسر المستقل (الحالة + التعديل + السهم) لمنع التداخل */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
             isArchived
               ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
               : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30'
@@ -134,7 +132,6 @@ export default function HalaqaCardItem({
             {isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}
           </span>
 
-          {/* زر تعديل بيانات الحلقة المنفصل عن الضغط الكلي */}
           {onEdit && (
             <button
               type="button"
@@ -142,14 +139,14 @@ export default function HalaqaCardItem({
                 e.stopPropagation();
                 onEdit(halaqa);
               }}
-              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors cursor-pointer shrink-0"
               title={t('common.edit', 'تعديل')}
             >
               <Edit3 className="w-3.5 h-3.5" />
             </button>
           )}
 
-          <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+          <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
         </div>
       </div>
     </div>
