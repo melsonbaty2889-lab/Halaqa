@@ -333,7 +333,7 @@ export function useAttendance({
       // 🎯 التصحيح المحوري: الحفظ بحسب المفتاح الفريد لـ Supabase (student_id, date)
       const { error } = await supabase
         .from('attendance')
-        .upsert(attendanceRecords, { onConflict: 'student_id,date' });
+        .upsert(attendanceRecords, { onConflict: 'student_id,halaqa_id,date' });
 
       if (error) throw error;
 
