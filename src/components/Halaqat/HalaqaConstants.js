@@ -44,7 +44,8 @@ export const getTrackOptions = (t) => [
   { value: 'muraja', label: typeof t === 'function' ? t('trackMuraja', 'المراجعة والتثبيت') : 'المراجعة والتثبيت' },
   { value: 'tilawah', label: typeof t === 'function' ? t('trackTilawah', 'التلاوة وتصحيح القراءة') : 'التلاوة وتصحيح القراءة' },
   { value: 'ijazah', label: typeof t === 'function' ? t('trackIjazah', 'الإجازة بالسند المتصل') : 'الإجازة بالسند المتصل' },
-  { value: 'mutun', label: typeof t === 'function' ? t('trackMutun', 'المتون العلمية والتجويد النظري') : 'المتون العلمية والتجويد النظري' }
+  { value: 'mutun', label: typeof t === 'function' ? t('trackMutun', 'المتون العلمية والتجويد النظري') : 'المتون العلمية والتجويد النظري' },
+  { value: 'general', label: typeof t === 'function' ? t('trackGeneral', 'الحلقة الشاملة (حفظ + مراجعة + درس تربوي)') : 'الحلقة الشاملة (حفظ + مراجعة + درس تربوي)' }
 ];
 
 /**
