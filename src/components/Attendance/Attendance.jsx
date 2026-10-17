@@ -1,12 +1,13 @@
 // src/components/Attendance/Attendance.jsx
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon, Archive, Lock } from 'lucide-react';
+import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon, Archive, Lock, Compass } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
 import PageLayout from '@/components/UI/PageLayout';
 import Select from '@/components/UI/Select';
 import CustomDatePicker from '@/components/UI/CustomDatePicker';
+import { getTrackOptions } from '@/components/Halaqat/HalaqaConstants';
 
 import AttendanceCard from './AttendanceCard';
 import AttendanceStats from './AttendanceStats';
@@ -46,6 +47,12 @@ export default function Attendance({
 
   const selectedHalaqa = halaqas.find(h => String(h.id) === String(selectedHalaqaId));
   const isArchived = Boolean(selectedHalaqa?.is_archived);
+
+  // تحديد المسار التعليمي للحلقة الحالية ورسالته الإرشادية
+  const currentHalaqaTrack = selectedHalaqa?.track || selectedHalaqa?.halaqa_track || 'hifz';
+  const trackOptions = getTrackOptions(t);
+  const matchedTrack = trackOptions.find(opt => opt.value === currentHalaqaTrack);
+  const currentTrackLabel = matchedTrack ? matchedTrack.label : t('trackHifz', 'حفظ القرآن الكريم وتجويده');
 
   // فحص هل اليوم مجدول للحلقة
   const checkIsScheduledDay = () => {
@@ -145,7 +152,7 @@ export default function Attendance({
     >
       <div className="text-semantic-textPrimary pb-20 relative select-none" dir={isRtl ? 'rtl' : 'ltr'}>
         
-        {/* شريط تنبيه الحلقة المؤرشفة (مدمج مباشرة) */}
+        {/* شريط تنبيه الحلقة المؤرشفة */}
         {isArchived && (
           <div className="p-3.5 rounded-xl mb-4 bg-semantic-surfaceInput border border-semantic-borderCard text-semantic-textSecondary text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
             <Archive className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
@@ -154,6 +161,17 @@ export default function Attendance({
                 'attendance.archivedNotice', 
                 'هذه الحلقة مؤرشفة حالياً. يمكنك استعراض السجلات القديمة فقط، وتم إيقاف إمكانية تعديل الحضور أو تسجيل التسميع.'
               )}
+            </span>
+          </div>
+        )}
+
+        {/* شريط توضيح المسار التعليمي للحلقة المحددة */}
+        {selectedHalaqaId && !isArchived && (
+          <div className="p-3 rounded-xl mb-4 bg-semantic-surfaceCard border border-semantic-borderCard text-semantic-textSecondary text-xs font-semibold flex items-center gap-2 shadow-sm animate-fade-in">
+            <Compass className="w-4 h-4 text-semantic-actionPrimary shrink-0" />
+            <span>
+              {t('attendance.currentTrackBadge', 'المسار التعليمي للحلقة المحددة:')}{' '}
+              <strong className="text-semantic-textPrimary">{currentTrackLabel}</strong>
             </span>
           </div>
         )}
@@ -184,17 +202,25 @@ export default function Attendance({
                 </p>
               </div>
             ) : (
-              filteredStudents.map(student => (
-                <div key={student.id} className={isArchived ? "pointer-events-none opacity-80" : ""}>
-                  <AttendanceCard 
-                    student={student}
-                    data={attendanceData[student.id] || {}}
-                    onChangeField={updateStudentField}
-                    isRtl={isRtl}
-                    t={t}
-                  />
-                </div>
-              ))
+              filteredStudents.map(student => {
+                // إعداد بيانات الطالب مع توحيد المسار القادم من الحلقة أو الطالب
+                const studentWithTrack = {
+                  ...student,
+                  track: selectedHalaqa?.track || selectedHalaqa?.halaqa_track || student.track || 'hifz'
+                };
+
+                return (
+                  <div key={student.id} className={isArchived ? "pointer-events-none opacity-80" : ""}>
+                    <AttendanceCard 
+                      student={studentWithTrack}
+                      data={attendanceData[student.id] || {}}
+                      onChangeField={updateStudentField}
+                      isRtl={isRtl}
+                      t={t}
+                    />
+                  </div>
+                );
+              })
             )}
           </div>
         )}
