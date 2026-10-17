@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { formatName } from '@/utils/formatters';
 
-const StudentAttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
+const AttendanceCard = ({ student, onSaveAttendance, initialData = {} }) => {
   const [status, setStatus] = useState(initialData.status || 'present');
   const [memorization, setMemorization] = useState(initialData.memorization || '');
   const [review, setReview] = useState(initialData.review || '');
@@ -199,4 +199,4 @@ const StudentAttendanceCard = ({ student, onSaveAttendance, initialData = {} }) 
   );
 };
 
-export default StudentAttendanceCard;
+export default AttendanceCard;
