@@ -958,6 +958,7 @@
     "unarchive_title": "Unarchive Student"
   },
   "students_management_title": "Student Affairs and Educational Track",
+  "students_plural": "طلاب",
   "students_unit": "Student",
   "subscription": {
     "attachReceipt": "Attach Transfer Notice Image:",
