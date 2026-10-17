@@ -1,15 +1,15 @@
 // src/components/Attendance/Attendance.jsx
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Loader2, GraduationCap } from 'lucide-react';
+import { Save, Loader2, GraduationCap, BookOpen, Calendar as CalendarIcon } from 'lucide-react';
 
 import { useAttendance } from '@/hooks/useAttendance';
 import StudentAttendanceCard from '@/components/Student/StudentAttendanceCard';
 import PageLayout from '@/components/UI/PageLayout';
+import Select from '@/components/UI/Select';
+import CustomDatePicker from '@/components/UI/CustomDatePicker';
 
-import AttendanceHeader from './AttendanceHeader';
 import AttendanceStats from './AttendanceStats';
-import AttendanceFilterBar from './AttendanceFilterBar';
 import ArchivedNoticeBar from './ArchivedNoticeBar';
 
 export default function Attendance({ 
@@ -48,6 +48,7 @@ export default function Attendance({
   const selectedHalaqa = halaqas.find(h => String(h.id) === String(selectedHalaqaId));
   const isArchived = Boolean(selectedHalaqa?.is_archived);
 
+  // فحص هل اليوم مجدول للحلقة
   const checkIsScheduledDay = () => {
     if (!selectedHalaqa || !selectedHalaqa.days_of_week || !selectedDate) return false;
     const dateObj = new Date(selectedDate);
@@ -77,26 +78,46 @@ export default function Attendance({
     }))
   ];
 
-  // 1. شبكة الإحصائيات لتمريرها لـ PageLayout
+  // 1️⃣ شبكة الإحصائيات
   const statsGridComponent = (
-    <AttendanceStats
-      stats={stats}
-    />
+    <AttendanceStats stats={stats} />
   );
 
-  // 2. الفلاتر (البحث + الحلقة + التاريخ) لتمريرها لـ PageLayout
+  // 2️⃣ الفلاتر المباشرة داخل PageLayout دون ملف منفصل
   const filtersComponent = (
-    <AttendanceFilterBar
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      selectedHalaqaId={selectedHalaqaId}
-      setSelectedHalaqaId={setSelectedHalaqaId}
-      halaqaOptions={halaqaOptions}
-      selectedDate={selectedDate}
-      setSelectedDate={setSelectedDate}
-      isOfficialScheduleDay={isOfficialScheduleDay}
-      t={t}
-    />
+    <>
+      <div className="col-span-2 md:col-span-1">
+        <Select
+          value={selectedHalaqaId || ''}
+          onChange={setSelectedHalaqaId}
+          options={halaqaOptions}
+          placeholder={t('attendance.selectHalaqa', 'جميع الحلقات والمجموعات')}
+          modalTitle={t('attendance.selectHalaqaModalTitle', 'اختيار الحلقة الدراسية')}
+          icon={BookOpen}
+        />
+      </div>
+
+      <div className="col-span-2 md:col-span-2 flex flex-col justify-center">
+        <CustomDatePicker
+          value={selectedDate}
+          onChange={setSelectedDate}
+          icon={CalendarIcon}
+        />
+        {selectedHalaqaId && selectedDate && (
+          <div className="text-[10px] mt-1 font-semibold px-1 flex items-center gap-1">
+            {isOfficialScheduleDay ? (
+              <span className="text-semantic-success flex items-center gap-1">
+                ● {t('attendance.officialDay', 'يوم انعقاد مجدول لهذه الحلقة')}
+              </span>
+            ) : (
+              <span className="text-semantic-textMuted flex items-center gap-1">
+                ○ {t('attendance.extraOrArchiveDay', 'جلسة استثنائية / استعراض أرشيف')}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 
   return (
@@ -124,10 +145,10 @@ export default function Attendance({
     >
       <div className="text-semantic-textPrimary pb-20 relative select-none" dir={isRtl ? 'rtl' : 'ltr'}>
         
-        {/* شريط تنبيه الأرشفة */}
+        {/* تنبيه الحلقة المؤرشفة */}
         {isArchived && <ArchivedNoticeBar />}
 
-        {/* رسائل النظام والتنبيهات */}
+        {/* رسائل التنبيه والنتائج */}
         {message.text && (
           <div className={`p-3.5 rounded-xl mb-4 text-xs font-bold border backdrop-blur-md animate-fade-in ${
             message.type === 'success' 
@@ -138,7 +159,7 @@ export default function Attendance({
           </div>
         )}
 
-        {/* قائمة الطلاب وبطاقات التسميع */}
+        {/* قائمة بطاقات الطلاب */}
         {loadingFetch ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <Loader2 className="w-8 h-8 animate-spin text-semantic-actionPrimary" />
@@ -170,7 +191,7 @@ export default function Attendance({
           </div>
         )}
 
-        {/* الشريط الثابت بالأسفل للاعتماد والحفظ */}
+        {/* الشريط الثابت للحفظ والاعتماد */}
         {!loadingFetch && filteredStudents.length > 0 && (
           <div className="sticky bottom-4 z-20 mt-6 backdrop-blur-lg bg-semantic-bgPage/85 p-2 rounded-2xl border border-semantic-borderCard shadow-xl">
             {isArchived ? (
