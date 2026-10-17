@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
+import { getDaysOptions } from '@/constants/days';
 
 export default function HalaqaCardItem({ 
   halaqa, 
@@ -41,19 +42,19 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // تنسيق أيام الانعقاد
+  // تنسيق أيام الانعقاد بالاعتماد على src/constants/days.js
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
-    const dayLabels = {
-      sat: t('days.sat', 'سبت'),
-      sun: t('days.sun', 'أحد'),
-      mon: t('days.mon', 'إثنين'),
-      tue: t('days.tue', 'ثلاثاء'),
-      wed: t('days.wed', 'أربعاء'),
-      thu: t('days.thu', 'خميس'),
-      fri: t('days.fri', 'جمعة')
-    };
-    return daysArray.map(d => dayLabels[d] || d).join('، ');
+    const daysOptions = getDaysOptions(t);
+    
+    return daysArray.map(dayVal => {
+      const found = daysOptions.find(d => 
+        d.value.toLowerCase() === String(dayVal || '').toLowerCase() || 
+        d.short.toLowerCase() === String(dayVal || '').toLowerCase() ||
+        d.value.toLowerCase().startsWith(String(dayVal || '').toLowerCase())
+      );
+      return found ? found.short : dayVal;
+    }).join('، ');
   };
 
   const formattedDays = formatDays(halaqa?.days_of_week);
