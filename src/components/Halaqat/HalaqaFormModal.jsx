@@ -126,7 +126,7 @@ export default function HalaqaFormModal({
       ...prev,
       name_text: value,
       name: typeof prev?.name === 'object' && prev?.name !== null 
-        ? { ...prev.name, [currentLang]: value } 
+        ? { ...prev.name, [currentLang]: value, ar: value } 
         : { [currentLang]: value, ar: value }
     }));
   };
@@ -165,26 +165,27 @@ export default function HalaqaFormModal({
     }
 
     const formattedName = typeof formData?.name === 'object' && formData?.name !== null 
-      ? { ...formData.name, [currentLang]: rawName }
+      ? { ...formData.name, [currentLang]: rawName, ar: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
     const payload = {
       ...formData,
       academy_id: resolvedAcademyId,
-      academyId: resolvedAcademyId,
       name: formattedName,
       days_of_week: Array.isArray(formData?.days_of_week) ? formData.days_of_week : [],
       educational_track: formData?.educational_track || 'hifz',
       teaching_type: formData?.teaching_type || 'online',
       target_audience: formData?.target_audience || 'kids',
       teacher_id: formData?.teacher_id || null,
-      max_students: formData?.max_students ? parseInt(formData.max_students, 10) : null,
-      timezone: formData?.timezone || defaultTimezone
+      start_time: startTime,
+      end_time: endTime,
+      max_students: formData?.max_students ? parseInt(formData.max_students, 10) : null
     };
 
     delete payload.name_text;
     delete payload.track;
     delete payload.type;
+    delete payload.academyId;
 
     const submitCallback = handleSubmit || onSubmit;
     if (submitCallback) {
@@ -349,7 +350,6 @@ export default function HalaqaFormModal({
 
         </div>
 
-        {/* أزرار العمليات */}
         <div className="flex items-center justify-end gap-2 border-t border-semantic-borderCard pt-3 mt-auto shrink-0 bg-semantic-surfaceCard">
           <button
             type="button"
