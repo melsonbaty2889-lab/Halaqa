@@ -82,26 +82,30 @@ export default function HalaqaCardItem({
   return (
     <div
       onClick={handleCardClick}
-      className={`bg-semantic-surfaceCard border rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start ${
+      className={`border rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start ${
         isArchived 
-          ? 'border-semantic-borderCard/60 opacity-80 hover:opacity-100 bg-semantic-surfaceCard/60' 
-          : 'border-semantic-borderCard hover:border-semantic-actionPrimary/50'
+          ? 'bg-semantic-surfaceInput/30 border-semantic-borderCard/40 opacity-60 hover:opacity-90 grayscale-[15%]' 
+          : 'bg-semantic-surfaceCard border-semantic-borderCard hover:border-semantic-actionPrimary/50 shadow-sm'
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       {/* 1. السطر العلوي: اسم الحلقة + زر التبديل الموحد + زر التعديل */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
             isArchived 
-              ? 'border-semantic-borderCard text-semantic-textMuted' 
-              : 'border-semantic-borderInput text-semantic-actionPrimary group-hover:border-semantic-actionPrimary/50'
+              ? 'bg-semantic-surfaceInput/50 border-semantic-borderCard/50 text-semantic-textMuted' 
+              : 'bg-semantic-surfaceInput border-semantic-borderInput text-semantic-actionPrimary group-hover:border-semantic-actionPrimary/50'
           }`}>
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="font-extrabold text-semantic-textPrimary text-sm sm:text-base group-hover:text-semantic-actionPrimary transition-colors leading-snug m-0 truncate text-start">
+            <h3 className={`font-extrabold text-sm sm:text-base transition-colors leading-snug m-0 truncate text-start ${
+              isArchived 
+                ? 'text-semantic-textMuted' 
+                : 'text-semantic-textPrimary group-hover:text-semantic-actionPrimary'
+            }`}>
               {halaqaName || t('unnamedHalaqa', 'حلقة بدون اسم')}
             </h3>
           </div>
