@@ -101,7 +101,7 @@ export default function HalaqasManager({
     setIsAddModalOpen(true);
   };
 
-    const handleModalSubmit = async (payload) => {
+  const handleModalSubmit = async (payload) => {
     try {
       if (editingHalaqa?.id) {
         if (onUpdateHalaqa) {
@@ -119,7 +119,7 @@ export default function HalaqasManager({
       console.error("Error submitting halaqa form:", err);
     }
   };
-  
+
   const getEmptyStateMessage = () => {
     if ((searchQuery || '').trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
     if (statusFilter === 'no_teacher') return t('halaqas.no_unassigned_halaqas', 'لا توجد حلقات بدون معلم حالياً.');
