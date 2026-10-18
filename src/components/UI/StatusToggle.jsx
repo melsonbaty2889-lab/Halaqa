@@ -22,7 +22,7 @@ export default function StatusToggle({
       type="button"
       onClick={handleClick}
       disabled={disabled || loading}
-      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-semantic-borderCard bg-semantic-surfaceInput/80 hover:border-semantic-actionPrimary transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-semantic-borderCard/60 bg-semantic-surfaceInput/90 hover:border-semantic-actionPrimary/50 transition-all cursor-pointer shadow-sm active:scale-95 outline-none focus:ring-0 ${className}`}
     >
       {/* جسم المفتاح (Track) */}
       <div
