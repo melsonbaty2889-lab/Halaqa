@@ -101,26 +101,34 @@ export default function HalaqasManager({
     setIsAddModalOpen(true);
   };
 
+  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة متناهية وتوافق كامل مع هيكل قاعدة البيانات
   const handleModalSubmit = async (payload) => {
     try {
       if (editingHalaqa?.id) {
         if (onUpdateHalaqa) {
-          // الحفاظ على حقل name كـ JSON object باللغات المتعددة وتحديث اللغة الحالية
           const existingNameObj = typeof editingHalaqa.name === 'object' && editingHalaqa.name !== null 
             ? editingHalaqa.name 
-            : {};
+            : { ar: '' };
 
           const updatedName = {
             ...existingNameObj,
-            [currentLang]: payload.name_text || payload.name || existingNameObj[currentLang] || ''
+            [currentLang]: payload.name_text || payload.name?.[currentLang] || existingNameObj[currentLang] || ''
           };
 
           const updatePayload = {
-            ...payload,
-            name: updatedName
+            id: editingHalaqa.id,
+            name: updatedName,
+            teacher_id: payload.teacher_id || null,
+            days_of_week: Array.isArray(payload.days_of_week) ? payload.days_of_week : [],
+            start_time: payload.start_time || null,
+            end_time: payload.end_time || null,
+            max_students: Number(payload.max_students) || 15,
+            educational_track: payload.educational_track || 'hifz',
+            teaching_type: payload.teaching_type || 'online',
+            target_audience: payload.target_audience || 'kids'
           };
 
-          await onUpdateHalaqa({ id: editingHalaqa.id, ...updatePayload });
+          await onUpdateHalaqa(updatePayload);
         }
       } else {
         if (onCreateHalaqa) {
