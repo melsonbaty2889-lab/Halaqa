@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users, Archive, CheckCircle } from 'lucide-react';
+import { 
+  BookOpen, ChevronLeft, ChevronRight, User, Clock, 
+  Edit3, Users, Archive, CheckCircle2, RotateCcw 
+} from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 import { getDaysOptions } from '@/constants/days';
@@ -13,7 +16,7 @@ export default function HalaqaCardItem({
   getLocalizedText, 
   onSelectHalaqa,
   onEdit,
-  onToggleArchive, // دالة جديدة للتحكم في الأرشفة والتنشيط بضغطة زر
+  onToggleArchive,
   onNavigateToAttendance 
 }) {
   const { t, i18n } = useTranslation();
@@ -80,12 +83,12 @@ export default function HalaqaCardItem({
       onClick={handleCardClick}
       className={`bg-semantic-surfaceCard border rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start ${
         isArchived 
-          ? 'border-semantic-borderCard/60 opacity-80 hover:opacity-100 bg-semantic-surfaceCard/60' 
+          ? 'border-semantic-borderCard/60 opacity-85 hover:opacity-100 bg-semantic-surfaceCard/60' 
           : 'border-semantic-borderCard hover:border-semantic-actionPrimary/50'
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. السطر العلوي: الأيقونة + اسم الحلقة + شارة التنشيط/الأرشفة القابلة للضغط وأزرار التحكم */}
+      {/* 1. السطر العلوي */}
       <div className="flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
@@ -103,25 +106,36 @@ export default function HalaqaCardItem({
           </div>
         </div>
 
-        {/* الحاوية الجانبية لأزرار التحكم والشارة القابلة للنقر */}
+        {/* أزرار التحكم والشارة التفاعلية */}
         <div className="flex items-center gap-1.5 shrink-0">
           
-          {/* زر تبديل الحالة (نشطة / مؤرشفة) */}
+          {/* زر التنشيط والأرشفة التفاعلي الوارد تصميمه بوضوح */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               if (onToggleArchive) onToggleArchive(halaqa);
             }}
-            title={isArchived ? t('clickToActivate', 'انقر للتنشيط') : t('clickToArchive', 'انقر للأرشفة')}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 flex items-center gap-1 transition-all cursor-pointer ${
+            title={isArchived ? t('clickToActivate', 'اضغط لتنشيط الحلقة') : t('clickToArchive', 'اضغط لأرشفة الحلقة')}
+            className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold border shrink-0 flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95 ${
               isArchived
-                ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:border-semantic-actionPrimary hover:text-semantic-actionPrimary'
-                : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30 hover:opacity-80'
+                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20'
+                : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/40 hover:bg-semantic-success/20'
             }`}
           >
-            {isArchived ? <Archive size={10} className="shrink-0" /> : <CheckCircle size={10} className="shrink-0" />}
-            <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
+            {isArchived ? (
+              <>
+                <RotateCcw size={11} className="shrink-0" />
+                <span>{t('archived', 'مؤرشفة')}</span>
+                <span className="text-[9px] opacity-70">({t('activate', 'تنشيط')})</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={11} className="shrink-0" />
+                <span>{t('activeSession', 'نشطة')}</span>
+                <span className="text-[9px] opacity-70">({t('archive', 'أرشفة')})</span>
+              </>
+            )}
           </button>
 
           {/* زر التعديل */}
@@ -132,8 +146,8 @@ export default function HalaqaCardItem({
                 e.stopPropagation();
                 onEdit(halaqa);
               }}
-              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors cursor-pointer shrink-0"
-              title={t('common.edit', 'تعديل')}
+              className="p-1.5 rounded-lg text-semantic-textMuted hover:text-semantic-actionPrimary hover:bg-semantic-surfaceInput transition-colors cursor-pointer shrink-0 border border-transparent hover:border-semantic-borderInput"
+              title={t('common.edit', 'تعديل الحلقة')}
             >
               <Edit3 className="w-3.5 h-3.5" />
             </button>
@@ -143,7 +157,7 @@ export default function HalaqaCardItem({
         </div>
       </div>
 
-      {/* 2. السطر الأوسط: اسم المعلم الكامل + عدد الطلاب */}
+      {/* 2. السطر الأوسط */}
       <div className="flex items-center justify-between gap-2 text-xs border-t border-semantic-borderInput/40 pt-2.5">
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
@@ -160,7 +174,7 @@ export default function HalaqaCardItem({
         </div>
       </div>
 
-      {/* 3. السطر السفلي: المواعيد */}
+      {/* 3. السطر السفلي */}
       {hasTimeData && (
         <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted bg-semantic-surfaceInput/30 p-2 rounded-xl border border-semantic-borderInput/30 mt-0.5">
           <Clock className="w-3 h-3 shrink-0 text-semantic-actionPrimary/80" />
