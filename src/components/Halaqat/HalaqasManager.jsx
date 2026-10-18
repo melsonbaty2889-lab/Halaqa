@@ -101,7 +101,7 @@ export default function HalaqasManager({
     setIsAddModalOpen(true);
   };
 
-  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة متناهية وتوافق كامل مع هيكل قاعدة البيانات
+  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة وتناغم مع تنقية الأيام من أي تكرار
   const handleModalSubmit = async (payload) => {
     try {
       if (editingHalaqa?.id) {
@@ -115,11 +115,14 @@ export default function HalaqasManager({
             [currentLang]: payload.name_text || payload.name?.[currentLang] || existingNameObj[currentLang] || ''
           };
 
+          // إزالة أي تكرار في أيام الانعقاد قبل إرسالها للسيرفر
+          const cleanDays = Array.from(new Set(Array.isArray(payload.days_of_week) ? payload.days_of_week : []));
+
           const updatePayload = {
             id: editingHalaqa.id,
             name: updatedName,
             teacher_id: payload.teacher_id || null,
-            days_of_week: Array.isArray(payload.days_of_week) ? payload.days_of_week : [],
+            days_of_week: cleanDays,
             start_time: payload.start_time || null,
             end_time: payload.end_time || null,
             max_students: Number(payload.max_students) || 15,
@@ -132,7 +135,9 @@ export default function HalaqasManager({
         }
       } else {
         if (onCreateHalaqa) {
-          await onCreateHalaqa(payload);
+          // تنقية الأيام عند الإنشاء أيضاً لتجنب أي تكرار
+          const cleanDaysCreate = Array.from(new Set(Array.isArray(payload.days_of_week) ? payload.days_of_week : []));
+          await onCreateHalaqa({ ...payload, days_of_week: cleanDaysCreate });
         }
       }
       setIsAddModalOpen(false);
