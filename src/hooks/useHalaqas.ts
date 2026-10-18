@@ -37,7 +37,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب كافة بيانات الحلقات (النشطة والمؤرشفة) دفعة واحدة للتحكم اللحظي
+  // 1. جلب بيانات الحلقات
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -98,13 +98,21 @@ export const useHalaqas = ({
     retry: 1,
   });
 
+  // 🛠️ تنظيف الحقول المؤقتة والعلاقات قبل إرسال Payload إلى Supabase
   const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
     const cleaned = { ...data };
+    delete cleaned.id;
     delete cleaned.academyId;
     delete cleaned.track;
     delete cleaned.type;
     delete cleaned.timezone;
     delete cleaned.selectedDays;
+    delete cleaned.name_text;
+    delete cleaned.teachers;
+    delete cleaned.curricula;
+    delete cleaned.students_count;
+    delete cleaned.student_count;
+    delete cleaned.created_at;
     return cleaned;
   };
 
@@ -143,23 +151,18 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
+  // 🛠️ إصلاح دالة التعديل بالتسجيل الفعلي وتحديث الكاش
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
-      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
       const cleanedData = sanitizeHalaqaPayload(halaqaData);
 
       const payload: any = {
         ...cleanedData,
         updated_at: new Date().toISOString(),
       };
-
-      if (currentAcademyId && !payload.academy_id) {
-        payload.academy_id = currentAcademyId;
-      }
 
       if (halaqaData.start_time) payload.start_time = formatTimeForDb(halaqaData.start_time);
       if (halaqaData.end_time) payload.end_time = formatTimeForDb(halaqaData.end_time);
@@ -176,25 +179,6 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-      queryClient.refetchQueries({ queryKey: ['halaqas'] });
-    },
-  });
-
-  const assignTeacherMutation = useMutation({
-    mutationFn: async ({ halaqaId, teacherId }: { halaqaId: string; teacherId: string | null }) => {
-      const { error } = await supabase
-        .from('halaqas')
-        .update({
-          teacher_id: teacherId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', halaqaId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -212,7 +196,6 @@ export const useHalaqas = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-      queryClient.refetchQueries({ queryKey: ['halaqas'] });
     },
   });
 
@@ -240,18 +223,6 @@ export const useHalaqas = ({
     [updateHalaqaMutation]
   );
 
-  const assignTeacherToHalaqa = useCallback(
-    async (halaqaId: string, teacherId: string | null) => {
-      try {
-        await assignTeacherMutation.mutateAsync({ halaqaId, teacherId });
-        return { success: true };
-      } catch (err: any) {
-        return { success: false, error: err?.message || 'فشلت العملية' };
-      }
-    },
-    [assignTeacherMutation]
-  );
-
   const toggleArchiveHalaqa = useCallback(
     async (halaqaId: string, currentArchived: boolean) => {
       try {
@@ -273,7 +244,6 @@ export const useHalaqas = ({
     refetch,
     createHalaqa,
     updateHalaqa,
-    assignTeacherToHalaqa,
     toggleArchiveHalaqa,
     isCreating: createHalaqaMutation.isPending,
     isUpdating: updateHalaqaMutation.isPending,
