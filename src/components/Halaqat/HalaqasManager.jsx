@@ -105,7 +105,22 @@ export default function HalaqasManager({
     try {
       if (editingHalaqa?.id) {
         if (onUpdateHalaqa) {
-          await onUpdateHalaqa({ id: editingHalaqa.id, ...payload });
+          // الحفاظ على حقل name كـ JSON object باللغات المتعددة وتحديث اللغة الحالية
+          const existingNameObj = typeof editingHalaqa.name === 'object' && editingHalaqa.name !== null 
+            ? editingHalaqa.name 
+            : {};
+
+          const updatedName = {
+            ...existingNameObj,
+            [currentLang]: payload.name_text || payload.name || existingNameObj[currentLang] || ''
+          };
+
+          const updatePayload = {
+            ...payload,
+            name: updatedName
+          };
+
+          await onUpdateHalaqa({ id: editingHalaqa.id, ...updatePayload });
         }
       } else {
         if (onCreateHalaqa) {
@@ -120,12 +135,10 @@ export default function HalaqasManager({
     }
   };
 
-  // 🛠️ دالة التبديل الفورية والسلسة (بدون إجبار إعادة جلب القائمة بالكامل لمنع القفز)
   const handleToggleArchive = async (halaqa) => {
     if (!halaqa?.id) return;
     try {
       if (onToggleArchiveHalaqa) {
-        // نكتفي باستدعاء الهوك الذي يقوم بالتحديث التفاؤلي السريع جداً
         await onToggleArchiveHalaqa(halaqa.id, Boolean(halaqa.is_archived));
       }
     } catch (err) {
