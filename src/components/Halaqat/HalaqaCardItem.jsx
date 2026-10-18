@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   BookOpen, ChevronLeft, ChevronRight, User, Clock, 
-  Edit3, Users, Archive, CheckCircle2, RotateCcw 
+  Edit3, Users
 } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
@@ -88,7 +88,7 @@ export default function HalaqaCardItem({
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. السطر العلوي: اسم الحلقة + الشارة الأنيقة + أزرار التحكم */}
+      {/* 1. السطر العلوي: اسم الحلقة + زر مفتاح التبديل المباشر + زر التعديل */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
@@ -106,18 +106,26 @@ export default function HalaqaCardItem({
           </div>
         </div>
 
-        {/* الحاوية الجانبية: الشارة + أزرار الإجراءات */}
+        {/* أزرار التحكم والزر التفاعلي الصريح */}
         <div className="flex items-center gap-1.5 shrink-0">
           
-          {/* شارة الحالة الأنيقة (بدون حشو نصي) */}
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border shrink-0 flex items-center gap-1 ${
-            isArchived
-              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-              : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30'
-          }`}>
-            {isArchived ? <Archive size={10} className="shrink-0" /> : <CheckCircle2 size={10} className="shrink-0" />}
+          {/* زر مفتاح التبديل المباشر والصريح للحالة */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleArchive) onToggleArchive(halaqa);
+            }}
+            title={isArchived ? t('clickToActivate', 'انقر للتنشيط') : t('clickToArchive', 'انقر للأرشفة')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
+              isArchived
+                ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:border-semantic-actionPrimary'
+                : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/50 hover:opacity-90'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${isArchived ? 'bg-semantic-textMuted' : 'bg-semantic-success animate-pulse'}`} />
             <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
-          </span>
+          </button>
 
           {/* زر التعديل */}
           {onEdit && (
@@ -132,27 +140,6 @@ export default function HalaqaCardItem({
             >
               <Edit3 className="w-3.5 h-3.5" />
             </button>
-          )}
-
-          {/* زر أرشفة/تنشيط مخصص ومستقل بلمسة تفاعلية */}
-          {onToggleArchive && (
-            {/* زر التبديل الواضح والصريح للحالة */}
-<button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    if (onToggleArchive) onToggleArchive(halaqa);
-  }}
-  title={isArchived ? t('clickToActivate', 'انقر للتنشيط') : t('clickToArchive', 'انقر للأرشفة')}
-  className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
-    isArchived
-      ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:border-semantic-actionPrimary'
-      : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/50 hover:opacity-90'
-  }`}
->
-  <span className={`w-2 h-2 rounded-full ${isArchived ? 'bg-semantic-textMuted' : 'bg-semantic-success animate-pulse'}`} />
-  <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
-</button>
           )}
 
           <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
