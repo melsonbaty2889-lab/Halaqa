@@ -26,6 +26,7 @@ export default function HalaqaFormModal({
   const isRtl = ['ar', 'ur'].includes(currentLang);
   
   const [timeError, setTimeError] = useState('');
+  const [loading, setLoading] = useState(false); // 🔄 حالة تحميل محلية لمنع الضغط المتكرر
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const daysOptions = getDaysOptions(t);
@@ -50,6 +51,7 @@ export default function HalaqaFormModal({
     const isVisible = Boolean(isOpen || open);
     if (isVisible) {
       setTimeError('');
+      setLoading(false);
     }
   }, [isOpen, open]);
 
@@ -145,6 +147,8 @@ export default function HalaqaFormModal({
       e.preventDefault();
     }
 
+    if (loading || isSubmitting) return;
+
     const rawName = getCurrentName();
     if (!rawName || !rawName.trim()) {
       alert(t('enterHalaqaNameAlert', 'يرجى إدخال اسم الحلقة'));
@@ -168,11 +172,14 @@ export default function HalaqaFormModal({
       ? { ...formData.name, [currentLang]: rawName, ar: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
+    // تنقية أيام الانعقاد من أي تكرار نهائياً
+    const cleanDays = Array.from(new Set(Array.isArray(formData?.days_of_week) ? formData.days_of_week : []));
+
     const payload = {
       ...formData,
       academy_id: resolvedAcademyId,
       name: formattedName,
-      days_of_week: Array.isArray(formData?.days_of_week) ? formData.days_of_week : [],
+      days_of_week: cleanDays,
       educational_track: formData?.educational_track || 'hifz',
       teaching_type: formData?.teaching_type || 'online',
       target_audience: formData?.target_audience || 'kids',
@@ -189,7 +196,14 @@ export default function HalaqaFormModal({
 
     const submitCallback = handleSubmit || onSubmit;
     if (submitCallback) {
-      await submitCallback(payload);
+      try {
+        setLoading(true);
+        await submitCallback(payload);
+      } catch (err) {
+        console.error("Error submitting halaqa form:", err);
+      } finally {
+        setLoading(false);
+      }
     } else {
       alert(t('noSaveFuncAlert', 'خطأ: لم يتم ربط دالة الحفظ بالمودال!'));
     }
@@ -197,6 +211,7 @@ export default function HalaqaFormModal({
 
   const isModalVisible = Boolean(isOpen || open);
   const selectedDays = Array.isArray(formData?.days_of_week) ? formData.days_of_week : [];
+  const showLoading = loading || isSubmitting;
 
   return (
     <Modal
@@ -354,17 +369,18 @@ export default function HalaqaFormModal({
           <button
             type="button"
             onClick={onClose}
+            disabled={showLoading}
             className={`${UI.btnSecondary} text-xs py-2.5 px-4 rounded-xl font-bold cursor-pointer`}
           >
             {t('cancel', 'إلغاء')}
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
-            className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer`}
+            disabled={showLoading}
+            className={`${UI.btnPrimary} text-xs py-2.5 px-6 rounded-xl font-extrabold transition-opacity flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
           >
-            <Save size={14} />
-            <span>{isSubmitting ? t('saving', 'جاري الحفظ...') : (formData?.id ? t('saveChanges', 'حفظ التعديلات') : t('createNewHalaqa', 'إنشاء الحلقة'))}</span>
+            <Save size={14} className={showLoading ? 'animate-spin' : ''} />
+            <span>{showLoading ? t('saving', 'جاري الحفظ...') : (formData?.id ? t('saveChanges', 'حفظ التعديلات') : t('createNewHalaqa', 'إنشاء الحلقة'))}</span>
           </button>
         </div>
       </form>
