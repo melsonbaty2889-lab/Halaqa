@@ -9,6 +9,7 @@ import {
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 import { getDaysOptions } from '@/constants/days';
+import StatusToggle from '@/components/UI/StatusToggle';
 
 export default function HalaqaCardItem({ 
   halaqa, 
@@ -56,7 +57,7 @@ export default function HalaqaCardItem({
       const safeVal = String(dayVal).toLowerCase();
       const found = daysOptions.find(d => 
         (d?.value || '').toLowerCase() === safeVal || 
-        (d?.label || '').toLowerCase() === safeVal ||
+        (d?.label || '').toLowerCase() === safeVal || 
         (d?.short || '').toLowerCase() === safeVal ||
         (d?.value || '').toLowerCase().startsWith(safeVal)
       );
@@ -88,7 +89,7 @@ export default function HalaqaCardItem({
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. السطر العلوي: اسم الحلقة + زر مفتاح التبديل الحقيقي (Toggle Switch) + زر التعديل */}
+      {/* 1. السطر العلوي: اسم الحلقة + زر التبديل الموحد + زر التعديل */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
@@ -109,33 +110,15 @@ export default function HalaqaCardItem({
         {/* الحاوية الجانبية لأزرار التحكم */}
         <div className="flex items-center gap-2 shrink-0">
           
-          {/* 🎛️ زر مفتاح التبديل الحقيقي (Toggle Switch with Text) */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onToggleArchive) onToggleArchive(halaqa);
-            }}
-            title={isArchived ? t('clickToActivate', 'انقر لتنشيط الحلقة') : t('clickToArchive', 'انقر لأرشفة الحلقة')}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-semantic-borderCard bg-semantic-surfaceInput/80 hover:border-semantic-actionPrimary transition-all cursor-pointer shadow-sm active:scale-95"
-          >
-            {/* جسم المفتاح (Slider Track) */}
-            <div className={`w-8 h-4 rounded-full transition-colors relative flex items-center p-0.5 ${
-              isArchived ? 'bg-semantic-borderCard' : 'bg-semantic-success'
-            }`}>
-              {/* دائرة المفتاح المتحركة (Thumb) */}
-              <div className={`w-3 h-3 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                isArchived ? 'translate-x-0' : 'translate-x-4 rtl:-translate-x-4'
-              }`} />
-            </div>
-
-            {/* النص التوضيحي للحالة بجانب المفتاح */}
-            <span className={`text-[11px] font-extrabold ${
-              isArchived ? 'text-semantic-textMuted' : 'text-semantic-success'
-            }`}>
-              {isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}
-            </span>
-          </button>
+          {/* 🎛️ المكون الموحد للتحكم بالحالة */}
+          {onToggleArchive && (
+            <StatusToggle
+              checked={!isArchived}
+              onChange={() => onToggleArchive(halaqa)}
+              activeLabel={t('activeSession', 'نشطة')}
+              inactiveLabel={t('archived', 'مؤرشفة')}
+            />
+          )}
 
           {/* زر التعديل */}
           {onEdit && (
