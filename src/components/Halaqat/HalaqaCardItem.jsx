@@ -47,12 +47,15 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // تنسيق أيام الانعقاد بالأسماء المترجمة
+  // 1️⃣ الخطوة الأولى: تنقية وتنسيق أيام الانعقاد بالأسماء المترجمة بدون أي تكرار
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const daysOptions = getDaysOptions(t);
     
-    return daysArray.map(dayVal => {
+    // إزالة القيم المكررة فوراً
+    const uniqueDays = Array.from(new Set(daysArray));
+    
+    return uniqueDays.map(dayVal => {
       if (!dayVal) return '';
       const safeVal = String(dayVal).toLowerCase();
       const found = daysOptions.find(d => 
