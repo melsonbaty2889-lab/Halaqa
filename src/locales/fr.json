@@ -33,6 +33,7 @@
   },
   "academyErrorAlert": "خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.",
   "activate": "تنشيط",
+  "activateHalaqa": "تنشيط الحلقة",
   "activeHalaqasSub": "متابعة الحلقات النشطة والمؤرشفة وتعيين المعلمين",
   "activeHalaqasTitle": "إدارة الحلقات والفصول",
   "activeSession": "جلسة نشطة",
@@ -90,6 +91,7 @@
   },
   "archive": "أرشفة",
   "archived": "مؤرشفة",
+  "archiveHalaqa": "أرشفة الحلقة",
   "assignTeacher": "تعيين المعلم المسؤول",
   "attendance": {
     "absent": "الغائبون",

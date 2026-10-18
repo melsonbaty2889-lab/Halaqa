@@ -9,6 +9,7 @@
   },
   "academyErrorAlert": "خطأ: لم يتم التعرف على الأكاديمية الحالية، يرجى إعادة تسجيل الدخول.",
   "activate": "تنشيط",
+  "activateHalaqa": "تنشيط الحلقة",
   "activeSession": "نشطة",
   "add_new_student": "إضافة طالب جديد",
   "affiliate": {
@@ -56,6 +57,7 @@
   },
   "archive": "أرشفة",
   "archived": "مؤرشفة",
+  "archiveHalaqa": "أرشفة الحلقة",
   "attendance": {
     "absent": "الغائبون",
     "absentReasonPlaceholder": "سبب الغياب (إن وجد)...",

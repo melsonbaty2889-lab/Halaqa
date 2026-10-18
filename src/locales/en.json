@@ -9,6 +9,7 @@
   },
   "academyErrorAlert": "Error: Current academy could not be recognized, please log in again.",
   "activate": "Activate",
+  "activateHalaqa": "تنشيط الحلقة",
   "activeSession": "Active",
   "add_new_student": "Add New Student",
   "affiliate": {
@@ -56,6 +57,7 @@
   },
   "archive": "Archive",
   "archived": "Archived",
+  "archiveHalaqa": "أرشفة الحلقة",
   "attendance": {
     "absent": "الغائبون",
     "absentReasonPlaceholder": "سبب الغياب (إن وجد)...",
