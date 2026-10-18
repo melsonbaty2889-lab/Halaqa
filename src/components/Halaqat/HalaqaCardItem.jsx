@@ -83,13 +83,13 @@ export default function HalaqaCardItem({
       onClick={handleCardClick}
       className={`bg-semantic-surfaceCard border rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer group hover:shadow-lg relative overflow-hidden flex flex-col justify-between gap-3 text-start ${
         isArchived 
-          ? 'border-semantic-borderCard/60 opacity-85 hover:opacity-100 bg-semantic-surfaceCard/60' 
+          ? 'border-semantic-borderCard/60 opacity-80 hover:opacity-100 bg-semantic-surfaceCard/60' 
           : 'border-semantic-borderCard hover:border-semantic-actionPrimary/50'
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. السطر العلوي */}
-      <div className="flex items-center justify-between gap-2.5">
+      {/* 1. السطر العلوي: اسم الحلقة + الشارة الأنيقة + أزرار التحكم */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
             isArchived 
@@ -106,37 +106,18 @@ export default function HalaqaCardItem({
           </div>
         </div>
 
-        {/* أزرار التحكم والشارة التفاعلية */}
+        {/* الحاوية الجانبية: الشارة + أزرار الإجراءات */}
         <div className="flex items-center gap-1.5 shrink-0">
           
-          {/* زر التنشيط والأرشفة التفاعلي الوارد تصميمه بوضوح */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onToggleArchive) onToggleArchive(halaqa);
-            }}
-            title={isArchived ? t('clickToActivate', 'اضغط لتنشيط الحلقة') : t('clickToArchive', 'اضغط لأرشفة الحلقة')}
-            className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold border shrink-0 flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95 ${
-              isArchived
-                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20'
-                : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/40 hover:bg-semantic-success/20'
-            }`}
-          >
-            {isArchived ? (
-              <>
-                <RotateCcw size={11} className="shrink-0" />
-                <span>{t('archived', 'مؤرشفة')}</span>
-                <span className="text-[9px] opacity-70">({t('activate', 'تنشيط')})</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={11} className="shrink-0" />
-                <span>{t('activeSession', 'نشطة')}</span>
-                <span className="text-[9px] opacity-70">({t('archive', 'أرشفة')})</span>
-              </>
-            )}
-          </button>
+          {/* شارة الحالة الأنيقة (بدون حشو نصي) */}
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border shrink-0 flex items-center gap-1 ${
+            isArchived
+              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+              : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30'
+          }`}>
+            {isArchived ? <Archive size={10} className="shrink-0" /> : <CheckCircle2 size={10} className="shrink-0" />}
+            <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
+          </span>
 
           {/* زر التعديل */}
           {onEdit && (
@@ -153,11 +134,30 @@ export default function HalaqaCardItem({
             </button>
           )}
 
+          {/* زر أرشفة/تنشيط مخصص ومستقل بلمسة تفاعلية */}
+          {onToggleArchive && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleArchive(halaqa);
+              }}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 border ${
+                isArchived
+                  ? 'text-semantic-success hover:bg-semantic-successBg border-semantic-successBorder/30'
+                  : 'text-amber-500 hover:bg-amber-500/10 border-amber-500/20'
+              }`}
+              title={isArchived ? t('activateHalaqa', 'تنشيط الحلقة') : t('archiveHalaqa', 'أرشفة الحلقة')}
+            >
+              {isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
           <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
         </div>
       </div>
 
-      {/* 2. السطر الأوسط */}
+      {/* 2. السطر الأوسط: اسم المعلم + عدد الطلاب */}
       <div className="flex items-center justify-between gap-2 text-xs border-t border-semantic-borderInput/40 pt-2.5">
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
@@ -174,7 +174,7 @@ export default function HalaqaCardItem({
         </div>
       </div>
 
-      {/* 3. السطر السفلي */}
+      {/* 3. السطر السفلي: الأيام والأوقات */}
       {hasTimeData && (
         <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted bg-semantic-surfaceInput/30 p-2 rounded-xl border border-semantic-borderInput/30 mt-0.5">
           <Clock className="w-3 h-3 shrink-0 text-semantic-actionPrimary/80" />
