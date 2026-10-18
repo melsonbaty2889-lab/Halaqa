@@ -38,7 +38,6 @@ export default function HalaqasManager({
     archived: safeHalaqas.filter(h => h && h.is_archived === true).length
   };
 
-  // فلترة آمنة 100% تمنع خطأ toLowerCase
   const filteredHalaqas = safeHalaqas.filter(item => {
     if (!item) return false;
 
@@ -134,7 +133,6 @@ export default function HalaqasManager({
         }}
         statsGrid={
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            {/* إجمالي الحلقات */}
             <div 
               onClick={() => setStatusFilter('all')}
               className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
@@ -150,7 +148,6 @@ export default function HalaqasManager({
               <p className="text-base sm:text-xl font-bold text-semantic-textPrimary mt-1">{stats.total}</p>
             </div>
 
-            {/* الحلقات النشطة */}
             <div 
               onClick={() => setStatusFilter('active')}
               className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
@@ -166,7 +163,6 @@ export default function HalaqasManager({
               <p className="text-base sm:text-xl font-bold text-semantic-success mt-1">{stats.active}</p>
             </div>
 
-            {/* بدون معلم */}
             <div 
               onClick={() => setStatusFilter('no_teacher')}
               className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
@@ -182,7 +178,6 @@ export default function HalaqasManager({
               <p className="text-base sm:text-xl font-bold text-semantic-warning mt-1">{stats.noTeacher}</p>
             </div>
 
-            {/* المؤرشفة */}
             <div 
               onClick={() => setStatusFilter('archived')}
               className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
@@ -238,6 +233,7 @@ export default function HalaqasManager({
                 halaqa={halaqa}
                 teachers={teachers}
                 onEdit={handleEditHalaqa}
+                onToggleArchive={onToggleArchiveHalaqa}
                 onNavigateToAttendance={onNavigateToAttendance}
               />
             ))}
