@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users, Archive } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, User, Clock, Edit3, Users, Archive, CheckCircle } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
 import { getDaysOptions } from '@/constants/days';
@@ -13,6 +13,7 @@ export default function HalaqaCardItem({
   getLocalizedText, 
   onSelectHalaqa,
   onEdit,
+  onToggleArchive, // دالة جديدة للتحكم في الأرشفة والتنشيط بضغطة زر
   onNavigateToAttendance 
 }) {
   const { t, i18n } = useTranslation();
@@ -65,7 +66,6 @@ export default function HalaqaCardItem({
   const maxStudents = halaqa?.max_students || 15;
 
   const handleCardClick = () => {
-    // يمكن الدخول على الحلقة لرؤية سجلات التسميع حتى لو كانت مؤرشفة
     if (onNavigateToAttendance) {
       onNavigateToAttendance(halaqa?.id, { isArchived });
     } else if (onSelectHalaqa) {
@@ -85,7 +85,7 @@ export default function HalaqaCardItem({
       }`}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      {/* 1. السطر العلوي: الأيقونة + اسم الحلقة + شارة الحالة وأزرار التحكم */}
+      {/* 1. السطر العلوي: الأيقونة + اسم الحلقة + شارة التنشيط/الأرشفة القابلة للضغط وأزرار التحكم */}
       <div className="flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-semantic-surfaceInput border flex items-center justify-center shrink-0 transition-colors ${
@@ -103,17 +103,28 @@ export default function HalaqaCardItem({
           </div>
         </div>
 
-        {/* الحاوية الجانبية لأزرار التحكم والشارة */}
+        {/* الحاوية الجانبية لأزرار التحكم والشارة القابلة للنقر */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 flex items-center gap-1 ${
-            isArchived
-              ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard'
-              : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30'
-          }`}>
-            {isArchived && <Archive size={10} className="shrink-0" />}
+          
+          {/* زر تبديل الحالة (نشطة / مؤرشفة) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleArchive) onToggleArchive(halaqa);
+            }}
+            title={isArchived ? t('clickToActivate', 'انقر للتنشيط') : t('clickToArchive', 'انقر للأرشفة')}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 flex items-center gap-1 transition-all cursor-pointer ${
+              isArchived
+                ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:border-semantic-actionPrimary hover:text-semantic-actionPrimary'
+                : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/30 hover:opacity-80'
+            }`}
+          >
+            {isArchived ? <Archive size={10} className="shrink-0" /> : <CheckCircle size={10} className="shrink-0" />}
             <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
-          </span>
+          </button>
 
+          {/* زر التعديل */}
           {onEdit && (
             <button
               type="button"
@@ -134,7 +145,6 @@ export default function HalaqaCardItem({
 
       {/* 2. السطر الأوسط: اسم المعلم الكامل + عدد الطلاب */}
       <div className="flex items-center justify-between gap-2 text-xs border-t border-semantic-borderInput/40 pt-2.5">
-        {/* المعلم */}
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <User className="w-3.5 h-3.5 shrink-0 text-semantic-actionPrimary" />
           <span className="font-semibold text-semantic-textSecondary truncate">
@@ -142,7 +152,6 @@ export default function HalaqaCardItem({
           </span>
         </div>
 
-        {/* عدد الطلاب بربط ترجمة ديناميكي */}
         <div className="flex items-center gap-1 text-[11px] font-bold text-semantic-textMuted bg-semantic-surfaceInput/60 px-2 py-0.5 rounded-lg border border-semantic-borderInput/50 shrink-0">
           <Users className="w-3 h-3 shrink-0 text-semantic-actionPrimary" />
           <span>
@@ -151,7 +160,7 @@ export default function HalaqaCardItem({
         </div>
       </div>
 
-      {/* 3. السطر السفلي: يظهر فقط إذا كانت هناك بيانات للمواعيد أو الأيام (يمنع الصندوق الفارغ) */}
+      {/* 3. السطر السفلي: المواعيد */}
       {hasTimeData && (
         <div className="flex items-center gap-1.5 text-[11px] text-semantic-textMuted bg-semantic-surfaceInput/30 p-2 rounded-xl border border-semantic-borderInput/30 mt-0.5">
           <Clock className="w-3 h-3 shrink-0 text-semantic-actionPrimary/80" />
