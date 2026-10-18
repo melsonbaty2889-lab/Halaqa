@@ -105,7 +105,7 @@ export default function HalaqasManager({
     try {
       if (editingHalaqa?.id) {
         if (onUpdateHalaqa) {
-          await onUpdateHalaqa(editingHalaqa.id, payload);
+          await onUpdateHalaqa({ id: editingHalaqa.id, ...payload });
         }
       } else {
         if (onCreateHalaqa) {
@@ -117,6 +117,19 @@ export default function HalaqasManager({
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Error submitting halaqa form:", err);
+    }
+  };
+
+  // 🛠️ دالة وسيطة ذكية لتشغيل الأرشفة والتنشيط بسلاسة مع الهوك
+  const handleToggleArchive = async (halaqa) => {
+    if (!halaqa?.id) return;
+    try {
+      if (onToggleArchiveHalaqa) {
+        await onToggleArchiveHalaqa(halaqa.id, Boolean(halaqa.is_archived));
+        if (onRefresh) onRefresh();
+      }
+    } catch (err) {
+      console.error("Error toggling archive status:", err);
     }
   };
 
@@ -241,7 +254,7 @@ export default function HalaqasManager({
                 halaqa={halaqa}
                 teachers={teachers}
                 onEdit={handleEditHalaqa}
-                onToggleArchive={onToggleArchiveHalaqa}
+                onToggleArchive={handleToggleArchive}
                 onNavigateToAttendance={onNavigateToAttendance}
               />
             ))}
