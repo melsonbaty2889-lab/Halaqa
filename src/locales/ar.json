@@ -261,6 +261,8 @@
   },
   "clear": "مسح",
   "clearSearch": "مسح البحث",
+  "clickToActivate": "انقر للتنشيط",
+  "clickToArchive": "انقر للأرشفة",
   "comm": {
     "academy_default": "مجمع الحلقة الذكية",
     "app_notice": "إشعار التطبيق",

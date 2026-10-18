@@ -261,6 +261,8 @@
   },
   "clear": "Clear",
   "clearSearch": "Clear Search",
+  "clickToActivate": "انقر للتنشيط",
+  "clickToArchive": "انقر للأرشفة",
   "comm": {
     "academy_default": "Smart Halaqa Complex",
     "app_notice": "App Notification",
