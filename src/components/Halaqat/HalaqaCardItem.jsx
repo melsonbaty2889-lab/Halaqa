@@ -136,21 +136,23 @@ export default function HalaqaCardItem({
 
           {/* زر أرشفة/تنشيط مخصص ومستقل بلمسة تفاعلية */}
           {onToggleArchive && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleArchive(halaqa);
-              }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 border ${
-                isArchived
-                  ? 'text-semantic-success hover:bg-semantic-successBg border-semantic-successBorder/30'
-                  : 'text-amber-500 hover:bg-amber-500/10 border-amber-500/20'
-              }`}
-              title={isArchived ? t('activateHalaqa', 'تنشيط الحلقة') : t('archiveHalaqa', 'أرشفة الحلقة')}
-            >
-              {isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
-            </button>
+            {/* زر التبديل الواضح والصريح للحالة */}
+<button
+  type="button"
+  onClick={(e) => {
+    e.stopPropagation();
+    if (onToggleArchive) onToggleArchive(halaqa);
+  }}
+  title={isArchived ? t('clickToActivate', 'انقر للتنشيط') : t('clickToArchive', 'انقر للأرشفة')}
+  className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
+    isArchived
+      ? 'bg-semantic-surfaceInput text-semantic-textMuted border-semantic-borderCard hover:border-semantic-actionPrimary'
+      : 'bg-semantic-successBg text-semantic-success border-semantic-successBorder/50 hover:opacity-90'
+  }`}
+>
+  <span className={`w-2 h-2 rounded-full ${isArchived ? 'bg-semantic-textMuted' : 'bg-semantic-success animate-pulse'}`} />
+  <span>{isArchived ? t('archived', 'مؤرشفة') : t('activeSession', 'نشطة')}</span>
+</button>
           )}
 
           <ArrowIcon className="w-4 h-4 text-semantic-textSecondary group-hover:text-semantic-actionPrimary transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 shrink-0" />
