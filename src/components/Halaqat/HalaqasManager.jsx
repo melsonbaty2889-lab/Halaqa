@@ -120,13 +120,13 @@ export default function HalaqasManager({
     }
   };
 
-  // 🛠️ دالة وسيطة ذكية لتشغيل الأرشفة والتنشيط بسلاسة مع الهوك
+  // 🛠️ دالة التبديل الفورية والسلسة (بدون إجبار إعادة جلب القائمة بالكامل لمنع القفز)
   const handleToggleArchive = async (halaqa) => {
     if (!halaqa?.id) return;
     try {
       if (onToggleArchiveHalaqa) {
+        // نكتفي باستدعاء الهوك الذي يقوم بالتحديث التفاؤلي السريع جداً
         await onToggleArchiveHalaqa(halaqa.id, Boolean(halaqa.is_archived));
-        if (onRefresh) onRefresh();
       }
     } catch (err) {
       console.error("Error toggling archive status:", err);
