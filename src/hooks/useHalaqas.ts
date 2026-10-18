@@ -37,7 +37,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب بيانات الحلقات
+  // 1. جلب كافة بيانات الحلقات مرتبة دائماً برصانة حسب created_at لمنع التذبذب والقفز
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -85,6 +85,7 @@ export const useHalaqas = ({
           );
         }
 
+        // الترتيب حسب تاريخ الإنشاء لضمان ثبات أماكن الحلقات عند التعديل أو الأرشفة
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -98,7 +99,6 @@ export const useHalaqas = ({
     retry: 1,
   });
 
-  // 🛠️ تنظيف الحقول المؤقتة والعلاقات قبل إرسال Payload إلى Supabase
   const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
     const cleaned = { ...data };
     delete cleaned.id;
@@ -154,7 +154,6 @@ export const useHalaqas = ({
     },
   });
 
-  // 🛠️ إصلاح دالة التعديل بالتسجيل الفعلي وتحديث الكاش
   const updateHalaqaMutation = useMutation({
     mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
       const cleanedData = sanitizeHalaqaPayload(halaqaData);
@@ -182,6 +181,7 @@ export const useHalaqas = ({
     },
   });
 
+  // ⚡ التحديث التفاؤلي السريع (Optimistic Update) لحل ثقل الضغط
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
@@ -194,8 +194,28 @@ export const useHalaqas = ({
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
+    onMutate: async ({ halaqaId, currentArchived }) => {
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousHalaqas = queryClient.getQueryData<Halaqa[]>(queryKey);
+
+      if (previousHalaqas) {
+        queryClient.setQueryData<Halaqa[]>(queryKey, (old = []) =>
+          old.map((item) =>
+            item.id === halaqaId ? { ...item, is_archived: !currentArchived } : item
+          )
+        );
+      }
+
+      return { previousHalaqas };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousHalaqas) {
+        queryClient.setQueryData(queryKey, context.previousHalaqas);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
