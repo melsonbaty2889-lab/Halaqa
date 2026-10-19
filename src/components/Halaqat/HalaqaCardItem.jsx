@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { getLocalizedContent } from './HalaqaConstants';
 import { formatTimeRange } from '@/utils/formatters';
-import { getDaysOptions } from '@/constants/days';
+import { getDaysOptions, normalizeDayValue } from '@/constants/days';
 import StatusToggle from '@/components/UI/StatusToggle';
 
 export default function HalaqaCardItem({ 
@@ -47,29 +47,38 @@ export default function HalaqaCardItem({
   const isArchived = Boolean(halaqa?.is_archived);
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // 1️⃣ الخطوة الأولى: تنقية وتنسيق أيام الانعقاد بالأسماء المترجمة بدون أي تكرار
+  // 1️⃣ تنسيق وتوحيد أيام الانعقاد باستخدام الدالة المعيارية وإزالة أي تكرار نهائياً
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const daysOptions = getDaysOptions(t);
     
-    // إزالة القيم المكررة فوراً
-    const uniqueDays = Array.from(new Set(daysArray));
+    // توحيد وإزالة القيم المكررة فوراً بناءً على القيمة المعيارية
+    const uniqueNormalizedDays = Array.from(new Set(daysArray.map(normalizeDayValue))).filter(Boolean);
     
-    return uniqueDays.map(dayVal => {
-      if (!dayVal) return '';
-      const safeVal = String(dayVal).toLowerCase();
+    return uniqueNormalizedDays.map(dayVal => {
       const found = daysOptions.find(d => 
-        (d?.value || '').toLowerCase() === safeVal || 
-        (d?.label || '').toLowerCase() === safeVal || 
-        (d?.short || '').toLowerCase() === safeVal ||
-        (d?.value || '').toLowerCase().startsWith(safeVal)
+        (d?.value || '').toLowerCase() === String(dayVal).toLowerCase()
       );
       return found ? found.label : dayVal;
     }).filter(Boolean).join(isRtl ? '، ' : ', ');
   };
 
   const formattedDays = formatDays(halaqa?.days_of_week);
-  const studentsCount = halaqa?.students_count || halaqa?.student_count || 0;
+
+  // 2️⃣ احتساب عدد الطلاب بدقة من مختلف الحقول أو العلاقات المحتملة
+  const getStudentsCount = () => {
+    if (typeof halaqa?.students_count === 'number') return halaqa.students_count;
+    if (typeof halaqa?.student_count === 'number') return halaqa.student_count;
+    if (Array.isArray(halaqa?.students)) return halaqa.students.length;
+    if (Array.isArray(halaqa?.halaqa_students)) return halaqa.halaqa_students.length;
+    if (Array.isArray(halaqa?.students_halaqas)) return halaqa.students_halaqas.length;
+    if (Array.isArray(halaqa?.students_count) && halaqa.students_count[0]?.count !== undefined) {
+      return halaqa.students_count[0].count;
+    }
+    return 0;
+  };
+
+  const studentsCount = getStudentsCount();
   const maxStudents = halaqa?.max_students || 15;
 
   const handleCardClick = () => {
