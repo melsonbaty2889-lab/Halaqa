@@ -1,4 +1,4 @@
-// src/components/UI/Modal.jsx
+/* src/components/UI/Modal.jsx */
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -163,9 +163,9 @@ export const Modal = ({
           background: getCardBg(), 
           border: `1px solid ${getBorder()}`, 
           borderRadius: 18, 
-          padding: "18px 16px", 
-          width: "min(92vw, 460px)", 
-          maxHeight: "85vh", 
+          padding: "20px 22px", 
+          width: "min(95vw, 680px)", // تم توسيع العرض ليناسب أجهزة الكمبيوتر والشاشات الكبيرة بشكل مريح ومثالي
+          maxHeight: "88vh", 
           display: "flex",
           flexDirection: "column",
           overflow: "hidden", 
@@ -183,13 +183,13 @@ export const Modal = ({
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          marginBottom: 12, 
+          marginBottom: 14, 
           flexShrink: 0, 
-          paddingBottom: 8, 
+          paddingBottom: 10, 
           borderBottom: `1px solid ${getBorder()}` 
         }}>
           {title && (
-            <h3 id={titleId} style={{ fontWeight: 700, color: getPrimary(), fontSize: "1.05rem", margin: 0, lineHeight: 1.2 }}>
+            <h3 id={titleId} style={{ fontWeight: 700, color: getPrimary(), fontSize: "1.15rem", margin: 0, lineHeight: 1.2 }}>
               {title}
             </h3>
           )}
@@ -233,5 +233,7 @@ export const Modal = ({
     document.body
   );
 };
+
+export default Modal;
 
 export default Modal;
