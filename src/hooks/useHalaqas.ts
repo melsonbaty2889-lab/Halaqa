@@ -37,7 +37,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب كافة بيانات الحلقات مرتبة دائماً برصانة حسب created_at لمنع التذبذب والقفز
+  // 1. جلب كافة بيانات الحلقات مع ربط المعلمين، المناهج، وجدول ارتباط الطلاب student_halaqas
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -62,6 +62,10 @@ export const useHalaqas = ({
             curricula (
               id,
               title
+            ),
+            student_halaqas (
+              student_id,
+              status
             )
           `)
           .eq('academy_id', academyId!);
@@ -110,6 +114,7 @@ export const useHalaqas = ({
     delete cleaned.name_text;
     delete cleaned.teachers;
     delete cleaned.curricula;
+    delete cleaned.student_halaqas; // منع إرسال جدول العلاقات عند التحديث/الإدخال
     delete cleaned.students_count;
     delete cleaned.student_count;
     delete cleaned.created_at;
