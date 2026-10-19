@@ -8,7 +8,7 @@ import { UI } from '@/theme/styles';
 import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 import { isStartTimeBeforeEndTime } from '@/utils/dateUtils';
-import { getDaysOptions } from '@/constants/days';
+import { getDaysOptions, normalizeDayValue } from '@/constants/days';
 
 export default function HalaqaFormModal({ 
   isOpen,
@@ -26,7 +26,7 @@ export default function HalaqaFormModal({
   const isRtl = ['ar', 'ur'].includes(currentLang);
   
   const [timeError, setTimeError] = useState('');
-  const [loading, setLoading] = useState(false); // 🔄 حالة تحميل محلية لمنع الضغط المتكرر
+  const [loading, setLoading] = useState(false);
   const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const daysOptions = getDaysOptions(t);
@@ -83,16 +83,18 @@ export default function HalaqaFormModal({
     }));
   };
 
+  // 1️⃣ استخدام دالة التوحيد المعيارية لإدارة أيام الانعقاد ومنع التكرار والتناقض
   const toggleDay = (dayValue) => {
+    const normalizedTarget = normalizeDayValue(dayValue);
     setFormData((prev) => {
-      const currentDays = Array.isArray(prev?.days_of_week) ? prev.days_of_week : [];
-      const exists = currentDays.some(d => String(d).toLowerCase() === String(dayValue).toLowerCase());
+      const currentDays = (Array.isArray(prev?.days_of_week) ? prev.days_of_week : []).map(normalizeDayValue);
+      const exists = currentDays.includes(normalizedTarget);
       
       const updatedDays = exists
-        ? currentDays.filter((d) => String(d).toLowerCase() !== String(dayValue).toLowerCase())
-        : [...currentDays, dayValue];
+        ? currentDays.filter((d) => d !== normalizedTarget)
+        : [...currentDays, normalizedTarget];
         
-      return { ...prev, days_of_week: updatedDays };
+      return { ...prev, days_of_week: Array.from(new Set(updatedDays)) };
     });
   };
 
@@ -172,8 +174,10 @@ export default function HalaqaFormModal({
       ? { ...formData.name, [currentLang]: rawName, ar: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
-    // تنقية أيام الانعقاد من أي تكرار نهائياً
-    const cleanDays = Array.from(new Set(Array.isArray(formData?.days_of_week) ? formData.days_of_week : []));
+    // تنقية وتوحيد أيام الانعقاد بالصيغة المعيارية ومنع أي تكرار نهائياً
+    const cleanDays = Array.from(
+      new Set((Array.isArray(formData?.days_of_week) ? formData.days_of_week : []).map(normalizeDayValue))
+    ).filter(Boolean);
 
     const payload = {
       ...formData,
@@ -210,7 +214,12 @@ export default function HalaqaFormModal({
   };
 
   const isModalVisible = Boolean(isOpen || open);
-  const selectedDays = Array.isArray(formData?.days_of_week) ? formData.days_of_week : [];
+  
+  // توحيد الأيام المحددة حالياً لتتطابق بسلاسة مع أزرار المودال
+  const selectedDays = Array.from(
+    new Set((Array.isArray(formData?.days_of_week) ? formData.days_of_week : []).map(normalizeDayValue))
+  ).filter(Boolean);
+
   const showLoading = loading || isSubmitting;
 
   return (
@@ -244,11 +253,8 @@ export default function HalaqaFormModal({
             </label>
             <div className={`flex flex-wrap gap-1.5 ${isRtl ? 'justify-start' : 'justify-start'}`}>
               {daysOptions.map((day) => {
-                const isSelected = selectedDays.some(d => 
-                  String(d).toLowerCase() === day.value.toLowerCase() || 
-                  String(d).toLowerCase() === day.short.toLowerCase() ||
-                  String(d).toLowerCase() === day.label.toLowerCase()
-                );
+                const normalizedDayVal = normalizeDayValue(day.value);
+                const isSelected = selectedDays.includes(normalizedDayVal);
                 
                 return (
                   <button
