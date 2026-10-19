@@ -25,7 +25,7 @@ export default function HalaqaCardItem({
   const isRtl = ['ar', 'ur'].includes(currentLang);
 
   const halaqaName = getLocalizedContent(halaqa?.name, currentLang, getLocalizedText) || halaqa?.name_text;
-  
+   
   // جلب اسم المعلم
   const rawTeacher = halaqa?.teacher || halaqa?.teacher_name || halaqa?.teacher_id;
   let teacherName = '';
@@ -51,10 +51,10 @@ export default function HalaqaCardItem({
   const formatDays = (daysArray) => {
     if (!Array.isArray(daysArray) || daysArray.length === 0) return null;
     const daysOptions = getDaysOptions(t);
-    
+     
     // توحيد وإزالة القيم المكررة فوراً بناءً على القيمة المعيارية
     const uniqueNormalizedDays = Array.from(new Set(daysArray.map(normalizeDayValue))).filter(Boolean);
-    
+     
     return uniqueNormalizedDays.map(dayVal => {
       const found = daysOptions.find(d => 
         (d?.value || '').toLowerCase() === String(dayVal).toLowerCase()
@@ -65,10 +65,16 @@ export default function HalaqaCardItem({
 
   const formattedDays = formatDays(halaqa?.days_of_week);
 
-  // 2️⃣ احتساب عدد الطلاب بدقة من مختلف الحقول أو العلاقات المحتملة
+  // 2️⃣ احتساب عدد الطلاب الفعلي بدقة من جدول student_halaqas أو مختلف العلاقات المحتملة
   const getStudentsCount = () => {
     if (typeof halaqa?.students_count === 'number') return halaqa.students_count;
     if (typeof halaqa?.student_count === 'number') return halaqa.student_count;
+    
+    // حساب الطلاب النشطين من جدول student_halaqas الفعلي
+    if (Array.isArray(halaqa?.student_halaqas)) {
+      return halaqa.student_halaqas.filter(item => !item.status || item.status === 'active').length;
+    }
+
     if (Array.isArray(halaqa?.students)) return halaqa.students.length;
     if (Array.isArray(halaqa?.halaqa_students)) return halaqa.halaqa_students.length;
     if (Array.isArray(halaqa?.students_halaqas)) return halaqa.students_halaqas.length;
@@ -125,7 +131,7 @@ export default function HalaqaCardItem({
 
         {/* الحاوية الجانبية لأزرار التحكم */}
         <div className="flex items-center gap-2 shrink-0">
-          
+            
           {/* 🎛️ المكون الموحد للتحكم بالحالة */}
           {onToggleArchive && (
             <StatusToggle
