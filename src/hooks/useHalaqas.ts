@@ -37,7 +37,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب كافة بيانات الحلقات مع ربط المعلمين، المناهج، وجدول الطلاب المباشر عبر (halaqa_id)
+  // 1. جلب كافة بيانات الحلقات مع المعلمين، المناهج، والطلاب عبر الربط الصريح
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -63,7 +63,7 @@ export const useHalaqas = ({
               id,
               title
             ),
-            students (
+            students:students!students_halaqa_id_fkey (
               id,
               status
             )
@@ -89,7 +89,6 @@ export const useHalaqas = ({
           );
         }
 
-        // الترتيب حسب تاريخ الإنشاء لضمان ثبات أماكن الحلقات عند التعديل أو الأرشفة
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -115,7 +114,7 @@ export const useHalaqas = ({
     delete cleaned.teachers;
     delete cleaned.curricula;
     delete cleaned.student_halaqas;
-    delete cleaned.students; // منع إرسال مصفوفة الطلاب عند التحديث/الإدخال
+    delete cleaned.students;
     delete cleaned.students_count;
     delete cleaned.student_count;
     delete cleaned.created_at;
@@ -187,7 +186,6 @@ export const useHalaqas = ({
     },
   });
 
-  // ⚡ التحديث التفاؤلي السريع (Optimistic Update) لحل ثقل الضغط
   const archiveMutation = useMutation({
     mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
       const { error } = await supabase
