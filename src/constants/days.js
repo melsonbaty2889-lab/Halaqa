@@ -16,14 +16,35 @@ export const getDaysOptions = (t) => [
 ];
 
 /**
+ * دالة مساعدة لتوحيد أي صيغة يوم إلى القيمة المعيارية الإنجليزية (PascalCase)
+ * @param {String} dayStr - صيغة اليوم أياً كانت (mon, Monday, الإثنين, sat... إلخ)
+ * @returns {String} القيمة المعيارية الموحدة (مثل 'Monday')
+ */
+export const normalizeDayValue = (dayStr) => {
+  if (!dayStr) return '';
+  const safe = String(dayStr).trim().toLowerCase();
+
+  if (['sat', 'saturday', 'السبت', 'سبت'].includes(safe)) return 'Saturday';
+  if (['sun', 'sunday', 'الأحد', 'الاحد', 'أحد', 'احد'].includes(safe)) return 'Sunday';
+  if (['mon', 'monday', 'الإثنين', 'الاثنين', 'إثنين', 'اثنين'].includes(safe)) return 'Monday';
+  if (['tue', 'tuesday', 'الثلاثاء', 'ثلاثاء'].includes(safe)) return 'Tuesday';
+  if (['wed', 'wednesday', 'الأربعاء', 'الاربعاء', 'أربعاء', 'اربعاء'].includes(safe)) return 'Wednesday';
+  if (['thu', 'thursday', 'الخميس', 'خميس'].includes(safe)) return 'Thursday';
+  if (['fri', 'friday', 'الجمعة', 'جمعة'].includes(safe)) return 'Friday';
+
+  return dayStr;
+};
+
+/**
  * دالة مساعدة لجلب اسم اليوم المترجم بناءً على قيمته (Value)
  * @param {String} dayValue - قيمة اليوم باللغة الإنجليزية (مثل 'Saturday')
  * @param {Function} t - دالة الترجمة i18next
  * @returns {String} اسم اليوم المترجم
  */
 export const getDayLabel = (dayValue, t) => {
+  const normalizedValue = normalizeDayValue(dayValue);
   const options = getDaysOptions(t);
-  const found = options.find(d => d.value.toLowerCase() === String(dayValue || '').toLowerCase());
+  const found = options.find(d => d.value.toLowerCase() === String(normalizedValue || '').toLowerCase());
   return found ? found.label : dayValue;
 };
 
