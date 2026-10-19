@@ -1,293 +1,317 @@
-/* src/hooks/useHalaqas.ts */
+/* src/components/Halaqat/HalaqasManager.jsx */
 
-import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Halaqa, HalaqaFilters } from '@/types/halaqa';
-import { formatTimeForDb } from '@/utils/dateUtils';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { BookOpen } from 'lucide-react';
+import PageLayout from '@/components/UI/PageLayout';
+import Select from '@/components/UI/Select';
+import { normalizeDayValue } from '@/constants/days';
 
-export interface UseHalaqasOptions {
-  academyId?: string | null;
-  initialFilters?: Partial<HalaqaFilters>;
-  enabled?: boolean;
-}
+import HalaqaCardItem from './HalaqaCardItem';
+import HalaqaFormModal from './HalaqaFormModal';
 
-export const useHalaqas = ({
-  academyId,
-  initialFilters,
-  enabled = true,
-}: UseHalaqasOptions = {}) => {
-  const queryClient = useQueryClient();
+export default function HalaqasManager({ 
+  halaqas = [], 
+  teachers = [], 
+  academyId, 
+  onRefresh, 
+  isRtl, 
+  isMobile,
+  onCreateHalaqa,
+  onUpdateHalaqa,
+  onToggleArchiveHalaqa,
+  onNavigateToAttendance
+}) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n?.language || 'ar';
 
-  const [filters, setFilters] = useState<HalaqaFilters>({
-    searchTerm: '',
-    status: 'all',
-    target_audience: 'all',
-    teaching_type: 'all',
-    is_archived: false,
-    ...initialFilters,
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingHalaqa, setEditingHalaqa] = useState(null);
+
+  const safeHalaqas = Array.isArray(halaqas) ? halaqas : [];
+
+  const stats = {
+    total: safeHalaqas.length,
+    active: safeHalaqas.filter(h => h && h.is_active !== false && !h.is_archived).length,
+    noTeacher: safeHalaqas.filter(h => h && !h.teacher_id && !h.is_archived).length,
+    archived: safeHalaqas.filter(h => h && h.is_archived === true).length
+  };
+
+  const filteredHalaqas = safeHalaqas.filter(item => {
+    if (!item) return false;
+
+    let rawName = '';
+    if (typeof item.name === 'object' && item.name !== null) {
+      rawName = item.name[currentLang] || item.name.ar || item.name.en || Object.values(item.name)[0] || '';
+    } else if (typeof item.name === 'string') {
+      rawName = item.name;
+    } else if (typeof item.name_text === 'string') {
+      rawName = item.name_text;
+    }
+
+    const safeSearchQuery = (searchQuery || '').toString().toLowerCase();
+    const safeName = (rawName || '').toString().toLowerCase();
+
+    const matchesSearch = safeName.includes(safeSearchQuery);
+
+    let matchesStatus = true;
+    if (statusFilter === 'active') matchesStatus = item.is_active !== false && !item.is_archived;
+    if (statusFilter === 'no_teacher') matchesStatus = !item.teacher_id && !item.is_archived;
+    if (statusFilter === 'archived') matchesStatus = item.is_archived === true;
+
+    return matchesSearch && matchesStatus;
   });
 
-  const isValidAcademyId = Boolean(
-    academyId &&
-    academyId !== 'undefined' &&
-    typeof academyId === 'string' &&
-    academyId.trim() !== ''
-  );
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+  };
 
-  const queryKey = ['halaqas', academyId || 'no-academy'];
+  const hasActiveFilters = Boolean((searchQuery || '').trim()) || statusFilter !== 'all';
 
-  // 1. جلب كافة بيانات الحلقات مع المعلمين، المناهج، والطلاب وحساب العداد بضمان كامل
-  const {
-    data: halaqas = [],
-    isLoading: loading,
-    error: queryError,
-    refetch,
-  } = useQuery({
-    queryKey,
-    queryFn: async (): Promise<Halaqa[]> => {
-      if (!isValidAcademyId) return [];
+  const statusOptions = [
+    { label: t('halaqas.all_status', 'جميع الحلقات'), value: 'all' },
+    { label: t('halaqas.active', 'الحلقات النشطة'), value: 'active' },
+    { label: t('halaqas.no_teacher', 'بدون معلم'), value: 'no_teacher' },
+    { label: t('common.archived', 'المؤرشفة'), value: 'archived' }
+  ];
 
-      try {
-        let query = supabase
-          .from('halaqas')
-          .select(`
-            *,
-            teachers (
-              id,
-              name,
-              email,
-              phone
-            ),
-            curricula (
-              id,
-              title
-            ),
-            students:students (
-              id,
-              status,
-              halaqa_id
-            )
-          `)
-          .eq('academy_id', academyId!);
+  const handleEditHalaqa = (item) => {
+    if (!item) return;
 
-        if (filters.status && filters.status !== 'all') {
-          query = query.eq('status', filters.status);
-        }
+    const nameText = typeof item?.name === 'object' && item?.name !== null
+      ? (item.name[currentLang] || item.name.ar || item.name.en || '') 
+      : (item?.name || item?.name_text || '');
 
-        if (filters.target_audience && filters.target_audience !== 'all') {
-          query = query.eq('target_audience', filters.target_audience);
-        }
+    // توحيد الأيام وتنقيتها فوراً عند التجهيز للمودال باستخدام normalizeDayValue
+    const rawDays = Array.isArray(item.days_of_week) ? item.days_of_week : [];
+    const normalizedDays = Array.from(new Set(rawDays.map(normalizeDayValue))).filter(Boolean);
 
-        if (filters.teaching_type && filters.teaching_type !== 'all') {
-          query = query.eq('teaching_type', filters.teaching_type);
-        }
+    setEditingHalaqa({
+      ...item,
+      id: item.id,
+      name_text: nameText,
+      name: item.name,
+      days_of_week: normalizedDays,
+      educational_track: item.educational_track || 'hifz',
+      teaching_type: item.teaching_type || 'online',
+      target_audience: item.target_audience || 'kids',
+      teacher_id: item.teacher_id || '',
+      start_time: item.start_time || '',
+      end_time: item.end_time || '',
+      max_students: item.max_students || 15
+    });
+    setIsAddModalOpen(true);
+  };
 
-        if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-          const term = `%${filters.searchTerm.trim()}%`;
-          query = query.or(
-            `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},code.ilike.${term}`
-          );
-        }
+  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة وتناغم مع تنقية الأيام المعيارية
+  const handleModalSubmit = async (payload) => {
+    try {
+      if (editingHalaqa?.id) {
+        if (onUpdateHalaqa) {
+          const existingNameObj = typeof editingHalaqa.name === 'object' && editingHalaqa.name !== null 
+            ? editingHalaqa.name 
+            : { ar: '' };
 
-        const { data, error } = await query.order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // ⚡ حساب عدد الطلاب النشطين لكل حلقة يدوياً وضمان إسناده لـ students_count
-        const halaqasWithCount = (data || []).map((halaqa: any) => {
-          const activeStudentsCount = Array.isArray(halaqa.students)
-            ? halaqa.students.filter(
-                (s: any) => s.halaqa_id === halaqa.id && (!s.status || s.status === 'active' || s.status === 'Active')
-              ).length
-            : 0;
-
-          return {
-            ...halaqa,
-            students_count: activeStudentsCount,
+          const updatedName = {
+            ...existingNameObj,
+            [currentLang]: payload.name_text || payload.name?.[currentLang] || existingNameObj[currentLang] || ''
           };
-        });
 
-        return halaqasWithCount as Halaqa[];
-      } catch (err: any) {
-        console.warn('Halaqas Query Error:', err?.message || err);
-        return [];
+          // إزالة أي تكرار وتوحيد الأيام بالصيغة المعيارية قبل إرسالها للسيرفر
+          const cleanDays = Array.from(
+            new Set((Array.isArray(payload.days_of_week) ? payload.days_of_week : []).map(normalizeDayValue))
+          ).filter(Boolean);
+
+          const updatePayload = {
+            id: editingHalaqa.id,
+            name: updatedName,
+            teacher_id: payload.teacher_id || null,
+            days_of_week: cleanDays,
+            start_time: payload.start_time || null,
+            end_time: payload.end_time || null,
+            max_students: Number(payload.max_students) || 15,
+            educational_track: payload.educational_track || 'hifz',
+            teaching_type: payload.teaching_type || 'online',
+            target_audience: payload.target_audience || 'kids'
+          };
+
+          await onUpdateHalaqa(updatePayload);
+        }
+      } else {
+        if (onCreateHalaqa) {
+          // تنقية وتوحيد الأيام عند الإنشاء أيضاً لتجنب أي تكرار
+          const cleanDaysCreate = Array.from(
+            new Set((Array.isArray(payload.days_of_week) ? payload.days_of_week : []).map(normalizeDayValue))
+          ).filter(Boolean);
+
+          await onCreateHalaqa({ ...payload, days_of_week: cleanDaysCreate });
+        }
       }
-    },
-    enabled: isValidAcademyId && enabled,
-    retry: 1,
-  });
-
-  const sanitizeHalaqaPayload = (data: Partial<Halaqa>) => {
-    const cleaned = { ...data };
-    delete cleaned.id;
-    delete cleaned.academyId;
-    delete cleaned.track;
-    delete cleaned.type;
-    delete cleaned.timezone;
-    delete cleaned.selectedDays;
-    delete cleaned.name_text;
-    delete cleaned.teachers;
-    delete cleaned.curricula;
-    delete cleaned.student_halaqas;
-    delete cleaned.students;
-    delete cleaned.students_count;
-    delete cleaned.student_count;
-    delete cleaned.created_at;
-    return cleaned;
+      setIsAddModalOpen(false);
+      setEditingHalaqa(null);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error("Error submitting halaqa form:", err);
+    }
   };
 
-  const createHalaqaMutation = useMutation({
-    mutationFn: async (halaqaData: Partial<Halaqa>) => {
-      const currentAcademyId = academyId || localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
-      
-      const isCurrentValid = Boolean(
-        currentAcademyId &&
-        currentAcademyId !== 'undefined' &&
-        typeof currentAcademyId === 'string' &&
-        currentAcademyId.trim() !== ''
-      );
-
-      if (!isCurrentValid) {
-        throw new Error('معرف الأكاديمية غير صالح أو غير موجود في الجلسة');
+  const handleToggleArchive = async (halaqa) => {
+    if (!halaqa?.id) return;
+    try {
+      if (onToggleArchiveHalaqa) {
+        await onToggleArchiveHalaqa(halaqa.id, Boolean(halaqa.is_archived));
       }
-
-      const cleanedData = sanitizeHalaqaPayload(halaqaData);
-
-      const payload = {
-        ...cleanedData,
-        academy_id: currentAcademyId,
-        start_time: formatTimeForDb(halaqaData.start_time),
-        end_time: formatTimeForDb(halaqaData.end_time),
-      };
-
-      const { data, error } = await supabase
-        .from('halaqas')
-        .insert([payload])
-        .select()
-        .single();
-
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-    },
-  });
-
-  const updateHalaqaMutation = useMutation({
-    mutationFn: async ({ id, ...halaqaData }: Partial<Halaqa> & { id: string }) => {
-      const cleanedData = sanitizeHalaqaPayload(halaqaData);
-
-      const payload: any = {
-        ...cleanedData,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (halaqaData.start_time) payload.start_time = formatTimeForDb(halaqaData.start_time);
-      if (halaqaData.end_time) payload.end_time = formatTimeForDb(halaqaData.end_time);
-
-      const { data, error } = await supabase
-        .from('halaqas')
-        .update(payload)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['halaqas'] });
-    },
-  });
-
-  const archiveMutation = useMutation({
-    mutationFn: async ({ halaqaId, currentArchived }: { halaqaId: string; currentArchived: boolean }) => {
-      const { error } = await supabase
-        .from('halaqas')
-        .update({
-          is_archived: !currentArchived,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', halaqaId);
-
-      if (error) throw error;
-    },
-    onMutate: async ({ halaqaId, currentArchived }) => {
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousHalaqas = queryClient.getQueryData<Halaqa[]>(queryKey);
-
-      if (previousHalaqas) {
-        queryClient.setQueryData<Halaqa[]>(queryKey, (old = []) =>
-          old.map((item) =>
-            item.id === halaqaId ? { ...item, is_archived: !currentArchived } : item
-          )
-        );
-      }
-
-      return { previousHalaqas };
-    },
-    onError: (_err, _variables, context) => {
-      if (context?.previousHalaqas) {
-        queryClient.setQueryData(queryKey, context.previousHalaqas);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
-
-  const createHalaqa = useCallback(
-    async (data: Partial<Halaqa>) => {
-      try {
-        const result = await createHalaqaMutation.mutateAsync(data);
-        return { success: true, data: result };
-      } catch (err: any) {
-        return { success: false, error: err?.message || 'فشلت عملية إنشاء الحلقة' };
-      }
-    },
-    [createHalaqaMutation]
-  );
-
-  const updateHalaqa = useCallback(
-    async (data: Partial<Halaqa> & { id: string }) => {
-      try {
-        const result = await updateHalaqaMutation.mutateAsync(data);
-        return { success: true, data: result };
-      } catch (err: any) {
-        return { success: false, error: err?.message || 'فشلت عملية تعديل الحلقة' };
-      }
-    },
-    [updateHalaqaMutation]
-  );
-
-  const toggleArchiveHalaqa = useCallback(
-    async (halaqaId: string, currentArchived: boolean) => {
-      try {
-        await archiveMutation.mutateAsync({ halaqaId, currentArchived });
-        return { success: true };
-      } catch (err: any) {
-        return { success: false, error: err?.message || 'فشلت عملية الأرشفة' };
-      }
-    },
-    [archiveMutation]
-  );
-
-  return {
-    halaqas,
-    loading,
-    error: queryError ? (queryError as Error).message : null,
-    filters,
-    setFilters,
-    refetch,
-    createHalaqa,
-    updateHalaqa,
-    toggleArchiveHalaqa,
-    isCreating: createHalaqaMutation.isPending,
-    isUpdating: updateHalaqaMutation.isPending,
+    } catch (err) {
+      console.error("Error toggling archive status:", err);
+    }
   };
-};
 
-export default useHalaqas;
+  const getEmptyStateMessage = () => {
+    if ((searchQuery || '').trim() !== '') return t('no_search_results', 'لم يتم العثور على حلقات تطابق البحث.');
+    if (statusFilter === 'no_teacher') return t('halaqas.no_unassigned_halaqas', 'لا توجد حلقات بدون معلم حالياً.');
+    if (statusFilter === 'archived') return t('halaqas.no_archived_halaqas', 'لا توجد حلقات مؤرشفة.');
+    if (statusFilter === 'active') return t('halaqas.no_active_halaqas', 'لا توجد حلقات نشطة حالياً.');
+    return t('halaqas.no_halaqas', 'لا توجد حلقات مضافة بعد.');
+  };
+
+  return (
+    <>
+      <PageLayout
+        title={t('halaqas.title', 'إدارة الحلقات والفصول')}
+        subtitle={t('halaqas.subtitle', 'تنظيم وتوزيع الطلاب والمعلمين على الحلقات')}
+        icon={BookOpen}
+        actionButtonText={t('halaqas.add_new', 'إنشاء حلقة جديدة')}
+        onActionButtonClick={() => {
+          setEditingHalaqa(null);
+          setIsAddModalOpen(true);
+        }}
+        statsGrid={
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <div 
+              onClick={() => setStatusFilter('all')}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'all' 
+                  ? 'border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
+            >
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'all' ? 'bg-semantic-actionPrimary' : 'bg-transparent'
+              }`}></div>
+              <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.total', 'إجمالي الحلقات')}</p>
+              <p className="text-base sm:text-xl font-bold text-semantic-textPrimary mt-1">{stats.total}</p>
+            </div>
+
+            <div 
+              onClick={() => setStatusFilter('active')}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'active' 
+                  ? 'border-semantic-success ring-1 ring-semantic-success' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
+            >
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'active' ? 'bg-semantic-success' : 'bg-transparent'
+              }`}></div>
+              <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.active', 'الحلقات النشطة')}</p>
+              <p className="text-base sm:text-xl font-bold text-semantic-success mt-1">{stats.active}</p>
+            </div>
+
+            <div 
+              onClick={() => setStatusFilter('no_teacher')}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'no_teacher' 
+                  ? 'border-semantic-warning ring-1 ring-semantic-warning' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
+            >
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'no_teacher' ? 'bg-semantic-warning' : 'bg-transparent'
+              }`}></div>
+              <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('halaqas.no_teacher', 'بدون معلم')}</p>
+              <p className="text-base sm:text-xl font-bold text-semantic-warning mt-1">{stats.noTeacher}</p>
+            </div>
+
+            <div 
+              onClick={() => setStatusFilter('archived')}
+              className={`bg-semantic-surfaceCard border rounded-xl p-2.5 sm:p-3 text-center relative overflow-hidden shadow-sm cursor-pointer transition-all ${
+                statusFilter === 'archived' 
+                  ? 'border-semantic-error ring-1 ring-semantic-error' 
+                  : 'border-semantic-borderCard hover:border-semantic-borderCard/80'
+              }`}
+            >
+              <div className={`absolute top-0 start-0 end-0 h-1 transition-colors ${
+                statusFilter === 'archived' ? 'bg-semantic-error' : 'bg-transparent'
+              }`}></div>
+              <p className="text-[10px] sm:text-xs text-semantic-textSecondary whitespace-nowrap font-medium">{t('common.archived', 'المؤرشفة')}</p>
+              <p className="text-base sm:text-xl font-bold text-semantic-error mt-1">{stats.archived}</p>
+            </div>
+          </div>
+        }
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={t('halaqas.search_placeholder', 'ابحث باسم الحلقة...')}
+        filtersChildren={
+          <div className="relative z-30 col-span-2 md:col-span-1">
+            <Select
+              title={t('halaqas.filter_status_title', 'حالة الحلقة')}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={statusOptions}
+              placeholder={t('halaqas.select_status', 'اختر الحالة...')}
+            />
+          </div>
+        }
+        totalCount={stats.total}
+        filteredCount={filteredHalaqas.length}
+        hasActiveFilters={hasActiveFilters}
+        onResetFilters={resetFilters}
+        onRefresh={onRefresh}
+        countUnitText={t('common.halaqaUnit', 'حلقة')}
+        isLoading={false}
+        isRtl={isRtl}
+        t={t}
+      >
+        {filteredHalaqas.length === 0 ? (
+          <div className="text-center py-12 bg-semantic-surfaceCard rounded-2xl border border-semantic-borderCard space-y-3">
+            <BookOpen className="w-12 h-12 text-semantic-textSecondary opacity-60 mx-auto" />
+            <p className="text-semantic-textSecondary font-medium text-sm">
+              {getEmptyStateMessage()}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-0">
+            {filteredHalaqas.map((halaqa) => (
+              <HalaqaCardItem
+                key={halaqa?.id || Math.random()}
+                halaqa={halaqa}
+                teachers={teachers}
+                onEdit={handleEditHalaqa}
+                onToggleArchive={handleToggleArchive}
+                onNavigateToAttendance={onNavigateToAttendance}
+              />
+            ))}
+          </div>
+        )}
+      </PageLayout>
+
+      {isAddModalOpen && (
+        <HalaqaFormModal
+          isOpen={isAddModalOpen}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingHalaqa(null);
+          }}
+          formData={editingHalaqa || {}}
+          setFormData={setEditingHalaqa}
+          handleSubmit={handleModalSubmit}
+          teachers={teachers}
+          academyId={academyId}
+        />
+      )}
+    </>
+  );
+}
