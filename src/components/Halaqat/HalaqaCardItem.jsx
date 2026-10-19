@@ -65,19 +65,16 @@ export default function HalaqaCardItem({
 
   const formattedDays = formatDays(halaqa?.days_of_week);
 
-  // 2️⃣ احتساب عدد الطلاب الفعلي بدقة من علاقة students المباشرة
+  // 2️⃣ احتساب عدد الطلاب الفعلي بدقة من مصفوفة الطلاب المباشرة أو الاحتياطية
   const getStudentsCount = () => {
-    if (typeof halaqa?.students_count === 'number') return halaqa.students_count;
-    if (typeof halaqa?.student_count === 'number') return halaqa.student_count;
-    
-    // حساب الطلاب النشطين من مصفوفة students المرتبطة بالحلقة مباشرة عبر halaqa_id
     if (Array.isArray(halaqa?.students)) {
-      return halaqa.students.filter(student => !student.status || student.status === 'active').length;
+      return halaqa.students.filter(student => !student.status || student.status === 'active' || student.status === 'Active').length;
     }
-
     if (Array.isArray(halaqa?.student_halaqas)) {
       return halaqa.student_halaqas.filter(item => !item.status || item.status === 'active').length;
     }
+    if (typeof halaqa?.students_count === 'number') return halaqa.students_count;
+    if (typeof halaqa?.student_count === 'number') return halaqa.student_count;
     
     return 0;
   };
