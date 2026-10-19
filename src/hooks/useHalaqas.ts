@@ -37,7 +37,7 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب كافة بيانات الحلقات مع المعلمين، المناهج، والطلاب عبر الربط الصريح
+  // 1. جلب كافة بيانات الحلقات مع المعلمين، المناهج، والطلاب وحساب العداد بضمان كامل
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -63,9 +63,10 @@ export const useHalaqas = ({
               id,
               title
             ),
-            students:students!students_halaqa_id_fkey (
+            students:students (
               id,
-              status
+              status,
+              halaqa_id
             )
           `)
           .eq('academy_id', academyId!);
@@ -92,7 +93,22 @@ export const useHalaqas = ({
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
-        return (data as Halaqa[]) || [];
+
+        // ⚡ حساب عدد الطلاب النشطين لكل حلقة يدوياً وضمان إسناده لـ students_count
+        const halaqasWithCount = (data || []).map((halaqa: any) => {
+          const activeStudentsCount = Array.isArray(halaqa.students)
+            ? halaqa.students.filter(
+                (s: any) => s.halaqa_id === halaqa.id && (!s.status || s.status === 'active' || s.status === 'Active')
+              ).length
+            : 0;
+
+          return {
+            ...halaqa,
+            students_count: activeStudentsCount,
+          };
+        });
+
+        return halaqasWithCount as Halaqa[];
       } catch (err: any) {
         console.warn('Halaqas Query Error:', err?.message || err);
         return [];
