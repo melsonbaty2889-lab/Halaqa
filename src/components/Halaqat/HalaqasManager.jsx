@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen } from 'lucide-react';
 import PageLayout from '@/components/UI/PageLayout';
 import Select from '@/components/UI/Select';
+import { normalizeDayValue } from '@/constants/days';
 
 import HalaqaCardItem from './HalaqaCardItem';
 import HalaqaFormModal from './HalaqaFormModal';
@@ -84,12 +85,16 @@ export default function HalaqasManager({
       ? (item.name[currentLang] || item.name.ar || item.name.en || '') 
       : (item?.name || item?.name_text || '');
 
+    // توحيد الأيام وتنقيتها فوراً عند التجهيز للمودال باستخدام normalizeDayValue
+    const rawDays = Array.isArray(item.days_of_week) ? item.days_of_week : [];
+    const normalizedDays = Array.from(new Set(rawDays.map(normalizeDayValue))).filter(Boolean);
+
     setEditingHalaqa({
       ...item,
       id: item.id,
       name_text: nameText,
       name: item.name,
-      days_of_week: Array.isArray(item.days_of_week) ? item.days_of_week : [],
+      days_of_week: normalizedDays,
       educational_track: item.educational_track || 'hifz',
       teaching_type: item.teaching_type || 'online',
       target_audience: item.target_audience || 'kids',
@@ -101,7 +106,7 @@ export default function HalaqasManager({
     setIsAddModalOpen(true);
   };
 
-  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة وتناغم مع تنقية الأيام من أي تكرار
+  // ✅ ضمان حفظ وتحديث بيانات مودال التعديل بدقة وتناغم مع تنقية الأيام المعيارية
   const handleModalSubmit = async (payload) => {
     try {
       if (editingHalaqa?.id) {
@@ -115,8 +120,10 @@ export default function HalaqasManager({
             [currentLang]: payload.name_text || payload.name?.[currentLang] || existingNameObj[currentLang] || ''
           };
 
-          // إزالة أي تكرار في أيام الانعقاد قبل إرسالها للسيرفر
-          const cleanDays = Array.from(new Set(Array.isArray(payload.days_of_week) ? payload.days_of_week : []));
+          // إزالة أي تكرار وتوحيد الأيام بالصيغة المعيارية قبل إرسالها للسيرفر
+          const cleanDays = Array.from(
+            new Set((Array.isArray(payload.days_of_week) ? payload.days_of_week : []).map(normalizeDayValue))
+          ).filter(Boolean);
 
           const updatePayload = {
             id: editingHalaqa.id,
@@ -135,8 +142,11 @@ export default function HalaqasManager({
         }
       } else {
         if (onCreateHalaqa) {
-          // تنقية الأيام عند الإنشاء أيضاً لتجنب أي تكرار
-          const cleanDaysCreate = Array.from(new Set(Array.isArray(payload.days_of_week) ? payload.days_of_week : []));
+          // تنقية وتوحيد الأيام عند الإنشاء أيضاً لتجنب أي تكرار
+          const cleanDaysCreate = Array.from(
+            new Set((Array.isArray(payload.days_of_week) ? payload.days_of_week : []).map(normalizeDayValue))
+          ).filter(Boolean);
+
           await onCreateHalaqa({ ...payload, days_of_week: cleanDaysCreate });
         }
       }
