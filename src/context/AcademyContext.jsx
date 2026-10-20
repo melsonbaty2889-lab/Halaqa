@@ -53,7 +53,6 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  // تحديث بيانات الأكاديمية الحالية وقائمة الأكاديميات لحظياً في الـ Context وتخزين المعرف محلياً
   const updateAcademyState = useCallback((newAcademyData) => {
     if (isMounted.current) {
       setAcademy((prev) => {
@@ -233,7 +232,6 @@ export const AcademyProvider = ({ children }) => {
         if (currentAcademy) {
           setAcademy(currentAcademy);
           
-          // ✅ التعديل الأهم: تخزين معرف الأكاديمية النشطة في التخزين المحلي فور جلبها
           if (currentAcademy.id) {
             localStorage.setItem('active_academy_id', currentAcademy.id);
             localStorage.setItem('academy_id', currentAcademy.id);
@@ -251,8 +249,12 @@ export const AcademyProvider = ({ children }) => {
           setAcademy(null);
           localStorage.removeItem('active_academy_id');
           localStorage.removeItem('academy_id');
+          
+          // ✅ التعديل: التمييز بين المدير وباقي المستخدمين الجدد بدون أكاديمية
           if (detectedRole === 'admin') {
             setAppState('NO_ACADEMY');
+          } else if (['teacher', 'student', 'parent'].includes(detectedRole)) {
+            setAppState('JOIN_ACADEMY');
           } else {
             setAppState('FULLY_ACTIVE');
           }
@@ -341,7 +343,6 @@ export const AcademyProvider = ({ children }) => {
     };
   }, [fetchUserStatus, clearAuthState]);
 
-  // الاستماع للتغييرات اللحظية للبروفايل
   useEffect(() => {
     if (!user?.id || !supabase) return;
 
