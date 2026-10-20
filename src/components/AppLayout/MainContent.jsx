@@ -72,7 +72,7 @@ export default function MainContent() {
   }, []);
 
   useEffect(() => {
-    if ((appState === 'NO_ACADEMY' || appState === 'FULLY_ACTIVE') && cachedSlug && profile?.academy_id) {
+    if ((appState === 'NO_ACADEMY' || appState === 'JOIN_ACADEMY' || appState === 'FULLY_ACTIVE') && cachedSlug && profile?.academy_id) {
       refreshStatus?.();
     }
   }, [appState, cachedSlug, profile?.academy_id, refreshStatus]);
@@ -233,7 +233,8 @@ export default function MainContent() {
             </ProtectedRoute>
           )}
 
-          {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && activeRole !== 'super_admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
+          {/* شاشة إنشاء الأكاديمية (للمدير الذي لا يملك أكاديمية) */}
+          {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && activeRole === 'admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
             !profile?.academy_id && cachedSlug ? (
               <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
             ) : (
@@ -247,6 +248,16 @@ export default function MainContent() {
                 }} 
               />
             )
+          )}
+
+          {/* 🌟 شاشة الانضمام لأكاديمية (للمعلم/الطالب/ولي الأمر بدون أكاديمية) */}
+          {appState === 'JOIN_ACADEMY' && !isNeedsRoleSelection && (
+            <JoinAcademy 
+              onLogout={logout} 
+              onJoinedAcademy={async () => {
+                if (refreshStatus) await refreshStatus();
+              }} 
+            />
           )}
 
           {appState === 'FULLY_ACTIVE' && profile?.academy_id && !isNeedsRoleSelection && (
@@ -310,7 +321,8 @@ export default function MainContent() {
             </Routes>
           )}
 
-          {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
+          {/* التأكد من إضافة JOIN_ACADEMY ضمن الحالات المعروفة لمنع ظهور رسالة الخطأ */}
+          {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'JOIN_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
             <div className="bg-transparent min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
               <AlertTriangle size={40} className="text-semantic-danger mb-4" />
               <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
