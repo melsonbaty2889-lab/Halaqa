@@ -44,7 +44,25 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. التحقق من الصلاحيات للأدوار المسموحة
+  // 3. 🛡️ التوجيه الذكي حسب وجود الأكاديمية (Onboarding Guard)
+  // الاستثناء: صفحات اختيار الدور، إنشاء الأكاديمية، والانضمام لأكاديمية
+  const isOnboardingPage = 
+    location.pathname.includes('/select-role') || 
+    location.pathname.includes('/create-academy') || 
+    location.pathname.includes('/join-academy');
+
+  const hasAcademy = academy?.id && academy?.id !== 'default';
+
+  if (!hasAcademy && !isOnboardingPage && currentRole !== 'super_admin') {
+    // المدير ينشئ أكاديمية جديدة، وباقي الأدوار تتجه لصفحة الانضمام
+    if (currentRole === 'admin') {
+      return <Navigate to="/create-academy" replace />;
+    } else {
+      return <Navigate to="/join-academy" replace />;
+    }
+  }
+
+  // 4. التحقق من الصلاحيات للأدوار المسموحة
   const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
   const isAllowed = 
     normalizedAllowed.length === 0 || 
@@ -52,7 +70,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     currentRole === 'admin' || 
     currentRole === 'super_admin';
 
-  // 4. التحقق من رابط الأكاديمية (Slug)
+  // 5. التحقق من رابط الأكاديمية (Slug)
   const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
   const isCorrectAcademy = 
     !slug || 
@@ -87,13 +105,11 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     );
   }
 
-  // 5. 🛡️ فحص صلاحية الاشتراك (Subscription Check)
-  // ينطبق الفحص فقط على مسارات لوحة التحكم الإدارية للأكاديمية وتستثنى صفحة الاشتراك والـ Super Admin
+  // 6. 🛡️ فحص صلاحية الاشتراك (Subscription Check)
   const isSubscriptionPage = location.pathname.includes('/subscription') || location.pathname.includes('/billing');
   const isSuperAdmin = currentRole === 'super_admin';
 
-  if (!isSuperAdmin && !isSubscriptionPage && academy?.id && academy?.id !== 'default') {
-    // إذا كان الاشتراك غير نشط وليس في انتظار المراجعة
+  if (!isSuperAdmin && !isSubscriptionPage && hasAcademy) {
     if (!isActive && !isPending) {
       return (
         <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
@@ -117,6 +133,5 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     }
   }
 
-  // السماح بالمرور إذا اجتاز جميع الفحوصات
   return children;
 }
