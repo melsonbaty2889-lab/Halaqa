@@ -14,6 +14,7 @@ const SignUpPage = lazy(() => import('@/components/Auth/SignUpPage'));
 const ForgotPassword = lazy(() => import('@/components/Auth/ForgotPassword'));
 const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
 const RoleSelectionPage = lazy(() => import('@/components/Auth/RoleSelectionPage'));
+const JoinAcademy = lazy(() => import('@/components/Auth/JoinAcademy'));
 const MainApp = lazy(() => import('@/components/Main/MainApp'));
 const CreateAcademy = lazy(() => import('@/components/Auth/CreateAcademy'));
 const AdminDashboard = lazy(() => import('@/components/SuperAdmin/AdminDashboard'));
