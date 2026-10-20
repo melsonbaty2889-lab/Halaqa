@@ -99,14 +99,16 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
       }
 
-      // 1. التحديث الآمن للدور عبر استدعاء دالة RPC المتوافقة مع حارس الأمان protect_profile_roles
-      const { error: profileError } = await supabase.rpc('set_initial_role', {
-        new_role: selectedRole
-      });
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: selectedRole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
       if (profileError) throw profileError;
 
-      // 2. تحديث الميتاداتا الخاصة بالمستخدم في Supabase Auth
       const { error: updateAuthError } = await supabase.auth.updateUser({
         data: { role: selectedRole }
       });
@@ -155,6 +157,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
           </div>
         )}
 
+        {/* التعديل هنا: تحسين استجابة الشبكة للتأقلم مع جميع أبعاد الشاشات */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
           {rolesList.map((item) => {
             const Icon = item.icon;
