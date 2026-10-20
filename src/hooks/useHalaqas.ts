@@ -37,7 +37,6 @@ export const useHalaqas = ({
 
   const queryKey = ['halaqas', academyId || 'no-academy'];
 
-  // 1. جلب كافة بيانات الحلقات مع المعلمين، المناهج، والطلاب وحساب العداد بضمان كامل
   const {
     data: halaqas = [],
     isLoading: loading,
@@ -62,11 +61,6 @@ export const useHalaqas = ({
             curricula (
               id,
               title
-            ),
-            students:students (
-              id,
-              status,
-              halaqa_id
             )
           `)
           .eq('academy_id', academyId!);
@@ -90,25 +84,36 @@ export const useHalaqas = ({
           );
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const { data: halaqasData, error: halaqasError } = await query.order('created_at', { ascending: false });
+        if (halaqasError) throw halaqasError;
 
-        if (error) throw error;
+        if (!halaqasData || halaqasData.length === 0) return [];
 
-        // ⚡ حساب عدد الطلاب النشطين لكل حلقة يدوياً وضمان إسناده لـ students_count
-        const halaqasWithCount = (data || []).map((halaqa: any) => {
-          const activeStudentsCount = Array.isArray(halaqa.students)
-            ? halaqa.students.filter(
-                (s: any) => s.halaqa_id === halaqa.id && (!s.status || s.status === 'active' || s.status === 'Active')
-              ).length
-            : 0;
+        const halaqaIds = halaqasData.map((h: any) => h.id);
+
+        // جلب الطلاب المرتبطين مباشرة بالحلقات عبر عمود halaqa_id في جدول students
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('id, status, halaqa_id')
+          .in('halaqa_id', halaqaIds);
+
+        if (studentsError) {
+          console.warn('Error fetching students count:', studentsError.message);
+        }
+
+        const halaqasWithStudents = halaqasData.map((halaqa: any) => {
+          const halaqaStudents = (studentsData || []).filter(
+            (s: any) => s.halaqa_id === halaqa.id && (!s.status || s.status === 'active')
+          );
 
           return {
             ...halaqa,
-            students_count: activeStudentsCount,
+            students: halaqaStudents,
+            students_count: halaqaStudents.length,
           };
         });
 
-        return halaqasWithCount as Halaqa[];
+        return halaqasWithStudents as Halaqa[];
       } catch (err: any) {
         console.warn('Halaqas Query Error:', err?.message || err);
         return [];
