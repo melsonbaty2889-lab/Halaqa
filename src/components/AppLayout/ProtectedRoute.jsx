@@ -1,3 +1,5 @@
+// src/components/AppLayout/ProtectedRoute.jsx
+
 import React from 'react';
 import { useParams, Navigate, useLocation } from 'react-router-dom';
 import { Loader2, Lock, CreditCard } from 'lucide-react';
@@ -45,7 +47,6 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   }
 
   // 3. 🛡️ التوجيه الذكي حسب وجود الأكاديمية (Onboarding Guard)
-  // الاستثناء: صفحات اختيار الدور، إنشاء الأكاديمية، والانضمام لأكاديمية
   const isOnboardingPage = 
     location.pathname.includes('/select-role') || 
     location.pathname.includes('/create-academy') || 
@@ -54,7 +55,6 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   const hasAcademy = academy?.id && academy?.id !== 'default';
 
   if (!hasAcademy && !isOnboardingPage && currentRole !== 'super_admin') {
-    // المدير ينشئ أكاديمية جديدة، وباقي الأدوار تتجه لصفحة الانضمام
     if (currentRole === 'admin') {
       return <Navigate to="/create-academy" replace />;
     } else {
@@ -62,13 +62,32 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     }
   }
 
-  // 4. التحقق من الصلاحيات للأدوار المسموحة
+  // 4. 🛡️ التحقق من الصلاحيات والتوجيه التلقائي المباشر لجميع الأدوار
   const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
+  
   const isAllowed = 
     normalizedAllowed.length === 0 || 
     normalizedAllowed.includes(currentRole) || 
     currentRole === 'admin' || 
     currentRole === 'super_admin';
+
+  // خريطة التوجيه الافتراضية لكل دور عند محاولة دخول صفحة غير مخصصة له
+  const roleDefaultRoutes = {
+    teacher: '/teacher-dashboard',
+    student: '/student-dashboard',
+    parent: '/parent-dashboard',
+    admin: '/dashboard',
+    academy_admin: '/dashboard',
+    super_admin: '/admin-dashboard'
+  };
+
+  // إذا حاول المستخدم الوصول لمسار غير مصرح له به، توجيهه تلقائياً للوحته المخصصة
+  if (!isAllowed) {
+    const targetRoute = roleDefaultRoutes[currentRole];
+    if (targetRoute && location.pathname !== targetRoute) {
+      return <Navigate to={targetRoute} replace />;
+    }
+  }
 
   // 5. التحقق من رابط الأكاديمية (Slug)
   const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
@@ -80,7 +99,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     currentRole === 'super_admin' || 
     currentRole === 'admin';
 
-  // واجهة الرفض الموحدة في حال عدم امتلاك صلاحية الوصول للمسار الحالي
+  // واجهة الرفض الموحدة لعدم مطابقة الأكاديمية أو المسار
   if (!isAllowed || !isCorrectAcademy) {
     return (
       <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
