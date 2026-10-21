@@ -146,7 +146,6 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
           .maybeSingle();
 
         if (teacherRecord) {
-          // المعلم موجود في جدول المعلمين، نقوم بإنشاء حساب المصادقة Auth له تلقائياً
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: validationResult.data.email,
             password: validationResult.data.password,
@@ -179,7 +178,7 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (isMounted.current) setRedirecting(true);
 
-      // 3. إنشاء أو تحديث سجل البروفايل الخاص به وربطه بالأكاديمية (مع تمرير full_name)
+      // 3. إنشاء أو تحديث سجل البروفايل الخاص به وربطه بالأكاديمية
       await supabase
         .from('profiles')
         .upsert({
@@ -233,12 +232,14 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
         }
       }, 500);
     } catch (err: unknown) {
-      console.error('Login Error:', err);
-      const userFriendlyMsg = handleAuthError(err, isRtl);
+      console.error('Login Error Detailed:', err);
+      
+      // إظهار الخطأ التقني صريحاً على الشاشة لنكتشف السبب الفعلي فوراً
+      const exactErrorMsg = err instanceof Error ? err.message : JSON.stringify(err);
       if (isMounted.current) {
         setStatus({
           type: 'error',
-          msg: userFriendlyMsg,
+          msg: `خطأ تقني: ${exactErrorMsg}`,
         });
         setRedirecting(false);
       }
