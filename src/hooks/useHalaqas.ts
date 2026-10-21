@@ -48,7 +48,7 @@ export const useHalaqas = ({
       if (!isValidAcademyId) return [];
 
       try {
-        // 1. التحقق من المستخدم المسجل حالياً ودوره برمجياً
+        // 1. التحقق من المستخدم المسجل حالياً ودوره
         const { data: { user } } = await supabase.auth.getUser();
         let userRole = 'admin';
         let currentTeacherRecordId: string | null = null;
@@ -61,15 +61,15 @@ export const useHalaqas = ({
             .maybeSingle();
 
           if (profile?.role) {
-            userRole = profile.role;
+            userRole = profile.role.toLowerCase().trim();
           }
 
-          // إذا كان المستخدم معلماً، نجلب المعرف المكتوبي له في جدول teachers
+          // إذا كان المستخدم معلماً، نجلب معرفه المكتوبي في جدول teachers سواء بـ user_id أو email
           if (userRole === 'teacher') {
             const { data: teacherRec } = await supabase
               .from('teachers')
               .select('id')
-              .eq('user_id', user.id)
+              .or(`user_id.eq.${user.id},email.eq.${user.email}`)
               .maybeSingle();
 
             if (teacherRec?.id) {
@@ -96,7 +96,7 @@ export const useHalaqas = ({
           `)
           .eq('academy_id', academyId!);
 
-        // 3. فلترة الحلقات الخاصة بالمعلم فقط إذا كان دوره معلماً
+        // 3. فلترة الحلقات الخاصة بالمعلم فقط بدون طمس الاستعلام
         if (userRole === 'teacher' && currentTeacherRecordId) {
           query = query.eq('teacher_id', currentTeacherRecordId);
         }
@@ -127,7 +127,7 @@ export const useHalaqas = ({
 
         const halaqaIds = halaqasData.map((h: any) => h.id);
 
-        // جلب الطلاب المرتبطين بالحلقات المجلوبة عبر عمود halaqa_id في جدول students
+        // جلب الطلاب المرتبطين بحلقات المعلم المجلوبة فقط
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
           .select('id, status, halaqa_id')
