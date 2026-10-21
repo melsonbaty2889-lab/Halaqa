@@ -1,3 +1,4 @@
+// src/hooks/useLoginForm.ts
 import { useState, useEffect, useRef, useMemo, FormEvent, KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -26,11 +27,9 @@ export type OnLoginSuccessCallback = (data: {
   profile: UserProfile | null;
 }) => void;
 
-// اللغات المدعومة بالترتيب
 const SUPPORTED_LANGUAGES = ['ar', 'en', 'fr', 'tr', 'ur', 'id'] as const;
 type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
-// لغات الـ RTL
 const RTL_LANGUAGES = ['ar', 'ur', 'fa', 'he'];
 
 // ── Main Hook ───────────────────────────────────────────────────
@@ -42,10 +41,8 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
   const isMounted = useRef<boolean>(true);
 
-  // استخراج كود اللغة الأساسي للواجهة فقط
   const currentLangCode = (i18n?.resolvedLanguage || i18n?.language || 'ar').split('-')[0].toLowerCase();
   
-  // تثبيت حساب الاتجاه لمنع إعادة الرسم اللحظية أثناء إدخال أندرويد
   const isRtl = useMemo(() => {
     return RTL_LANGUAGES.includes(currentLangCode);
   }, [currentLangCode]);
@@ -129,11 +126,46 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email: validationResult.data.email,
-          password: validationResult.data.password,
-        });
+      let authData, authError;
+
+      // 1. محاولة تسجيل الدخول بالطريقة التقليدية
+      const signInResult = await supabase.auth.signInWithPassword({
+        email: validationResult.data.email,
+        password: validationResult.data.password,
+      });
+
+      authData = signInResult.data;
+      authError = signInResult.error;
+
+      // 2. إذا فشل الدخول، نتحقق هل البريد مسجل مسبقاً في جدول المعلمين بواسطة المدير؟
+      if (authError && (authError.message.includes('Invalid login credentials') || authError.status === 400)) {
+        const { data: teacherRecord } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('email', validationResult.data.email)
+          .maybeSingle();
+
+        if (teacherRecord) {
+          // المعلم موجود في جدول المعلمين، نقوم بإنشاء حساب المصادقة Auth له تلقائياً
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: validationResult.data.email,
+            password: validationResult.data.password,
+            options: {
+              data: {
+                role: teacherRecord.metadata?.system_role || 'teacher',
+                full_name: teacherRecord.name,
+                academy_id: teacherRecord.academy_id
+              }
+            }
+          });
+
+          if (signUpError) throw signUpError;
+          authData = signUpData;
+          authError = null;
+        } else {
+          throw authError;
+        }
+      }
 
       if (authError) {
         if (authError.message === 'Email not confirmed') {
@@ -147,13 +179,17 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (isMounted.current) setRedirecting(true);
 
+      // 3. إنشاء أو تحديث سجل البروفايل الخاص به وربطه بالأكاديمية
       await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
+          role: authData.user?.user_metadata?.role || 'teacher',
+          academy_id: authData.user?.user_metadata?.academy_id || null,
+          is_activated: true,
           last_login_at: new Date().toISOString(),
           is_online: true,
-        })
-        .eq('id', user.id);
+        });
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
