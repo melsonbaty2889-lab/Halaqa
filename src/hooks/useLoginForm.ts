@@ -234,21 +234,17 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     } catch (err: unknown) {
       console.error('Login Error Detailed:', err);
       
-      // استخراج تفاصيل الخطأ بدقة تامة لإظهاره على الشاشة
-      let exactErrorMsg = 'Unknown Error';
-      if (err instanceof Error) {
-        exactErrorMsg = err.message || JSON.stringify(err);
-      } else if (typeof err === 'object' && err !== null) {
-        const supabaseErr = err as any;
-        exactErrorMsg = supabaseErr.message || supabaseErr.error_description || supabaseErr.details || JSON.stringify(err);
-      } else {
+      let exactErrorMsg = '';
+      try {
+        exactErrorMsg = JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+      } catch (e) {
         exactErrorMsg = String(err);
       }
 
       if (isMounted.current) {
         setStatus({
           type: 'error',
-          msg: `خطأ تقني: ${exactErrorMsg}`,
+          msg: `خطأ تقني صريح: ${exactErrorMsg}`,
         });
         setRedirecting(false);
       }
