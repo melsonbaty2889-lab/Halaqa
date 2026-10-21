@@ -1,3 +1,5 @@
+/* src/hooks/useStudents.ts */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -53,7 +55,7 @@ export const useStudents = (
     debouncedSearchTerm,
   ];
 
-  // 1. جلب الطلاب
+  // 1. جلب الطلاب (مع الفلترة التلقائية بناءً على دور المستخدم: مدير أو معلم)
   const {
     data: students = [],
     isLoading: loading,
@@ -64,52 +66,103 @@ export const useStudents = (
     queryFn: async (): Promise<Student[]> => {
       if (!academyId) return [];
 
-      let query = supabase
-        .from('students')
-        .select(`
-          *,
-          halaqas (
-            id,
-            name,
-            target_audience
-          ),
-          parents (
-            id,
-            name,
-            phone,
-            email
-          )
-        `)
-        .eq('academy_id', academyId)
-        .eq('is_archived', filters.isArchived);
+      try {
+        // أ) التحقق من دور المستخدم الحالي وهل هو معلم أم مدير
+        const { data: { user } } = await supabase.auth.getUser();
+        let userRole = 'admin';
+        let currentTeacherRecordId: string | null = null;
+        let teacherHalaqaIds: string[] = [];
 
-      if (filters.gender && filters.gender !== 'all') {
-        query = query.eq('gender', filters.gender);
-      }
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
 
-      if (filters.halaqaId && filters.halaqaId !== 'all') {
-        if (filters.halaqaId === 'none') {
-          query = query.is('halaqa_id', null);
-        } else {
-          query = query.eq('halaqa_id', filters.halaqaId);
+          if (profile?.role) {
+            userRole = profile.role;
+          }
+
+          // إذا كان المستخدم معلماً، نجلب الحلقات المسندة إليه فقط
+          if (userRole === 'teacher') {
+            const { data: teacherRec } = await supabase
+              .from('teachers')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (teacherRec?.id) {
+              currentTeacherRecordId = teacherRec.id;
+
+              const { data: teacherHalaqas } = await supabase
+                .from('halaqas')
+                .select('id')
+                .eq('teacher_id', currentTeacherRecordId);
+
+              if (teacherHalaqas) {
+                teacherHalaqaIds = teacherHalaqas.map((h: any) => h.id);
+              }
+            }
+          }
         }
+
+        let query = supabase
+          .from('students')
+          .select(`
+            *,
+            halaqas (
+              id,
+              name,
+              target_audience
+            ),
+            parents (
+              id,
+              name,
+              phone,
+              email
+            )
+          `)
+          .eq('academy_id', academyId)
+          .eq('is_archived', filters.isArchived);
+
+        // ب) إذا كان المستخدم معلماً وليس لديه حلقات مسندة، نعيد مصفوفة فارغة
+        if (userRole === 'teacher') {
+          if (teacherHalaqaIds.length === 0) return [];
+          query = query.in('halaqa_id', teacherHalaqaIds);
+        }
+
+        if (filters.gender && filters.gender !== 'all') {
+          query = query.eq('gender', filters.gender);
+        }
+
+        if (filters.halaqaId && filters.halaqaId !== 'all') {
+          if (filters.halaqaId === 'none') {
+            query = query.is('halaqa_id', null);
+          } else {
+            query = query.eq('halaqa_id', filters.halaqaId);
+          }
+        }
+
+        // جـ) البحث الشامل والذكي عبر كافة اللغات المدعومة
+        if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+          const rawTerm = debouncedSearchTerm.trim();
+          const term = `%${rawTerm}%`;
+          const normalizedTerm = normalizePhone(rawTerm);
+
+          query = query.or(
+            `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},student_code.ilike.${term},parent_phone.ilike.%${normalizedTerm}%`
+          );
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data as Student[]) || [];
+      } catch (err: any) {
+        console.warn('Students Query Error:', err?.message || err);
+        return [];
       }
-
-      // 💡 البحث الشامل والذكي عبر كافة اللغات المدعومة (ar, en, tr, fr, ur, id) وكود الطالب ورقم الهاتف
-      if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
-        const rawTerm = debouncedSearchTerm.trim();
-        const term = `%${rawTerm}%`;
-        const normalizedTerm = normalizePhone(rawTerm);
-
-        query = query.or(
-          `name->>ar.ilike.${term},name->>en.ilike.${term},name->>tr.ilike.${term},name->>fr.ilike.${term},name->>ur.ilike.${term},name->>id.ilike.${term},student_code.ilike.${term},parent_phone.ilike.%${normalizedTerm}%`
-        );
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data as Student[]) || [];
     },
     enabled: Boolean(academyId),
   });
