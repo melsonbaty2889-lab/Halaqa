@@ -22,7 +22,6 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   // 1. جلب حالة الاشتراك للأكاديمية الحالية
   const { isActive, isPending, loading: subLoading } = useSubscription(academy?.id);
 
-  // حالة التحميل أثناء فحص الجلسة أو الاشتراك
   if (appState === 'LOADING' || (subLoading && academy?.id)) {
     return (
       <div className="bg-semantic-bgPage min-h-screen flex justify-center items-center text-semantic-actionPrimary">
@@ -34,19 +33,17 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   // 2. استخراج دور المستخدم
   const rawRole = userRole || profile?.role;
   
-  // إذا لم يكن هناك دور محدد للمستخدم المسجل -> تحويله لصفحة تحديد الدور
   if (profile && !rawRole) {
     return <Navigate to="/select-role" replace />;
   }
 
   const currentRole = rawRole ? rawRole.toString().toLowerCase().trim() : 'guest';
 
-  // إذا لم يكن مسجلاً للدخول مطلقاً
   if (currentRole === 'guest') {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. 🛡️ التوجيه الذكي حسب وجود الأكاديمية (Onboarding Guard)
+  // 3. التوجيه الذكي للأكاديمية (Onboarding)
   const isOnboardingPage = 
     location.pathname.includes('/select-role') || 
     location.pathname.includes('/create-academy') || 
@@ -62,16 +59,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     }
   }
 
-  // 4. 🛡️ التحقق من الصلاحيات والتوجيه التلقائي المباشر لجميع الأدوار
-  const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
-  
-  const isAllowed = 
-    normalizedAllowed.length === 0 || 
-    normalizedAllowed.includes(currentRole) || 
-    currentRole === 'admin' || 
-    currentRole === 'super_admin';
-
-  // خريطة التوجيه الافتراضية لكل دور عند محاولة دخول صفحة غير مخصصة له
+  // 4. خريطة التوجيه الافتراضية لكل دور
   const roleDefaultRoutes = {
     teacher: '/teacher-dashboard',
     student: '/student-dashboard',
@@ -81,15 +69,23 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     super_admin: '/admin-dashboard'
   };
 
-  // إذا حاول المستخدم الوصول لمسار غير مصرح له به، توجيهه تلقائياً للوحته المخصصة
+  // 5. التحقق من الصلاحيات
+  const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
+  const isAllowed = 
+    normalizedAllowed.length === 0 || 
+    normalizedAllowed.includes(currentRole) || 
+    currentRole === 'admin' || 
+    currentRole === 'super_admin';
+
+  // إذا لم يكن مصرحاً له، إعادة توجيه فورية للوحة المخصصة لدوره دون إظهار شاشة الحظر
   if (!isAllowed) {
-    const targetRoute = roleDefaultRoutes[currentRole];
-    if (targetRoute && location.pathname !== targetRoute) {
+    const targetRoute = roleDefaultRoutes[currentRole] || '/dashboard';
+    if (location.pathname !== targetRoute) {
       return <Navigate to={targetRoute} replace />;
     }
   }
 
-  // 5. التحقق من رابط الأكاديمية (Slug)
+  // 6. التحقق من رابط الأكاديمية (Slug) مع السماح للمعلمين والمديرين بالمرور
   const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
   const isCorrectAcademy = 
     !slug || 
@@ -97,34 +93,15 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     slug === currentSlug || 
     academy?.id === 'default' ||
     currentRole === 'super_admin' || 
-    currentRole === 'admin';
+    currentRole === 'admin' ||
+    currentRole === 'teacher';
 
-  // واجهة الرفض الموحدة لعدم مطابقة الأكاديمية أو المسار
-  if (!isAllowed || !isCorrectAcademy) {
-    return (
-      <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
-        <div className="bg-semantic-dangerBg p-5 rounded-full mb-4 text-semantic-danger">
-          <Lock size={40} />
-        </div>
-        <h2 className="text-xl font-bold mb-2 text-semantic-textPrimary">
-          {getText(t, 'auth.unauthorized_title', 'غير مصرح لك بالوصول لهذه الشاشة')}
-        </h2>
-        <p className="text-semantic-textSecondary text-sm max-w-sm mb-6">
-          {getText(t, 'auth.unauthorized_desc', 'دور حسابك الحالي غير مجاز لاستخدام هذه الصفحة.')}
-        </p>
-        <button
-          onClick={logout}
-          aria-label={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
-          title={getText(t, 'common.logout_return', 'تسجيل الخروج والعودة')}
-          className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-white border-none rounded-lg font-bold cursor-pointer transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-actionPrimary/50"
-        >
-          {getText(t, 'common.logout_return', 'العودة لتسجيل الدخول')}
-        </button>
-      </div>
-    );
+  if (!isCorrectAcademy) {
+    const targetRoute = roleDefaultRoutes[currentRole] || '/dashboard';
+    return <Navigate to={targetRoute} replace />;
   }
 
-  // 6. 🛡️ فحص صلاحية الاشتراك (Subscription Check)
+  // 7. فحص صلاحية الاشتراك (Subscription Check)
   const isSubscriptionPage = location.pathname.includes('/subscription') || location.pathname.includes('/billing');
   const isSuperAdmin = currentRole === 'super_admin';
 
