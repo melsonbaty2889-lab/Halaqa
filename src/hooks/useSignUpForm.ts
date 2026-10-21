@@ -154,6 +154,17 @@ export const useSignUpForm = (
           });
         }
 
+        // 🌟 التعديل هنا: توجيه المستخدم لصفحة تسجيل الدخول بعد 2 ثانية لكي يقرأ الرسالة
+        setTimeout(() => {
+          if (isMounted.current) {
+            if (onSwitchToLogin) {
+              onSwitchToLogin(cleanEmail);
+            } else {
+              navigate('/login', { state: { email: cleanEmail } });
+            }
+          }
+        }, 2500);
+
         if (onSignUpSuccess) {
           onSignUpSuccess();
         }
