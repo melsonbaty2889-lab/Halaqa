@@ -8,7 +8,7 @@ export default function ProfileMenu({
   onToggle = () => {},
   userName = '',
   userEmail = '',
-  userRole = 'admin',
+  userRole = '',
   onLogout,
   onEditProfile,
   activeRtl = true
@@ -40,7 +40,7 @@ export default function ProfileMenu({
         return {
           label: t('roles.parent', 'ولي أمر'),
           icon: HeartHandshake,
-          colorClass: 'bg-[var(--surface-google)] text-[var(--text-sub)] border-[var(--border-input)]'
+          colorClass: 'bg-[var(--surface-input)] text-[var(--text-sub)] border-[var(--border-input)]'
         };
       default:
         return {
