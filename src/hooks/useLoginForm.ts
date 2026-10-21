@@ -234,8 +234,17 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
     } catch (err: unknown) {
       console.error('Login Error Detailed:', err);
       
-      // إظهار الخطأ التقني صريحاً على الشاشة لنكتشف السبب الفعلي فوراً
-      const exactErrorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+      // استخراج تفاصيل الخطأ بدقة تامة لإظهاره على الشاشة
+      let exactErrorMsg = 'Unknown Error';
+      if (err instanceof Error) {
+        exactErrorMsg = err.message || JSON.stringify(err);
+      } else if (typeof err === 'object' && err !== null) {
+        const supabaseErr = err as any;
+        exactErrorMsg = supabaseErr.message || supabaseErr.error_description || supabaseErr.details || JSON.stringify(err);
+      } else {
+        exactErrorMsg = String(err);
+      }
+
       if (isMounted.current) {
         setStatus({
           type: 'error',
