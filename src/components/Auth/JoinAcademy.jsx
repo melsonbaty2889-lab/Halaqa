@@ -24,7 +24,9 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
 
   const handleJoin = async (e) => {
     e.preventDefault();
-    if (!inviteCode.trim()) {
+    const cleanCode = inviteCode.trim();
+
+    if (!cleanCode) {
       const msg = t('join_academy.code_required', 'يرجى إدخال رمز انضمام الأكاديمية');
       setErrorMsg(msg);
       showToast(msg, 'error');
@@ -35,11 +37,11 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
     setErrorMsg('');
 
     try {
-      // 1. البحث عن الأكاديمية بواسطة كود الانضمام أو الـ Slug
+      // 1. البحث عن الأكاديمية بواسطة الـ slug أو الـ id الموجودين في الـ Schema
       const { data: academyData, error: academyError } = await supabase
         .from('academies')
         .select('id, name, slug')
-        .or(`invite_code.eq.${inviteCode.trim()},code.eq.${inviteCode.trim()},slug.eq.${inviteCode.trim()}`)
+        .or(`slug.eq.${cleanCode},id.eq.${cleanCode}`)
         .maybeSingle();
 
       if (academyError || !academyData) {
@@ -73,11 +75,11 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
   };
 
   return (
-    <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
+    <AuthLayout langBtn="{<LanguageSwitcher"/>} subtitle={appSubtitle}>
       <div className="w-full max-w-md mx-auto px-2" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center mb-6 text-center">
           <div className="p-3 bg-semantic-actionPrimary/10 text-semantic-actionPrimary rounded-2xl mb-3">
-            <Building2 size={32} />
+            <Building2 size="{32}"/>
           </div>
           <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight mb-1 text-semantic-textPrimary">
             {t('join_academy.title', 'الانضمام إلى أكاديمية')}
@@ -89,7 +91,7 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
 
         {errorMsg && (
           <div className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs border bg-semantic-dangerBg border-semantic-danger text-semantic-danger">
-            <AlertCircle size={16} className="shrink-0" />
+            <AlertCircle className="shrink-0" size="{16}"/>
             <span>{errorMsg}</span>
           </div>
         )}
@@ -104,14 +106,14 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
                 type="text"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
-                placeholder={t('join_academy.code_placeholder', 'أدخل الكود هنا (مثال: ACAD-1234)')}
+                placeholder={t('join_academy.code_placeholder', 'أدخل رمز الانضمام أو كود الأكاديمية')}
                 className="w-full px-4 py-3 bg-semantic-surfaceInput border border-semantic-borderInput rounded-xl text-xs font-medium text-semantic-textPrimary placeholder:text-semantic-textSecondary/50 focus:outline-none focus:border-semantic-actionPrimary transition-all pe-10"
               />
-              <KeyRound size={18} className="absolute end-3 top-3.5 text-semantic-textSecondary" />
+              <KeyRound className="absolute end-3 top-3.5 text-semantic-textSecondary" size="{18}"/>
             </div>
           </div>
 
-          <PrimaryButton loading={loading} disabled={!inviteCode.trim()}>
+          <PrimaryButton disabled="{!inviteCode.trim()}" loading="{loading}">
             {t('join_academy.submit_btn', 'انضمام الآن')}
           </PrimaryButton>
         </form>
@@ -122,18 +124,13 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
             type="button"
             className="inline-flex items-center gap-2 text-xs font-bold text-semantic-danger hover:underline cursor-pointer bg-transparent border-none"
           >
-            <LogOut size={14} />
+            <LogOut size="{14}"/>
             <span>{t('common.logout', 'تسجيل الخروج')}</span>
           </button>
         </div>
       </div>
 
-      <Toast
-        isOpen={toastState.isOpen}
-        message={toastState.message}
-        type={toastState.type}
-        onClose={hideToast}
-      />
+      <Toast isOpen="{toastState.isOpen}" message="{toastState.message}" onClose="{hideToast}" type="{toastState.type}"/>
     </AuthLayout>
   );
 }
