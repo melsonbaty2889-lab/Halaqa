@@ -17,7 +17,7 @@ export default function Header({
   sidebarOpen, 
   setSidebarOpen, 
   isRtl,
-  userRole = 'admin',
+  userRole,
   onLogout
 }) {
   const { t, i18n } = useTranslation();
@@ -48,12 +48,13 @@ export default function Header({
   // حالة التنبيه المخصص (Toast)
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // بيانات المستخدم المسجل
+  // بيانات المستخدم المسجل والدور
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [currentUserPhone, setCurrentUserPhone] = useState('');
   const [currentUserGender, setCurrentUserGender] = useState('');
+  const [currentUserRole, setCurrentUserRole] = useState(userRole);
 
   // استدعاء هوك الإشعارات الموحد
   const { 
@@ -95,7 +96,7 @@ export default function Header({
     }
   };
 
-  // جلب معلومات المستخدم المسجل حالياً من Supabase Auth
+  // جلب معلومات المستخدم والدور من Supabase Auth والبروفايل
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
@@ -105,9 +106,13 @@ export default function Header({
           setCurrentUserId(user.id);
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, phone, gender')
+            .select('full_name, phone, gender, role')
             .eq('id', user.id)
             .maybeSingle();
+
+          if (profile?.role) {
+            setCurrentUserRole(profile.role);
+          }
 
           let extractedName = '';
           if (profile?.full_name) {
@@ -125,8 +130,8 @@ export default function Header({
 
           if (!extractedName) {
             extractedName = user.user_metadata?.full_name || 
-                            user.user_metadata?.name || 
-                            user.email?.split('@')[0];
+                          user.user_metadata?.name || 
+                          user.email?.split('@')[0];
           }
 
           if (extractedName) {
@@ -390,7 +395,7 @@ export default function Header({
             }}
             userName={currentUserName || activeAcademy?.owner_name || academyName}
             userEmail={currentUserEmail}
-            userRole={userRole}
+            userRole={currentUserRole}
             onLogout={handleLogout}
             onEditProfile={() => setShowEditProfileModal(true)}
             activeRtl={activeRtl}
