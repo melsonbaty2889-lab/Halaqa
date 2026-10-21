@@ -48,6 +48,37 @@ export const useHalaqas = ({
       if (!isValidAcademyId) return [];
 
       try {
+        // 1. التحقق من المستخدم المسجل حالياً ودوره برمجياً
+        const { data: { user } } = await supabase.auth.getUser();
+        let userRole = 'admin';
+        let currentTeacherRecordId: string | null = null;
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile?.role) {
+            userRole = profile.role;
+          }
+
+          // إذا كان المستخدم معلماً، نجلب المعرف المكتوبي له في جدول teachers
+          if (userRole === 'teacher') {
+            const { data: teacherRec } = await supabase
+              .from('teachers')
+              .select('id')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (teacherRec?.id) {
+              currentTeacherRecordId = teacherRec.id;
+            }
+          }
+        }
+
+        // 2. إعداد الاستعلام الأساسي للحلقات
         let query = supabase
           .from('halaqas')
           .select(`
@@ -64,6 +95,11 @@ export const useHalaqas = ({
             )
           `)
           .eq('academy_id', academyId!);
+
+        // 3. فلترة الحلقات الخاصة بالمعلم فقط إذا كان دوره معلماً
+        if (userRole === 'teacher' && currentTeacherRecordId) {
+          query = query.eq('teacher_id', currentTeacherRecordId);
+        }
 
         if (filters.status && filters.status !== 'all') {
           query = query.eq('status', filters.status);
@@ -91,7 +127,7 @@ export const useHalaqas = ({
 
         const halaqaIds = halaqasData.map((h: any) => h.id);
 
-        // جلب الطلاب المرتبطين مباشرة بالحلقات عبر عمود halaqa_id في جدول students
+        // جلب الطلاب المرتبطين بالحلقات المجلوبة عبر عمود halaqa_id في جدول students
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
           .select('id, status, halaqa_id')
