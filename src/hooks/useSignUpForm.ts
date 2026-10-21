@@ -154,7 +154,7 @@ export const useSignUpForm = (
           });
         }
 
-        // 🌟 التعديل هنا: توجيه المستخدم لصفحة تسجيل الدخول بعد 2 ثانية لكي يقرأ الرسالة
+        // التوجيه التلقائي لصفحة تسجيل الدخول بعد قراءة رسالة النجاح
         setTimeout(() => {
           if (isMounted.current) {
             if (onSwitchToLogin) {
@@ -197,7 +197,7 @@ export const useSignUpForm = (
         if (isMounted.current) setLoading(false);
       }
     },
-    [email, password, fullName, validateFormDirectly, onSignUpSuccess, handleExistingUserFlow, t]
+    [email, password, fullName, validateFormDirectly, onSignUpSuccess, handleExistingUserFlow, t, navigate, onSwitchToLogin]
   );
 
   const handleGoogleSignUp = useCallback(async () => {
