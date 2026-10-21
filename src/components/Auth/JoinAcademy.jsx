@@ -37,12 +37,11 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
     setErrorMsg('');
 
     try {
-      // 1. البحث عن الأكاديمية بواسطة الـ slug أو الـ id
-      const { data: academyData, error: academyError } = await supabase
-        .from('academies')
-        .select('id, name, slug')
-        .or(`slug.eq.${cleanCode},id.eq.${cleanCode}`)
-        .maybeSingle();
+      // 1. البحث عن الأكاديمية بواسطة الـ slug أو الـ id عبر دالة RPC
+      const { data: academyList, error: academyError } = await supabase
+        .rpc('get_academy_by_code', { search_code: cleanCode });
+
+      const academyData = academyList && academyList.length > 0 ? academyList[0] : null;
 
       if (academyError || !academyData) {
         throw new Error(t('join_academy.invalid_code', 'رمز الانضمام غير صحيح أو غير موجود، يرجى مراجعة إدارة الأكاديمية'));
