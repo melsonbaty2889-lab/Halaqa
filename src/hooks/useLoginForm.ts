@@ -179,13 +179,14 @@ export function useLoginForm(onLoginSuccess?: OnLoginSuccessCallback) {
 
       if (isMounted.current) setRedirecting(true);
 
-      // 3. إنشاء أو تحديث سجل البروفايل الخاص به وربطه بالأكاديمية
+      // 3. إنشاء أو تحديث سجل البروفايل الخاص به وربطه بالأكاديمية (مع تمرير full_name)
       await supabase
         .from('profiles')
         .upsert({
           id: user.id,
           role: authData.user?.user_metadata?.role || 'teacher',
           academy_id: authData.user?.user_metadata?.academy_id || null,
+          full_name: authData.user?.user_metadata?.full_name || null,
           is_activated: true,
           last_login_at: new Date().toISOString(),
           is_online: true,
