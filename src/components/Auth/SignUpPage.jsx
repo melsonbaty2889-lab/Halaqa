@@ -99,7 +99,7 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
             {t('auth.createNewAccount', 'إنشاء حساب جديد')}
           </h1>
           <p className="text-xs font-medium leading-relaxed m-0 text-semantic-textSecondary">
-            {t('auth.signUpDescription', 'قم بإنشاء حسابك الآن وادعُ طلابك لمتابعة حلقات التحفيظ')}
+            {t('auth.signUpDescription', 'قم بإنشاء حسابك الجديد للبدء في استخدام المنصة')}
           </p>
         </div>
 
@@ -145,8 +145,8 @@ export default function SignUpPage({ onSwitchToLogin, onSignUpSuccess }) {
                   clearFieldError('fullName');
                   setFullName(e.target.value);
                 }}
-                placeholder={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
-                aria-label={t('auth.fullNamePlaceholder', 'الاسم الكامل')}
+                placeholder={t('auth.fullNamePlaceholder', 'الإسم الكامل')}
+                aria-label={t('auth.fullNamePlaceholder', 'الإسم الكامل')}
                 required
                 className={`w-full py-2.5 rounded-xl border text-xs outline-none transition-all min-h-[44px] bg-semantic-surfaceInput text-semantic-textPrimary ${
                   isRtl ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'
