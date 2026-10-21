@@ -58,6 +58,56 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
 
       if (updateError) throw updateError;
 
+      // 3. التحقق أو إنشاء سجل في جدول teachers للمعلم الحالي
+      let { data: existingTeacher } = await supabase
+        .from('teachers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let teacherRecordId = existingTeacher?.id;
+
+      if (!teacherRecordId) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const { data: newTeacher, error: createTeacherErr } = await supabase
+          .from('teachers')
+          .insert({
+            user_id: user.id,
+            academy_id: academyData.id,
+            email: user.email,
+            name: userProfile?.full_name || user.email?.split('@')[0],
+            phone: userProfile?.phone || '',
+            is_active: true
+          })
+          .select('id')
+          .single();
+
+        if (!createTeacherErr && newTeacher) {
+          teacherRecordId = newTeacher.id;
+        }
+      } else {
+        await supabase
+          .from('teachers')
+          .update({ academy_id: academyData.id })
+          .eq('id', teacherRecordId);
+      }
+
+      // 4. ربط المعلم بالأكاديمية في جدول academy_teachers
+      if (teacherRecordId) {
+        await supabase
+          .from('academy_teachers')
+          .upsert({
+            academy_id: academyData.id,
+            teacher_id: teacherRecordId,
+            is_active: true
+          }, { onConflict: 'academy_id,teacher_id' });
+      }
+
       showToast(t('join_academy.success', 'تم الانضمام للأكاديمية بنجاح!'), 'success');
       
       if (onJoinedAcademy) {
