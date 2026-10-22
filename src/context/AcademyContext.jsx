@@ -166,6 +166,7 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
+      // 1. البحث عبر academy_id الموجود في البروفايل
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -187,6 +188,7 @@ export const AcademyProvider = ({ children }) => {
         if (profileAcademy) fetchedList.push(profileAcademy);
       }
 
+      // 2. البحث في جدول المعلمين إذا لم تكن مديراً
       if (fetchedList.length === 0) {
         const { data: teacherList } = await supabase
           .from('academy_teachers')
@@ -200,6 +202,7 @@ export const AcademyProvider = ({ children }) => {
         }
       }
 
+      // 3. البحث عن الأكاديمية عبر owner_id إذا كان المستخدم مدير ولم يربط البروفايل بـ academy_id
       if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -220,6 +223,14 @@ export const AcademyProvider = ({ children }) => {
         if (ownedAcademies && ownedAcademies.length > 0) {
           fetchedList = ownedAcademies;
           detectedRole = 'admin';
+
+          // ✅ حل جذري تلقائي: تحديث حقل academy_id في جدول profiles في قاعدة البيانات لتفادي التعليق في المستقبل
+          if (!activeProfile.academy_id && ownedAcademies[0]?.id) {
+            await supabase
+              .from('profiles')
+              .update({ academy_id: ownedAcademies[0].id })
+              .eq('id', currentUser.id);
+          }
         }
       }
 
@@ -250,7 +261,6 @@ export const AcademyProvider = ({ children }) => {
           localStorage.removeItem('active_academy_id');
           localStorage.removeItem('academy_id');
           
-          // ✅ التعديل: التمييز بين المدير وباقي المستخدمين الجدد بدون أكاديمية
           if (detectedRole === 'admin') {
             setAppState('NO_ACADEMY');
           } else if (['teacher', 'student', 'parent'].includes(detectedRole)) {
