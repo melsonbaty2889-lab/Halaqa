@@ -78,6 +78,14 @@ export default function AcademyCard({
               <h3 className="m-0 text-semantic-textPrimary font-bold text-sm truncate">
                 {academyName}
               </h3>
+              
+              {/* ⚠️ تنبيه بصري في حال كانت الأكاديمية بدون مالك */}
+              {!academy?.owner_id && (
+                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0">
+                  بدون مالك
+                </span>
+              )}
+
               {academy?.is_active ? (
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0">
                   نشط
@@ -89,9 +97,28 @@ export default function AcademyCard({
               )}
             </div>
             
-            <p className="m-0 text-[11px] text-semantic-textSecondary mt-0.5 truncate">
-              <span className="text-semantic-textMuted">المالك:</span> {ownerName}
-            </p>
+            <div className="flex items-center justify-between mt-0.5">
+              <p className="m-0 text-[11px] text-semantic-textSecondary truncate">
+                <span className="text-semantic-textMuted">المالك:</span> {ownerName}
+              </p>
+
+              {/* زرار سريع لتعيين مالك لو الأكاديمية بدون مالك */}
+              {!academy?.owner_id && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof onOpenPhoneModal === 'function') {
+                      onOpenPhoneModal(academy);
+                    }
+                  }}
+                  className="text-[10px] bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30 px-2 py-0.5 rounded transition-colors cursor-pointer mr-2 shrink-0"
+                >
+                  تعيين مالك
+                </button>
+              )}
+            </div>
+
             {complexName && (
               <p className="m-0 text-[11px] text-semantic-textMuted mt-0.5 truncate">
                 <span>المجمع:</span> {complexName}
