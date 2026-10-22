@@ -224,12 +224,19 @@ export const AcademyProvider = ({ children }) => {
           fetchedList = ownedAcademies;
           detectedRole = 'admin';
 
-          // ✅ حل جذري تلقائي: تحديث حقل academy_id في جدول profiles في قاعدة البيانات لتفادي التعليق في المستقبل
+          // ✅ التحديث الفوري في القاعدة وفي الذاكرة المحلية لكي تفتح الشاشة فوراً دون الحاجة لتحديث الصفحة
           if (!activeProfile.academy_id && ownedAcademies[0]?.id) {
+            const newAcademyId = ownedAcademies[0].id;
+            
             await supabase
               .from('profiles')
-              .update({ academy_id: ownedAcademies[0].id })
+              .update({ academy_id: newAcademyId })
               .eq('id', currentUser.id);
+
+            activeProfile.academy_id = newAcademyId;
+            if (isMounted.current) {
+              setProfile({ ...activeProfile });
+            }
           }
         }
       }
