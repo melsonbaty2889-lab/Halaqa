@@ -71,10 +71,11 @@ export default function Settings({
   const importInputRef = useRef(null);
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية متضمنة أسماء الأكاديمية للغات الست
+  // حالة البيانات الأساسية متضمنة أسماء الأكاديمية وكود الإحالة
   const [formData, setFormData] = useState({
     name: { ar: '', en: '', tr: '', fr: '', ur: '', id: '' },
     slug: '',
+    my_referral_code: '',
     description: '',
     logo_url: '',
     currency: currentCurrency || 'EGP',
@@ -141,6 +142,7 @@ export default function Settings({
             ...data,
             name: parsedName,
             slug: data.slug || `academy-${academyId.slice(0, 8)}`,
+            my_referral_code: data.my_referral_code || '',
             description: data.description || '',
             logo_url: data.logo_url || '',
             currency: data.currency || currentCurrency || 'EGP',
