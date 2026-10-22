@@ -687,6 +687,8 @@
     "nameEn": "Academy Name (English)",
     "nameEnPlaceholder": "Enter academy name in English...",
     "nameEnPrimary": "Academy Name (English)",
+    "referralCode": "",
+    "referralHint": "",
     "slugHint": "slugHint",
     "slugLabel": "slugLabel",
     "uploadBtn": "uploadBtn"
