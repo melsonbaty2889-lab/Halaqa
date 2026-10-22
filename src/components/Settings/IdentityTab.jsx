@@ -1,5 +1,7 @@
-import React from 'react';
-import { Upload, Trash2, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+// src/components/Settings/IdentityTab.jsx
+
+import React, { useState } from 'react';
+import { Upload, Trash2, Image as ImageIcon, Link as LinkIcon, Copy, Check, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function IdentityTab({ 
@@ -12,6 +14,7 @@ export default function IdentityTab({
   fileInputRef 
 }) {
   const { t, i18n } = useTranslation();
+  const [copied, setCopied] = useState(false);
 
   const isRtl = i18n.dir() === 'rtl' || i18n.language === 'ar';
 
@@ -32,6 +35,14 @@ export default function IdentityTab({
       fileInputRef.current.value = '';
       fileInputRef.current.click();
     }
+  };
+
+  const handleCopyReferral = () => {
+    const code = formData?.my_referral_code;
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getArabicName = () => {
@@ -99,7 +110,7 @@ export default function IdentityTab({
         </div>
       </div>
 
-      {/* 2. قسم البيانات الأساسية (الاسم والـ Slug والوصف) */}
+      {/* 2. قسم البيانات الأساسية (الاسم والـ Slug والوصف وكود الإحالة) */}
       <div className="bg-semantic-surfaceCard border border-semantic-borderCard rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* الحقل الأساسي (حسب لغة الواجهة الحالية) */}
@@ -168,6 +179,41 @@ export default function IdentityTab({
             {t('identity.slugHint', isRtl 
               ? 'يستخدم هذا المعرّف في روابط التسجيل والصفحات الخاصة بالأكاديمية (أحرف إنجليزية وشُرط فقط).' 
               : 'Used in registration links and unique URLs (lowercase letters, numbers, and hyphens only).')}
+          </p>
+        </div>
+
+        {/* كود الإحالة الخاص بالأكاديمية (Read-only + Copy) */}
+        <div>
+          <label className="block text-xs font-bold mb-1.5 text-semantic-textPrimary">
+            {t('identity.referralCode', isRtl ? 'كود الإحالة الخاص بالأكاديمية' : 'Academy Referral Code')}
+          </label>
+          <div className="flex items-center gap-2 dir-ltr">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-semantic-textSecondary select-none">
+                <Share2 size={13} />
+              </span>
+              <input 
+                type="text" 
+                readOnly
+                value={formData?.my_referral_code || ''} 
+                placeholder="ACAD-XXXXXX"
+                className="w-full bg-semantic-surfaceInput/60 border border-semantic-borderInput rounded-xl py-2.5 pr-3.5 pl-8 text-xs font-mono font-bold text-semantic-actionPrimary outline-none text-start cursor-not-allowed select-all" 
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyReferral}
+              disabled={!formData?.my_referral_code}
+              className="bg-semantic-surfaceInput hover:bg-semantic-surfaceInput/80 text-semantic-textPrimary border border-semantic-borderInput text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer font-bold transition-all shrink-0 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {copied ? <Check size={14} className="text-semantic-success" /> : <Copy size={14} />}
+              <span>{copied ? (isRtl ? 'تم النسخ' : 'Copied') : (isRtl ? 'نسخ' : 'Copy')}</span>
+            </button>
+          </div>
+          <p className="text-[10px] text-semantic-textSecondary mt-1">
+            {t('identity.referralHint', isRtl 
+              ? 'كود ثابت وغير قابل للتعديل يُستخدم في التسويق ودعوة الأكاديميات الأخرى.' 
+              : 'Immutable unique code used for marketing and academy invitations.')}
           </p>
         </div>
 
