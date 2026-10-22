@@ -1,4 +1,6 @@
-import React from 'react';
+// src/components/Settings/AcademyCard.jsx
+
+import React, { useState } from 'react';
 import { ExternalLink, MessageCircle, PlusCircle, Check } from 'lucide-react';
 
 export default function AcademyCard({
@@ -14,7 +16,7 @@ export default function AcademyCard({
   processingId,
   getSafeText
 }) {
-  const isSelected = Array.isArray(selectedAcademyIds) && selectedAcademyIds.includes(academy.id);
+  const isSelected = Array.isArray(selectedAcademyIds) && selectedAcademyIds.includes(academy?.id);
 
   const resolveSafeText = (val, defaultVal = '') => {
     if (typeof getSafeText === 'function') {
@@ -52,6 +54,8 @@ export default function AcademyCard({
     e.preventDefault();
     e.stopPropagation();
     
+    if (!academy?.id) return; // حماية إضافية ضد البيانات الفارغة
+
     if (typeof onSelectAcademy === 'function') {
       onSelectAcademy(academy);
     }
@@ -130,7 +134,7 @@ export default function AcademyCard({
         {/* Checkbox */}
         <button
           type="button"
-          onClick={() => typeof onToggleSelect === 'function' && onToggleSelect(academy.id)}
+          onClick={() => academy?.id && typeof onToggleSelect === 'function' && onToggleSelect(academy.id)}
           className={`w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5 ${
             isSelected 
               ? 'bg-sky-500 border-sky-500 text-white' 
@@ -209,7 +213,7 @@ export default function AcademyCard({
 
           <button
             type="button"
-            onClick={() => typeof onStatusToggle === 'function' && onStatusToggle(academy.id, academy.is_active)}
+            onClick={() => academy?.id && typeof onStatusToggle === 'function' && onStatusToggle(academy.id, academy.is_active)}
             disabled={processingId === academy.id}
             className={`flex-1 py-1.5 px-1 text-[11px] font-bold border rounded-lg cursor-pointer transition-colors text-center truncate ${
               academy?.is_active 
