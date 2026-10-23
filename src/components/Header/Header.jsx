@@ -26,16 +26,22 @@ export default function Header({
   const isAr = currentLanguage.startsWith('ar');
   const activeRtl = isRtl !== undefined ? isRtl : isAr;
 
-  // جلب بيانات الأكاديمية المسجلة حالياً من Context
-  const { academy, currentAcademy } = useAcademy();
+  // جلب بيانات الأكاديمية المسجلة حالياً مع حماية كاملة ضد القيم الفارغة
+  const academyContext = useAcademy() || {};
+  const { academy = null, currentAcademy = null } = academyContext;
   const activeAcademy = academy || currentAcademy;
   const academyId = activeAcademy?.id || null;
 
-  // استخراج اسم الأكاديمية من قاعدة البيانات
+  // استخراج اسم الأكاديمية بأمان تام
   const academyName = useMemo(() => {
     if (!activeAcademy) return t('app.name', 'Smart Halaqa Pro');
-    if (typeof activeAcademy.name === 'object') {
-      return activeAcademy.name[currentLanguage] || activeAcademy.name.ar || activeAcademy.name.en || '';
+    if (typeof activeAcademy.name === 'object' && activeAcademy.name !== null) {
+      return (
+        activeAcademy.name[currentLanguage] || 
+        activeAcademy.name.ar || 
+        activeAcademy.name.en || 
+        t('app.name', 'Smart Halaqa Pro')
+      );
     }
     return activeAcademy.name || t('app.name', 'Smart Halaqa Pro');
   }, [activeAcademy, currentLanguage, t]);
@@ -43,7 +49,7 @@ export default function Header({
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   
   // حالة التنبيه المخصص (Toast)
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -56,23 +62,34 @@ export default function Header({
   const [currentUserGender, setCurrentUserGender] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState(userRole);
 
-  // استدعاء هوك الإشعارات الموحد
+  // استدعاء هوك الإشعارات الموحد بأمان
   const { 
-    notifications: rawNotifications, 
-    unreadCount, 
-    loading: loadingNotifs, 
+    notifications: rawNotifications = [], 
+    unreadCount = 0, 
+    loading: loadingNotifs = false, 
     markAsRead, 
     markAllAsRead, 
-    formatText 
-  } = useNotifications(currentUserId, academyId);
+    formatText = (text) => text 
+  } = useNotifications(currentUserId, academyId) || {};
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const showToastMessage = useCallback((message, type = 'success') => {
+    if (!isMountedRef.current) return;
     setToast({ show: true, message, type });
     setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' });
+      if (isMountedRef.current) {
+        setToast({ show: false, message: '', type: 'success' });
+      }
     }, 4000);
   }, []);
 
@@ -96,13 +113,15 @@ export default function Header({
     }
   };
 
-  // جلب معلومات المستخدم والدور من Supabase Auth والبروفايل
+  // جلب معلومات المستخدم والدور من Supabase Auth والبروفايل مع معالجة آمنة
   useEffect(() => {
+    let isSubscribed = true;
+
     const fetchCurrentUser = async () => {
       if (!supabase?.auth) return;
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+        if (user && isSubscribed) {
           setCurrentUserId(user.id);
           const { data: profile } = await supabase
             .from('profiles')
@@ -110,13 +129,13 @@ export default function Header({
             .eq('id', user.id)
             .maybeSingle();
 
-          if (profile?.role) {
+          if (profile?.role && isSubscribed) {
             setCurrentUserRole(profile.role);
           }
 
           let extractedName = '';
           if (profile?.full_name) {
-            if (typeof profile.full_name === 'object') {
+            if (typeof profile.full_name === 'object' && profile.full_name !== null) {
               extractedName = profile.full_name[currentLanguage] || profile.full_name.ar || profile.full_name.en || '';
             } else if (typeof profile.full_name === 'string') {
               try {
@@ -128,23 +147,18 @@ export default function Header({
             }
           }
 
-          if (!extractedName) {
+          if (!extractedName && isSubscribed) {
             extractedName = user.user_metadata?.full_name || 
                           user.user_metadata?.name || 
                           user.email?.split('@')[0];
           }
 
-          if (extractedName) {
-            setCurrentUserName(extractedName);
+          if (isSubscribed) {
+            if (extractedName) setCurrentUserName(extractedName);
+            if (user.email) setCurrentUserEmail(user.email);
+            setCurrentUserPhone(profile?.phone || user.user_metadata?.phone || '');
+            setCurrentUserGender(profile?.gender || user.user_metadata?.gender || '');
           }
-          if (user.email) {
-            setCurrentUserEmail(user.email);
-          }
-          const userPhone = profile?.phone || user.user_metadata?.phone || '';
-          setCurrentUserPhone(userPhone);
-
-          const userGender = profile?.gender || user.user_metadata?.gender || '';
-          setCurrentUserGender(userGender);
         }
       } catch (err) {
         console.error('Error fetching current user:', err);
@@ -152,6 +166,10 @@ export default function Header({
     };
 
     fetchCurrentUser();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [currentLanguage]);
 
   // تحديث البروفايل
@@ -207,16 +225,13 @@ export default function Header({
     }
 
     if (name || phone !== undefined || gender !== undefined) {
-      const { error: metaError } = await supabase.auth.updateUser({
+      await supabase.auth.updateUser({
         data: {
           ...(name && { full_name: name, name: name }),
           ...(phone !== undefined && { phone: phone }),
           ...(gender !== undefined && { gender: gender })
         }
       });
-      if (metaError) {
-        console.error('Meta update error:', metaError);
-      }
     }
 
     const profileUpdateData = {
@@ -232,7 +247,7 @@ export default function Header({
 
       let currentFullNameObj = {};
       if (existingProfile?.full_name) {
-        if (typeof existingProfile.full_name === 'object') {
+        if (typeof existingProfile.full_name === 'object' && existingProfile.full_name !== null) {
           currentFullNameObj = { ...existingProfile.full_name };
         } else if (typeof existingProfile.full_name === 'string') {
           try {
@@ -295,33 +310,37 @@ export default function Header({
   }, []);
 
   const formattedNotifications = useMemo(() => {
+    if (!Array.isArray(rawNotifications)) return [];
     return rawNotifications.map((item) => ({
       ...item,
-      title: formatText(item.title),
-      message: formatText(item.message),
-      category: item.notification_type || 'info'
+      title: formatText(item?.title),
+      message: formatText(item?.message),
+      category: item?.notification_type || 'info'
     }));
   }, [rawNotifications, formatText]);
 
   const handleNotificationClick = async (notif) => {
-    if (!notif.is_read) {
+    if (!notif?.is_read && notif?.id && typeof markAsRead === 'function') {
       await markAsRead(notif.id);
     }
     
-    if (notif.action_url) {
+    if (notif?.action_url) {
       navigate(notif.action_url);
     }
     setShowNotifMenu(false);
   };
 
   const handleClearAll = async () => {
-    await markAllAsRead();
+    if (typeof markAllAsRead === 'function') {
+      await markAllAsRead();
+    }
     setShowNotifMenu(false);
   };
 
   const formatTime = useCallback((dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleTimeString(currentLanguage, {
       hour: '2-digit',
       minute: '2-digit'
@@ -331,7 +350,7 @@ export default function Header({
   const handleToggleSidebar = () => {
     setShowNotifMenu(false);
     setShowProfileMenu(false);
-    if (setSidebarOpen) {
+    if (typeof setSidebarOpen === 'function') {
       setSidebarOpen(!sidebarOpen);
     }
   };
@@ -341,7 +360,7 @@ export default function Header({
       className="sticky top-0 z-50 min-h-[56px] px-3.5 py-2.5 bg-[var(--surface-card)] border-b border-[var(--border-card)] flex items-center justify-between gap-2.5 shadow-xl w-full transition-all" 
       dir={activeRtl ? 'rtl' : 'ltr'}
     >
-      {/* القسم الأيمن: زر القائمة واسم الأكاديمية المسجل من داتابيز */}
+      {/* القسم الأيمن: زر القائمة واسم الأكاديمية */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <button
           type="button"
@@ -356,14 +375,14 @@ export default function Header({
           <h1 className="m-0 text-xs sm:text-sm font-extrabold text-[var(--text-main)] truncate leading-tight select-none">
             {academyName}
           </h1>
-          <span className="text-[10px] text-[var(--text-sub)] font-medium flex items-center gap-1.5 hidden sm:flex">
+          <span className="text-[10px] text-[var(--text-sub)] font-medium hidden sm:flex items-center gap-1.5">
             <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[var(--emerald-text)] shadow-[0_0_6px_var(--emerald-text)]' : 'bg-[var(--error)]'}`} />
             {isOnline ? t('header.onlineSync', 'متصل بالمزامنة') : t('header.offline', 'غير متصل')}
           </span>
         </div>
       </div>
 
-      {/* القسم الأيسر: الإشعارات والبروفايل فقط */}
+      {/* القسم الأيسر: الإشعارات والبروفايل */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         
         {/* زر قائمة الإشعارات */}
