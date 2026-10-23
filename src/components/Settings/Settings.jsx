@@ -22,7 +22,6 @@ const generateSmartSlug = (names, rawSlug, currentId) => {
     if (cleanedCustom) return cleanedCustom;
   }
 
-  // البحث عن أول اسم بلغة نصية إنكليزية أو لاتينية
   const candidateName = names?.en || names?.tr || names?.fr || names?.id || names?.ar || names?.ur;
 
   if (candidateName && candidateName.trim() !== '') {
@@ -35,12 +34,12 @@ const generateSmartSlug = (names, rawSlug, currentId) => {
     if (cleaned) return cleaned;
   }
 
-  const shortId = currentId ? currentId.slice(0, 8) : Math.random().toString(36).substring(2, 8);
+  const shortId = currentId ? String(currentId).slice(0, 8) : Math.random().toString(36).substring(2, 8);
   return `academy-${shortId}`;
 };
 
 export default function Settings({
-  academyId,
+  academyId: propAcademyId,
   session,
   currentCurrency,
   currentTimezone,
@@ -50,10 +49,16 @@ export default function Settings({
   onAcademyUpdate
 }) {
   const { t, i18n } = useTranslation();
-  const { updateAcademyState } = useAcademy();
+  
+  // استخراج الـ Context مع حماية كاملة ضد القيم الفارغة
+  const academyContext = useAcademy() || {};
+  const { academy, currentAcademy, updateAcademyState } = academyContext;
+  
+  // تحديد معرف الأكاديمية النهائي بأمان بدون أي كراش
+  const activeAcademy = academy || currentAcademy || {};
+  const targetAcademyId = propAcademyId || activeAcademy?.id || null;
 
-  // دعم لغات الـ RTL: العربية (ar) والأردو (ur)
-  const currentLang = i18n.language || 'ar';
+  const currentLang = i18n?.language || 'ar';
   const rtlLanguages = ['ar', 'ur'];
   const isRtl = rtlLanguages.some(lang => currentLang.startsWith(lang));
 
@@ -99,15 +104,15 @@ export default function Settings({
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // جلب البيانات من قاعدة البيانات
+  // جلب البيانات من قاعدة البيانات بأمان
   useEffect(() => {
     async function loadAcademySettings() {
-      if (!academyId) return;
+      if (!targetAcademyId) return;
       try {
         const { data, error } = await supabase
           .from('academies')
           .select('*')
-          .eq('id', academyId)
+          .eq('id', targetAcademyId)
           .maybeSingle();
 
         if (error) throw error;
@@ -141,7 +146,7 @@ export default function Settings({
           const loaded = {
             ...data,
             name: parsedName,
-            slug: data.slug || `academy-${academyId.slice(0, 8)}`,
+            slug: data.slug || `academy-${String(targetAcademyId).slice(0, 8)}`,
             my_referral_code: data.my_referral_code || '',
             description: data.description || '',
             logo_url: data.logo_url || '',
@@ -172,7 +177,7 @@ export default function Settings({
     }
 
     loadAcademySettings();
-  }, [academyId, currentCurrency, currentTimezone, currentCountryCode]);
+  }, [targetAcademyId, currentCurrency, currentTimezone, currentCountryCode]);
 
   // تحديث الحقول
   const updateField = (field, value) => {
@@ -202,7 +207,7 @@ export default function Settings({
       
       let newSlug = prev.slug;
       if (!prev.slug || prev.slug.startsWith('academy-')) {
-        newSlug = generateSmartSlug(updatedName, '', academyId);
+        newSlug = generateSmartSlug(updatedName, '', targetAcademyId);
       }
 
       const updated = { ...prev, name: updatedName, slug: newSlug };
@@ -218,14 +223,14 @@ export default function Settings({
   // رفع الشعار
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !academyId) return;
+    if (!file || !targetAcademyId) return;
 
     try {
       setUploadingLogo(true);
 
       const { data: existingFiles } = await supabase.storage
         .from('avatars')
-        .list('logos', { search: `logo-${academyId}` });
+        .list('logos', { search: `logo-${targetAcademyId}` });
 
       if (existingFiles && existingFiles.length > 0) {
         const filesToRemove = existingFiles.map(f => `logos/${f.name}`);
@@ -233,7 +238,7 @@ export default function Settings({
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${academyId}-${Date.now()}.${fileExt}`;
+      const fileName = `logo-${targetAcademyId}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -251,7 +256,7 @@ export default function Settings({
       const { error: dbError } = await supabase
         .from('academies')
         .update({ logo_url: newLogoUrl })
-        .eq('id', academyId);
+        .eq('id', targetAcademyId);
 
       if (dbError) throw dbError;
 
@@ -259,11 +264,11 @@ export default function Settings({
       setInitialData(prev => ({ ...prev, logo_url: newLogoUrl }));
 
       if (typeof updateAcademyState === 'function') {
-        updateAcademyState({ id: academyId, logo_url: newLogoUrl });
+        updateAcademyState({ id: targetAcademyId, logo_url: newLogoUrl });
       }
 
       if (typeof onAcademyUpdate === 'function') {
-        onAcademyUpdate({ id: academyId, logo_url: newLogoUrl });
+        onAcademyUpdate({ id: targetAcademyId, logo_url: newLogoUrl });
       }
 
       showToast(t('settings.logoUploadSuccess'), 'success');
@@ -278,12 +283,12 @@ export default function Settings({
 
   // حذف الشعار
   const handleRemoveLogo = async () => {
-    if (!academyId) return;
+    if (!targetAcademyId) return;
 
     try {
       const { data: existingFiles } = await supabase.storage
         .from('avatars')
-        .list('logos', { search: `logo-${academyId}` });
+        .list('logos', { search: `logo-${targetAcademyId}` });
 
       if (existingFiles && existingFiles.length > 0) {
         const filesToRemove = existingFiles.map(f => `logos/${f.name}`);
@@ -293,13 +298,13 @@ export default function Settings({
       await supabase
         .from('academies')
         .update({ logo_url: null })
-        .eq('id', academyId);
+        .eq('id', targetAcademyId);
 
       setFormData(prev => ({ ...prev, logo_url: '' }));
       setInitialData(prev => ({ ...prev, logo_url: '' }));
 
       if (typeof updateAcademyState === 'function') {
-        updateAcademyState({ id: academyId, logo_url: null });
+        updateAcademyState({ id: targetAcademyId, logo_url: null });
       }
 
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -314,9 +319,9 @@ export default function Settings({
   // حفظ التغييرات
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!academyId) return;
+    if (!targetAcademyId) return;
 
-    const hasAnyName = Object.values(formData.name || {}).some(n => n && n.trim() !== '');
+    const hasAnyName = Object.values(formData.name || {}).some(n => n && typeof n === 'string' && n.trim() !== '');
 
     if (!hasAnyName) {
       showToast(t('settings.nameRequired'), 'error');
@@ -326,7 +331,7 @@ export default function Settings({
     try {
       setSaving(true);
 
-      const cleanSlug = generateSmartSlug(formData.name, formData.slug, academyId);
+      const cleanSlug = generateSmartSlug(formData.name, formData.slug, targetAcademyId);
 
       const updatePayload = {
         name: formData.name,
@@ -352,7 +357,7 @@ export default function Settings({
       const { error } = await supabase
         .from('academies')
         .update(updatePayload)
-        .eq('id', academyId);
+        .eq('id', targetAcademyId);
 
       if (error) throw error;
 
@@ -364,11 +369,11 @@ export default function Settings({
       showToast(t('settings.saveSuccess'), 'success');
 
       if (typeof updateAcademyState === 'function') {
-        updateAcademyState({ ...updatePayload, id: academyId });
+        updateAcademyState({ ...updatePayload, id: targetAcademyId });
       }
 
       if (typeof onAcademyUpdate === 'function') {
-        onAcademyUpdate({ ...updatePayload, id: academyId });
+        onAcademyUpdate({ ...updatePayload, id: targetAcademyId });
       }
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -387,16 +392,15 @@ export default function Settings({
     setIsDirty(false);
   };
 
-  // التبويبات بالترجمة المباشرة
   const steps = [
     {
       id: 'general',
-      label: t('settings.generalStep'),
+      label: t('settings.generalStep', 'المعلومات العامة'),
       icon: Building
     },
     {
       id: 'system',
-      label: t('settings.systemStep'),
+      label: t('settings.systemStep', 'إعدادات النظام'),
       icon: ShieldCheck
     },
   ];
@@ -483,7 +487,7 @@ export default function Settings({
             }`}
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            <span>{saving ? t('common.saving') : t('common.save')}</span>
+            <span>{saving ? t('common.saving', 'جاري الحفظ...') : t('common.save', 'حفظ')}</span>
           </button>
 
           <div className="min-h-[38px] flex items-center">
@@ -494,7 +498,7 @@ export default function Settings({
                 className="bg-semantic-surfaceInput hover:bg-semantic-surfaceInput/80 text-semantic-textSecondary hover:text-semantic-textPrimary border border-semantic-borderInput text-xs px-4 py-2.5 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl font-medium transition-all animate-in fade-in"
               >
                 <RotateCcw size={14} />
-                <span>{t('common.discard')}</span>
+                <span>{t('common.discard', 'إلغاء التغييرات')}</span>
               </button>
             )}
           </div>
