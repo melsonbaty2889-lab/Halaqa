@@ -11,6 +11,60 @@ const getTodayDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
+/**
+ * جلب جلسة اليوم للحلقة أو إنشاء واحدة جديدة تلقائياً مع دعم نوع الجلسة والمعلم
+ */
+export const getOrCreateSession = async ({ academyId, halaqaId, teacherId, sessionType = 'standard', sessionNotes = null }) => {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // 1️⃣ البحث عن جلسة من نفس النوع لنفس الحلقة اليوم
+  const { data: existingSession, error: fetchError } = await supabase
+    .from('attendance_sessions')
+    .select('*')
+    .eq('academy_id', academyId)
+    .eq('halaqa_id', halaqaId)
+    .eq('session_type', sessionType)
+    .gte('session_date', startOfDay.toISOString())
+    .lte('session_date', endOfDay.toISOString())
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error("🚨 Error fetching session:", fetchError.message);
+    throw fetchError;
+  }
+
+  if (existingSession) {
+    return existingSession;
+  }
+
+  // 2️⃣ لو الجلسة مش موجودة، يتم إنشاء جلسة جديدة
+  const { data: newSession, error: insertError } = await supabase
+    .from('attendance_sessions')
+    .insert([
+      {
+        academy_id: academyId,
+        halaqa_id: halaqaId,
+        teacher_id: teacherId || null,
+        session_date: new Date().toISOString(),
+        session_type: sessionType,
+        session_notes: sessionNotes,
+      }
+    ])
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error("🚨 Error creating session:", insertError.message);
+    throw insertError;
+  }
+
+  return newSession;
+};
+
 export const fetchAttendance = async (academyId, date) => {
   if (!academyId || !date) return [];
 
@@ -219,4 +273,5 @@ export const sessionService = {
   upsertAttendance,
   saveDailySession,
   saveStudentExam,
+  getOrCreateSession,
 };
