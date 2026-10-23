@@ -1,5 +1,5 @@
 /* src/context/AcademyContext.jsx */
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
@@ -38,7 +38,13 @@ export const AcademyProvider = ({ children }) => {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [academy, setAcademy] = useState(null);
+  
+  // 🛡️ قراءة سريعة من الـ LocalStorage لمنع تأخر المعرف أثناء الريفرش
+  const cachedAcademyId = typeof window !== 'undefined' 
+    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null)
+    : null;
+
+  const [academy, setAcademy] = useState(() => cachedAcademyId ? { id: cachedAcademyId } : null);
   const [academiesList, setAcademiesList] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [appState, setAppState] = useState('LOADING');
@@ -81,10 +87,10 @@ export const AcademyProvider = ({ children }) => {
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
       if (!targetAcademy) return '';
-      const currentLang = i18n.language || 'ar';
+      const currentLang = i18n?.language || 'ar';
       return extractAcademyName(targetAcademy.name || targetAcademy.title, currentLang);
     },
-    [academy, i18n.language]
+    [academy, i18n?.language]
   );
 
   const clearAuthState = useCallback(() => {
@@ -146,7 +152,6 @@ export const AcademyProvider = ({ children }) => {
       let targetAcademy = null;
       let detectedRole = activeProfile.role;
 
-      // 1. البحث عبر academy_id في البروفايل
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
@@ -157,7 +162,6 @@ export const AcademyProvider = ({ children }) => {
         if (profileAcademy) targetAcademy = profileAcademy;
       }
 
-      // 2. البحث عبر owner_id لو المالك ومدير
       if (!targetAcademy && activeProfile.role === 'admin') {
         const { data: ownedAcademies } = await supabase
           .from('academies')
@@ -334,43 +338,57 @@ export const AcademyProvider = ({ children }) => {
     }
   };
 
+  // 🛡️ استخراج معرّف الأكاديمية الصريح بحماية كاملة
+  const resolvedAcademyId = academy?.id || profile?.academy_id || cachedAcademyId || null;
+
+  const contextValue = useMemo(() => ({
+    user,
+    profile,
+    academy,
+    academiesList,
+    userRole,
+    appState,
+    academyId: resolvedAcademyId,       // 👈 إتاحة camelCase
+    academyid: resolvedAcademyId,       // 👈 إتاحة lowercase لمنع أي خطأ أملائي
+    activeAcademyId: resolvedAcademyId,
+    setAcademy: (newAcademy) => {
+      if (newAcademy?.id) {
+        localStorage.setItem('active_academy_id', newAcademy.id);
+        localStorage.setItem('academy_id', newAcademy.id);
+      }
+      setAcademy(newAcademy);
+    },
+    updateAcademyState,
+    getAcademyName,
+    logout,
+    refreshStatus
+  }), [user, profile, academy, academiesList, userRole, appState, resolvedAcademyId, updateAcademyState, getAcademyName, logout, refreshStatus]);
+
   return (
-    <AcademyContext.Provider
-      value={{
-        user,
-        profile,
-        academy,
-        academiesList,
-        userRole,
-        appState,
-        setAcademy: (newAcademy) => {
-          if (newAcademy?.id) {
-            localStorage.setItem('active_academy_id', newAcademy.id);
-            localStorage.setItem('academy_id', newAcademy.id);
-          }
-          setAcademy(newAcademy);
-        },
-        updateAcademyState,
-        getAcademyName,
-        logout,
-        refreshStatus
-      }}
-    >
+    <AcademyContext.Provider value={contextValue}>
       {children}
     </AcademyContext.Provider>
   );
 };
 
+// 🛡️ هانئ ومحصن 100% يمنع أي كراش حتى لو استدعي خارج الـ Provider أو أثناء الإقلاع
 export const useAcademy = () => {
   const context = useContext(AcademyContext);
+  const fallbackId = typeof window !== 'undefined' 
+    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null) 
+    : null;
+
   if (!context) {
     return {
       user: null,
       profile: null,
-      academy: null,
+      academy: fallbackId ? { id: fallbackId } : null,
       academiesList: [],
       userRole: null,
       appState: 'LOADING',
+      academyId: fallbackId,
+      academyid: fallbackId,
+      activeAcademyId: fallbackId,
       setAcademy: () => {},
       updateAcademyState: () => {},
       getAcademyName: () => '',
