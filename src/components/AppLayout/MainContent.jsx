@@ -235,24 +235,20 @@ export default function MainContent() {
             </ProtectedRoute>
           )}
 
-          {/* شاشة إنشاء الأكاديمية (تظهر فقط إذا كانت الحالة قطعاً NO_ACADEMY ولا توجد أكاديمية محملة) */}
-          {appState === 'NO_ACADEMY' && !academy && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
-            !profile?.academy_id && cachedSlug ? (
-              <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
-            ) : (
-              <CreateAcademy 
-                onLogout={logout} 
-                onSubmitAcademy={async (createdAcademyData) => {
-                  if (createdAcademyData?.slug) {
-                    localStorage.setItem('current_academy_slug', createdAcademyData.slug);
-                  }
-                  if (refreshStatus) await refreshStatus();
-                }} 
-              />
-            )
+          {/* 1. شاشة إنشاء الأكاديمية (لا تظهر أبدًا إلا إذا لم توجد أي أكاديمية محملة وكانت الحالة قطعاً NO_ACADEMY) */}
+          {appState === 'NO_ACADEMY' && !academy && !profile?.academy_id && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
+            <CreateAcademy 
+              onLogout={logout} 
+              onSubmitAcademy={async (createdAcademyData) => {
+                if (createdAcademyData?.slug) {
+                  localStorage.setItem('current_academy_slug', createdAcademyData.slug);
+                }
+                if (refreshStatus) await refreshStatus();
+              }} 
+            />
           )}
 
-          {/* شاشة الانضمام لأكاديمية (للمعلم/الطالب/ولي الأمر بدون أكاديمية) */}
+          {/* شاشة الانضمام لأكاديمية */}
           {appState === 'JOIN_ACADEMY' && !isNeedsRoleSelection && (
             <JoinAcademy 
               onLogout={logout} 
@@ -262,8 +258,8 @@ export default function MainContent() {
             />
           )}
 
-          {/* التطبيق الأساسي (يفتح طالما appState مفعّل وتوجد بيانات أكاديمية أو academy_id) */}
-          {appState === 'FULLY_ACTIVE' && (academy || profile?.academy_id) && !isNeedsRoleSelection && (
+          {/* 2. التطبيق الأساسي (الداشبورد) - يفتح فوراً متى وجدت الأكاديمية أو البروفايل */}
+          {(appState === 'FULLY_ACTIVE' || academy || profile?.academy_id) && appState !== 'NO_ACADEMY' && !isNeedsRoleSelection && (
             <Routes>
               <Route 
                 path="/select-role" 
