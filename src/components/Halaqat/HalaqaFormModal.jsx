@@ -9,6 +9,7 @@ import { Input, Select, CustomTimePicker } from '@/components/UI';
 import { getTrackOptions, getTargetAudienceOptions, getHalaqaTypeOptions } from './HalaqaConstants';
 import { isStartTimeBeforeEndTime } from '@/utils/dateUtils';
 import { getDaysOptions, normalizeDayValue } from '@/constants/days';
+import { useAcademy } from '@/context/AcademyContext';
 
 export default function HalaqaFormModal({ 
   isOpen,
@@ -24,17 +25,23 @@ export default function HalaqaFormModal({
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
   const isRtl = ['ar', 'ur'].includes(currentLang);
+
+  // جلب الأكاديمية الحالية من Context كمرجع رئيسي آمن
+  const academyContext = useAcademy() || {};
+  const { academy, currentAcademy } = academyContext;
+  const activeAcademy = academy || currentAcademy;
   
   const [timeError, setTimeError] = useState('');
   const [loading, setLoading] = useState(false);
-  const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
   const daysOptions = getDaysOptions(t);
 
   const getStoredAcademyId = () => {
     try {
-      const activeAcademy = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
-      if (activeAcademy) return activeAcademy;
+      if (activeAcademy?.id) return activeAcademy.id;
+
+      const activeAcademyId = localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id');
+      if (activeAcademyId) return activeAcademyId;
 
       const userSession = localStorage.getItem('supabase.auth.token') || localStorage.getItem('sb-access-token');
       if (userSession) {
@@ -83,7 +90,7 @@ export default function HalaqaFormModal({
     }));
   };
 
-  // 1️⃣ استخدام دالة التوحيد المعيارية لإدارة أيام الانعقاد ومنع التكرار والتناقض
+  // إدارة أيام الانعقاد بأسلوب معيارى يمنع التكرار
   const toggleDay = (dayValue) => {
     const normalizedTarget = normalizeDayValue(dayValue);
     setFormData((prev) => {
@@ -139,9 +146,9 @@ export default function HalaqaFormModal({
   const audienceOptions = getTargetAudienceOptions(t).filter((o) => o.value !== 'all');
   const typeOptions = getHalaqaTypeOptions(t);
 
-  const teacherSelectOptions = teachers.map((tch) => ({
-    value: tch.id || tch.teacher_id,
-    label: tch.name || tch.full_name || tch.email || t('unnamedTeacher', 'معلم بدون اسم')
+  const teacherSelectOptions = (Array.isArray(teachers) ? teachers : []).map((tch) => ({
+    value: tch?.id || tch?.teacher_id,
+    label: tch?.name || tch?.full_name || tch?.email || t('unnamedTeacher', 'معلم بدون اسم')
   }));
 
   const onSubmitForm = async (e) => {
@@ -174,7 +181,6 @@ export default function HalaqaFormModal({
       ? { ...formData.name, [currentLang]: rawName, ar: rawName }
       : { [currentLang]: rawName, ar: rawName };
 
-    // تنقية وتوحيد أيام الانعقاد بالصيغة المعيارية ومنع أي تكرار نهائياً
     const cleanDays = Array.from(
       new Set((Array.isArray(formData?.days_of_week) ? formData.days_of_week : []).map(normalizeDayValue))
     ).filter(Boolean);
@@ -215,7 +221,6 @@ export default function HalaqaFormModal({
 
   const isModalVisible = Boolean(isOpen || open);
   
-  // توحيد الأيام المحددة حالياً لتتطابق بسلاسة مع أزرار المودال
   const selectedDays = Array.from(
     new Set((Array.isArray(formData?.days_of_week) ? formData.days_of_week : []).map(normalizeDayValue))
   ).filter(Boolean);
