@@ -163,7 +163,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
   const currentLang = i18n?.language || 'ar';
 
-  const { academy, academiesList, setAcademy } = useAcademy();
+  const academyContext = useAcademy() || {};
+  const { academy = null, academiesList = [], setAcademy = () => {} } = academyContext;
   const isMobile = useIsMobile(1024);
 
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
@@ -279,7 +280,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
     isFetchingRef.current = true;
     
-    // 💡 التعديل هنا: لا تقم بإظهار شاشة التحميل الكاملة إلا إذا لم تكن البيانات محملة من قبل
     if (!fetchedAcademyIdRef.current) {
       setLoadingData(true);
     }
@@ -530,7 +530,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
           />
         ) : <InteractiveQuran isRtl={isRtl} countryCode={countryCode} />;
         
-                  case 'students':
+      case 'students':
       case 'student-profile':
       case 'students-management':
         return isTeacher ? (
@@ -632,7 +632,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
             avatar: session?.user?.user_metadata?.avatar_url || ""
           }}
         />
-                <main 
+        <main 
           className={`flex-1 w-full max-w-7xl mx-auto box-border overflow-y-auto ${
             isMobile ? 'px-3 sm:px-5 py-3 pb-20' : 'px-4 sm:px-6 py-4 pb-6'
           }`}
