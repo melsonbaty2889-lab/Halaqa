@@ -1,3 +1,5 @@
+/* src/components/AppLayout/MainContent.jsx */
+
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Loader2, Clock, LogOut, AlertTriangle, RefreshCw, ShieldAlert } from 'lucide-react';
@@ -72,10 +74,10 @@ export default function MainContent() {
   }, []);
 
   useEffect(() => {
-    if ((appState === 'NO_ACADEMY' || appState === 'JOIN_ACADEMY' || appState === 'FULLY_ACTIVE') && cachedSlug && profile?.academy_id) {
+    if ((appState === 'NO_ACADEMY' || appState === 'JOIN_ACADEMY' || appState === 'FULLY_ACTIVE') && cachedSlug && !academy?.id) {
       refreshStatus?.();
     }
-  }, [appState, cachedSlug, profile?.academy_id, refreshStatus]);
+  }, [appState, cachedSlug, academy?.id, refreshStatus]);
 
   const handleManualRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -233,8 +235,8 @@ export default function MainContent() {
             </ProtectedRoute>
           )}
 
-          {/* شاشة إنشاء الأكاديمية (للمدير الذي لا يملك أكاديمية) */}
-          {(appState === 'NO_ACADEMY' || (appState === 'FULLY_ACTIVE' && !profile?.academy_id && activeRole === 'admin')) && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
+          {/* شاشة إنشاء الأكاديمية (تظهر فقط إذا كانت الحالة قطعاً NO_ACADEMY ولا توجد أكاديمية محملة) */}
+          {appState === 'NO_ACADEMY' && !academy && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
             !profile?.academy_id && cachedSlug ? (
               <FullPageLoader label={getText(t, 'academy.syncing', 'جاري مزامنة بيانات الأكاديمية...')} />
             ) : (
@@ -250,7 +252,7 @@ export default function MainContent() {
             )
           )}
 
-          {/* 🌟 شاشة الانضمام لأكاديمية (للمعلم/الطالب/ولي الأمر بدون أكاديمية) */}
+          {/* شاشة الانضمام لأكاديمية (للمعلم/الطالب/ولي الأمر بدون أكاديمية) */}
           {appState === 'JOIN_ACADEMY' && !isNeedsRoleSelection && (
             <JoinAcademy 
               onLogout={logout} 
@@ -260,7 +262,8 @@ export default function MainContent() {
             />
           )}
 
-          {appState === 'FULLY_ACTIVE' && profile?.academy_id && !isNeedsRoleSelection && (
+          {/* التطبيق الأساسي (يفتح طالما appState مفعّل وتوجد بيانات أكاديمية أو academy_id) */}
+          {appState === 'FULLY_ACTIVE' && (academy || profile?.academy_id) && !isNeedsRoleSelection && (
             <Routes>
               <Route 
                 path="/select-role" 
@@ -321,7 +324,7 @@ export default function MainContent() {
             </Routes>
           )}
 
-          {/* التأكد من إضافة JOIN_ACADEMY ضمن الحالات المعروفة لمنع ظهور رسالة الخطأ */}
+          {/* معالجة الحالات غير المعرفة */}
           {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'JOIN_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
             <div className="bg-transparent min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
               <AlertTriangle size={40} className="text-semantic-danger mb-4" />
