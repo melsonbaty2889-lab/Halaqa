@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getOrCreateSession } from '@/lib/sessionService';
 
 // ── Constants ───────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ export interface Halaqa {
   id: string;
   name?: string | Record<string, string>;
   educational_track?: string;
+  teacher_id?: string;
+  track?: string;
   [key: string]: any;
 }
 
@@ -59,6 +62,7 @@ export interface AttendanceRecordPayload {
   student_id: string;
   academy_id: string;
   halaqa_id: string;
+  session_id: string | null;
   date: string;
   status: AttendanceStatus;
   notes: string | null;
@@ -274,7 +278,7 @@ export function useAttendance({
     });
   }, [filteredStudents, translateText]);
 
-  // 🔥 الحفظ المجمع في Supabase
+  // 🔥 الحفظ المجمع مع ربط session_id تلقائياً
   const handleSaveAttendance = async () => {
     if (!academyId) {
       setMessage({ text: translateText('errorLoading', 'حدث خطأ في معرف الأكاديمية'), type: 'error' });
@@ -290,8 +294,22 @@ export function useAttendance({
     setMessage({ text: '', type: '' });
 
     const fallbackHalaqaId = halaqas && halaqas.length > 0 ? halaqas[0].id : null;
+    const activeHalaqaId = selectedHalaqaId || fallbackHalaqaId;
 
     try {
+      // 1️⃣ جلب أو إنشاء رأس الجلسة للحصول على session_id
+      let sessionId: string | null = null;
+      if (activeHalaqaId) {
+        const activeHalaqa = halaqas.find((h) => String(h.id) === String(activeHalaqaId));
+        const session = await getOrCreateSession({
+          academyId,
+          halaqaId: activeHalaqaId,
+          teacherId: activeHalaqa?.teacher_id || null,
+          sessionType: activeHalaqa?.track || activeHalaqa?.educational_track || 'standard',
+        });
+        sessionId = session?.id || null;
+      }
+
       const attendanceRecords: AttendanceRecordPayload[] = [];
 
       for (const student of filteredStudents) {
@@ -314,6 +332,7 @@ export function useAttendance({
           student_id: student.id,
           academy_id: academyId,
           halaqa_id: targetHalaqaId,
+          session_id: sessionId, // 👈 الربط مع رأس الجلسة
           date: selectedDate,
           status: currentRecord?.status || 'present',
           notes: (currentRecord?.notes || '').trim() || null,
@@ -330,10 +349,10 @@ export function useAttendance({
         return;
       }
 
-      // 🎯 التصحيح المحوري: الحفظ بحسب المفتاح الفريد لـ Supabase (student_id, date)
+      // 2️⃣ الحفظ المجمع في Supabase مع الـ session_id
       const { error } = await supabase
         .from('attendance')
-        .upsert(attendanceRecords, { onConflict: 'student_id,halaqa_id,date' });
+        .upsert(attendanceRecords, { onConflict: 'student_id,date' });
 
       if (error) throw error;
 
