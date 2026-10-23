@@ -103,11 +103,23 @@ export const saveDailySession = async ({
   teacherId,
   attendanceStatus,
   attendanceNotes,
-  hifzData,        
+  hifzData,
+  sessionType = 'standard',
 }) => {
   try {
     const today = getTodayDateString();
 
+    // 1️⃣ أولاً: جلب أو إنشاء الجلسة للحصول على session_id
+    const session = await getOrCreateSession({
+      academyId,
+      halaqaId,
+      teacherId,
+      sessionType,
+    });
+
+    const sessionId = session?.id || null;
+
+    // 2️⃣ ثانياً: حفظ الحضور والغياب مع ربطه بـ session_id
     const { error: attendanceError } = await supabase
       .from('attendance')
       .upsert(
@@ -115,6 +127,7 @@ export const saveDailySession = async ({
           student_id: studentId,
           academy_id: academyId,
           halaqa_id: halaqaId || null,
+          session_id: sessionId,
           date: today,
           status: attendanceStatus,
           notes: attendanceNotes || null,
@@ -185,7 +198,7 @@ export const saveDailySession = async ({
       });
     }
 
-    return { success: true, error: null };
+    return { success: true, error: null, sessionId };
   } catch (error) {
     console.error('🚨 Error saving daily session:', error.message);
     return { success: false, error: error.message };
