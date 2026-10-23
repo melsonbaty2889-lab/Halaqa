@@ -3,13 +3,24 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { supabase } from '@/lib/supabase';
 import { useAcademy } from '@/context/AcademyContext.jsx'; 
 
-const DataContext = createContext({});
+const DataContext = createContext({
+  halaqas: [],
+  students: [],
+  teachers: [],
+  loadingData: false,
+  refreshHalaqas: () => {},
+  refreshStudents: () => {},
+  refreshTeachers: () => {},
+  refreshAllData: () => {}
+});
 
 // مفاتيح التخزين المحلي للـ Caching
 const getCacheKey = (academyId, key) => `halaqa_cache_${academyId}_${key}`;
 
 export const DataProvider = ({ children }) => {
-  const { academy, appState } = useAcademy();
+  const academyContext = useAcademy() || {};
+  const { academy, appState } = academyContext;
+  
   const [halaqas, setHalaqas] = useState([]);
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -73,11 +84,10 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
-  // 3. جلب المدرسين النشطين وحفظهم في الكاش (معدل وآمن تماماً بدون profiles)
+  // 3. جلب المدرسين النشطين وحفظهم في الكاش
   const fetchTeachers = useCallback(async (academyId) => {
     if (!academyId) return;
     try {
-      // أ) جلب المعرفات الخاصة بالمعلمين المرتبطين بالأكاديمية
       const { data: relations, error: relError } = await supabase
         .from('academy_teachers')
         .select('teacher_id, is_active')
@@ -94,7 +104,6 @@ export const DataProvider = ({ children }) => {
         return;
       }
 
-      // ب) جلب بيانات المعلمين من جدول teachers مباشرة
       const { data: teachersData, error: teachersError } = await supabase
         .from('teachers')
         .select('*')
@@ -113,12 +122,13 @@ export const DataProvider = ({ children }) => {
 
   // 4. دالة تحديث شاملة لجميع البيانات
   const refreshAllData = useCallback(async () => {
-    if (!academy?.id) return;
+    const targetId = academy?.id || localStorage.getItem('active_academy_id');
+    if (!targetId) return;
     setLoadingData(true);
     await Promise.all([
-      fetchHalaqas(academy.id),
-      fetchStudents(academy.id),
-      fetchTeachers(academy.id)
+      fetchHalaqas(targetId),
+      fetchStudents(targetId),
+      fetchTeachers(targetId)
     ]);
     setLoadingData(false);
   }, [academy?.id, fetchHalaqas, fetchStudents, fetchTeachers]);
@@ -126,22 +136,20 @@ export const DataProvider = ({ children }) => {
   // مراقبة حالة التطبيق واستعراض الكاش فوراً ثم جلب البيانات الحديثة
   useEffect(() => {
     let isMounted = true;
+    const targetId = academy?.id || localStorage.getItem('active_academy_id');
 
-    if (appState === 'FULLY_ACTIVE' && academy?.id) {
-      // أ) قراءة الكاش المحلي أولاً للسرعة اللحظية
-      loadCachedData(academy.id);
+    if ((appState === 'FULLY_ACTIVE' || targetId) && targetId) {
+      loadCachedData(targetId);
 
-      // ب) إطلاق التحديث في الخلفية من Supabase
       setLoadingData(true);
       Promise.all([
-        fetchHalaqas(academy.id),
-        fetchStudents(academy.id),
-        fetchTeachers(academy.id)
+        fetchHalaqas(targetId),
+        fetchStudents(targetId),
+        fetchTeachers(targetId)
       ]).finally(() => {
         if (isMounted) setLoadingData(false);
       });
     } else {
-      // تفريغ البيانات والـ Cache للحفاظ على خصوصية الحسابات
       setHalaqas([]);
       setStudents([]);
       setTeachers([]);
@@ -159,9 +167,9 @@ export const DataProvider = ({ children }) => {
       students,
       teachers,
       loadingData,
-      refreshHalaqas: () => academy?.id && fetchHalaqas(academy.id),
-      refreshStudents: () => academy?.id && fetchStudents(academy.id),
-      refreshTeachers: () => academy?.id && fetchTeachers(academy.id),
+      refreshHalaqas: () => (academy?.id || localStorage.getItem('active_academy_id')) && fetchHalaqas(academy?.id || localStorage.getItem('active_academy_id')),
+      refreshStudents: () => (academy?.id || localStorage.getItem('active_academy_id')) && fetchStudents(academy?.id || localStorage.getItem('active_academy_id')),
+      refreshTeachers: () => (academy?.id || localStorage.getItem('active_academy_id')) && fetchTeachers(academy?.id || localStorage.getItem('active_academy_id')),
       refreshAllData
     }}>
       {children}
@@ -169,4 +177,17 @@ export const DataProvider = ({ children }) => {
   );
 };
 
-export const useData = () => useContext(DataContext);
+// 🛡️ حماية نهائية لهوك useData لمنع الكراش تماماً لو تم استدعاؤه خارج الـ Provider
+export const useData = () => {
+  const context = useContext(DataContext);
+  return context || {
+    halaqas: [],
+    students: [],
+    teachers: [],
+    loadingData: false,
+    refreshHalaqas: () => {},
+    refreshStudents: () => {},
+    refreshTeachers: () => {},
+    refreshAllData: () => {}
+  };
+};
