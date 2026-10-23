@@ -166,22 +166,11 @@ export const AcademyProvider = ({ children }) => {
       let currentAcademy = null;
       let detectedRole = activeProfile.role;
 
-      // 1. البحث عبر academy_id الموجود في البروفايل
+      // 1. البحث عبر academy_id الموجود في البروفايل (بشكل آمن ومستقر)
       if (activeProfile.academy_id) {
         const { data: profileAcademy } = await supabase
           .from('academies')
-          .select(`
-            *,
-            saas_subscriptions (
-              id,
-              plan_tier,
-              status,
-              trial_ends_at,
-              expires_at,
-              price,
-              currency
-            )
-          `)
+          .select('*')
           .eq('id', activeProfile.academy_id)
           .maybeSingle();
 
@@ -206,27 +195,17 @@ export const AcademyProvider = ({ children }) => {
       if (fetchedList.length === 0) {
         const { data: ownedAcademies } = await supabase
           .from('academies')
-          .select(`
-            *,
-            saas_subscriptions (
-              id,
-              plan_tier,
-              status,
-              trial_ends_at,
-              expires_at,
-              price,
-              currency
-            )
-          `)
+          .select('*')
           .eq('owner_id', currentUser.id);
 
         if (ownedAcademies && ownedAcademies.length > 0) {
           fetchedList = ownedAcademies;
           detectedRole = 'admin';
 
-          // ✅ التحديث الفوري في القاعدة وفي الذاكرة المحلية لكي تفتح الشاشة فوراً دون الحاجة لتحديث الصفحة
-          if (!activeProfile.academy_id && ownedAcademies[0]?.id) {
-            const newAcademyId = ownedAcademies[0].id;
+          // ✅ التحديث الفوري في القاعدة وفي الذاكرة المحلية لفتح الشاشة فوراً
+          const targetAcademy = ownedAcademies[0];
+          if (!activeProfile.academy_id && targetAcademy?.id) {
+            const newAcademyId = targetAcademy.id;
             
             await supabase
               .from('profiles')
