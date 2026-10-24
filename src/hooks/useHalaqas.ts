@@ -15,7 +15,7 @@ export interface UseHalaqasOptions {
 export const useHalaqas = (optionsOrAcademyId?: UseHalaqasOptions | string | null) => {
   const queryClient = useQueryClient();
 
-  // 🛡️ دعم مرن ومتوافق: سواء تم تمرير معرف نصي مباشر أو كائن خيارات (Options Object)
+  // 🛡️ معالجة مرنة للمدخلات: التعرف على ما إذا كان المدخل نصاً مباشراً أم كائن خيارات
   const propAcademyId = 
     typeof optionsOrAcademyId === 'string' || optionsOrAcademyId === null 
       ? optionsOrAcademyId 
@@ -31,7 +31,7 @@ export const useHalaqas = (optionsOrAcademyId?: UseHalaqasOptions | string | nul
       ? (optionsOrAcademyId as UseHalaqasOptions)?.enabled ?? true 
       : true;
 
-  // 🛡️ جلب الـ academyId تلقائياً مع تصفية القيم الوهمية والفارغة
+  // 🛡️ استخراج معرّف الأكاديمية واستبعاد القيم غير الصالحة
   const getResolvedAcademyId = () => {
     if (propAcademyId && propAcademyId !== 'undefined' && propAcademyId !== 'null' && propAcademyId !== 'temp_no_academy') {
       return propAcademyId;
