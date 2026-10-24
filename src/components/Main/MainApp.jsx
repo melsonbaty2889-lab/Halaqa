@@ -167,6 +167,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy = null, academiesList = [], setAcademy = () => {} } = academyContext;
   const isMobile = useIsMobile(1024);
 
+  // 🛡️ استخراج معرّف الأكاديمية مع دعم التخزين المؤقت لمنع الـ null لحظة الإقلاع
   const cachedAcademyId = typeof window !== 'undefined' 
     ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id')) 
     : null;
@@ -174,8 +175,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || cachedAcademyId || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  const safeAcademyId = academyId && academyId !== 'null' && academyId !== 'undefined' ? academyId : null;
-  const halaqasHook = useHalaqas(safeAcademyId) || {};
+  // 🛡️ استدعاء الهوك بالتوقيع الصحيح (كائن خيارات) مع قيم افتراضية آمنة
+  const halaqasHook = useHalaqas({ academyId }) || {};
   const { 
     createHalaqa = async () => ({ success: false }), 
     updateHalaqa = async () => ({ success: false }), 
@@ -334,8 +335,8 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       if (academy.country_code) setCountryCode(academy.country_code);
     }
 
-    // 🛡️ صمام أمان لإيقاف حالة التحميل تلقائياً بعد 1.5 ثانية إذا تأخر جلب البيانات
-    const timer = setTimeout(() => {
+    // 🛡️ صمام أمان لإلغاء حالة التحميل بعد 1.5 ثانية كحد أقصى لمنع تعليق الشاشة
+    const safetyTimer = setTimeout(() => {
       setLoadingData(false);
     }, 1500);
 
@@ -345,7 +346,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       setLoadingData(false);
     }
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(safetyTimer);
   }, [academyId, academy?.currency, academy?.timezone, academy?.country_code, fetchSubResources]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
