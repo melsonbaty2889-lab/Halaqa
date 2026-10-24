@@ -175,8 +175,9 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || cachedAcademyId || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  // 🛡️ استدعاء الهوك مع قيم افتراضية آمنة تمنع الانهيار تماماً لو تأخرت الاستجابة
-  const halaqasHook = useHalaqas(academyId) || {};
+  // 🛡️ استدعاء الهوك مع قيمة safeAcademyId لمنع الكراش الداخلي والقيم الافتراضية الآمنة
+  const safeAcademyId = academyId && academyId !== 'null' && academyId !== 'undefined' ? academyId : null;
+  const halaqasHook = useHalaqas(safeAcademyId) || {};
   const { 
     createHalaqa = async () => ({ success: false }), 
     updateHalaqa = async () => ({ success: false }), 
@@ -363,6 +364,18 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       return { success: false, error: error.message };
     }
   }, []);
+
+  // 🛡️ حراسة إقلاع حاسمة: إذا كانت الجلسة موجودة ولكن معرف الأكاديمية لم يكتمل تحميله بعد، نعرض شاشة التحميل
+  if (session && !academyId && !isPlatformAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark-bg p-4" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-brandEmerald border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-sm font-semibold text-appText-sub">جاري تهيئة بيئة الأكاديمية...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!loadingData && !isPlatformAdmin && isAcademyActive === false) {
     return (
