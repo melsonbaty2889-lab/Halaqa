@@ -12,16 +12,28 @@ export interface UseHalaqasOptions {
   enabled?: boolean;
 }
 
-export const useHalaqas = ({
-  academyId: propAcademyId,
-  initialFilters,
-  enabled = true,
-}: UseHalaqasOptions = {}) => {
+export const useHalaqas = (optionsOrAcademyId?: UseHalaqasOptions | string | null) => {
   const queryClient = useQueryClient();
 
-  // 🛡️ حل جذري: جلب الـ academyId تلقائياً من الـ LocalStorage لو البروب وصل فارغاً أثناء الـ Refresh
+  // 🛡️ دعم مرن ومتوافق: سواء تم تمرير معرف نصي مباشر أو كائن خيارات (Options Object)
+  const propAcademyId = 
+    typeof optionsOrAcademyId === 'string' || optionsOrAcademyId === null 
+      ? optionsOrAcademyId 
+      : (optionsOrAcademyId as UseHalaqasOptions)?.academyId;
+      
+  const initialFilters = 
+    typeof optionsOrAcademyId === 'object' && optionsOrAcademyId !== null 
+      ? (optionsOrAcademyId as UseHalaqasOptions)?.initialFilters 
+      : undefined;
+      
+  const enabled = 
+    typeof optionsOrAcademyId === 'object' && optionsOrAcademyId !== null 
+      ? (optionsOrAcademyId as UseHalaqasOptions)?.enabled ?? true 
+      : true;
+
+  // 🛡️ جلب الـ academyId تلقائياً مع تصفية القيم الوهمية والفارغة
   const getResolvedAcademyId = () => {
-    if (propAcademyId && propAcademyId !== 'undefined' && propAcademyId !== 'null') {
+    if (propAcademyId && propAcademyId !== 'undefined' && propAcademyId !== 'null' && propAcademyId !== 'temp_no_academy') {
       return propAcademyId;
     }
     if (typeof window !== 'undefined') {
@@ -340,7 +352,7 @@ export const useHalaqas = ({
     toggleArchiveHalaqa,
     isCreating: createHalaqaMutation.isPending,
     isUpdating: updateHalaqaMutation.isPending,
-    academyId, // 👈 تم إضافتها لمنع أي خطأ destructuring نهائياً
+    academyId,
   };
 };
 
