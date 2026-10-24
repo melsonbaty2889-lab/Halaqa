@@ -50,13 +50,16 @@ export default function Settings({
 }) {
   const { t, i18n } = useTranslation();
   
-  // استخراج الـ Context مع حماية كاملة ضد القيم الفارغة
+  // 🛡️ استخراج الـ Context مع حماية كاملة واسترجاع احتياطي فوراً من الـ LocalStorage
   const academyContext = useAcademy() || {};
-  const { academy, currentAcademy, updateAcademyState } = academyContext;
+  const { academy, currentAcademy, academyId: contextAcademyId, updateAcademyState } = academyContext;
   
-  // تحديد معرف الأكاديمية النهائي بأمان بدون أي كراش
+  const cachedAcademyId = typeof window !== 'undefined' 
+    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id')) 
+    : null;
+
   const activeAcademy = academy || currentAcademy || {};
-  const targetAcademyId = propAcademyId || activeAcademy?.id || null;
+  const targetAcademyId = propAcademyId || contextAcademyId || activeAcademy?.id || cachedAcademyId || null;
 
   const currentLang = i18n?.language || 'ar';
   const rtlLanguages = ['ar', 'ur'];
@@ -76,7 +79,7 @@ export default function Settings({
   const importInputRef = useRef(null);
   const isDirtyRef = useRef(false);
 
-  // حالة البيانات الأساسية متضمنة أسماء الأكاديمية وكود الإحالة
+  // حالة البيانات الأساسية مع تحصين القيم
   const [formData, setFormData] = useState({
     name: { ar: '', en: '', tr: '', fr: '', ur: '', id: '' },
     slug: '',
@@ -101,14 +104,23 @@ export default function Settings({
 
   const [initialData, setInitialData] = useState({});
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   // جلب البيانات من قاعدة البيانات بأمان
   useEffect(() => {
+    let isSubscribed = true;
+
     async function loadAcademySettings() {
-      if (!targetAcademyId) return;
+      if (!targetAcademyId) {
+        if (isSubscribed) setLoadingData(false);
+        return;
+      }
+
       try {
+        if (isSubscribed) setLoadingData(true);
+
         const { data, error } = await supabase
           .from('academies')
           .select('*')
@@ -117,7 +129,7 @@ export default function Settings({
 
         if (error) throw error;
 
-        if (data) {
+        if (data && isSubscribed) {
           let parsedName = { ar: '', en: '', tr: '', fr: '', ur: '', id: '' };
           
           if (typeof data.name === 'object' && data.name !== null) {
@@ -137,11 +149,16 @@ export default function Settings({
             }
           }
 
-          const loadedWeekendDays = Array.isArray(data.weekend_days)
-            ? data.weekend_days
-            : (typeof data.weekend_days === 'string'
-                ? JSON.parse(data.weekend_days)
-                : ['friday', 'saturday']);
+          let loadedWeekendDays = ['friday', 'saturday'];
+          if (Array.isArray(data.weekend_days)) {
+            loadedWeekendDays = data.weekend_days;
+          } else if (typeof data.weekend_days === 'string') {
+            try {
+              loadedWeekendDays = JSON.parse(data.weekend_days);
+            } catch {
+              loadedWeekendDays = ['friday', 'saturday'];
+            }
+          }
 
           const loaded = {
             ...data,
@@ -173,10 +190,16 @@ export default function Settings({
         }
       } catch (err) {
         console.error('Error fetching academy settings:', err);
+      } finally {
+        if (isSubscribed) setLoadingData(false);
       }
     }
 
     loadAcademySettings();
+
+    return () => {
+      isSubscribed = false;
+    };
   }, [targetAcademyId, currentCurrency, currentTimezone, currentCountryCode]);
 
   // تحديث الحقول
@@ -203,7 +226,8 @@ export default function Settings({
   // تحديث الاسم بأي لغة مدعومة
   const handleNameChange = (lang, value) => {
     setFormData((prev) => {
-      const updatedName = { ...prev.name, [lang]: value };
+      const currentName = prev.name || {};
+      const updatedName = { ...currentName, [lang]: value };
       
       let newSlug = prev.slug;
       if (!prev.slug || prev.slug.startsWith('academy-')) {
@@ -271,10 +295,10 @@ export default function Settings({
         onAcademyUpdate({ id: targetAcademyId, logo_url: newLogoUrl });
       }
 
-      showToast(t('settings.logoUploadSuccess'), 'success');
+      showToast(t('settings.logoUploadSuccess', 'تم رفع الشعار بنجاح'), 'success');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      showToast(t('settings.logoUploadError'), 'error');
+      showToast(t('settings.logoUploadError', 'تعذر رفع الشعار'), 'error');
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -309,10 +333,10 @@ export default function Settings({
 
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      showToast(t('settings.logoRemoveSuccess'), 'success');
+      showToast(t('settings.logoRemoveSuccess', 'تم حذف الشعار بنجاح'), 'success');
     } catch (error) {
       console.error('Error removing logo:', error);
-      showToast(t('settings.logoRemoveError'), 'error');
+      showToast(t('settings.logoRemoveError', 'تعذر حذف الشعار'), 'error');
     }
   };
 
@@ -324,7 +348,7 @@ export default function Settings({
     const hasAnyName = Object.values(formData.name || {}).some(n => n && typeof n === 'string' && n.trim() !== '');
 
     if (!hasAnyName) {
-      showToast(t('settings.nameRequired'), 'error');
+      showToast(t('settings.nameRequired', 'اسم الأكاديمية مطلوب'), 'error');
       return;
     }
 
@@ -366,7 +390,7 @@ export default function Settings({
       isDirtyRef.current = false;
       setIsDirty(false);
 
-      showToast(t('settings.saveSuccess'), 'success');
+      showToast(t('settings.saveSuccess', 'تم حفظ الإعدادات بنجاح'), 'success');
 
       if (typeof updateAcademyState === 'function') {
         updateAcademyState({ ...updatePayload, id: targetAcademyId });
@@ -377,7 +401,7 @@ export default function Settings({
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(t('settings.saveError'), 'error');
+      showToast(t('settings.saveError', 'حدث خطأ أثناء الحفظ'), 'error');
     } finally {
       setSaving(false);
     }
@@ -404,6 +428,15 @@ export default function Settings({
       icon: ShieldCheck
     },
   ];
+
+  if (loadingData && !formData.slug) {
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-3 text-semantic-textMuted">
+        <Loader2 className="animate-spin text-semantic-actionPrimary" size={32} />
+        <span className="text-xs font-semibold">{t('common.loading', 'جاري تحميل الإعدادات...')}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 text-start px-2 sm:px-4 text-semantic-textPrimary" dir={isRtl ? 'rtl' : 'ltr'}>
