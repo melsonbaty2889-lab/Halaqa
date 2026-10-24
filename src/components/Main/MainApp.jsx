@@ -167,10 +167,23 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy = null, academiesList = [], setAcademy = () => {} } = academyContext;
   const isMobile = useIsMobile(1024);
 
-  const academyId = academy?.id || session?.user?.user_metadata?.academy_id || null;
+  // 🛡️ استخراج معرّف الأكاديمية مع دعم التخزين المؤقت لمنع الـ null لحظة الإقلاع
+  const cachedAcademyId = typeof window !== 'undefined' 
+    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id')) 
+    : null;
+
+  const academyId = academy?.id || session?.user?.user_metadata?.academy_id || cachedAcademyId || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  const { createHalaqa, updateHalaqa, toggleArchiveHalaqa, filters, setFilters } = useHalaqas(academyId);
+  // 🛡️ استدعاء الهوك مع قيم افتراضية آمنة تمنع الانهيار تماماً لو تأخرت الاستجابة
+  const halaqasHook = useHalaqas(academyId) || {};
+  const { 
+    createHalaqa = async () => ({ success: false }), 
+    updateHalaqa = async () => ({ success: false }), 
+    toggleArchiveHalaqa = async () => ({ success: false }), 
+    filters = {}, 
+    setFilters = () => {} 
+  } = halaqasHook;
 
   const getDefaultTabForRole = useCallback((role) => {
     const r = (role || 'admin').toString().toLowerCase().trim();
