@@ -167,7 +167,6 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const { academy = null, academiesList = [], setAcademy = () => {} } = academyContext;
   const isMobile = useIsMobile(1024);
 
-  // 🛡️ استخراج معرّف الأكاديمية مع دعم التخزين المؤقت لمنع الـ null لحظة الإقلاع
   const cachedAcademyId = typeof window !== 'undefined' 
     ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id')) 
     : null;
@@ -175,8 +174,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
   const academyId = academy?.id || session?.user?.user_metadata?.academy_id || cachedAcademyId || null;
   const isAcademyActive = academy?.is_active ?? true;
 
-  // 🛡️ استخدام معرف نصي آمن مؤقت بدلاً من null لمنع انهيار استعلامات الهوك الداخلي أثناء التحميل الأول
-  const safeAcademyId = academyId && academyId !== 'null' && academyId !== 'undefined' ? academyId : 'temp_no_academy';
+  const safeAcademyId = academyId && academyId !== 'null' && academyId !== 'undefined' ? academyId : null;
   const halaqasHook = useHalaqas(safeAcademyId) || {};
   const { 
     createHalaqa = async () => ({ success: false }), 
@@ -289,6 +287,7 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
     }
     if (!forceRefresh) {
       if (fetchedAcademyIdRef.current === targetAcademyId || isFetchingRef.current) {
+        setLoadingData(false);
         return;
       }
     }
@@ -334,11 +333,19 @@ export default function MainApp({ session, userRole, trialDaysLeft, isTrial = tr
       if (academy.timezone) setTimezone(academy.timezone);
       if (academy.country_code) setCountryCode(academy.country_code);
     }
+
+    // 🛡️ صمام أمان لإيقاف حالة التحميل تلقائياً بعد 1.5 ثانية إذا تأخر جلب البيانات
+    const timer = setTimeout(() => {
+      setLoadingData(false);
+    }, 1500);
+
     if (academyId) {
       fetchSubResources(academyId);
     } else {
       setLoadingData(false);
     }
+
+    return () => clearTimeout(timer);
   }, [academyId, academy?.currency, academy?.timezone, academy?.country_code, fetchSubResources]);
 
   const handleSwitchAcademy = useCallback((newAcademyId) => {
