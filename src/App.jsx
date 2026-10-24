@@ -5,13 +5,36 @@ import { C } from '@/theme/colors';
 
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
-import MainContent from '@/components/AppLayout/MainContent';
 
-const TestHooks = lazy(() => import('@/components/TestHooks'));
-const SplashScreen = lazy(() => import('@/components/UI/SplashScreen'));
-const CertificateVerify = lazy(() => import('@/components/Certificates/CertificateVerify'));
-const UpdatePassword = lazy(() => import('@/components/Auth/UpdatePassword'));
-const DevPlayground = lazy(() => {
+// 🛡️ Safe Lazy Loading لضمان عدم تعليق الشاشة الخضراء عند فشل أو تأخر جلب الملفات
+const safeLazy = (importFn) => {
+  return lazy(() =>
+    importFn().catch((error) => {
+      console.error("🚨 Lazy Load Component Error:", error);
+      return { 
+        default: () => (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center text-white space-y-4">
+            <div className="text-appError font-bold text-lg">تعذر تحميل هذا القسم من التطبيق</div>
+            <p className="text-xs text-appText-sub">يرجى التحقق من اتصال الإنترنت أو إعادة تحميل الصفحة.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-brandEmerald text-white rounded-xl text-xs font-bold"
+            >
+              إعادة تحميل الصفحة
+            </button>
+          </div>
+        )
+      };
+    })
+  );
+};
+
+const MainContent = safeLazy(() => import('@/components/AppLayout/MainContent'));
+const TestHooks = safeLazy(() => import('@/components/TestHooks'));
+const SplashScreen = safeLazy(() => import('@/components/UI/SplashScreen'));
+const CertificateVerify = safeLazy(() => import('@/components/Certificates/CertificateVerify'));
+const UpdatePassword = safeLazy(() => import('@/components/Auth/UpdatePassword'));
+const DevPlayground = safeLazy(() => {
   const isDev = import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
   const hasTestParam = typeof window !== 'undefined' && window.location.search.includes('view=test');
 
@@ -94,10 +117,9 @@ const FallbackLoader = () => (
   <div 
     role="status"
     aria-label="جاري التحميل"
-    className="bg-transparent min-h-screen flex items-center justify-center"
-    style={{ color: C.semantic?.actionPrimary || C.amber?.DEFAULT || '#D97706' }}
+    className="bg-transparent min-h-screen flex items-center justify-center text-brandEmerald"
   >
-    <Loader2 className="animate-spin" size={32} />
+    <Loader2 className="animate-spin" size={36} />
   </div>
 );
 
