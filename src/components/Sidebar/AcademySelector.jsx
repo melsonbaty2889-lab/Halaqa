@@ -8,27 +8,28 @@ import { formatGregorianDate } from '@/utils/dateUtils';
 
 export default function AcademySelector({
   academiesList = [],
-  currentAcademy,
-  currentAcademyId,
-  currentAcademyName,
-  academyLogo,
-  dropdownOpen,
-  setDropdownOpen,
-  dropdownRef,
-  statusBadge,
-  effectiveDaysLeft,
-  subscription,
-  onSwitchAcademy,
-  onOpenCreateAcademy,
-  onClose,
-  getText,
+  currentAcademy = null,
+  currentAcademyId = null,
+  currentAcademyName = '',
+  academyLogo = null,
+  dropdownOpen = false,
+  setDropdownOpen = () => {},
+  dropdownRef = null,
+  statusBadge = null,
+  effectiveDaysLeft = 0,
+  subscription = null,
+  onSwitchAcademy = () => {},
+  onOpenCreateAcademy = null,
+  onClose = null,
+  getText = () => '',
   dropDirection = 'down'
 }) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n?.language || 'ar';
-  const isRtl = i18n.dir() === 'rtl';
+  const isRtl = i18n?.dir ? i18n.dir() === 'rtl' : true;
 
   const resolveText = useCallback((textObj) => {
+    if (!textObj) return '';
     if (typeof getText === 'function') {
       const res = getText(textObj);
       if (res) return res;
@@ -46,24 +47,29 @@ export default function AcademySelector({
     return '';
   }, [currentAcademyName, currentAcademy?.name, resolveText]);
 
-  const activeLogo = academyLogo || currentAcademy?.logo_url;
+  const activeLogo = academyLogo || currentAcademy?.logo_url || null;
 
-  const hasMultipleAcademies = academiesList.length > 1;
+  const safeAcademiesList = Array.isArray(academiesList) ? academiesList : [];
+  const hasMultipleAcademies = safeAcademiesList.length > 1;
   const canOpenDropdown = hasMultipleAcademies || Boolean(onOpenCreateAcademy);
 
-  // استخراج تاريخ الانتهاء الصحيح بدون تكرار
+  // 🛡️ استخراج تاريخ الانتهاء الصحيح بأمان تام
   const expiryDate = useMemo(() => {
-    const sub = subscription || currentAcademy?.saas_subscription;
-    if (sub && sub.status === 'active') {
-      return sub.expires_at;
+    const safeSub = subscription || currentAcademy?.saas_subscription || {};
+    if (safeSub && safeSub.status === 'active') {
+      return safeSub.expires_at || null;
     }
-    return sub?.trial_ends_at || currentAcademy?.trial_ends_at || null;
+    return safeSub?.trial_ends_at || currentAcademy?.trial_ends_at || null;
   }, [subscription, currentAcademy]);
 
-  // تنسيق تاريخ الانتهاء باستخدام دالة formatGregorianDate الموحدة للأرقام (123)
+  // تنسيق تاريخ الانتهاء باستخدام دالة formatGregorianDate
   const formattedExpiryDate = useMemo(() => {
     if (!expiryDate) return null;
-    return formatGregorianDate(expiryDate, currentLang);
+    try {
+      return formatGregorianDate(expiryDate, currentLang);
+    } catch (e) {
+      return null;
+    }
   }, [expiryDate, currentLang]);
 
   const dropdownPositionClasses = dropDirection === 'up' ? 'bottom-full mb-2' : 'top-full mt-2';
@@ -163,17 +169,18 @@ export default function AcademySelector({
         <div className={`absolute ${dropdownPositionClasses} inset-x-0 p-1.5 rounded-xl bg-semantic-surfaceCard border border-semantic-borderCard shadow-main backdrop-blur-2xl z-50 overflow-hidden`}>
           {hasMultipleAcademies && (
             <div className="max-h-56 overflow-y-auto space-y-1 custom-scrollbar">
-              {academiesList.map((acc) => {
+              {safeAcademiesList.map((acc) => {
+                if (!acc) return null;
                 const isSelected = acc.id === currentAcademyId;
                 const accName = resolveText(acc.name);
                 const accLogo = acc.logo_url;
 
                 return (
                   <button
-                    key={acc.id}
+                    key={acc.id || Math.random()}
                     type="button"
                     onClick={() => {
-                      if (onSwitchAcademy) onSwitchAcademy(acc.id);
+                      if (onSwitchAcademy && acc.id) onSwitchAcademy(acc.id);
                       setDropdownOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] rounded-lg text-xs cursor-pointer transition-all duration-150 group ${
