@@ -162,6 +162,7 @@ export default function MainContent() {
                 </p>
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button 
+                    type="button"
                     onClick={handleManualRefresh} 
                     disabled={isRefreshing}
                     aria-label={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
@@ -173,6 +174,7 @@ export default function MainContent() {
                   </button>
 
                   <button 
+                    type="button"
                     onClick={logout} 
                     aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                     title={getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -205,6 +207,7 @@ export default function MainContent() {
                 </div>
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button 
+                    type="button"
                     onClick={handleManualRefresh} 
                     disabled={isRefreshing}
                     aria-label={getText(t, 'common.refresh', 'إعادة التحديث')}
@@ -216,6 +219,7 @@ export default function MainContent() {
                   </button>
 
                   <button 
+                    type="button"
                     onClick={logout} 
                     aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                     title={getText(t, 'common.logout', 'تسجيل الخروج')}
@@ -235,7 +239,7 @@ export default function MainContent() {
             </ProtectedRoute>
           )}
 
-          {/* 1. شاشة إنشاء الأكاديمية (لا تظهر أبدًا إلا إذا لم توجد أي أكاديمية محملة وكانت الحالة قطعاً NO_ACADEMY) */}
+          {/* 1. شاشة إنشاء الأكاديمية */}
           {appState === 'NO_ACADEMY' && !academy && !profile?.academy_id && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
             <CreateAcademy 
               onLogout={logout} 
@@ -258,14 +262,14 @@ export default function MainContent() {
             />
           )}
 
-          {/* 2. التطبيق الأساسي (الداشبورد) - يفتح فوراً متى وجدت الأكاديمية أو البروفايل */}
-          {(appState === 'FULLY_ACTIVE' || academy || profile?.academy_id) && appState !== 'NO_ACADEMY' && !isNeedsRoleSelection && (
+          {/* 2. التطبيق الأساسي (الداشبورد والمحتوى) - يعمل بثبات بدون أي شروط مسارات معلقة */}
+          {appState !== 'NO_ACADEMY' && !isNeedsRoleSelection && (
             <Routes>
               <Route 
                 path="/select-role" 
                 element={
                   activeRole ? (
-                    <Navigate to={`/${academy?.slug || cachedSlug}`} replace />
+                    <Navigate to={`/${academy?.slug || cachedSlug || 'dashboard'}`} replace />
                   ) : (
                     <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
                   )
@@ -299,22 +303,18 @@ export default function MainContent() {
               <Route 
                 path="/*" 
                 element={
-                  (academy?.slug || cachedSlug) ? (
-                    <Navigate to={`/${academy?.slug || cachedSlug}/${
-                      ['admin', 'super_admin'].includes((activeRole || '').toLowerCase()) ? 'dashboard' :
-                      (activeRole || '').toLowerCase() === 'teacher' ? 'teacher' :
-                      (activeRole || '').toLowerCase() === 'student' ? 'student' :
-                      (activeRole || '').toLowerCase() === 'parent' ? 'parent' : 'dashboard'
-                    }`} replace />
-                  ) : (
-                    <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
-                      <MainApp 
-                        session={user ? { user } : null} 
-                        userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
-                        setShowEarlyUpgrade={setShowEarlyUpgrade}
-                      />
-                    </ProtectedRoute>
-                  )
+                  <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
+                    <MainApp 
+                      session={user ? { user } : null} 
+                      userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
+                      setShowEarlyUpgrade={setShowEarlyUpgrade}
+                    />
+                    <InlineUpgradeModal 
+                      isOpen={showEarlyUpgrade} 
+                      onClose={() => setShowEarlyUpgrade(false)} 
+                      academyName={academy?.name}
+                    />
+                  </ProtectedRoute>
                 } 
               />
             </Routes>
@@ -327,6 +327,7 @@ export default function MainContent() {
               <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
               <p className="text-semantic-textSecondary mb-2">App State: <strong className="text-semantic-actionPrimary">{appState || 'NULL'}</strong></p>
               <button 
+                type="button"
                 onClick={logout} 
                 aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                 title={getText(t, 'common.logout', 'تسجيل الخروج')}
