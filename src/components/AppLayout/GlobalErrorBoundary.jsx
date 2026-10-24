@@ -3,13 +3,16 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { C } from '@/theme/colors';
 
 export default class GlobalErrorBoundary extends Component {
-  state = { hasError: false, error: null };
+  // أضفنا errorInfo للحالة هنا
+  state = { hasError: false, error: null, errorInfo: null };
 
   static getDerivedStateFromError(error) { 
     return { hasError: true, error }; 
   }
 
   componentDidCatch(error, errorInfo) {
+    // حفظنا تفاصيل ومسار الملفات هنا
+    this.setState({ errorInfo });
     console.error("🚨 Global App Crash:", error, errorInfo);
   }
 
@@ -25,6 +28,7 @@ export default class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       const errorMessage = this.state.error?.toString() || 'حدث خطأ غير متوقع في النظام';
+      const componentStack = this.state.errorInfo?.componentStack || '';
 
       return (
         <div style={{
@@ -35,7 +39,9 @@ export default class GlobalErrorBoundary extends Component {
           justifyContent: 'center',
           padding: '24px',
           fontFamily: "'Cairo', system-ui, sans-serif",
-          color: C.semantic.textPrimary
+          color: C.semantic.textPrimary,
+          direction: 'rtl',
+          textAlign: 'right'
         }}>
           <div style={{
             width: '100%',
@@ -105,11 +111,34 @@ export default class GlobalErrorBoundary extends Component {
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
-                maxHeight: '110px',
+                maxHeight: '90px',
                 overflowY: 'auto'
               }}>
                 {errorMessage}
               </p>
+
+              {/* قسم عرض مسار الملفات والمكونات المسببة */}
+              {componentStack && (
+                <>
+                  <div style={{ fontSize: '0.75rem', color: C.semantic.textSecondary, marginBlockStart: '12px', marginBlockEnd: '4px' }}>
+                    مسار الملفات والمكونات (Component Stack):
+                  </div>
+                  <pre style={{
+                    fontSize: '0.7rem',
+                    color: C.semantic.textPrimary,
+                    background: C.semantic.surfaceCard,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    overflowX: 'auto',
+                    textAlign: 'left',
+                    direction: 'ltr',
+                    maxHeight: '120px',
+                    margin: 0
+                  }}>
+                    {componentStack}
+                  </pre>
+                </>
+              )}
             </div>
 
             {/* Reload Button */}
