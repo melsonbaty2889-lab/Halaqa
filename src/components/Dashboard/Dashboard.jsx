@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { getDashboardStats } from '@/lib/dashboardService';
+import { useAcademy } from '@/context/AcademyContext';
 import { UI } from '@/theme/styles';
 
 import { ShieldCheck, Loader2, Plus, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -33,6 +34,14 @@ export default function Dashboard({
 }) {
   const { i18n, t } = useTranslation();
   
+  // 🛡️ استخراج سياق الأكاديمية مع تحصين كامل ضد القيم الفارغة والجلوس في اللحظات الأولى من التسجيل
+  const academyContext = useAcademy() || {};
+  const { academy, currentAcademy, academyId: contextAcademyId } = academyContext;
+
+  const cachedAcademyId = typeof window !== 'undefined' 
+    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id')) 
+    : null;
+
   const isArabic = !i18n.language || i18n.language.startsWith('ar');
   const isRtl = i18n.dir() === 'rtl' || isArabic;
   const currentLang = i18n.language || 'ar';
@@ -84,10 +93,16 @@ export default function Dashboard({
     };
   }, []);
 
+  // 🛡️ تجميع المعرّف النهائي بطريقة مضادة للانهيار والتأخير
   const academyId = selectedAdminAcademy?.id || 
+                    contextAcademyId || 
+                    academy?.id || 
+                    currentAcademy?.id || 
                     preloadedDashboardData?.academy_id || 
                     preloadedDashboardData?.id || 
-                    session?.user?.user_metadata?.academy_id;
+                    session?.user?.user_metadata?.academy_id || 
+                    cachedAcademyId || 
+                    null;
 
   const rawUserName = session?.user?.user_metadata?.full_name || 
                       session?.user?.user_metadata?.name || '';
