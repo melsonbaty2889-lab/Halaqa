@@ -143,6 +143,7 @@ export default class GlobalErrorBoundary extends Component {
 
             {/* Reload Button */}
             <button
+              type="button"
               onClick={this.handleReload}
               aria-label="إعادة تحميل الصفحة"
               title="إعادة تحميل الصفحة"
@@ -161,7 +162,7 @@ export default class GlobalErrorBoundary extends Component {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: `0 4px 14px ${C.semantic.actionPrimaryGlow}`,
+                boxShadow: `0 4px 14px ${C.semantic.actionPrimaryGlow || 'transparent'}`,
                 transition: 'all 0.2s ease'
               }}
             >
