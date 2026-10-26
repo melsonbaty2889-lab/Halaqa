@@ -10,7 +10,7 @@ export const getIjazatOptions = (t) => [
   // 2. القراءات والجمع
   { id: 'qiraat_sab', label: t ? t('ijazat.qiraatSab', 'القراءات السبع') : 'القراءات السبع' },
   { id: 'qiraat_ashr_sughra', label: t ? t('ijazat.qiraatAshrSughra', 'العشر الصغرى (الشاطبية والدرة)') : 'العشر الصغرى (الشاطبية والدرة)' },
-  { id: 'qiraat_ashr_kubra', label: t ? t('ijazat.qiraatAshrKubra', 'العشر الكبرى (طيب النشر)') : 'العشر الكبرى (طيب النشر)' },
+  { id: 'qiraat_ashr_kubra', label: t ? t('ijazat.qiraatAshrKubra', 'العشر الكبرى (طيبة النشر)') : 'العشر الكبرى (طيبة النشر)' },
 
   // 3. المتون التجويدية
   { id: 'jazariyyah', label: t ? t('ijazat.jazariyyah', 'المقدمة الجزرية') : 'المقدمة الجزرية' },
