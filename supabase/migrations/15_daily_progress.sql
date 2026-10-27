@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 1. إنشاء جدول المتابعة اليومية وإنجاز الطلاب (daily_progress)
+-- 1. إنشاء جدول المتابعة اليومية وإنجاز الطلاب (daily_progress) - النسخة النهائية المحدثة
 -- ==============================================================================
 create table if not exists public.daily_progress (
   id uuid not null default gen_random_uuid (),
@@ -26,8 +26,9 @@ create table if not exists public.daily_progress (
   
   constraint daily_progress_pkey primary key (id),
   constraint unique_student_progress_date unique (student_id, halaqa_id, date),
-  constraint daily_progress_review_surah_id_fkey foreign key (review_surah_id) references public.surahs (id),
-  constraint daily_progress_hifz_surah_id_fkey foreign key (hifz_surah_id) references public.surahs (id),
+  -- تعديل قيود السور إلى RESTRICT لحماية سلامة البيانات القرآنية
+  constraint daily_progress_review_surah_id_fkey foreign key (review_surah_id) references public.surahs (id) on delete restrict,
+  constraint daily_progress_hifz_surah_id_fkey foreign key (hifz_surah_id) references public.surahs (id) on delete restrict,
   constraint daily_progress_academy_fkey foreign key (academy_id) references public.academies (id) on delete cascade,
   constraint daily_progress_halaqa_id_fkey foreign key (halaqa_id) references public.halaqas (id) on delete set null,
   constraint daily_progress_student_id_fkey foreign key (student_id) references public.students (id) on delete cascade,
@@ -46,15 +47,11 @@ create table if not exists public.daily_progress (
 ) TABLESPACE pg_default;
 
 -- ==============================================================================
--- 2. الفهارس لتحسين أداء الاستعلامات والتقارير (Indexes)
+-- 2. الفهارس المحسنة (Indexes - تم تنظيف الفهارس المكررة)
 -- ==============================================================================
-create index if not exists idx_daily_progress_student on public.daily_progress using btree (academy_id, student_id, date) TABLESPACE pg_default;
-create index if not exists idx_daily_progress_student_id on public.daily_progress using btree (student_id) TABLESPACE pg_default;
+create index if not exists idx_daily_progress_student_date on public.daily_progress using btree (academy_id, student_id, date) TABLESPACE pg_default;
 create index if not exists idx_daily_progress_teacher_id on public.daily_progress using btree (teacher_id) TABLESPACE pg_default;
 create index if not exists idx_daily_progress_halaqa_id on public.daily_progress using btree (halaqa_id) TABLESPACE pg_default;
-create index if not exists idx_daily_progress_student_date on public.daily_progress using btree (student_id, date) TABLESPACE pg_default;
-create index if not exists idx_daily_progress_hifz_surah_id on public.daily_progress using btree (hifz_surah_id) TABLESPACE pg_default;
-create index if not exists idx_daily_progress_review_surah_id on public.daily_progress using btree (review_surah_id) TABLESPACE pg_default;
 create index if not exists idx_daily_progress_academy_date on public.daily_progress using btree (academy_id, date) TABLESPACE pg_default;
 
 -- ==============================================================================
