@@ -16,20 +16,19 @@ create table if not exists public.ai_recitation_logs (
   confidence_score numeric(3, 2) null,
   reviewed_by uuid null,
   reviewed_at timestamp with time zone null,
+  
   constraint ai_recitation_logs_pkey primary key (id),
-  constraint ai_recitation_logs_academy_id_fkey foreign KEY (academy_id) references academies (id) on delete set null,
-  constraint ai_recitation_logs_reviewed_by_fkey foreign KEY (reviewed_by) references profiles (id) on delete set null,
-  constraint ai_recitation_logs_student_id_fkey foreign KEY (student_id) references students (id) on delete set null,
+  constraint ai_recitation_logs_academy_id_fkey foreign key (academy_id) references public.academies (id) on delete set null,
+  constraint ai_recitation_logs_reviewed_by_fkey foreign key (reviewed_by) references public.profiles (id) on delete set null,
+  constraint ai_recitation_logs_student_id_fkey foreign key (student_id) references public.students (id) on delete set null,
   constraint ai_recitation_logs_status_check check (
-    (
-      (status)::text = any (
-        array[
-          ('pending_review'::character varying)::text,
-          ('approved_by_teacher'::character varying)::text,
-          ('rejected'::character varying)::text,
-          ('needs_re_recording'::character varying)::text
-        ]
-      )
+    (status)::text = any (
+      array[
+        ('pending_review'::character varying)::text,
+        ('approved_by_teacher'::character varying)::text,
+        ('rejected'::character varying)::text,
+        ('needs_re_recording'::character varying)::text
+      ]
     )
   )
 ) TABLESPACE pg_default;
@@ -43,11 +42,56 @@ create index if not exists idx_ai_recitation_logs_student_id on public.ai_recita
 create index if not exists idx_ai_recitation_logs_status on public.ai_recitation_logs using btree (status) TABLESPACE pg_default;
 
 -- ==============================================================================
--- 3. تفعيل الأمان وسياسات الصفوف (RLS & Policies)
+-- 3. أمان الصفوف وسياسات الحماية (RLS & Policies)
 -- ==============================================================================
 alter table public.ai_recitation_logs enable row level security;
 
--- (أ) سياسة المعلم (طلابه النشطين في حلقاته فقط)
+-- (أ) سياسة إدارة كادر الأكاديمية والسوبر أدمن
+drop policy if exists "academy_staff_manage_recitation_logs" on public.ai_recitation_logs;
+create policy "academy_staff_manage_recitation_logs"
+  on public.ai_recitation_logs
+  for all
+  to authenticated
+  using (
+    (academy_id in (select t.academy_id from public.teachers t where t.user_id = auth.uid()))
+    or is_super_admin()
+  )
+  with check (
+    (academy_id in (select t.academy_id from public.teachers t where t.user_id = auth.uid()))
+    or is_super_admin()
+  );
+
+-- (ب) سياسة ولي الأمر (عرض تقارير الأبناء)
+drop policy if exists "parents_view_children_recitation_logs" on public.ai_recitation_logs;
+create policy "parents_view_children_recitation_logs"
+  on public.ai_recitation_logs
+  for select
+  to authenticated
+  using (
+    student_id in (
+      select sg.student_id
+      from public.student_guardians sg
+      join public.parents p on p.id = sg.parent_id
+      where p.profile_id = auth.uid()
+        and sg.can_view_reports = true
+    )
+  );
+
+-- (ج) سياسة الطالب (عرض سجلاته الشخصية)
+drop policy if exists "students_view_own_recitation_logs" on public.ai_recitation_logs;
+create policy "students_view_own_recitation_logs"
+  on public.ai_recitation_logs
+  for select
+  to authenticated
+  using (
+    student_id in (
+      select s.id 
+      from public.students s 
+      where s.user_id = auth.uid()
+    )
+  );
+
+-- (د) سياسة المعلم (إدارة طلاب حلقاته النشطة فقط)
 drop policy if exists "teachers_manage_own_students_recitation_logs" on public.ai_recitation_logs;
 create policy "teachers_manage_own_students_recitation_logs"
   on public.ai_recitation_logs
@@ -72,57 +116,4 @@ create policy "teachers_manage_own_students_recitation_logs"
       where t.user_id = auth.uid()
         and sh.status = 'active'
     )
-  );
-
--- (ب) سياسة ولي الأمر (أبناؤه فقط المربوطين بحسابه)
-drop policy if exists "parents_view_children_recitation_logs" on public.ai_recitation_logs;
-create policy "parents_view_children_recitation_logs"
-  on public.ai_recitation_logs
-  for select
-  to authenticated
-  using (
-    student_id in (
-      select sg.student_id
-      from public.student_guardians sg
-      join public.parents p on p.id = sg.parent_id
-      where p.profile_id = auth.uid()
-        and sg.can_view_reports = true
-    )
-  );
-
--- (ج) سياسة الطالب (سجلاته الشخصية فقط)
-drop policy if exists "students_view_own_recitation_logs" on public.ai_recitation_logs;
-create policy "students_view_own_recitation_logs"
-  on public.ai_recitation_logs
-  for select
-  to authenticated
-  using (
-    student_id in (
-      select s.id 
-      from public.students s 
-      where s.user_id = auth.uid()
-    )
-  );
-
--- (د) سياسة كادر الأكاديمية والسوبر أدمن (إدارة شاملة)
-drop policy if exists "academy_staff_manage_recitation_logs" on public.ai_recitation_logs;
-create policy "academy_staff_manage_recitation_logs"
-  on public.ai_recitation_logs
-  for all
-  to authenticated
-  using (
-    (academy_id in (
-      select t.academy_id 
-      from public.teachers t 
-      where t.user_id = auth.uid()
-    ))
-    or is_super_admin()
-  )
-  with check (
-    (academy_id in (
-      select t.academy_id 
-      from public.teachers t 
-      where t.user_id = auth.uid()
-    ))
-    or is_super_admin()
   );
