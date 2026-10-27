@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 1. إنشاء جدول مستويات المنهج (curriculum_levels)
+-- 1. إنشاء جدول مستويات المنهج (curriculum_levels) - النسخة المحسنة والمنظفة
 -- ==============================================================================
 create table if not exists public.curriculum_levels (
   id uuid not null default gen_random_uuid (),
@@ -19,10 +19,9 @@ create table if not exists public.curriculum_levels (
 ) TABLESPACE pg_default;
 
 -- ==============================================================================
--- 2. الفهارس لتحسين أداء الاستعلامات (Indexes)
+-- 2. الفهارس (Indexes) - تم تنظيف الفهارس المكررة
 -- ==============================================================================
 create index if not exists idx_curriculum_levels_curriculum on public.curriculum_levels using btree (curriculum_id) TABLESPACE pg_default;
-create index if not exists idx_curriculum_levels_curriculum_id on public.curriculum_levels using btree (curriculum_id) TABLESPACE pg_default;
 
 -- ==============================================================================
 -- 3. المشغلات (Triggers)
