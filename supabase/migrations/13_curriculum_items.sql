@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 1. إنشاء جدول عناصر المنهج (curriculum_items)
+-- 1. إنشاء جدول عناصر المنهج (curriculum_items) - النسخة المحسنة والمنظفة
 -- ==============================================================================
 create table if not exists public.curriculum_items (
   id uuid not null default gen_random_uuid (),
@@ -53,11 +53,10 @@ create table if not exists public.curriculum_items (
 ) TABLESPACE pg_default;
 
 -- ==============================================================================
--- 2. الفهارس لتحسين أداء الاستعلامات (Indexes)
+-- 2. الفهارس (Indexes) - تم حذف الفهرس المكرر والحفاظ على الأداء الأمثل
 -- ==============================================================================
 create index if not exists idx_curriculum_items_level on public.curriculum_items using btree (level_id) TABLESPACE pg_default;
 create index if not exists idx_curriculum_items_order on public.curriculum_items using btree (level_id, order_index) TABLESPACE pg_default;
-create index if not exists idx_curriculum_items_level_id on public.curriculum_items using btree (level_id) TABLESPACE pg_default;
 
 -- ==============================================================================
 -- 3. المشغلات (Triggers)
