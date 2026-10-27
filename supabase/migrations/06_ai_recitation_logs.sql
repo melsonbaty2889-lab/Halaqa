@@ -12,6 +12,7 @@ create table public.ai_recitation_logs (
   teacher_notes text null,
   confidence_score numeric(3, 2) null,
   reviewed_by uuid null,
+  reviewed_at timestamp with time zone null,
   constraint ai_recitation_logs_pkey primary key (id),
   constraint ai_recitation_logs_pkey primary key (id),
   constraint ai_recitation_logs_academy_id_fkey foreign KEY (academy_id) references academies (id) on delete set null,
