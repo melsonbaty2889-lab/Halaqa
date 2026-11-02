@@ -162,7 +162,6 @@ export default function SubscriptionPage({ onBack }) {
           {
             academy_id: academyId,
             payer_id: user.id,
-            plan_tier: 'pro',
             plan_duration: selectedPlan,
             status: 'pending_verification',
             payment_gateway: methodId || 'manual',
@@ -200,7 +199,6 @@ export default function SubscriptionPage({ onBack }) {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* إخفاء زر العودة العلوي والهيدر عند نجاح إرسال الطلب لمنع التكرار */}
         {!isSubmitted && (
           <>
             <div className="flex items-center justify-start pb-4 border-b border-semantic-borderCard">
