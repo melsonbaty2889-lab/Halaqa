@@ -529,6 +529,7 @@
     "delete_confirm_text": "Are you sure you want to permanently delete this document?",
     "delete_title": "Delete Document",
     "drag_drop_text": "Click here to choose a file from your device",
+    "error_notes_required_for_other": "يرجى إدخال ملاحظات توضيحية عند اختيار نوع \"أخرى\"",
     "error_select_file": "Please choose a file first",
     "error_size_limit": "File size exceeds the allowed limit (10 MB)",
     "file_label": "File",
