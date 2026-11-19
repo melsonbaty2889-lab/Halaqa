@@ -1,3 +1,4 @@
+// src/hooks/useStudentDocuments.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -36,6 +37,31 @@ export interface OperationResult {
   error?: string;
 }
 
+const STORAGE_BUCKET = 'documents';
+const SINGLE_INSTANCE_DOC_TYPES = ['id_card', 'passport', 'birth_certificate'];
+
+// استخراج مسار الملف داخل الـ bucket بشكل موحد من file_url
+const extractStoragePath = (fileUrl?: string | null): string | null => {
+  if (!fileUrl) return null;
+
+  try {
+    const parsed = new URL(fileUrl);
+    const marker = `/${STORAGE_BUCKET}/`;
+    const idx = parsed.pathname.indexOf(marker);
+    if (idx !== -1) {
+      return decodeURIComponent(parsed.pathname.slice(idx + marker.length));
+    }
+  } catch {
+    const marker = `/${STORAGE_BUCKET}/`;
+    const idx = fileUrl.indexOf(marker);
+    if (idx !== -1) {
+      return decodeURIComponent(fileUrl.slice(idx + marker.length).split('?')[0]);
+    }
+  }
+
+  return null;
+};
+
 // ── Main Hook ───────────────────────────────────────────────────
 
 export const useStudentDocuments = ({
@@ -50,7 +76,7 @@ export const useStudentDocuments = ({
   const [successToast, setSuccessToast] = useState<string>('');
 
   const isMounted = useRef<boolean>(true);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
@@ -119,15 +145,18 @@ export const useStudentDocuments = ({
 
   const handleDelete = async (
     docId: string,
-    docPath?: string
+    docPath?: string | null
   ): Promise<OperationResult> => {
     if (!docId) return { success: false, error: 'Document ID is missing' };
     if (isMounted.current) setIsDeleting(true);
 
     try {
-      if (docPath) {
-        const decodedPath = decodeURIComponent(docPath);
-        await supabase.storage.from('documents').remove([decodedPath]);
+      const targetDoc = documents.find((d) => d.id === docId);
+      const resolvedPath =
+        docPath || extractStoragePath(targetDoc?.file_url) || null;
+
+      if (resolvedPath) {
+        await supabase.storage.from(STORAGE_BUCKET).remove([resolvedPath]);
       }
 
       const { error: dbError } = await supabase
@@ -149,7 +178,9 @@ export const useStudentDocuments = ({
       console.warn('Delete Error:', err?.message || err);
       return {
         success: false,
-        error: translate('common.error', 'حدث خطأ أثناء الحذف: ') + (err?.message || ''),
+        error:
+          translate('common.error', 'حدث خطأ أثناء الحذف: ') +
+          (err?.message || ''),
       };
     } finally {
       if (isMounted.current) setIsDeleting(false);
@@ -183,22 +214,16 @@ export const useStudentDocuments = ({
         currentAcademyId = studentData?.academy_id || null;
       }
 
-      const singleInstanceTypes = ['id_card', 'passport', 'birth_certificate'];
-      const isSingleInstance = singleInstanceTypes.includes(documentType);
+      const isSingleInstance = SINGLE_INSTANCE_DOC_TYPES.includes(documentType);
 
       if (isSingleInstance) {
         const existingDoc = documents.find(
           (doc) => doc.document_type === documentType
         );
         if (existingDoc) {
-          if (
-            existingDoc.file_url &&
-            existingDoc.file_url.includes('/documents/')
-          ) {
-            const oldPath = decodeURIComponent(
-              existingDoc.file_url.split('/documents/')[1]
-            );
-            await supabase.storage.from('documents').remove([oldPath]);
+          const oldPath = extractStoragePath(existingDoc.file_url);
+          if (oldPath) {
+            await supabase.storage.from(STORAGE_BUCKET).remove([oldPath]);
           }
           await supabase
             .from('student_documents')
@@ -207,7 +232,9 @@ export const useStudentDocuments = ({
         }
       }
 
-      const fileExt = file.name.split('.').pop();
+      const nameParts = file.name.split('.');
+      const fileExt =
+        nameParts.length > 1 ? nameParts.pop()!.toLowerCase() : 'bin';
       const uniqueId =
         typeof crypto !== 'undefined' && crypto.randomUUID
           ? crypto.randomUUID()
@@ -216,14 +243,17 @@ export const useStudentDocuments = ({
       const filePath = `students/${studentId}/${Date.now()}_${uniqueId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('documents')
+        .from(STORAGE_BUCKET)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from('documents').getPublicUrl(filePath);
+      } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
+
+      const normalizedMimeType = file.type ? file.type.toLowerCase() : null;
+      const trimmedNotes = notes?.trim() ? notes.trim() : null;
 
       const { data, error: dbError } = await supabase
         .from('student_documents')
@@ -234,10 +264,10 @@ export const useStudentDocuments = ({
             file_name: file.name,
             file_url: publicUrl,
             file_size: file.size,
-            mime_type: file.type,
+            mime_type: normalizedMimeType,
             document_type: documentType,
             uploaded_by: user?.id || null,
-            notes: notes || null,
+            notes: trimmedNotes,
             uploaded_at: new Date().toISOString(),
           },
         ])
