@@ -15,6 +15,11 @@ const DOCUMENT_TYPES = [
   'other'
 ];
 
+const MAX_FILE_SIZE_MB = 25;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ACCEPTED_FILE_TYPES =
+  '.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.pdf,.doc,.docx,.txt,.xls,.xlsx,.csv';
+
 export const DocumentUploadModal = ({
   isOpen,
   onClose,
@@ -53,8 +58,13 @@ export const DocumentUploadModal = ({
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB Limit
-        setError(t('documents.error_size_limit', 'حجم الملف يتجاوز الحد المسموح (10 ميجابايت)'));
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setError(
+          t(
+            'documents.error_size_limit',
+            `حجم الملف يتجاوز الحد المسموح (${MAX_FILE_SIZE_MB} ميجابايت)`
+          )
+        );
         return;
       }
       setError(null);
@@ -65,6 +75,7 @@ export const DocumentUploadModal = ({
   const handleRemoveFile = (e) => {
     e.stopPropagation();
     setSelectedFile(null);
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -76,7 +87,19 @@ export const DocumentUploadModal = ({
       setError(t('documents.error_select_file', 'يرجى اختيار ملف أولاً'));
       return;
     }
-    await onUpload({ file: selectedFile, documentType, notes });
+
+    if (documentType === 'other' && !notes.trim()) {
+      setError(
+        t(
+          'documents.error_notes_required_for_other',
+          'يرجى إدخال ملاحظات توضيحية عند اختيار نوع "أخرى"'
+        )
+      );
+      return;
+    }
+
+    setError(null);
+    await onUpload({ file: selectedFile, documentType, notes: notes.trim() });
     handleClose();
   };
 
@@ -132,7 +155,10 @@ export const DocumentUploadModal = ({
               </label>
               <Select
                 value={documentType}
-                onChange={(val) => setDocumentType(val)}
+                onChange={(val) => {
+                  setDocumentType(val);
+                  if (error) setError(null);
+                }}
                 options={typeOptions}
                 placeholder={t('documents.type_label', 'نوع المستند')}
               />
@@ -149,7 +175,7 @@ export const DocumentUploadModal = ({
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx"
+                accept={ACCEPTED_FILE_TYPES}
               />
 
               <div 
@@ -202,7 +228,9 @@ export const DocumentUploadModal = ({
                     <p className="text-sm font-medium text-semantic-textPrimary">
                       {t('documents.drag_drop_text', 'انقر هنا لاختيار ملف من جهازك')}
                     </p>
-                    <p className="text-xs text-semantic-textSecondary">PDF, PNG, JPG (MAX. 10MB)</p>
+                    <p className="text-xs text-semantic-textSecondary">
+                      PDF, Word, Excel, CSV, TXT, Images (MAX. {MAX_FILE_SIZE_MB}MB)
+                    </p>
                   </div>
                 )}
               </div>
@@ -219,11 +247,17 @@ export const DocumentUploadModal = ({
             {/* Notes */}
             <div className="space-y-1.5 relative z-10">
               <label className="block text-xs font-medium text-semantic-textSecondary">
-                {t('documents.notes_label', 'ملاحظات')}
+                {t('documents.notes_label', 'ملاحظات')}{' '}
+                {documentType === 'other' && (
+                  <span className="text-semantic-actionPrimary">*</span>
+                )}
               </label>
               <textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => {
+                  setNotes(e.target.value);
+                  if (error) setError(null);
+                }}
                 placeholder={t('documents.notes_placeholder', 'تفاصيل أو ملاحظات إضافية...')}
                 rows={3}
                 disabled={isLoading}
