@@ -224,22 +224,9 @@ export const useStudentDocuments = ({
       }
 
       const isSingleInstance = SINGLE_INSTANCE_DOC_TYPES.includes(documentType);
-
-      if (isSingleInstance) {
-        const existingDoc = documents.find(
-          (doc) => doc.document_type === documentType
-        );
-        if (existingDoc) {
-          const oldPath = extractStoragePath(existingDoc.file_url);
-          if (oldPath) {
-            await supabase.storage.from(STORAGE_BUCKET).remove([oldPath]);
-          }
-          await supabase
-            .from('student_documents')
-            .delete()
-            .eq('id', existingDoc.id);
-        }
-      }
+      const previousDocs = isSingleInstance
+        ? documents.filter((doc) => doc.document_type === documentType)
+        : [];
 
       const nameParts = file.name.split('.');
       const fileExt =
@@ -264,6 +251,17 @@ export const useStudentDocuments = ({
       const normalizedMimeType = file.type ? file.type.toLowerCase() : null;
       const trimmedNotes = notes?.trim() ? notes.trim() : null;
 
+      if (isSingleInstance && previousDocs.length > 0) {
+        for (const oldDoc of previousDocs) {
+          const { error: oldDbError } = await supabase
+            .from('student_documents')
+            .delete()
+            .eq('id', oldDoc.id);
+
+          if (oldDbError) throw oldDbError;
+        }
+      }
+
       const { data, error: dbError } = await supabase
         .from('student_documents')
         .insert([
@@ -283,7 +281,39 @@ export const useStudentDocuments = ({
         .select()
         .single();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        await supabase.storage.from(STORAGE_BUCKET).remove([filePath]);
+
+        if (dbError.code === '23505') {
+          return {
+            success: false,
+            error: translate(
+              'documents.duplicate_single_instance',
+              'يوجد مستند من هذا النوع بالفعل للطالب، يرجى المحاولة مرة أخرى.'
+            ),
+          };
+        }
+        throw dbError;
+      }
+
+      if (isSingleInstance && previousDocs.length > 0) {
+        const oldPaths = previousDocs
+          .map((doc) => extractStoragePath(doc.file_url))
+          .filter((p): p is string => Boolean(p));
+
+        if (oldPaths.length > 0) {
+          const { error: oldStorageError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .remove(oldPaths);
+
+          if (oldStorageError) {
+            console.warn(
+              'Old storage file remove warning:',
+              oldStorageError.message || oldStorageError
+            );
+          }
+        }
+      }
 
       if (isMounted.current) {
         setDocuments((prev) => {
