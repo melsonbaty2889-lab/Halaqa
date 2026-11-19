@@ -2,14 +2,28 @@
 import React from 'react';
 import { FileText, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Download, X } from 'lucide-react';
 
+const IMAGE_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+];
+
 const isImage = (mime, url) => {
-  if (mime?.startsWith('image/')) return true;
-  return /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
+  const normalizedMime = mime?.toLowerCase().trim();
+  if (normalizedMime && IMAGE_MIME_TYPES.includes(normalizedMime)) return true;
+  if (normalizedMime?.startsWith('image/')) return true;
+  if (!url) return false;
+  return /\.(jpg|jpeg|png|webp|gif|heic|heif)(\?.*)?$/i.test(url);
 };
 
 const isPdf = (mime, url) => {
-  if (mime === 'application/pdf') return true;
-  return /\.pdf$/i.test(url);
+  const normalizedMime = mime?.toLowerCase().trim();
+  if (normalizedMime === 'application/pdf') return true;
+  if (!url) return false;
+  return /\.pdf(\?.*)?$/i.test(url);
 };
 
 const DocumentPreviewModal = ({ previewDoc, onClose, zoomScale, setZoomScale, t }) => {
