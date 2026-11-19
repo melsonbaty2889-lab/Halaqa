@@ -155,16 +155,25 @@ export const useStudentDocuments = ({
       const resolvedPath =
         docPath || extractStoragePath(targetDoc?.file_url) || null;
 
-      if (resolvedPath) {
-        await supabase.storage.from(STORAGE_BUCKET).remove([resolvedPath]);
-      }
-
       const { error: dbError } = await supabase
         .from('student_documents')
         .delete()
         .eq('id', docId);
 
       if (dbError) throw dbError;
+
+      if (resolvedPath) {
+        const { error: storageError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .remove([resolvedPath]);
+
+        if (storageError) {
+          console.warn(
+            'Storage remove warning:',
+            storageError.message || storageError
+          );
+        }
+      }
 
       if (isMounted.current) {
         setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
