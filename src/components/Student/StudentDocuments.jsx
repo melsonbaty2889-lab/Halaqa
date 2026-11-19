@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowRight, ArrowLeft, Upload, FileText, Search, Trash2, Eye, HardDrive, Calendar, 
-  Loader2, AlertTriangle, CheckCircle2 
+  Loader2, AlertTriangle, CheckCircle2, AlertCircle 
 } from 'lucide-react';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
@@ -30,13 +30,19 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [zoomScale, setZoomScale] = useState(1);
 
-  // حالات الحذف
+  // حالات الحذف والرسائل
   const [deleteDocId, setDeleteDocId] = useState(null);
-  const [deleteDocPath, setDeleteDocPath] = useState(null);
+  const [errorToast, setErrorToast] = useState('');
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (!errorToast) return;
+    const timer = setTimeout(() => setErrorToast(''), 4000);
+    return () => clearTimeout(timer);
+  }, [errorToast]);
 
   // تثبيت سكرول الشاشة عند فتح أية نافذة منعاً للتنقل غير المرغوب
   useEffect(() => {
@@ -59,10 +65,11 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
   }, [previewDoc, deleteDocId, isUploadModalOpen]);
 
   const confirmDelete = async () => {
-    const res = await handleDelete(deleteDocId, deleteDocPath);
+    const res = await handleDelete(deleteDocId);
     if (res?.success) {
       setDeleteDocId(null);
-      setDeleteDocPath(null);
+    } else if (res?.error) {
+      setErrorToast(res.error);
     }
   };
 
@@ -70,6 +77,8 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
     const res = await handleUpload(uploadData);
     if (res?.success) {
       setIsUploadModalOpen(false);
+    } else if (res?.error) {
+      setErrorToast(res.error);
     }
   };
 
@@ -101,11 +110,19 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
 
   return (
     <div className="space-y-4 text-semantic-textPrimary relative" dir={i18n?.dir ? i18n.dir() : 'rtl'}>
-      {/* Toast Notification */}
+      {/* Success Toast Notification */}
       {successToast && (
         <div className="fixed bottom-5 start-5 z-[999999] flex items-center gap-2 bg-semantic-success text-white px-4 py-3 rounded-xl shadow-xl animate-bounce">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span className="text-sm font-bold">{successToast}</span>
+        </div>
+      )}
+
+      {/* Error Toast Notification */}
+      {errorToast && (
+        <div className="fixed bottom-5 start-5 z-[999999] flex items-center gap-2 bg-semantic-error text-white px-4 py-3 rounded-xl shadow-xl">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-bold">{errorToast}</span>
         </div>
       )}
 
@@ -221,14 +238,7 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
                 
                 <button
                   type="button"
-                  onClick={() => {
-                    setDeleteDocId(doc.id);
-                    let storagePath = null;
-                    if (doc.file_url && doc.file_url.includes('/documents/')) {
-                      storagePath = doc.file_url.split('/documents/')[1];
-                    }
-                    setDeleteDocPath(storagePath);
-                  }}
+                  onClick={() => setDeleteDocId(doc.id)}
                   className="p-2 text-semantic-textSecondary hover:text-semantic-error hover:bg-semantic-surfaceInput rounded-lg transition-colors cursor-pointer"
                   title={t('common.delete', 'حذف')}
                 >
@@ -278,10 +288,7 @@ const StudentDocuments = ({ studentId, academyId, onBack }) => {
               <button
                 type="button"
                 disabled={isDeleting}
-                onClick={() => {
-                  setDeleteDocId(null);
-                  setDeleteDocPath(null);
-                }}
+                onClick={() => setDeleteDocId(null)}
                 className="flex-1 py-2 px-3 rounded-xl border border-semantic-borderCard text-xs font-semibold text-semantic-textSecondary hover:bg-semantic-surfaceInput transition-all cursor-pointer"
               >
                 {t('common.cancel', 'إلغاء')}
