@@ -1,7 +1,6 @@
 import React, { useState, lazy, Suspense, useCallback, useEffect } from 'react';
-import { Routes, Route, useSearchParams } from 'react-router-dom';
+import { Routes, Route, useSearchParams, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { C } from '@/theme/colors';
 
 import GlobalErrorBoundary from '@/components/AppLayout/GlobalErrorBoundary';
 import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanner';
@@ -10,20 +9,20 @@ import OfflineAndUpdateBanner from '@/components/AppLayout/OfflineAndUpdateBanne
 const safeLazy = (importFn) => {
   return lazy(() =>
     importFn().catch((error) => {
-      console.error("🚨 Lazy Load Component Error:", error);
-      return { 
+      console.error('🚨 Lazy Load Component Error:', error);
+      return {
         default: () => (
           <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center text-white space-y-4">
             <div className="text-appError font-bold text-lg">تعذر تحميل هذا القسم من التطبيق</div>
             <p className="text-xs text-appText-sub">يرجى التحقق من اتصال الإنترنت أو إعادة تحميل الصفحة.</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-brandEmerald text-white rounded-xl text-xs font-bold"
             >
               إعادة تحميل الصفحة
             </button>
           </div>
-        )
+        ),
       };
     })
   );
@@ -35,8 +34,11 @@ const SplashScreen = safeLazy(() => import('@/components/UI/SplashScreen'));
 const CertificateVerify = safeLazy(() => import('@/components/Certificates/CertificateVerify'));
 const UpdatePassword = safeLazy(() => import('@/components/Auth/UpdatePassword'));
 const DevPlayground = safeLazy(() => {
-  const isDev = import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
-  const hasTestParam = typeof window !== 'undefined' && window.location.search.includes('view=test');
+  const isDev =
+    import.meta.env?.DEV ||
+    (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
+  const hasTestParam =
+    typeof window !== 'undefined' && window.location.search.includes('view=test');
 
   if (isDev || hasTestParam) {
     return import('@/components/Dev/DevPlayground');
@@ -75,7 +77,7 @@ function useAndroidFocusFix() {
 
 // 🌟 مكون الخلفية الموحد المطابق لشاشة SplashScreen (الشبكة + التوهج الزمردي)
 const GlobalEmeraldBackground = () => (
-  <div 
+  <div
     className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
     style={{
       backgroundImage: `
@@ -83,7 +85,7 @@ const GlobalEmeraldBackground = () => (
         radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 0)
       `,
       backgroundSize: '100% 100%, 28px 28px',
-      backgroundPosition: 'center center, 0 0'
+      backgroundPosition: 'center center, 0 0',
     }}
   />
 );
@@ -101,7 +103,7 @@ if (typeof window !== 'undefined') {
         sessionStorage.setItem('chunk_reload_timestamp', now.toString());
         if ('caches' in window) {
           caches.keys().then((names) => {
-            for (let name of names) caches.delete(name);
+            for (const name of names) caches.delete(name);
           });
         }
         window.location.reload();
@@ -114,7 +116,7 @@ if (typeof window !== 'undefined') {
 }
 
 const FallbackLoader = () => (
-  <div 
+  <div
     role="status"
     aria-label="جاري التحميل"
     className="bg-transparent min-h-screen flex items-center justify-center text-brandEmerald"
@@ -127,12 +129,16 @@ export default function App() {
   useAndroidFocusFix();
 
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const view = searchParams.get('view');
 
+  const isDirectLinkRoute =
+    location.pathname.startsWith('/verify/') || location.pathname === '/update-password';
+
   const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined' || isDirectLinkRoute) return false;
     try {
-      return view === 'splash' || !sessionStorage.getItem('app_splash_seen');
+      return view === 'splash' || !localStorage.getItem('app_splash_seen');
     } catch {
       return false;
     }
@@ -140,7 +146,7 @@ export default function App() {
 
   const handleSplashFinish = useCallback(() => {
     try {
-      sessionStorage.setItem('app_splash_seen', 'true');
+      localStorage.setItem('app_splash_seen', 'true');
     } catch {
       // Ignored
     }
@@ -154,15 +160,12 @@ export default function App() {
 
         <div className="relative z-10 min-h-screen flex flex-col bg-transparent pb-24 md:pb-0">
           <OfflineAndUpdateBanner />
-          
+
           <Suspense fallback={<FallbackLoader />}>
             {view === 'test' ? (
               <DevPlayground />
-            ) : showSplash ? (
-              <SplashScreen 
-                lang="ar" 
-                onFinish={handleSplashFinish} 
-              />
+            ) : showSplash && !isDirectLinkRoute ? (
+              <SplashScreen lang="ar" onFinish={handleSplashFinish} />
             ) : (
               <Routes>
                 <Route path="/test" element={<TestHooks />} />
