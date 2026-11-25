@@ -1,119 +1,95 @@
-import { useState, useCallback, FormEvent } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
-// ── Types & Interfaces ──────────────────────────────────────────
-
-export interface CreateAcademyPayload {
-  p_name: string | Record<string, string>;
-  p_slug: string;
-  p_country_code?: string;
-  p_currency?: string;
-  p_learning_type?: string;
-  p_default_qiraat?: string;
-  p_teaching_methodology?: string;
-  p_logo_url?: string | null;
-  [key: string]: any;
-}
-
-export type OnSubmitAcademyCallback = (data: any) => Promise<void> | void;
-
-export interface UseCreateAcademyReturn {
-  academyName: string;
-  setAcademyName: (name: string) => void;
-  isSubmitting: boolean;
-  isSuccess: boolean;
-  errorMsg: string;
-  handleSubmit: (e?: FormEvent) => Promise<any>;
-  reset: () => void;
-}
-
-// ── Helper Function ─────────────────────────────────────────────
-
 /**
- * توليد Slug آمن يدعم الحروف العربية والإنجليزية والترقيم
+ * توليد Slug مطابق لقيد academies_slug_lowercase_check (حروف صغيرة وأرقام وشرطات فقط)
  */
-function generateSlug(text: string): string {
-  const cleanText = text
+function generateSafeSlug(nameText) {
+  const latinPart = String(nameText || '')
     .trim()
     .toLowerCase()
-    .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, '') // السماح بالحروف العربية والأرقام واللاتينية
+    .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 30);
 
-  const timeStamp = Date.now().toString().slice(-5);
-  
-  if (!cleanText) {
-    return `academy-${timeStamp}`;
+  const suffix = Date.now().toString().slice(-5);
+
+  if (!latinPart) {
+    return `academy-${suffix}`;
   }
-  
-  return `${cleanText}-${timeStamp}`;
+
+  return `${latinPart}-${suffix}`;
 }
 
-// ── Main Hook ───────────────────────────────────────────────────
+export function useCreateAcademy(onSubmitAcademy = null) {
+  const { t } = useTranslation();
 
-export function useCreateAcademy(
-  onSubmitAcademy?: OnSubmitAcademyCallback | null
-): UseCreateAcademyReturn {
-  const { t, i18n } = useTranslation();
-
-  const [academyName, setAcademyName] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const reset = useCallback(() => {
-    setAcademyName('');
     setIsSubmitting(false);
     setIsSuccess(false);
     setErrorMsg('');
   }, []);
 
   const handleSubmit = useCallback(
-    async (e?: FormEvent) => {
-      if (e) e.preventDefault();
+    async (eOrData, maybeData) => {
+      if (eOrData && typeof eOrData.preventDefault === 'function') {
+        eOrData.preventDefault();
+      }
 
-      const trimmedName = academyName.trim();
-      if (isSubmitting || !trimmedName) return;
+      const rawInput =
+        maybeData && typeof maybeData === 'object'
+          ? maybeData
+          : eOrData && typeof eOrData === 'object' && !eOrData.preventDefault
+          ? eOrData
+          : {};
+
+      const academyName = String(rawInput.name || rawInput.academyName || '').trim();
+
+      if (isSubmitting || !academyName) return null;
 
       setIsSubmitting(true);
       setErrorMsg('');
 
       try {
-        // 1. توليد Slug تلقائي وآمن من اسم الأكاديمية
-        const generatedSlug = generateSlug(trimmedName);
+        const safeSlug = generateSafeSlug(academyName);
+        const countryCode = rawInput.country_code
+          ? String(rawInput.country_code).trim().toUpperCase().slice(0, 2)
+          : null;
 
-        // 2. تحديد مفتاح اسم اللغة الحالية
-        const currentLang = i18n?.language || 'ar';
-        const nameKey = `name_${currentLang}`;
-
-        // 3. تجهيز بيانات RPC واستدعاء الدالة السحابية
-        const rpcPayload: CreateAcademyPayload = {
-          p_name: trimmedName,
-          [nameKey]: trimmedName,
-          p_slug: generatedSlug,
-          p_country_code: 'SA',
-          p_currency: 'SAR',
-          p_learning_type: 'online',
-          p_default_qiraat: 'hafs_an_asem',
-          p_teaching_methodology: 'mashreqi',
-          p_logo_url: null,
+        const rpcParams = {
+          p_name: academyName,
+          p_slug: safeSlug,
+          p_country_code: countryCode,
+          p_default_qiraat: rawInput.default_qiraat || 'hafs_an_asem',
+          p_teaching_methodology: rawInput.teaching_methodology || 'mashreqi',
+          p_logo_url: rawInput.logo_url || null,
         };
 
-        const { data, error } = await supabase.rpc('create_academy_with_owner', rpcPayload);
+        const { data, error } = await supabase.rpc('create_academy_with_owner', rpcParams);
 
         if (error) throw error;
 
         setIsSuccess(true);
 
-        if (onSubmitAcademy) {
-          await onSubmitAcademy(data);
+        if (typeof onSubmitAcademy === 'function') {
+          await onSubmitAcademy({
+            ...data,
+            ...rawInput,
+            slug: safeSlug,
+          });
         }
 
         return data;
-      } catch (error: any) {
+      } catch (error) {
         console.error('Create academy error:', error);
-        
+
         const isDuplicate =
           error?.message?.includes('duplicate key') ||
           error?.code === '23505' ||
@@ -129,12 +105,10 @@ export function useCreateAcademy(
         setIsSubmitting(false);
       }
     },
-    [academyName, isSubmitting, i18n?.language, onSubmitAcademy, t]
+    [isSubmitting, onSubmitAcademy, t]
   );
 
   return {
-    academyName,
-    setAcademyName,
     isSubmitting,
     isSuccess,
     errorMsg,
