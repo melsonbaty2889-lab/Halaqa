@@ -16,12 +16,11 @@ const getText = (tFunc, key, fallback) => {
 export default function RoleSelectionGuard() {
   const { profile, appState, userRole, t } = useAcademy();
 
-  // 1. انتظار اكتمال تحميل البيانات لمنع الـ Race Condition
   if (appState === 'LOADING' || !appState) {
     return (
-      <div 
-        role="status" 
-        aria-label={getText(t, 'system.loading', 'جاري التحميل...')} 
+      <div
+        role="status"
+        aria-label={getText(t, 'system.loading', 'جاري التحميل...')}
         className="bg-semantic-bgPage min-h-screen flex justify-center items-center text-semantic-actionPrimary"
       >
         <Loader2 className="animate-spin" size={28} />
@@ -29,20 +28,17 @@ export default function RoleSelectionGuard() {
     );
   }
 
-  // 2. إذا لم يكتمل تسجيل الدخول أو لا يوجد ملف شخصي -> التوجيه لصفحة الدخول
   if (!profile) {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. استخراج وتدقيق الدور من المصدر المركزي
   const currentRole = (userRole || profile?.role || '').toString().toLowerCase().trim();
   const hasValidRole = VALID_ROLES.includes(currentRole);
+  const isRoleExplicitlySelected = profile?.metadata?.role_selected === true;
 
-  // 4. إذا كان لدى المستخدم دور صالح بالفعل -> منعه من دخول صفحة التحديد
-  if (hasValidRole) {
+  if (hasValidRole && isRoleExplicitlySelected) {
     return <Navigate to="/" replace />;
   }
 
-  // 5. إذا كان المستخدم مسجلاً وليس لديه دور صالح بعد -> السماح بصفحة اختيار الدور
   return <Outlet />;
 }
