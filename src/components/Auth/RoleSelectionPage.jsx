@@ -2,30 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { PrimaryButton } from '@/components/UI/AuthButtons';
 import Toast from '@/components/UI/Toast';
 import { useToast } from '@/hooks/useToast';
-import { 
-  ROLES, 
-  SELECTABLE_ROLES, 
-  isValidSelectableRole, 
-  getRouteForRole 
+import {
+  ROLES,
+  SELECTABLE_ROLES,
+  isValidSelectableRole,
+  getRouteForRole,
 } from '@/constants/roles';
-import { 
-  GraduationCap, 
-  BookOpen, 
-  Users, 
-  Building2, 
-  CheckCircle2, 
-  AlertCircle
+import {
+  GraduationCap,
+  BookOpen,
+  Users,
+  Building2,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function RoleSelectionPage({ onRoleSelected }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
+  const { refreshStatus } = useAcademy() || {};
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,10 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
     const checkUserSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
         if (error || !session) {
           navigate('/login', { replace: true });
         }
@@ -94,25 +99,33 @@ export default function RoleSelectionPage({ onRoleSelected }) {
     setErrorMsg('');
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError || !user) {
         throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
       }
 
-      // 1. التحديث الآمن للدور عبر استدعاء دالة RPC المتوافقة مع حارس الأمان protect_profile_roles
       const { error: profileError } = await supabase.rpc('set_initial_role', {
-        new_role: selectedRole
+        new_role: selectedRole,
       });
 
       if (profileError) throw profileError;
 
-      // 2. تحديث الميتاداتا الخاصة بالمستخدم في Supabase Auth
       const { error: updateAuthError } = await supabase.auth.updateUser({
-        data: { role: selectedRole }
+        data: {
+          role: selectedRole,
+          role_selected: true,
+        },
       });
       if (updateAuthError) throw updateAuthError;
 
       await supabase.auth.refreshSession();
+
+      if (typeof refreshStatus === 'function') {
+        await refreshStatus();
+      }
 
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
@@ -131,10 +144,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
   };
 
   return (
-    <AuthLayout 
-      langBtn={<LanguageSwitcher />}
-      subtitle={appSubtitle}
-    >
+    <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
       <div className="w-full max-w-xl mx-auto px-1 sm:px-2" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center mb-4 sm:mb-5 text-center">
           <h1 className="text-base sm:text-xl font-extrabold tracking-tight mb-1 text-semantic-textPrimary">
@@ -146,7 +156,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
         </div>
 
         {errorMsg && (
-          <div 
+          <div
             className="mb-4 p-2.5 rounded-xl flex items-center gap-2 text-xs border transition-all bg-semantic-dangerBg border-semantic-danger text-semantic-danger"
             role="alert"
           >
@@ -173,23 +183,23 @@ export default function RoleSelectionPage({ onRoleSelected }) {
                   if (e.key === 'Enter' || e.key === ' ') setSelectedRole(item.id);
                 }}
                 className={`relative p-3 sm:p-3.5 rounded-xl border text-start cursor-pointer transition-all flex flex-col justify-between group ${
-                  isSelected 
-                    ? 'bg-semantic-actionPrimary/10 border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary/30' 
+                  isSelected
+                    ? 'bg-semantic-actionPrimary/10 border-semantic-actionPrimary ring-1 ring-semantic-actionPrimary/30'
                     : 'bg-semantic-surfaceInput border-semantic-borderInput hover:border-semantic-borderHover'
                 }`}
               >
                 {isSelected && (
-                  <CheckCircle2 
-                    size={16} 
-                    className="absolute top-2.5 end-2.5 text-semantic-actionPrimary" 
+                  <CheckCircle2
+                    size={16}
+                    className="absolute top-2.5 end-2.5 text-semantic-actionPrimary"
                   />
                 )}
-                
+
                 <div className="flex items-center gap-2 mb-1 pe-4">
-                  <div 
+                  <div
                     className={`p-1.5 sm:p-2 rounded-lg shrink-0 border transition-colors ${
-                      isSelected 
-                        ? 'bg-semantic-actionPrimary border-semantic-actionPrimary text-white' 
+                      isSelected
+                        ? 'bg-semantic-actionPrimary border-semantic-actionPrimary text-white'
                         : 'bg-semantic-surfaceCard border-semantic-borderCard text-semantic-actionPrimary'
                     }`}
                   >
@@ -199,7 +209,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
                     {item.title}
                   </h3>
                 </div>
-                
+
                 <p className="text-[10px] sm:text-[11px] leading-relaxed m-0 text-semantic-textSecondary">
                   {item.desc}
                 </p>
