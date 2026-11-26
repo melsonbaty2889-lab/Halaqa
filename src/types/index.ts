@@ -6,13 +6,19 @@ export * from './attendance';
 export * from './badge';
 export * from './certificate';
 export * from './curriculum';
+export * from './document';
+export * from './enrollment';
 export * from './exam';
 export * from './halaqa';
 export * from './notification';
 export * from './parent';
 export * from './payment';
 export * from './profile';
+export * from './progress';
+export * from './quran';
+export * from './session';
 export * from './student';
+export * from './subscription';
 export * from './teacher';
 
 export type UserRole =
