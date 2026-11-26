@@ -1,6 +1,12 @@
 /* src/types/index.ts */
 
 export * from './database.types';
+export * from './halaqa';
+export * from './attendance';
+export * from './curriculum';
+export * from './parent';
+export * from './student';
+export * from './teacher';
 
 export type UserRole =
   | 'super_admin'
