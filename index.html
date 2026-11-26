@@ -33,11 +33,10 @@
     <!-- 3. تفريغ الـ Cache والـ Service Workers المسجلة قديمة تلقائياً -->
     <script>
       (function () {
-        const CURRENT_VERSION = '1.0.4'; // ترقية الإصدار لمسح التخزين القديم
+        const CURRENT_VERSION = '1.0.4'; // ترقية الإصدار لتحديث الكاش والـ Service Workers
         const savedVersion = localStorage.getItem('app_version');
 
         if (savedVersion !== CURRENT_VERSION) {
-          localStorage.clear();
           sessionStorage.clear();
           localStorage.setItem('app_version', CURRENT_VERSION);
 
