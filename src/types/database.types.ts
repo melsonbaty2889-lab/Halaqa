@@ -3026,39 +3026,33 @@ export interface Database {
           uploaded_at?: string | null;
         };
       };
-      vw_top_achievers: {
+            vw_top_achievers: {
         Row: {
-          student_id: string | null;
+          id: string | null;
           academy_id: string | null;
           student_name: Json | null;
-          avatar_url: string | null;
           points: number | null;
-          current_juz: number | null;
-          halaqa_id: string | null;
+          level_score: number | null;
+          avatar_url: string | null;
           halaqa_name: Json | null;
-          rank: number | null;
         };
         Insert: {
-          student_id?: string | null;
+          id?: string | null;
           academy_id?: string | null;
           student_name?: Json | null;
-          avatar_url?: string | null;
           points?: number | null;
-          current_juz?: number | null;
-          halaqa_id?: string | null;
+          level_score?: number | null;
+          avatar_url?: string | null;
           halaqa_name?: Json | null;
-          rank?: number | null;
         };
         Update: {
-          student_id?: string | null;
+          id?: string | null;
           academy_id?: string | null;
           student_name?: Json | null;
-          avatar_url?: string | null;
           points?: number | null;
-          current_juz?: number | null;
-          halaqa_id?: string | null;
+          level_score?: number | null;
+          avatar_url?: string | null;
           halaqa_name?: Json | null;
-          rank?: number | null;
         };
       };
     };
