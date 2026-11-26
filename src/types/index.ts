@@ -1,13 +1,16 @@
 /* src/types/index.ts */
 
-// إعادة تصدير كافة الأنواع من ملفات الجداول والطلاب
 export * from './database.types';
-export * from './student';
 
-// أنواع عامة ومساعدة للتطبيق بأكمله (Global & Utility Types)
-export type UserRole = 'admin' | 'supervisor' | 'teacher' | 'parent' | 'student';
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'manager'
+  | 'teacher'
+  | 'student'
+  | 'parent';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T | null;
   error: string | null;
   success: boolean;
