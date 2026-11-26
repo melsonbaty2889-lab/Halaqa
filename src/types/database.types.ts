@@ -3047,4 +3047,27 @@ export interface Database {
           current_juz?: number | null;
           halaqa_id?: string | null;
           halaqa_name?: Json | null;
-   
+          rank?: number | null;
+        };
+        Update: {
+          student_id?: string | null;
+          academy_id?: string | null;
+          student_name?: Json | null;
+          avatar_url?: string | null;
+          points?: number | null;
+          current_juz?: number | null;
+          halaqa_id?: string | null;
+          halaqa_name?: Json | null;
+          rank?: number | null;
+        };
+      };
+    };
+  };
+}
+
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
+export type InsertTables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert'];
+export type UpdateTables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update'];
