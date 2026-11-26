@@ -181,9 +181,104 @@ export interface Database {
           user_id?: string | null;
         };
       };
+          parents: {
+        Row: {
+          id: string;
+          academy_id: string;
+          name: string;
+          phone: string;
+          profile_id: string | null;
+          created_at: string;
+          updated_at: string | null;
+          email: string | null;
+          country_code: string | null;
+          preferred_language: string | null;
+          metadata: Json | null;
+          is_active: boolean;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          name: string;
+          phone: string;
+          profile_id?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          email?: string | null;
+          country_code?: string | null;
+          preferred_language?: string | null;
+          metadata?: Json | null;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          name?: string;
+          phone?: string;
+          profile_id?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          email?: string | null;
+          country_code?: string | null;
+          preferred_language?: string | null;
+          metadata?: Json | null;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+      };
+          student_guardians: {
+        Row: {
+          id: string;
+          student_id: string;
+          parent_id: string;
+          relationship_type: string;
+          can_pay: boolean;
+          can_view_reports: boolean;
+          created_at: string;
+          updated_at: string;
+          can_receive_notifications: boolean;
+          can_pickup_student: boolean;
+          metadata: Json;
+          is_primary: boolean;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          parent_id: string;
+          relationship_type?: string;
+          can_pay?: boolean;
+          can_view_reports?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          can_receive_notifications?: boolean;
+          can_pickup_student?: boolean;
+          metadata?: Json;
+          is_primary?: boolean;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          parent_id?: string;
+          relationship_type?: string;
+          can_pay?: boolean;
+          can_view_reports?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          can_receive_notifications?: boolean;
+          can_pickup_student?: boolean;
+          metadata?: Json;
+          is_primary?: boolean;
+        };
+      };
 
 
-            academies: {
+      
+                // ==========================================
+      // 3. Academies & Teachers
+      // ==========================================
+          academies: {
         Row: {
           id: string;
           name: Json;
@@ -287,7 +382,7 @@ export interface Database {
           assignment_mode?: string | null;
         };
       };
-      teachers: {
+          teachers: {
         Row: {
           id: string;
           bio: Json | null;
@@ -382,54 +477,15 @@ export interface Database {
           mobile_wallet?: string | null;
         };
       };
-      parents: {
-        Row: {
-          id: string;
-          academy_id: string;
-          name: string;
-          phone: string;
-          profile_id: string | null;
-          created_at: string;
-          updated_at: string | null;
-          email: string | null;
-          country_code: string | null;
-          preferred_language: string | null;
-          metadata: Json | null;
-          is_active: boolean;
-          created_by: string | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          name: string;
-          phone: string;
-          profile_id?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          email?: string | null;
-          country_code?: string | null;
-          preferred_language?: string | null;
-          metadata?: Json | null;
-          is_active?: boolean;
-          created_by?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          name?: string;
-          phone?: string;
-          profile_id?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          email?: string | null;
-          country_code?: string | null;
-          preferred_language?: string | null;
-          metadata?: Json | null;
-          is_active?: boolean;
-          created_by?: string | null;
-        };
-      };
-      exams: {
+
+
+
+
+      
+            // ==========================================
+      // 4. Exams, Badges & Attendance
+      // ==========================================
+          exams: {
         Row: {
           id: string;
           academy_id: string;
@@ -497,7 +553,7 @@ export interface Database {
           curriculum_item_id?: string | null;
         };
       };
-      badges: {
+          badges: {
         Row: {
           id: string;
           academy_id: string;
@@ -533,7 +589,12 @@ export interface Database {
         };
       };
 
-            curricula: {
+
+      
+                // ==========================================
+      // 5. Curricula, Quran & Progress
+      // ==========================================
+          curricula: {
         Row: {
           id: string;
           academy_id: string;
@@ -568,7 +629,7 @@ export interface Database {
           updated_at?: string | null;
         };
       };
-      curriculum_items: {
+          curriculum_items: {
         Row: {
           id: string;
           level_id: string;
@@ -630,7 +691,7 @@ export interface Database {
           created_at?: string;
         };
       };
-      curriculum_levels: {
+          curriculum_levels: {
         Row: {
           id: string;
           curriculum_id: string;
@@ -659,6 +720,11 @@ export interface Database {
           created_at?: string;
         };
       };
+
+
+
+
+      
       notifications: {
         Row: {
           id: string;
@@ -1082,7 +1148,10 @@ export interface Database {
         };
       };
 
-            student_halaqas: {
+                // ==========================================
+      // 6. Relations, Documents & Certificates
+      // ==========================================
+          student_halaqas: {
         Row: {
           id: string;
           academy_id: string;
@@ -1135,51 +1204,7 @@ export interface Database {
           metadata?: Json;
         };
       };
-      student_guardians: {
-        Row: {
-          id: string;
-          student_id: string;
-          parent_id: string;
-          relationship_type: string;
-          can_pay: boolean;
-          can_view_reports: boolean;
-          created_at: string;
-          updated_at: string;
-          can_receive_notifications: boolean;
-          can_pickup_student: boolean;
-          metadata: Json;
-          is_primary: boolean;
-        };
-        Insert: {
-          id?: string;
-          student_id: string;
-          parent_id: string;
-          relationship_type?: string;
-          can_pay?: boolean;
-          can_view_reports?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          can_receive_notifications?: boolean;
-          can_pickup_student?: boolean;
-          metadata?: Json;
-          is_primary?: boolean;
-        };
-        Update: {
-          id?: string;
-          student_id?: string;
-          parent_id?: string;
-          relationship_type?: string;
-          can_pay?: boolean;
-          can_view_reports?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          can_receive_notifications?: boolean;
-          can_pickup_student?: boolean;
-          metadata?: Json;
-          is_primary?: boolean;
-        };
-      };
-      academy_teachers: {
+          academy_teachers: {
         Row: {
           id: string;
           academy_id: string;
@@ -1205,7 +1230,7 @@ export interface Database {
           updated_at?: string | null;
         };
       };
-      files: {
+          files: {
         Row: {
           id: string;
           academy_id: string;
@@ -1240,7 +1265,7 @@ export interface Database {
           bucket_name?: string;
         };
       };
-      academy_documents: {
+          academy_documents: {
         Row: {
           id: string;
           academy_id: string;
@@ -1406,7 +1431,10 @@ export interface Database {
         };
       };
 
-            attendance_sessions: {
+                  // ==========================================
+      // 7. Subscriptions, Payments & Settings
+      // ==========================================
+          attendance_sessions: {
         Row: {
           id: string;
           academy_id: string;
@@ -1698,7 +1726,10 @@ export interface Database {
         };
       };
 
-            activity_logs: {
+                  // ==========================================
+      // 8. Notifications, Logs & System
+      // ==========================================
+          activity_logs: {
         Row: {
           id: string;
           academy_id: string | null;
@@ -1996,7 +2027,10 @@ export interface Database {
         };
       };
 
-            teachers_public_view: {
+                  // ==========================================
+      // 9. Views & Aggregated Stats
+      // ==========================================
+          teachers_public_view: {
         Row: {
           id: string | null;
           academy_id: string | null;
