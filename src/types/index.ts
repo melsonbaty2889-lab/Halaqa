@@ -1,10 +1,17 @@
 /* src/types/index.ts */
 
 export * from './database.types';
-export * from './halaqa';
+export * from './academy';
 export * from './attendance';
+export * from './badge';
+export * from './certificate';
 export * from './curriculum';
+export * from './exam';
+export * from './halaqa';
+export * from './notification';
 export * from './parent';
+export * from './payment';
+export * from './profile';
 export * from './student';
 export * from './teacher';
 
