@@ -9,6 +9,9 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+          // ==========================================
+    // 1. Users, Roles & Auth
+    // ==========================================
       profiles: {
         Row: {
           id: string;
@@ -71,7 +74,9 @@ export interface Database {
           academy_id?: string | null;
         };
       };
-
+    // ==========================================
+    // 2. Students, Parents & Guardians
+    // ==========================================
           students: {
         Row: {
           id: string;
