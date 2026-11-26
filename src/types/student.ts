@@ -1,6 +1,6 @@
 /* src/types/student.ts */
 
-import type { Json, Tables, InsertTables, UpdateTables } from './database.types';
+import type { Tables, InsertTables, UpdateTables } from './database.types';
 
 export type StudentRow = Tables<'students'>;
 export type StudentInsert = InsertTables<'students'>;
@@ -10,9 +10,7 @@ export type StudentGender = 'male' | 'female';
 export type StudentStatus = 'active' | 'inactive' | 'paused' | 'graduated';
 
 export interface Student
-  extends Omit<StudentRow, 'name' | 'notes' | 'gender' | 'status'> {
-  name: Json; // دعم اللغات المتعددة (JSONB)
-  notes: Json;
+  extends Omit<StudentRow, 'gender' | 'status'> {
   gender?: StudentGender | string | null;
   status: StudentStatus | string;
 
