@@ -9,9 +9,9 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-          // ==========================================
-    // 1. Users, Roles & Auth
-    // ==========================================
+      // ==========================================
+      // 1. Users, Roles & Auth
+      // ==========================================
       profiles: {
         Row: {
           id: string;
@@ -74,10 +74,10 @@ export interface Database {
           academy_id?: string | null;
         };
       };
-    // ==========================================
-    // 2. Students, Parents & Guardians
-    // ==========================================
-          students: {
+            // ==========================================
+      // 2. Students, Parents & Guardians
+      // ==========================================
+      students: {
         Row: {
           id: string;
           student_code: string | null;
@@ -181,7 +181,7 @@ export interface Database {
           user_id?: string | null;
         };
       };
-          parents: {
+      parents: {
         Row: {
           id: string;
           academy_id: string;
@@ -228,7 +228,7 @@ export interface Database {
           created_by?: string | null;
         };
       };
-          student_guardians: {
+      student_guardians: {
         Row: {
           id: string;
           student_id: string;
@@ -272,13 +272,10 @@ export interface Database {
           is_primary?: boolean;
         };
       };
-
-
-      
-                // ==========================================
-      // 3. Academies & Teachers
+            // ==========================================
+      // 3. Academies, Halaqas & Teachers
       // ==========================================
-          academies: {
+      academies: {
         Row: {
           id: string;
           name: Json;
@@ -382,7 +379,7 @@ export interface Database {
           assignment_mode?: string | null;
         };
       };
-          teachers: {
+      teachers: {
         Row: {
           id: string;
           bio: Json | null;
@@ -477,15 +474,310 @@ export interface Database {
           mobile_wallet?: string | null;
         };
       };
-
-
-
-
-      
+      halaqas: {
+        Row: {
+          id: string;
+          academy_id: string;
+          teacher_id: string | null;
+          description: Json | null;
+          days_of_week: string[] | null;
+          start_time: string;
+          end_time: string;
+          max_students: number | null;
+          meeting_url: string | null;
+          status: string | null;
+          target_audience: string | null;
+          teaching_type: string | null;
+          educational_track: string | null;
+          created_at: string;
+          updated_at: string | null;
+          is_archived: boolean;
+          code: string | null;
+          language_code: string | null;
+          curriculum_id: string | null;
+          min_students: number | null;
+          meeting_platform: string | null;
+          name: Json;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          teacher_id?: string | null;
+          description?: Json | null;
+          days_of_week?: string[] | null;
+          start_time: string;
+          end_time: string;
+          max_students?: number | null;
+          meeting_url?: string | null;
+          status?: string | null;
+          target_audience?: string | null;
+          teaching_type?: string | null;
+          educational_track?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          is_archived?: boolean;
+          code?: string | null;
+          language_code?: string | null;
+          curriculum_id?: string | null;
+          min_students?: number | null;
+          meeting_platform?: string | null;
+          name?: Json;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          teacher_id?: string | null;
+          description?: Json | null;
+          days_of_week?: string[] | null;
+          start_time?: string;
+          end_time?: string;
+          max_students?: number | null;
+          meeting_url?: string | null;
+          status?: string | null;
+          target_audience?: string | null;
+          teaching_type?: string | null;
+          educational_track?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          is_archived?: boolean;
+          code?: string | null;
+          language_code?: string | null;
+          curriculum_id?: string | null;
+          min_students?: number | null;
+          meeting_platform?: string | null;
+          name?: Json;
+        };
+      };
+      student_halaqas: {
+        Row: {
+          id: string;
+          academy_id: string;
+          student_id: string;
+          halaqa_id: string;
+          joined_at: string;
+          left_at: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string | null;
+          leave_reason: string | null;
+          changed_by: string | null;
+          notes: string | null;
+          is_archived: boolean;
+          deleted_at: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          student_id: string;
+          halaqa_id: string;
+          joined_at?: string;
+          left_at?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string | null;
+          leave_reason?: string | null;
+          changed_by?: string | null;
+          notes?: string | null;
+          is_archived?: boolean;
+          deleted_at?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          student_id?: string;
+          halaqa_id?: string;
+          joined_at?: string;
+          left_at?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string | null;
+          leave_reason?: string | null;
+          changed_by?: string | null;
+          notes?: string | null;
+          is_archived?: boolean;
+          deleted_at?: string | null;
+          metadata?: Json;
+        };
+      };
+      academy_teachers: {
+        Row: {
+          id: string;
+          academy_id: string;
+          teacher_id: string;
+          is_active: boolean | null;
+          created_at: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          teacher_id: string;
+          is_active?: boolean | null;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          teacher_id?: string;
+          is_active?: boolean | null;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+      };
             // ==========================================
-      // 4. Exams, Badges & Attendance
+      // 4. Attendance, Exams & Badges
       // ==========================================
-          exams: {
+      attendance: {
+        Row: {
+          id: string;
+          academy_id: string;
+          halaqa_id: string;
+          student_id: string;
+          teacher_id: string | null;
+          date: string;
+          status: string;
+          retention_assignment: string | null;
+          new_memorization: string | null;
+          session_grade: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string | null;
+          quarter_index: number | null;
+          juz: number | null;
+          quarter_in_hizb: number | null;
+          lesson_activity: string | null;
+          session_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          halaqa_id: string;
+          student_id: string;
+          teacher_id?: string | null;
+          date?: string;
+          status: string;
+          retention_assignment?: string | null;
+          new_memorization?: string | null;
+          session_grade?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          quarter_index?: number | null;
+          juz?: number | null;
+          quarter_in_hizb?: number | null;
+          lesson_activity?: string | null;
+          session_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          halaqa_id?: string;
+          student_id?: string;
+          teacher_id?: string | null;
+          date?: string;
+          status?: string;
+          retention_assignment?: string | null;
+          new_memorization?: string | null;
+          session_grade?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          quarter_index?: number | null;
+          juz?: number | null;
+          quarter_in_hizb?: number | null;
+          lesson_activity?: string | null;
+          session_id?: string | null;
+        };
+      };
+      attendance_sessions: {
+        Row: {
+          id: string;
+          academy_id: string;
+          halaqa_id: string;
+          session_date: string;
+          session_notes: string | null;
+          created_at: string;
+          created_in_timezone: string | null;
+          teacher_id: string | null;
+          updated_at: string | null;
+          session_type: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          halaqa_id: string;
+          session_date?: string;
+          session_notes?: string | null;
+          created_at?: string;
+          created_in_timezone?: string | null;
+          teacher_id?: string | null;
+          updated_at?: string | null;
+          session_type?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          halaqa_id?: string;
+          session_date?: string;
+          session_notes?: string | null;
+          created_at?: string;
+          created_in_timezone?: string | null;
+          teacher_id?: string | null;
+          updated_at?: string | null;
+          session_type?: string | null;
+        };
+      };
+      teacher_availability: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          day_of_week: string;
+          start_time: string;
+          end_time: string;
+          academy_id: string | null;
+          is_active: boolean;
+          timezone: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string | null;
+          is_archived: boolean;
+          archived_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          day_of_week: string;
+          start_time: string;
+          end_time: string;
+          academy_id?: string | null;
+          is_active?: boolean;
+          timezone?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          is_archived?: boolean;
+          archived_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          teacher_id?: string;
+          day_of_week?: string;
+          start_time?: string;
+          end_time?: string;
+          academy_id?: string | null;
+          is_active?: boolean;
+          timezone?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          is_archived?: boolean;
+          archived_at?: string | null;
+        };
+      };
+      exams: {
         Row: {
           id: string;
           academy_id: string;
@@ -553,7 +845,7 @@ export interface Database {
           curriculum_item_id?: string | null;
         };
       };
-          badges: {
+      badges: {
         Row: {
           id: string;
           academy_id: string;
@@ -588,13 +880,54 @@ export interface Database {
           updated_at?: string | null;
         };
       };
-
-
-      
-                // ==========================================
+      student_badges: {
+        Row: {
+          id: string;
+          student_id: string;
+          badge_id: string;
+          unlocked_at: string | null;
+          academy_id: string | null;
+          awarded_by: string | null;
+          reason: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+          is_archived: boolean;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          badge_id: string;
+          unlocked_at?: string | null;
+          academy_id?: string | null;
+          awarded_by?: string | null;
+          reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          is_archived?: boolean;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          badge_id?: string;
+          unlocked_at?: string | null;
+          academy_id?: string | null;
+          awarded_by?: string | null;
+          reason?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          is_archived?: boolean;
+          deleted_at?: string | null;
+        };
+      };
+            // ==========================================
       // 5. Curricula, Quran & Progress
       // ==========================================
-          curricula: {
+      curricula: {
         Row: {
           id: string;
           academy_id: string;
@@ -629,7 +962,36 @@ export interface Database {
           updated_at?: string | null;
         };
       };
-          curriculum_items: {
+      curriculum_levels: {
+        Row: {
+          id: string;
+          curriculum_id: string;
+          order_index: number;
+          passing_score: number;
+          title: Json;
+          updated_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          curriculum_id: string;
+          order_index?: number;
+          passing_score?: number;
+          title?: Json;
+          updated_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          curriculum_id?: string;
+          order_index?: number;
+          passing_score?: number;
+          title?: Json;
+          updated_at?: string | null;
+          created_at?: string;
+        };
+      };
+      curriculum_items: {
         Row: {
           id: string;
           level_id: string;
@@ -691,142 +1053,7 @@ export interface Database {
           created_at?: string;
         };
       };
-          curriculum_levels: {
-        Row: {
-          id: string;
-          curriculum_id: string;
-          order_index: number;
-          passing_score: number;
-          title: Json;
-          updated_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          curriculum_id: string;
-          order_index?: number;
-          passing_score?: number;
-          title?: Json;
-          updated_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          curriculum_id?: string;
-          order_index?: number;
-          passing_score?: number;
-          title?: Json;
-          updated_at?: string | null;
-          created_at?: string;
-        };
-      };
-
-
-
-
-      
-      notifications: {
-        Row: {
-          id: string;
-          academy_id: string | null;
-          user_id: string | null;
-          title: Json;
-          message: Json | null;
-          is_read: boolean | null;
-          notification_type: string | null;
-          created_at: string;
-          action_url: string | null;
-          entity_type: string | null;
-          entity_id: string | null;
-          read_at: string | null;
-          metadata: Json | null;
-          is_archived: boolean;
-          priority: string | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id?: string | null;
-          user_id?: string | null;
-          title: Json;
-          message?: Json | null;
-          is_read?: boolean | null;
-          notification_type?: string | null;
-          created_at?: string;
-          action_url?: string | null;
-          entity_type?: string | null;
-          entity_id?: string | null;
-          read_at?: string | null;
-          metadata?: Json | null;
-          is_archived?: boolean;
-          priority?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string | null;
-          user_id?: string | null;
-          title?: Json;
-          message?: Json | null;
-          is_read?: boolean | null;
-          notification_type?: string | null;
-          created_at?: string;
-          action_url?: string | null;
-          entity_type?: string | null;
-          entity_id?: string | null;
-          read_at?: string | null;
-          metadata?: Json | null;
-          is_archived?: boolean;
-          priority?: string | null;
-        };
-      };
-      notification_templates: {
-        Row: {
-          id: string;
-          academy_id: string;
-          trigger_event: string;
-          locale_code: string | null;
-          title: string | null;
-          template_body: string;
-          channels: string[] | null;
-          is_active: boolean | null;
-          created_at: string;
-          updated_at: string | null;
-          template_name: string | null;
-          description: string | null;
-          available_variables: Json | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          trigger_event: string;
-          locale_code?: string | null;
-          title?: string | null;
-          template_body: string;
-          channels?: string[] | null;
-          is_active?: boolean | null;
-          created_at?: string;
-          updated_at?: string | null;
-          template_name?: string | null;
-          description?: string | null;
-          available_variables?: Json | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          trigger_event?: string;
-          locale_code?: string | null;
-          title?: string | null;
-          template_body?: string;
-          channels?: string[] | null;
-          is_active?: boolean | null;
-          created_at?: string;
-          updated_at?: string | null;
-          template_name?: string | null;
-          description?: string | null;
-          available_variables?: Json | null;
-        };
-      };
-
-            daily_progress: {
+      daily_progress: {
         Row: {
           id: string;
           academy_id: string;
@@ -1147,90 +1374,57 @@ export interface Database {
           reviewed_at?: string | null;
         };
       };
-
-                // ==========================================
-      // 6. Relations, Documents & Certificates
+            // ==========================================
+      // 6. Certificates & Documents
       // ==========================================
-          student_halaqas: {
+      certificates: {
         Row: {
           id: string;
-          academy_id: string;
           student_id: string;
-          halaqa_id: string;
-          joined_at: string;
-          left_at: string | null;
-          status: string;
-          created_at: string;
+          curriculum_id: string;
+          verification_code: string;
+          issued_at: string | null;
+          pdf_url: string | null;
+          issued_by: string | null;
+          metadata: Json | null;
+          certificate_type: string | null;
+          qr_hash: string | null;
+          verified_url: string | null;
           updated_at: string | null;
-          leave_reason: string | null;
-          changed_by: string | null;
-          notes: string | null;
-          is_archived: boolean;
-          deleted_at: string | null;
-          metadata: Json;
+          created_at: string;
         };
         Insert: {
           id?: string;
-          academy_id: string;
           student_id: string;
-          halaqa_id: string;
-          joined_at?: string;
-          left_at?: string | null;
-          status?: string;
-          created_at?: string;
+          curriculum_id: string;
+          verification_code: string;
+          issued_at?: string | null;
+          pdf_url?: string | null;
+          issued_by?: string | null;
+          metadata?: Json | null;
+          certificate_type?: string | null;
+          qr_hash?: string | null;
+          verified_url?: string | null;
           updated_at?: string | null;
-          leave_reason?: string | null;
-          changed_by?: string | null;
-          notes?: string | null;
-          is_archived?: boolean;
-          deleted_at?: string | null;
-          metadata?: Json;
+          created_at?: string;
         };
         Update: {
           id?: string;
-          academy_id?: string;
           student_id?: string;
-          halaqa_id?: string;
-          joined_at?: string;
-          left_at?: string | null;
-          status?: string;
-          created_at?: string;
+          curriculum_id?: string;
+          verification_code?: string;
+          issued_at?: string | null;
+          pdf_url?: string | null;
+          issued_by?: string | null;
+          metadata?: Json | null;
+          certificate_type?: string | null;
+          qr_hash?: string | null;
+          verified_url?: string | null;
           updated_at?: string | null;
-          leave_reason?: string | null;
-          changed_by?: string | null;
-          notes?: string | null;
-          is_archived?: boolean;
-          deleted_at?: string | null;
-          metadata?: Json;
+          created_at?: string;
         };
       };
-          academy_teachers: {
-        Row: {
-          id: string;
-          academy_id: string;
-          teacher_id: string;
-          is_active: boolean | null;
-          created_at: string;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          teacher_id: string;
-          is_active?: boolean | null;
-          created_at?: string;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          teacher_id?: string;
-          is_active?: boolean | null;
-          created_at?: string;
-          updated_at?: string | null;
-        };
-      };
-          files: {
+      files: {
         Row: {
           id: string;
           academy_id: string;
@@ -1265,7 +1459,7 @@ export interface Database {
           bucket_name?: string;
         };
       };
-          academy_documents: {
+      academy_documents: {
         Row: {
           id: string;
           academy_id: string;
@@ -1430,93 +1624,125 @@ export interface Database {
           created_at?: string;
         };
       };
-
-                  // ==========================================
-      // 7. Subscriptions, Payments & Settings
+            // ==========================================
+      // 7. Payments, Subscriptions & Settings
       // ==========================================
-          attendance_sessions: {
+      payments: {
         Row: {
           id: string;
           academy_id: string;
-          halaqa_id: string;
-          session_date: string;
-          session_notes: string | null;
+          student_id: string;
+          plan_id: string | null;
+          amount: number;
+          currency: string;
+          period_start: string | null;
+          period_end: string | null;
+          due_date: string;
+          paid_at: string | null;
+          status: string;
+          payment_method: string | null;
+          gateway_ref: string | null;
+          notes: string | null;
           created_at: string;
-          created_in_timezone: string | null;
-          teacher_id: string | null;
-          updated_at: string | null;
-          session_type: string | null;
+          updated_at: string;
+          invoice_number: string | null;
+          metadata: Json | null;
+          created_by: string | null;
+          month: string | null;
+          receipt_url: string | null;
+          exchange_rate: number;
         };
         Insert: {
           id?: string;
           academy_id: string;
-          halaqa_id: string;
-          session_date?: string;
-          session_notes?: string | null;
+          student_id: string;
+          plan_id?: string | null;
+          amount?: number;
+          currency?: string;
+          period_start?: string | null;
+          period_end?: string | null;
+          due_date?: string;
+          paid_at?: string | null;
+          status?: string;
+          payment_method?: string | null;
+          gateway_ref?: string | null;
+          notes?: string | null;
           created_at?: string;
-          created_in_timezone?: string | null;
-          teacher_id?: string | null;
-          updated_at?: string | null;
-          session_type?: string | null;
+          updated_at?: string;
+          invoice_number?: string | null;
+          metadata?: Json | null;
+          created_by?: string | null;
+          month?: string | null;
+          receipt_url?: string | null;
+          exchange_rate?: number;
         };
         Update: {
           id?: string;
           academy_id?: string;
-          halaqa_id?: string;
-          session_date?: string;
-          session_notes?: string | null;
+          student_id?: string;
+          plan_id?: string | null;
+          amount?: number;
+          currency?: string;
+          period_start?: string | null;
+          period_end?: string | null;
+          due_date?: string;
+          paid_at?: string | null;
+          status?: string;
+          payment_method?: string | null;
+          gateway_ref?: string | null;
+          notes?: string | null;
           created_at?: string;
-          created_in_timezone?: string | null;
-          teacher_id?: string | null;
-          updated_at?: string | null;
-          session_type?: string | null;
+          updated_at?: string;
+          invoice_number?: string | null;
+          metadata?: Json | null;
+          created_by?: string | null;
+          month?: string | null;
+          receipt_url?: string | null;
+          exchange_rate?: number;
         };
       };
-      teacher_availability: {
+      payment_plans: {
         Row: {
           id: string;
-          teacher_id: string;
-          day_of_week: string;
-          start_time: string;
-          end_time: string;
-          academy_id: string | null;
+          academy_id: string;
+          name: Json;
+          price: number;
+          currency: string;
+          duration_days: number;
           is_active: boolean;
-          timezone: string | null;
-          notes: string | null;
           created_at: string;
           updated_at: string | null;
           is_archived: boolean;
-          archived_at: string | null;
+          color: string | null;
+          metadata: Json | null;
         };
         Insert: {
           id?: string;
-          teacher_id: string;
-          day_of_week: string;
-          start_time: string;
-          end_time: string;
-          academy_id?: string | null;
+          academy_id: string;
+          name: Json;
+          price?: number;
+          currency?: string;
+          duration_days?: number;
           is_active?: boolean;
-          timezone?: string | null;
-          notes?: string | null;
           created_at?: string;
           updated_at?: string | null;
           is_archived?: boolean;
-          archived_at?: string | null;
+          color?: string | null;
+          metadata?: Json | null;
         };
         Update: {
           id?: string;
-          teacher_id?: string;
-          day_of_week?: string;
-          start_time?: string;
-          end_time?: string;
-          academy_id?: string | null;
+          academy_id?: string;
+          name?: Json;
+          price?: number;
+          currency?: string;
+          duration_days?: number;
           is_active?: boolean;
-          timezone?: string | null;
-          notes?: string | null;
           created_at?: string;
           updated_at?: string | null;
           is_archived?: boolean;
-          archived_at?: string | null;
+          color?: string | null;
+          metadata?: Json | null;
         };
       };
       saas_subscriptions: {
@@ -1637,6 +1863,32 @@ export interface Database {
           description?: string | null;
         };
       };
+      saas_coupon_redemptions: {
+        Row: {
+          id: string;
+          coupon_id: string;
+          academy_id: string;
+          subscription_id: string | null;
+          discount_applied: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          coupon_id: string;
+          academy_id: string;
+          subscription_id?: string | null;
+          discount_applied: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          coupon_id?: string;
+          academy_id?: string;
+          subscription_id?: string | null;
+          discount_applied?: number;
+          created_at?: string;
+        };
+      };
       saas_referrals: {
         Row: {
           id: string;
@@ -1725,11 +1977,267 @@ export interface Database {
           created_at?: string;
         };
       };
-
-                  // ==========================================
+            // ==========================================
       // 8. Notifications, Logs & System
       // ==========================================
-          activity_logs: {
+      notifications: {
+        Row: {
+          id: string;
+          academy_id: string | null;
+          user_id: string | null;
+          title: Json;
+          message: Json | null;
+          is_read: boolean | null;
+          notification_type: string | null;
+          created_at: string;
+          action_url: string | null;
+          entity_type: string | null;
+          entity_id: string | null;
+          read_at: string | null;
+          metadata: Json | null;
+          is_archived: boolean;
+          priority: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id?: string | null;
+          user_id?: string | null;
+          title: Json;
+          message?: Json | null;
+          is_read?: boolean | null;
+          notification_type?: string | null;
+          created_at?: string;
+          action_url?: string | null;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          read_at?: string | null;
+          metadata?: Json | null;
+          is_archived?: boolean;
+          priority?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string | null;
+          user_id?: string | null;
+          title?: Json;
+          message?: Json | null;
+          is_read?: boolean | null;
+          notification_type?: string | null;
+          created_at?: string;
+          action_url?: string | null;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          read_at?: string | null;
+          metadata?: Json | null;
+          is_archived?: boolean;
+          priority?: string | null;
+        };
+      };
+      notification_logs: {
+        Row: {
+          id: string;
+          academy_id: string;
+          recipient_user_id: string | null;
+          channel_used: string;
+          status: string | null;
+          sent_text: string;
+          error_message: string | null;
+          created_at: string;
+          template_id: string | null;
+          provider_message_id: string | null;
+          provider: string | null;
+          delivered_at: string | null;
+          metadata: Json | null;
+          rendered_content: string | null;
+          template_data: Json | null;
+          error_code: string | null;
+          retry_count: number;
+          priority: string;
+          message_cost: number | null;
+          read_at: string | null;
+          locale_code: string | null;
+          idempotency_key: string | null;
+          student_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          recipient_user_id?: string | null;
+          channel_used: string;
+          status?: string | null;
+          sent_text: string;
+          error_message?: string | null;
+          created_at?: string;
+          template_id?: string | null;
+          provider_message_id?: string | null;
+          provider?: string | null;
+          delivered_at?: string | null;
+          metadata?: Json | null;
+          rendered_content?: string | null;
+          template_data?: Json | null;
+          error_code?: string | null;
+          retry_count?: number;
+          priority?: string;
+          message_cost?: number | null;
+          read_at?: string | null;
+          locale_code?: string | null;
+          idempotency_key?: string | null;
+          student_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          recipient_user_id?: string | null;
+          channel_used?: string;
+          status?: string | null;
+          sent_text?: string;
+          error_message?: string | null;
+          created_at?: string;
+          template_id?: string | null;
+          provider_message_id?: string | null;
+          provider?: string | null;
+          delivered_at?: string | null;
+          metadata?: Json | null;
+          rendered_content?: string | null;
+          template_data?: Json | null;
+          error_code?: string | null;
+          retry_count?: number;
+          priority?: string;
+          message_cost?: number | null;
+          read_at?: string | null;
+          locale_code?: string | null;
+          idempotency_key?: string | null;
+          student_id?: string | null;
+        };
+      };
+      notification_logs_archive: {
+        Row: {
+          id: string;
+          academy_id: string;
+          recipient_user_id: string | null;
+          channel_used: string;
+          status: string | null;
+          sent_text: string;
+          error_message: string | null;
+          created_at: string;
+          archived_at: string;
+          template_id: string | null;
+          provider_message_id: string | null;
+          provider: string | null;
+          delivered_at: string | null;
+          metadata: Json | null;
+          rendered_content: string | null;
+          template_data: Json | null;
+          error_code: string | null;
+          retry_count: number;
+          priority: string;
+          message_cost: number | null;
+          read_at: string | null;
+          locale_code: string | null;
+          idempotency_key: string | null;
+          student_id: string | null;
+        };
+        Insert: {
+          id: string;
+          academy_id: string;
+          recipient_user_id?: string | null;
+          channel_used: string;
+          status?: string | null;
+          sent_text: string;
+          error_message?: string | null;
+          created_at: string;
+          archived_at?: string;
+          template_id?: string | null;
+          provider_message_id?: string | null;
+          provider?: string | null;
+          delivered_at?: string | null;
+          metadata?: Json | null;
+          rendered_content?: string | null;
+          template_data?: Json | null;
+          error_code?: string | null;
+          retry_count?: number;
+          priority?: string;
+          message_cost?: number | null;
+          read_at?: string | null;
+          locale_code?: string | null;
+          idempotency_key?: string | null;
+          student_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          recipient_user_id?: string | null;
+          channel_used?: string;
+          status?: string | null;
+          sent_text?: string;
+          error_message?: string | null;
+          created_at?: string;
+          archived_at?: string;
+          template_id?: string | null;
+          provider_message_id?: string | null;
+          provider?: string | null;
+          delivered_at?: string | null;
+          metadata?: Json | null;
+          rendered_content?: string | null;
+          template_data?: Json | null;
+          error_code?: string | null;
+          retry_count?: number;
+          priority?: string;
+          message_cost?: number | null;
+          read_at?: string | null;
+          locale_code?: string | null;
+          idempotency_key?: string | null;
+          student_id?: string | null;
+        };
+      };
+      notification_templates: {
+        Row: {
+          id: string;
+          academy_id: string;
+          trigger_event: string;
+          locale_code: string | null;
+          title: string | null;
+          template_body: string;
+          channels: string[] | null;
+          is_active: boolean | null;
+          created_at: string;
+          updated_at: string | null;
+          template_name: string | null;
+          description: string | null;
+          available_variables: Json | null;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          trigger_event: string;
+          locale_code?: string | null;
+          title?: string | null;
+          template_body: string;
+          channels?: string[] | null;
+          is_active?: boolean | null;
+          created_at?: string;
+          updated_at?: string | null;
+          template_name?: string | null;
+          description?: string | null;
+          available_variables?: Json | null;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          trigger_event?: string;
+          locale_code?: string | null;
+          title?: string | null;
+          template_body?: string;
+          channels?: string[] | null;
+          is_active?: boolean | null;
+          created_at?: string;
+          updated_at?: string | null;
+          template_name?: string | null;
+          description?: string | null;
+          available_variables?: Json | null;
+        };
+      };
+      activity_logs: {
         Row: {
           id: string;
           academy_id: string | null;
@@ -1858,86 +2366,6 @@ export interface Database {
           created_at?: string;
         };
       };
-      notification_logs_archive: {
-        Row: {
-          id: string;
-          academy_id: string;
-          recipient_user_id: string | null;
-          channel_used: string;
-          status: string | null;
-          sent_text: string;
-          error_message: string | null;
-          created_at: string;
-          archived_at: string;
-          template_id: string | null;
-          provider_message_id: string | null;
-          provider: string | null;
-          delivered_at: string | null;
-          metadata: Json | null;
-          rendered_content: string | null;
-          template_data: Json | null;
-          error_code: string | null;
-          retry_count: number;
-          priority: string;
-          message_cost: number | null;
-          read_at: string | null;
-          locale_code: string | null;
-          idempotency_key: string | null;
-          student_id: string | null;
-        };
-        Insert: {
-          id: string;
-          academy_id: string;
-          recipient_user_id?: string | null;
-          channel_used: string;
-          status?: string | null;
-          sent_text: string;
-          error_message?: string | null;
-          created_at: string;
-          archived_at?: string;
-          template_id?: string | null;
-          provider_message_id?: string | null;
-          provider?: string | null;
-          delivered_at?: string | null;
-          metadata?: Json | null;
-          rendered_content?: string | null;
-          template_data?: Json | null;
-          error_code?: string | null;
-          retry_count?: number;
-          priority?: string;
-          message_cost?: number | null;
-          read_at?: string | null;
-          locale_code?: string | null;
-          idempotency_key?: string | null;
-          student_id?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          recipient_user_id?: string | null;
-          channel_used?: string;
-          status?: string | null;
-          sent_text?: string;
-          error_message?: string | null;
-          created_at?: string;
-          archived_at?: string;
-          template_id?: string | null;
-          provider_message_id?: string | null;
-          provider?: string | null;
-          delivered_at?: string | null;
-          metadata?: Json | null;
-          rendered_content?: string | null;
-          template_data?: Json | null;
-          error_code?: string | null;
-          retry_count?: number;
-          priority?: string;
-          message_cost?: number | null;
-          read_at?: string | null;
-          locale_code?: string | null;
-          idempotency_key?: string | null;
-          student_id?: string | null;
-        };
-      };
       saas_events_queue: {
         Row: {
           id: string;
@@ -2026,11 +2454,10 @@ export interface Database {
           updated_at?: string | null;
         };
       };
-
-                  // ==========================================
+            // ==========================================
       // 9. Views & Aggregated Stats
       // ==========================================
-          teachers_public_view: {
+      teachers_public_view: {
         Row: {
           id: string | null;
           academy_id: string | null;
@@ -2315,8 +2742,7 @@ export interface Database {
           created_at?: string | null;
         };
       };
-
-            v_overdue_payments: {
+      v_overdue_payments: {
         Row: {
           payment_id: string | null;
           academy_id: string | null;
@@ -2621,487 +3047,4 @@ export interface Database {
           current_juz?: number | null;
           halaqa_id?: string | null;
           halaqa_name?: Json | null;
-          rank?: number | null;
-        };
-        Update: {
-          student_id?: string | null;
-          academy_id?: string | null;
-          student_name?: Json | null;
-          avatar_url?: string | null;
-          points?: number | null;
-          current_juz?: number | null;
-          halaqa_id?: string | null;
-          halaqa_name?: Json | null;
-          rank?: number | null;
-        };
-      };
-      
-          halaqas: {
-        Row: {
-          id: string;
-          academy_id: string;
-          teacher_id: string | null;
-          description: Json | null;
-          days_of_week: string[] | null;
-          start_time: string;
-          end_time: string;
-          max_students: number | null;
-          meeting_url: string | null;
-          status: string | null;
-          target_audience: string | null;
-          teaching_type: string | null;
-          educational_track: string | null;
-          created_at: string;
-          updated_at: string | null;
-          is_archived: boolean;
-          code: string | null;
-          language_code: string | null;
-          curriculum_id: string | null;
-          min_students: number | null;
-          meeting_platform: string | null;
-          name: Json;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          teacher_id?: string | null;
-          description?: Json | null;
-          days_of_week?: string[] | null;
-          start_time: string;
-          end_time: string;
-          max_students?: number | null;
-          meeting_url?: string | null;
-          status?: string | null;
-          target_audience?: string | null;
-          teaching_type?: string | null;
-          educational_track?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          is_archived?: boolean;
-          code?: string | null;
-          language_code?: string | null;
-          curriculum_id?: string | null;
-          min_students?: number | null;
-          meeting_platform?: string | null;
-          name?: Json;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          teacher_id?: string | null;
-          description?: Json | null;
-          days_of_week?: string[] | null;
-          start_time?: string;
-          end_time?: string;
-          max_students?: number | null;
-          meeting_url?: string | null;
-          status?: string | null;
-          target_audience?: string | null;
-          teaching_type?: string | null;
-          educational_track?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          is_archived?: boolean;
-          code?: string | null;
-          language_code?: string | null;
-          curriculum_id?: string | null;
-          min_students?: number | null;
-          meeting_platform?: string | null;
-          name?: Json;
-        };
-      };
-
-          attendance: {
-        Row: {
-          id: string;
-          academy_id: string;
-          halaqa_id: string;
-          student_id: string;
-          teacher_id: string | null;
-          date: string;
-          status: string;
-          retention_assignment: string | null;
-          new_memorization: string | null;
-          session_grade: number | null;
-          notes: string | null;
-          created_at: string;
-          updated_at: string | null;
-          quarter_index: number | null;
-          juz: number | null;
-          quarter_in_hizb: number | null;
-          lesson_activity: string | null;
-          session_id: string | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          halaqa_id: string;
-          student_id: string;
-          teacher_id?: string | null;
-          date?: string;
-          status: string;
-          retention_assignment?: string | null;
-          new_memorization?: string | null;
-          session_grade?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          quarter_index?: number | null;
-          juz?: number | null;
-          quarter_in_hizb?: number | null;
-          lesson_activity?: string | null;
-          session_id?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          halaqa_id?: string;
-          student_id?: string;
-          teacher_id?: string | null;
-          date?: string;
-          status?: string;
-          retention_assignment?: string | null;
-          new_memorization?: string | null;
-          session_grade?: number | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string | null;
-          quarter_index?: number | null;
-          juz?: number | null;
-          quarter_in_hizb?: number | null;
-          lesson_activity?: string | null;
-          session_id?: string | null;
-        };
-      };
-
-          certificates: {
-        Row: {
-          id: string;
-          student_id: string;
-          curriculum_id: string;
-          verification_code: string;
-          issued_at: string | null;
-          pdf_url: string | null;
-          issued_by: string | null;
-          metadata: Json | null;
-          certificate_type: string | null;
-          qr_hash: string | null;
-          verified_url: string | null;
-          updated_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          student_id: string;
-          curriculum_id: string;
-          verification_code: string;
-          issued_at?: string | null;
-          pdf_url?: string | null;
-          issued_by?: string | null;
-          metadata?: Json | null;
-          certificate_type?: string | null;
-          qr_hash?: string | null;
-          verified_url?: string | null;
-          updated_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          student_id?: string;
-          curriculum_id?: string;
-          verification_code?: string;
-          issued_at?: string | null;
-          pdf_url?: string | null;
-          issued_by?: string | null;
-          metadata?: Json | null;
-          certificate_type?: string | null;
-          qr_hash?: string | null;
-          verified_url?: string | null;
-          updated_at?: string | null;
-          created_at?: string;
-        };
-      };
-
-        payments: {
-        Row: {
-          id: string;
-          academy_id: string;
-          student_id: string;
-          plan_id: string | null;
-          amount: number;
-          currency: string;
-          period_start: string | null;
-          period_end: string | null;
-          due_date: string;
-          paid_at: string | null;
-          status: string;
-          payment_method: string | null;
-          gateway_ref: string | null;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-          invoice_number: string | null;
-          metadata: Json | null;
-          created_by: string | null;
-          month: string | null;
-          receipt_url: string | null;
-          exchange_rate: number;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          student_id: string;
-          plan_id?: string | null;
-          amount?: number;
-          currency?: string;
-          period_start?: string | null;
-          period_end?: string | null;
-          due_date?: string;
-          paid_at?: string | null;
-          status?: string;
-          payment_method?: string | null;
-          gateway_ref?: string | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          invoice_number?: string | null;
-          metadata?: Json | null;
-          created_by?: string | null;
-          month?: string | null;
-          receipt_url?: string | null;
-          exchange_rate?: number;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          student_id?: string;
-          plan_id?: string | null;
-          amount?: number;
-          currency?: string;
-          period_start?: string | null;
-          period_end?: string | null;
-          due_date?: string;
-          paid_at?: string | null;
-          status?: string;
-          payment_method?: string | null;
-          gateway_ref?: string | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          invoice_number?: string | null;
-          metadata?: Json | null;
-          created_by?: string | null;
-          month?: string | null;
-          receipt_url?: string | null;
-          exchange_rate?: number;
-        };
-      };
-
-            payment_plans: {
-        Row: {
-          id: string;
-          academy_id: string;
-          name: Json;
-          price: number;
-          currency: string;
-          duration_days: number;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string | null;
-          is_archived: boolean;
-          color: string | null;
-          metadata: Json | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          name: Json;
-          price?: number;
-          currency?: string;
-          duration_days?: number;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string | null;
-          is_archived?: boolean;
-          color?: string | null;
-          metadata?: Json | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          name?: Json;
-          price?: number;
-          currency?: string;
-          duration_days?: number;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string | null;
-          is_archived?: boolean;
-          color?: string | null;
-          metadata?: Json | null;
-        };
-      };
-
-            notification_logs: {
-        Row: {
-          id: string;
-          academy_id: string;
-          recipient_user_id: string | null;
-          channel_used: string;
-          status: string | null;
-          sent_text: string;
-          error_message: string | null;
-          created_at: string;
-          template_id: string | null;
-          provider_message_id: string | null;
-          provider: string | null;
-          delivered_at: string | null;
-          metadata: Json | null;
-          rendered_content: string | null;
-          template_data: Json | null;
-          error_code: string | null;
-          retry_count: number;
-          priority: string;
-          message_cost: number | null;
-          read_at: string | null;
-          locale_code: string | null;
-          idempotency_key: string | null;
-          student_id: string | null;
-        };
-        Insert: {
-          id?: string;
-          academy_id: string;
-          recipient_user_id?: string | null;
-          channel_used: string;
-          status?: string | null;
-          sent_text: string;
-          error_message?: string | null;
-          created_at?: string;
-          template_id?: string | null;
-          provider_message_id?: string | null;
-          provider?: string | null;
-          delivered_at?: string | null;
-          metadata?: Json | null;
-          rendered_content?: string | null;
-          template_data?: Json | null;
-          error_code?: string | null;
-          retry_count?: number;
-          priority?: string;
-          message_cost?: number | null;
-          read_at?: string | null;
-          locale_code?: string | null;
-          idempotency_key?: string | null;
-          student_id?: string | null;
-        };
-        Update: {
-          id?: string;
-          academy_id?: string;
-          recipient_user_id?: string | null;
-          channel_used?: string;
-          status?: string | null;
-          sent_text?: string;
-          error_message?: string | null;
-          created_at?: string;
-          template_id?: string | null;
-          provider_message_id?: string | null;
-          provider?: string | null;
-          delivered_at?: string | null;
-          metadata?: Json | null;
-          rendered_content?: string | null;
-          template_data?: Json | null;
-          error_code?: string | null;
-          retry_count?: number;
-          priority?: string;
-          message_cost?: number | null;
-          read_at?: string | null;
-          locale_code?: string | null;
-          idempotency_key?: string | null;
-          student_id?: string | null;
-        };
-      };
-
-
-            saas_coupon_redemptions: {
-        Row: {
-          id: string;
-          coupon_id: string;
-          academy_id: string;
-          subscription_id: string | null;
-          discount_applied: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          coupon_id: string;
-          academy_id: string;
-          subscription_id?: string | null;
-          discount_applied: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          coupon_id?: string;
-          academy_id?: string;
-          subscription_id?: string | null;
-          discount_applied?: number;
-          created_at?: string;
-        };
-      };
-
-
-            student_badges: {
-        Row: {
-          id: string;
-          student_id: string;
-          badge_id: string;
-          unlocked_at: string | null;
-          academy_id: string | null;
-          awarded_by: string | null;
-          reason: string | null;
-          metadata: Json;
-          created_at: string;
-          updated_at: string;
-          is_archived: boolean;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          student_id: string;
-          badge_id: string;
-          unlocked_at?: string | null;
-          academy_id?: string | null;
-          awarded_by?: string | null;
-          reason?: string | null;
-          metadata?: Json;
-          created_at?: string;
-          updated_at?: string;
-          is_archived?: boolean;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          student_id?: string;
-          badge_id?: string;
-          unlocked_at?: string | null;
-          academy_id?: string | null;
-          awarded_by?: string | null;
-          reason?: string | null;
-          metadata?: Json;
-          created_at?: string;
-          updated_at?: string;
-          is_archived?: boolean;
-          deleted_at?: string | null;
-        };
-      };
-    };
-  }
-}
-
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row'];
-export type InsertTables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Insert'];
-export type UpdateTables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Update'];
-
-    
+   
