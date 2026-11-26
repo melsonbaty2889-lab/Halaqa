@@ -1,31 +1,24 @@
+/* src/types/attendance.ts */
+
+import type { Json, Tables, InsertTables, UpdateTables } from './database.types';
+
+export type AttendanceRow = Tables<'attendance'>;
+export type AttendanceInsert = InsertTables<'attendance'>;
+export type AttendanceUpdate = UpdateTables<'attendance'>;
+
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
-export interface Attendance {
-  id: string;
-  academy_id: string;
-  halaqa_id: string;
-  student_id: string;
-  teacher_id?: string | null;
-  date: string; // date format YYYY-MM-DD
+export interface Attendance extends Omit<AttendanceRow, 'status'> {
   status: AttendanceStatus | string;
-  retention_assignment?: string | null;
-  new_memorization?: string | null;
-  session_grade?: number | null;
-  notes?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  quarter_index?: number | null;
-  juz?: number | null;
-  quarter_in_hizb?: number | null;
 
   // العلاقات المجلوبة (Joined Relations)
   students?: {
     id: string;
-    name?: Record<string, any> | string | null;
+    name?: Json | string | null;
   } | null;
   halaqas?: {
     id: string;
-    name?: Record<string, any> | null;
+    name?: Json | null;
   } | null;
   teachers?: {
     id: string;
