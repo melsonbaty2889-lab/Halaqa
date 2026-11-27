@@ -206,6 +206,8 @@ export const AcademyProvider = ({ children }) => {
 
           if (detectedRole === 'admin') {
             setAppState('NO_ACADEMY');
+          } else if (detectedRole === 'teacher') {
+            setAppState('JOIN_ACADEMY');
           } else {
             setAppState('FULLY_ACTIVE');
           }
