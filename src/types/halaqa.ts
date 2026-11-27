@@ -20,14 +20,13 @@ export interface LocalizedText {
 export interface Halaqa
   extends Omit<
     HalaqaRow,
-    'name' | 'description' | 'status' | 'target_audience' | 'teaching_type' | 'educational_track'
+    'name' | 'description' | 'status' | 'target_audience' | 'teaching_type'
   > {
   name: LocalizedText | Json;
   description?: LocalizedText | Json | null;
   status?: HalaqaStatus | string | null;
   target_audience?: TargetAudience | string | null;
   teaching_type?: TeachingType | string | null;
-  educational_track?: EducationalTrack | null;
 
   teachers?: {
     id: string;
