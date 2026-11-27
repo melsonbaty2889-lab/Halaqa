@@ -6,14 +6,18 @@
 import AES from 'crypto-js/aes';
 import Utf8 from 'crypto-js/enc-utf8';
 
-// جلب المفتاح السري من متغيرات البيئة مع قيمة افتراضية
-const SECRET_KEY = import.meta.env.VITE_STORAGE_SECRET_KEY || 'SmartHalaqa_SecureKey_2026!';
+// جلب المفتاح السري من متغيرات البيئة فقط بدون قيمة افتراضية مكشوفة
+const SECRET_KEY = import.meta.env.VITE_STORAGE_SECRET_KEY;
 
 /**
  * 1. تشفير البيانات وحفظها في LocalStorage
  */
 export const encryptAndSave = (key, data) => {
   if (!key) return;
+  if (!SECRET_KEY) {
+    console.error("فشل تشفير وحفظ البيانات: المتغير VITE_STORAGE_SECRET_KEY غير معرف.");
+    return;
+  }
   try {
     const stringData = typeof data === 'object' ? JSON.stringify(data) : String(data);
     const encryptedData = AES.encrypt(stringData, SECRET_KEY).toString();
@@ -28,6 +32,10 @@ export const encryptAndSave = (key, data) => {
  */
 export const getAndDecrypt = (key) => {
   if (!key) return null;
+  if (!SECRET_KEY) {
+    console.error("فشل فك تشفير البيانات: المتغير VITE_STORAGE_SECRET_KEY غير معرف.");
+    return null;
+  }
   try {
     const encryptedData = localStorage.getItem(key);
     if (!encryptedData) return null;
