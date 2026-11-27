@@ -1,14 +1,12 @@
 /* src/types/parent.ts */
 
-import type { Json, Tables, InsertTables, UpdateTables } from './database.types';
+import type { Tables, InsertTables, UpdateTables } from './database.types';
 
 export type ParentRow = Tables<'parents'>;
 export type ParentInsert = InsertTables<'parents'>;
 export type ParentUpdate = UpdateTables<'parents'>;
 
-export interface Parent extends Omit<ParentRow, 'metadata'> {
-  metadata?: Json | null;
-
+export interface Parent extends ParentRow {
   // العلاقات المجلوبة
   profiles?: {
     id: string;
