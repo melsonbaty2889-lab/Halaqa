@@ -1,6 +1,6 @@
 /* src/types/progress.ts */
 
-import type { Json, Tables, InsertTables, UpdateTables } from './database.types';
+import type { Tables, InsertTables, UpdateTables } from './database.types';
 
 export type DailyProgressRow = Tables<'daily_progress'>;
 export type DailyProgressInsert = InsertTables<'daily_progress'>;
@@ -16,14 +16,8 @@ export type StudentStreakUpdate = UpdateTables<'student_streaks'>;
 
 export type ProgressStatus = 'not_started' | 'in_progress' | 'completed' | 'failed';
 
-export interface DailyProgress extends DailyProgressRow {}
-
-export interface StudentProgress
-  extends Omit<StudentProgressRow, 'status' | 'metadata'> {
+export interface StudentProgress extends Omit<StudentProgressRow, 'status'> {
   status?: ProgressStatus | string | null;
-  metadata: Json;
 }
 
-export interface StudentStreak extends Omit<StudentStreakRow, 'metadata'> {
-  metadata: Json;
-}
+export type StudentStreak = StudentStreakRow;
