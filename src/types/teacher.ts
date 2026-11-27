@@ -6,21 +6,19 @@ export type TeacherRow = Tables<'teachers'>;
 export type TeacherInsert = InsertTables<'teachers'>;
 export type TeacherUpdate = UpdateTables<'teachers'>;
 
+export type AcademyTeacherRow = Tables<'academy_teachers'>;
+export type AcademyTeacherInsert = InsertTables<'academy_teachers'>;
+export type AcademyTeacherUpdate = UpdateTables<'academy_teachers'>;
+
 export type EmploymentType = 'salary' | 'hourly';
 export type TeachingMode = 'online' | 'offline' | 'hybrid';
 
 export interface Teacher
-  extends Omit<
-    TeacherRow,
-    'bio' | 'international_payout' | 'metadata' | 'employment_type' | 'teaching_mode'
-  > {
-  bio?: Json | null;
-  international_payout?: Json | null;
-  metadata?: Json | null;
+  extends Omit<TeacherRow, 'employment_type' | 'teaching_mode'> {
   employment_type?: EmploymentType | string | null;
   teaching_mode?: TeachingMode | string | null;
 
-  // Foreign key relation from profiles
+  // علاقة البروفايل المرتبط بالمعلم عند عمل join
   profiles?: {
     id: string;
     full_name?: string | null;
