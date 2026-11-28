@@ -20,7 +20,7 @@ export const SELECTABLE_ROLES = Object.freeze([
 export const ONBOARDING_ROLE_ROUTES = Object.freeze({
   [ROLES.SUPER_ADMIN]: '/admin-dashboard',
   [ROLES.ADMIN]: '/create-academy',
-  [ROLES.MANAGER]: '/academy-dashboard',
+  [ROLES.MANAGER]: '/join-academy',
   [ROLES.TEACHER]: '/join-academy',
   [ROLES.STUDENT]: '/join-academy',
   [ROLES.PARENT]: '/join-academy',
