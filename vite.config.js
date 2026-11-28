@@ -23,24 +23,7 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         sourcemap: true,
-        navigateFallbackDenylist: [/^\/index\.html$/],
-        runtimeCaching: [
-          {
-            // استثناء مسارات المصادقة والجلسات الأمنية، وتخزين بيانات القراءة العامة فقط بأمان
-            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-data-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // يوم واحد فقط للبيانات العامة
-              },
-              cacheableResponse: {
-                statuses: [200]
-              }
-            }
-          }
-        ]
+        navigateFallbackDenylist: [/^\/index\.html$/]
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
