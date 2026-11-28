@@ -1,6 +1,6 @@
 /* src/types/curriculum.ts */
 
-import type { Json, Tables, InsertTables, UpdateTables } from './database.types';
+import type { Tables, InsertTables, UpdateTables } from './database.types';
 
 export type CurriculumRow = Tables<'curricula'>;
 export type CurriculumInsert = InsertTables<'curricula'>;
@@ -16,9 +16,7 @@ export type CurriculumCategory =
   | 'arabic'
   | 'other';
 
-export interface Curriculum extends Omit<CurriculumRow, 'title' | 'description' | 'category'> {
-  title: Json;
-  description?: Json | null;
+export interface Curriculum extends Omit<CurriculumRow, 'category'> {
   category?: CurriculumCategory | string | null;
 }
 
