@@ -27,7 +27,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
-  const { refreshStatus } = useAcademy() || {};
+  const { refreshStatus, academyId } = useAcademy() || {};
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -113,15 +113,17 @@ export default function RoleSelectionPage({ onRoleSelected }) {
 
       if (profileError) throw profileError;
 
-      const { error: updateAuthError } = await supabase.auth.updateUser({
-        data: {
-          role: selectedRole,
-          role_selected: true,
-        },
-      });
-      if (updateAuthError) throw updateAuthError;
-
-      await supabase.auth.refreshSession();
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            role: selectedRole,
+            role_selected: true,
+          },
+        });
+        await supabase.auth.refreshSession();
+      } catch (metaErr) {
+        console.warn('Auth metadata sync warning:', metaErr);
+      }
 
       if (typeof refreshStatus === 'function') {
         await refreshStatus();
@@ -130,7 +132,7 @@ export default function RoleSelectionPage({ onRoleSelected }) {
       if (onRoleSelected) {
         await onRoleSelected(selectedRole);
       } else {
-        const targetRoute = getRouteForRole(selectedRole);
+        const targetRoute = getRouteForRole(selectedRole, Boolean(academyId));
         navigate(targetRoute, { replace: true });
       }
     } catch (err) {
