@@ -52,7 +52,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   const hasAcademy = academy?.id && academy?.id !== 'default';
 
   if (!hasAcademy && !isOnboardingPage && currentRole !== 'super_admin') {
-    if (currentRole === 'admin') {
+    if (currentRole === 'admin' || currentRole === 'academy_admin') {
       return <Navigate to="/create-academy" replace />;
     } else {
       return <Navigate to="/join-academy" replace />;
@@ -71,6 +71,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     normalizedAllowed.length === 0 ||
     normalizedAllowed.includes(currentRole) ||
     currentRole === 'admin' ||
+    currentRole === 'academy_admin' ||
     currentRole === 'super_admin';
 
   if (!isAllowed && location.pathname !== fallbackHomeRoute) {
@@ -85,18 +86,19 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     academy?.id === 'default' ||
     currentRole === 'super_admin' ||
     currentRole === 'admin' ||
+    currentRole === 'academy_admin' ||
     currentRole === 'teacher';
 
   if (!isCorrectAcademy && location.pathname !== fallbackHomeRoute) {
     return <Navigate to={fallbackHomeRoute} replace />;
   }
 
-  // 6. فحص صلاحية الاشتراك (Subscription Check)
+  // 6. فحص صلاحية الاشتراك لمدير الأكاديمية فقط (مع استثناء السوبر أدمن وصفحة الاشتراك)
   const isSubscriptionPage =
     location.pathname.includes('/subscription') || location.pathname.includes('/billing');
-  const isSuperAdmin = currentRole === 'super_admin';
+  const isAcademyOwnerOrAdmin = currentRole === 'admin' || currentRole === 'academy_admin';
 
-  if (!isSuperAdmin && !isSubscriptionPage && hasAcademy) {
+  if (isAcademyOwnerOrAdmin && !isSubscriptionPage && hasAcademy) {
     if (!isActive && !isPending) {
       return (
         <div className="bg-semantic-bgPage min-h-screen flex flex-col items-center justify-center text-semantic-textPrimary p-5 text-center font-['Cairo',system-ui,sans-serif]">
