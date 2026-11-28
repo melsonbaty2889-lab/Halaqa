@@ -160,9 +160,9 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
     }
   }, [academyId, t]);
 
-  // 3. الاشتراك بالبث المباشر (Realtime) للجدولين في قناة واحدة مرتبة
+  // 3. الاشتراك بالبث المباشر (Realtime) في قناة فريدة قبل subscribe()
   useEffect(() => {
-    if (!academyId) {
+    if (!academyId || !supabase || typeof supabase.channel !== 'function') {
       setSubscription(null);
       setLoading(false);
       return;
@@ -170,34 +170,47 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    const channelName = `sub_realtime_${academyId}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'saas_subscriptions',
-          filter: `academy_id=eq.${academyId}`,
-        },
-        () => fetchSubscription()
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'academies',
-          filter: `id=eq.${academyId}`,
-        },
-        () => fetchSubscription()
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      const channelName = `sub_realtime_${academyId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'saas_subscriptions',
+            filter: `academy_id=eq.${academyId}`,
+          },
+          () => {
+            fetchSubscription();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'academies',
+            filter: `id=eq.${academyId}`,
+          },
+          () => {
+            fetchSubscription();
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error('🚨 Realtime subscription error:', err);
+    }
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (channel && typeof supabase.removeChannel === 'function') {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          console.error('🚨 Error removing realtime channel:', err);
+        }
       }
     };
   }, [academyId, fetchSubscription]);
