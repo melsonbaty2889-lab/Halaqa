@@ -10,6 +10,5 @@ export type StudentBadgeRow = Tables<'student_badges'>;
 export type StudentBadgeInsert = InsertTables<'student_badges'>;
 export type StudentBadgeUpdate = UpdateTables<'student_badges'>;
 
-export interface Badge extends BadgeRow {}
-
-export interface StudentBadge extends StudentBadgeRow {}
+export type Badge = BadgeRow;
+export type StudentBadge = StudentBadgeRow;
