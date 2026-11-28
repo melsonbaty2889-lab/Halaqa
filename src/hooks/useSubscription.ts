@@ -3,29 +3,27 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 
 export type SubscriptionStatus = 'trial' | 'active' | 'pending_verification' | 'unpaid' | 'canceled' | 'past_due' | string;
-export type PlanTier = 'monthly' | 'yearly' | string;
 export type PlanDuration = 'monthly' | 'yearly' | string;
 
 export interface SaasSubscription {
   id: string;
   academy_id: string;
-  payer_id?: string;
-  plan_tier: PlanTier;
+  payer_id: string;
   plan_duration: PlanDuration;
   status: SubscriptionStatus;
   trial_ends_at?: string | null;
   expires_at: string;
-  starts_at?: string;
-  cancel_at_period_end?: boolean;
+  starts_at: string;
+  cancel_at_period_end: boolean;
   canceled_at?: string | null;
   payment_gateway?: string | null;
   gateway_subscription_id?: string | null;
   gateway_customer_id?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  price?: number;
-  currency?: string;
-  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  price: number;
+  currency: string;
+  metadata: Record<string, any>;
   last_payment_attempt_at?: string | null;
 }
 
@@ -111,9 +109,9 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
           .maybeSingle(),
         supabase
           .from('academies')
-          .select('expires_at, trial_ends_at, is_active')
+          .select('is_active')
           .eq('id', academyId)
-          .maybeSingle()
+          .maybeSingle(),
       ]);
 
       if (subRes.error) throw subRes.error;
@@ -131,31 +129,28 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
       // حساب احتياطي مباشر
       const now = new Date();
-      const targetExpiryStr = 
-        subData?.expires_at || 
-        academyData?.expires_at || 
-        subData?.trial_ends_at || 
-        academyData?.trial_ends_at;
+      const targetExpiryStr = subData?.expires_at || subData?.trial_ends_at;
 
       let calcDays = 0;
-      let calcIsActive = false;
+      let calcIsActive = Boolean(academyData?.is_active);
       let calcIsTrial = false;
 
       if (targetExpiryStr) {
         const expiryDate = new Date(targetExpiryStr);
         const diffTime = expiryDate.getTime() - now.getTime();
         calcDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-        calcIsActive = diffTime > 0;
-        calcIsTrial = !subData?.expires_at && !academyData?.expires_at && Boolean(targetExpiryStr);
+        calcIsActive = diffTime > 0 || Boolean(academyData?.is_active);
+        calcIsTrial = !subData?.expires_at && Boolean(subData?.trial_ends_at);
       }
 
+      const finalIsActive = computed ? Boolean(computed.is_active) : calcIsActive;
+
       setComputedData({
-        isActive: computed ? Boolean(computed.is_active) : calcIsActive,
+        isActive: finalIsActive,
         isTrial: computed ? Boolean(computed.is_trial) : calcIsTrial,
         daysRemaining: computed ? Number(computed.days_remaining) || 0 : calcDays,
-        status: computed?.status || subData?.status || (calcIsActive ? 'active' : 'trial'),
+        status: computed?.status || subData?.status || (finalIsActive ? 'active' : 'trial'),
       });
-
     } catch (err: any) {
       console.error('🚨 Error fetching subscription:', err);
       const fallbackMsg = t('subscription.errors.fetchFailed', 'فشل جلب بيانات الاشتراك');
@@ -175,8 +170,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
 
     fetchSubscription();
 
-    // إنشاء قناة واحدة وتجميع كل التغييرات فيها مع وضع subscribe() في النهاية
-    const channelName = `sub_realtime_${academyId}_${Date.now()}`;
+    const channelName = `sub_realtime_${academyId}`;
     const channel = supabase
       .channel(channelName)
       .on(
@@ -199,7 +193,7 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
         },
         () => fetchSubscription()
       )
-      .subscribe(); // ✅ الاشتراك يتم في النهاية تماماً بعد إضافة جميع الـ on
+      .subscribe();
 
     return () => {
       if (channel) {
@@ -209,8 +203,8 @@ export function useSubscription(explicitAcademyId?: string | null): UseSubscript
   }, [academyId, fetchSubscription]);
 
   const isPending = Boolean(
-    subscription?.status === 'pending_verification' || 
-    subscription?.status === 'unpaid' || 
+    subscription?.status === 'pending_verification' ||
+    subscription?.status === 'unpaid' ||
     subscription?.status === 'past_due'
   );
 
