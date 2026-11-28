@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams, Navigate, useLocation } from 'react-router-dom';
-import { Loader2, Lock, CreditCard } from 'lucide-react';
+import { Loader2, CreditCard } from 'lucide-react';
 import { useAcademy } from '@/context/AcademyContext';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -15,7 +15,7 @@ const getText = (tFunc, key, fallback) => {
 };
 
 export default function ProtectedRoute({ allowedRoles = [], children }) {
-  const { profile, appState, academy, userRole, logout, t } = useAcademy();
+  const { profile, appState, academy, userRole, t } = useAcademy();
   const { slug } = useParams();
   const location = useLocation();
 
@@ -32,7 +32,7 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
 
   // 2. استخراج دور المستخدم
   const rawRole = userRole || profile?.role;
-  
+
   if (profile && !rawRole) {
     return <Navigate to="/select-role" replace />;
   }
@@ -44,9 +44,9 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
   }
 
   // 3. التوجيه الذكي للأكاديمية (Onboarding)
-  const isOnboardingPage = 
-    location.pathname.includes('/select-role') || 
-    location.pathname.includes('/create-academy') || 
+  const isOnboardingPage =
+    location.pathname.includes('/select-role') ||
+    location.pathname.includes('/create-academy') ||
     location.pathname.includes('/join-academy');
 
   const hasAcademy = academy?.id && academy?.id !== 'default';
@@ -59,50 +59,41 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
     }
   }
 
-  // 4. خريطة التوجيه الافتراضية لكل دور
-  const roleDefaultRoutes = {
-    teacher: '/teacher-dashboard',
-    student: '/student-dashboard',
-    parent: '/parent-dashboard',
-    admin: '/dashboard',
-    academy_admin: '/dashboard',
-    super_admin: '/admin-dashboard'
-  };
+  const currentSlug =
+    academy?.slug ||
+    (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
 
-  // 5. التحقق من الصلاحيات
-  const normalizedAllowed = allowedRoles.map(r => (r || '').toString().toLowerCase().trim());
-  const isAllowed = 
-    normalizedAllowed.length === 0 || 
-    normalizedAllowed.includes(currentRole) || 
-    currentRole === 'admin' || 
+  const fallbackHomeRoute = currentSlug ? `/${currentSlug}` : '/';
+
+  // 4. التحقق من الصلاحيات
+  const normalizedAllowed = allowedRoles.map((r) => (r || '').toString().toLowerCase().trim());
+  const isAllowed =
+    normalizedAllowed.length === 0 ||
+    normalizedAllowed.includes(currentRole) ||
+    currentRole === 'admin' ||
     currentRole === 'super_admin';
 
-  // إذا لم يكن مصرحاً له، إعادة توجيه فورية للوحة المخصصة لدوره دون إظهار شاشة الحظر
-  if (!isAllowed) {
-    const targetRoute = roleDefaultRoutes[currentRole] || '/dashboard';
-    if (location.pathname !== targetRoute) {
-      return <Navigate to={targetRoute} replace />;
-    }
+  if (!isAllowed && location.pathname !== fallbackHomeRoute) {
+    return <Navigate to={fallbackHomeRoute} replace />;
   }
 
-  // 6. التحقق من رابط الأكاديمية (Slug) مع السماح للمعلمين والمديرين بالمرور
-  const currentSlug = academy?.slug || (typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null);
-  const isCorrectAcademy = 
-    !slug || 
-    !currentSlug || 
-    slug === currentSlug || 
+  // 5. التحقق من رابط الأكاديمية (Slug) مع السماح للمعلمين والمديرين بالمرور
+  const isCorrectAcademy =
+    !slug ||
+    !currentSlug ||
+    slug === currentSlug ||
     academy?.id === 'default' ||
-    currentRole === 'super_admin' || 
+    currentRole === 'super_admin' ||
     currentRole === 'admin' ||
     currentRole === 'teacher';
 
-  if (!isCorrectAcademy) {
-    const targetRoute = roleDefaultRoutes[currentRole] || '/dashboard';
-    return <Navigate to={targetRoute} replace />;
+  if (!isCorrectAcademy && location.pathname !== fallbackHomeRoute) {
+    return <Navigate to={fallbackHomeRoute} replace />;
   }
 
-  // 7. فحص صلاحية الاشتراك (Subscription Check)
-  const isSubscriptionPage = location.pathname.includes('/subscription') || location.pathname.includes('/billing');
+  // 6. فحص صلاحية الاشتراك (Subscription Check)
+  const isSubscriptionPage =
+    location.pathname.includes('/subscription') || location.pathname.includes('/billing');
   const isSuperAdmin = currentRole === 'super_admin';
 
   if (!isSuperAdmin && !isSubscriptionPage && hasAcademy) {
@@ -116,7 +107,11 @@ export default function ProtectedRoute({ allowedRoles = [], children }) {
             {getText(t, 'subscription.expired_title', 'اشتراك المنظومة غير مفعّل أو منتهي')}
           </h2>
           <p className="text-semantic-textSecondary text-sm max-w-md mb-6 leading-relaxed">
-            {getText(t, 'subscription.expired_desc', 'لتتمكن من الاستمرار في استخدام لوحة التحكم وخدمات المنظومة، يرجى اختيار خطة الاشتراك وتفعيل الترخيص.')}
+            {getText(
+              t,
+              'subscription.expired_desc',
+              'لتتمكن من الاستمرار في استخدام لوحة التحكم وخدمات المنظومة، يرجى اختيار خطة الاشتراك وتفعيل الترخيص.'
+            )}
           </p>
           <a
             href="/subscription"
