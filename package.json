@@ -1,5 +1,5 @@
 {
-  "name": "halqa-smart",
+  "name": "smart-halaqa",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx || true",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
     "extract-i18n": "i18next-parser"
   },
   "dependencies": {
