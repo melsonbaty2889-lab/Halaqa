@@ -34,6 +34,88 @@ const extractAcademyName = (nameData, lang = 'ar') => {
   return String(nameData);
 };
 
+async function ensureTeacherRecordExists(currentUser, activeProfile, academyId) {
+  if (!currentUser?.id || !academyId) return;
+
+  try {
+    const { data: existingTeacher, error: findError } = await supabase
+      .from('teachers')
+      .select('id')
+      .eq('academy_id', academyId)
+      .or(`user_id.eq.${currentUser.id},id.eq.${currentUser.id}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (findError) {
+      console.error('⚠️ خطأ أثناء فحص سجل المعلم:', findError);
+      return;
+    }
+
+    let teacherId = existingTeacher?.id || null;
+
+    if (!teacherId) {
+      const teacherName =
+        activeProfile?.full_name ||
+        currentUser?.user_metadata?.full_name ||
+        currentUser?.email?.split('@')[0] ||
+        'معلم';
+
+      const { data: insertedTeacher, error: insertError } = await supabase
+        .from('teachers')
+        .insert({
+          id: currentUser.id,
+          user_id: currentUser.id,
+          academy_id: academyId,
+          name: teacherName,
+          email: activeProfile?.email || currentUser?.email || null,
+          phone: activeProfile?.phone || null,
+          experience_years: 0,
+          is_active: true,
+          is_teaching: true,
+          is_archived: false,
+        })
+        .select('id')
+        .maybeSingle();
+
+      if (insertError) {
+        console.error('⚠️ تعذر إنشاء سجل المعلم تلقائياً:', insertError);
+        return;
+      }
+
+      teacherId = insertedTeacher?.id || currentUser.id;
+    }
+
+    const { data: existingLink, error: linkFindError } = await supabase
+      .from('academy_teachers')
+      .select('id')
+      .eq('academy_id', academyId)
+      .eq('teacher_id', teacherId)
+      .limit(1)
+      .maybeSingle();
+
+    if (linkFindError) {
+      console.error('⚠️ خطأ أثناء فحص ربط أكاديمية المعلم:', linkFindError);
+      return;
+    }
+
+    if (!existingLink) {
+      const { error: linkInsertError } = await supabase
+        .from('academy_teachers')
+        .insert({
+          academy_id: academyId,
+          teacher_id: teacherId,
+          is_active: true,
+        });
+
+      if (linkInsertError) {
+        console.error('⚠️ تعذر ربط المعلم بجدول academy_teachers:', linkInsertError);
+      }
+    }
+  } catch (err) {
+    console.error('⚠️ خطأ غير متوقع أثناء مزامنة سجل المعلم:', err);
+  }
+}
+
 export const AcademyProvider = ({ children }) => {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
@@ -186,6 +268,10 @@ export const AcademyProvider = ({ children }) => {
               if (isMounted.current) setProfile({ ...activeProfile });
             }
           }
+        }
+
+        if (targetAcademy?.id && detectedRole === 'teacher') {
+          await ensureTeacherRecordExists(currentUser, activeProfile, targetAcademy.id);
         }
 
         if (isMounted.current) {
