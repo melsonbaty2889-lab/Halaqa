@@ -7,7 +7,7 @@ const AcademyContext = createContext(null);
 
 const extractAcademyName = (nameData, lang = 'ar') => {
   if (!nameData) return '';
-  
+
   let parsed = nameData;
   if (typeof nameData === 'string') {
     try {
@@ -38,13 +38,13 @@ export const AcademyProvider = ({ children }) => {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  
-  // 🛡️ قراءة سريعة من الـ LocalStorage لمنع تأخر المعرف أثناء الريفرش
-  const cachedAcademyId = typeof window !== 'undefined' 
-    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null)
-    : null;
 
-  const [academy, setAcademy] = useState(() => cachedAcademyId ? { id: cachedAcademyId } : null);
+  const cachedAcademyId =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null
+      : null;
+
+  const [academy, setAcademy] = useState(() => (cachedAcademyId ? { id: cachedAcademyId } : null));
   const [academiesList, setAcademiesList] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [appState, setAppState] = useState('LOADING');
@@ -59,18 +59,20 @@ export const AcademyProvider = ({ children }) => {
     };
   }, []);
 
-  const updateAcademyState = useCallback((newAcademyData) => {
-    if (isMounted.current) {
+  const updateAcademyState = useCallback(
+    (newAcademyData) => {
+      if (!isMounted.current) return;
+
       setAcademy((prev) => {
         const updated = prev ? { ...prev, ...newAcademyData } : newAcademyData;
-        if (updated?.id) {
+        if (updated?.id && typeof window !== 'undefined') {
           localStorage.setItem('active_academy_id', updated.id);
           localStorage.setItem('academy_id', updated.id);
         }
         return updated;
       });
 
-      setAcademiesList((prevList) => 
+      setAcademiesList((prevList) =>
         prevList.map((item) => {
           if (newAcademyData?.id && item.id === newAcademyData.id) {
             return { ...item, ...newAcademyData };
@@ -81,8 +83,9 @@ export const AcademyProvider = ({ children }) => {
           return item;
         })
       );
-    }
-  }, [academy?.id]);
+    },
+    [academy?.id]
+  );
 
   const getAcademyName = useCallback(
     (targetAcademy = academy) => {
@@ -110,124 +113,130 @@ export const AcademyProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchUserStatus = useCallback(async (currentUser) => {
-    if (!currentUser) {
-      clearAuthState();
-      return;
-    }
-
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
-
-    try {
-      if (isMounted.current) setUser(currentUser);
-
-      const { data: activeProfile, error: profError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-
-      if (profError || !activeProfile) {
-        console.error("🚨 تعذر جلب البروفايل:", profError);
+  const fetchUserStatus = useCallback(
+    async (currentUser) => {
+      if (!currentUser) {
         clearAuthState();
         return;
       }
 
-      if (isMounted.current) {
-        setProfile(activeProfile);
-        setUserRole(activeProfile.role || null);
-      }
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-      if (!activeProfile.role) {
-        if (isMounted.current) setAppState('ROLE_SELECTION');
-        return;
-      }
+      try {
+        if (isMounted.current) setUser(currentUser);
 
-      if (activeProfile.role === 'super_admin') {
-        if (isMounted.current) setAppState('SUPER_ADMIN');
-        return;
-      }
-
-      let targetAcademy = null;
-      let detectedRole = activeProfile.role;
-
-      if (activeProfile.academy_id) {
-        const { data: profileAcademy } = await supabase
-          .from('academies')
+        const { data: activeProfile, error: profError } = await supabase
+          .from('profiles')
           .select('*')
-          .eq('id', activeProfile.academy_id)
+          .eq('id', currentUser.id)
           .maybeSingle();
-        
-        if (profileAcademy) targetAcademy = profileAcademy;
-      }
 
-      if (!targetAcademy && activeProfile.role === 'admin') {
-        const { data: ownedAcademies } = await supabase
-          .from('academies')
-          .select('*')
-          .eq('owner_id', currentUser.id)
-          .limit(1);
+        if (profError || !activeProfile) {
+          console.error('🚨 تعذر جلب البروفايل:', profError);
+          clearAuthState();
+          return;
+        }
 
-        if (ownedAcademies && ownedAcademies.length > 0) {
-          targetAcademy = ownedAcademies[0];
-          
-          if (targetAcademy?.id && !activeProfile.academy_id) {
-            await supabase
-              .from('profiles')
-              .update({ academy_id: targetAcademy.id })
-              .eq('id', currentUser.id);
-            
-            activeProfile.academy_id = targetAcademy.id;
-            if (isMounted.current) setProfile({ ...activeProfile });
+        if (isMounted.current) {
+          setProfile(activeProfile);
+          setUserRole(activeProfile.role || null);
+        }
+
+        if (!activeProfile.role) {
+          if (isMounted.current) setAppState('ROLE_SELECTION');
+          return;
+        }
+
+        if (activeProfile.role === 'super_admin') {
+          if (isMounted.current) setAppState('SUPER_ADMIN');
+          return;
+        }
+
+        let targetAcademy = null;
+        const detectedRole = activeProfile.role;
+
+        if (activeProfile.academy_id) {
+          const { data: profileAcademy } = await supabase
+            .from('academies')
+            .select('*')
+            .eq('id', activeProfile.academy_id)
+            .maybeSingle();
+
+          if (profileAcademy) targetAcademy = profileAcademy;
+        }
+
+        if (!targetAcademy && activeProfile.role === 'admin') {
+          const { data: ownedAcademies } = await supabase
+            .from('academies')
+            .select('*')
+            .eq('owner_id', currentUser.id)
+            .limit(1);
+
+          if (ownedAcademies && ownedAcademies.length > 0) {
+            targetAcademy = ownedAcademies[0];
+
+            if (targetAcademy?.id && !activeProfile.academy_id) {
+              await supabase
+                .from('profiles')
+                .update({ academy_id: targetAcademy.id })
+                .eq('id', currentUser.id);
+
+              activeProfile.academy_id = targetAcademy.id;
+              if (isMounted.current) setProfile({ ...activeProfile });
+            }
           }
         }
-      }
 
-      if (isMounted.current) {
-        setUserRole(detectedRole);
+        if (isMounted.current) {
+          setUserRole(detectedRole);
 
-        if (targetAcademy) {
-          setAcademy(targetAcademy);
-          setAcademiesList([targetAcademy]);
-          
-          localStorage.setItem('active_academy_id', targetAcademy.id);
-          localStorage.setItem('academy_id', targetAcademy.id);
-          if (targetAcademy.slug) {
-            localStorage.setItem('current_academy_slug', targetAcademy.slug);
-          }
+          if (targetAcademy) {
+            setAcademy(targetAcademy);
+            setAcademiesList([targetAcademy]);
 
-          setAppState('FULLY_ACTIVE');
-        } else {
-          setAcademy(null);
-          setAcademiesList([]);
-          localStorage.removeItem('active_academy_id');
-          localStorage.removeItem('academy_id');
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('active_academy_id', targetAcademy.id);
+              localStorage.setItem('academy_id', targetAcademy.id);
+              if (targetAcademy.slug) {
+                localStorage.setItem('current_academy_slug', targetAcademy.slug);
+              }
+            }
 
-          if (detectedRole === 'admin') {
-            setAppState('NO_ACADEMY');
-          } else if (detectedRole === 'teacher') {
-            setAppState('JOIN_ACADEMY');
-          } else {
             setAppState('FULLY_ACTIVE');
+          } else {
+            setAcademy(null);
+            setAcademiesList([]);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('active_academy_id');
+              localStorage.removeItem('academy_id');
+            }
+
+            if (detectedRole === 'admin') {
+              setAppState('NO_ACADEMY');
+            } else if (['teacher', 'student', 'parent'].includes(detectedRole)) {
+              setAppState('JOIN_ACADEMY');
+            } else {
+              setAppState('FULLY_ACTIVE');
+            }
           }
         }
+      } catch (e) {
+        console.error('🚨 خطأ أثناء معالجة الصلاحيات:', e);
+        clearAuthState();
+      } finally {
+        isFetchingRef.current = false;
       }
-
-    } catch (e) {
-      console.error("🚨 خطأ أثناء معالجة الصلاحيات:", e);
-      clearAuthState();
-    } finally {
-      isFetchingRef.current = false;
-    }
-  }, [clearAuthState]);
+    },
+    [clearAuthState]
+  );
 
   const refreshStatus = useCallback(async () => {
     try {
       const { data } = await supabase.auth.getUser();
       await fetchUserStatus(data?.user || null);
     } catch (err) {
-      console.error("🚨 خطأ أثناء تحديث الحالة:", err);
+      console.error('🚨 خطأ أثناء تحديث الحالة:', err);
       clearAuthState();
     }
   }, [fetchUserStatus, clearAuthState]);
@@ -248,7 +257,7 @@ export const AcademyProvider = ({ children }) => {
           await fetchUserStatus(initUser || null);
         }
       } catch (err) {
-        console.error("🚨 خطأ إقلاع المصادقة:", err);
+        console.error('🚨 خطأ إقلاع المصادقة:', err);
         if (isSubscribed) clearAuthState();
       }
     }
@@ -297,35 +306,31 @@ export const AcademyProvider = ({ children }) => {
   }, [fetchUserStatus, clearAuthState]);
 
   useEffect(() => {
-    if (!user?.id || !supabase) return;
+    if (!user?.id || !supabase || typeof supabase.channel !== 'function') return;
 
     let channel = null;
     try {
-      if (typeof supabase.channel === 'function') {
-        const channelName = `profile_changes_${user.id}_${Date.now()}`;
-        
-        channel = supabase
-          .channel(channelName)
-          .on(
-            'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'profiles',
-              filter: `id=eq.${user.id}`
-            },
-            () => {
-              refreshStatus();
-            }
-          )
-          .subscribe();
-      }
+      channel = supabase
+        .channel(`profile_changes_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${user.id}`,
+          },
+          () => {
+            refreshStatus();
+          }
+        )
+        .subscribe();
     } catch (err) {
-      console.error("🚨 خطأ الاشتراك اللحظي:", err);
+      console.error('🚨 خطأ الاشتراك اللحظي:', err);
     }
 
     return () => {
-      if (channel && supabase && typeof supabase.removeChannel === 'function') {
+      if (channel && typeof supabase.removeChannel === 'function') {
         supabase.removeChannel(channel);
       }
     };
@@ -336,49 +341,64 @@ export const AcademyProvider = ({ children }) => {
       clearAuthState();
       await supabase.auth.signOut();
     } catch (error) {
-      console.error("🚨 خطأ أثناء تسجيل الخروج:", error);
+      console.error('🚨 خطأ أثناء تسجيل الخروج:', error);
     }
   };
 
-  // 🛡️ استخراج معرّف الأكاديمية الصريح بحماية كاملة
   const resolvedAcademyId = academy?.id || profile?.academy_id || cachedAcademyId || null;
 
-  const contextValue = useMemo(() => ({
-    user,
-    profile,
-    academy,
-    academiesList,
-    userRole,
-    appState,
-    academyId: resolvedAcademyId,       // 👈 إتاحة camelCase
-    academyid: resolvedAcademyId,       // 👈 إتاحة lowercase لمنع أي خطأ أملائي
-    activeAcademyId: resolvedAcademyId,
-    setAcademy: (newAcademy) => {
-      if (newAcademy?.id) {
-        localStorage.setItem('active_academy_id', newAcademy.id);
-        localStorage.setItem('academy_id', newAcademy.id);
-      }
-      setAcademy(newAcademy);
-    },
-    updateAcademyState,
-    getAcademyName,
-    logout,
-    refreshStatus
-  }), [user, profile, academy, academiesList, userRole, appState, resolvedAcademyId, updateAcademyState, getAcademyName, logout, refreshStatus]);
-
-  return (
-    <AcademyContext.Provider value={contextValue}>
-      {children}
-    </AcademyContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      user,
+      profile,
+      academy,
+      academiesList,
+      userRole,
+      appState,
+      academyId: resolvedAcademyId,
+      academyid: resolvedAcademyId,
+      activeAcademyId: resolvedAcademyId,
+      setAcademy: (newAcademy) => {
+        if (typeof window !== 'undefined') {
+          if (newAcademy?.id) {
+            localStorage.setItem('active_academy_id', newAcademy.id);
+            localStorage.setItem('academy_id', newAcademy.id);
+          } else if (newAcademy === null) {
+            localStorage.removeItem('active_academy_id');
+            localStorage.removeItem('academy_id');
+          }
+        }
+        setAcademy(newAcademy);
+      },
+      updateAcademyState,
+      getAcademyName,
+      logout,
+      refreshStatus,
+    }),
+    [
+      user,
+      profile,
+      academy,
+      academiesList,
+      userRole,
+      appState,
+      resolvedAcademyId,
+      updateAcademyState,
+      getAcademyName,
+      logout,
+      refreshStatus,
+    ]
   );
+
+  return <AcademyContext.Provider value={contextValue}>{children}</AcademyContext.Provider>;
 };
 
-// 🛡️ هانئ ومحصن 100% يمنع أي كراش حتى لو استدعي خارج الـ Provider أو أثناء الإقلاع
 export const useAcademy = () => {
   const context = useContext(AcademyContext);
-  const fallbackId = typeof window !== 'undefined' 
-    ? (localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null) 
-    : null;
+  const fallbackId =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('active_academy_id') || localStorage.getItem('academy_id') || null
+      : null;
 
   if (!context) {
     return {
@@ -395,7 +415,7 @@ export const useAcademy = () => {
       updateAcademyState: () => {},
       getAcademyName: () => '',
       logout: async () => {},
-      refreshStatus: async () => {}
+      refreshStatus: async () => {},
     };
   }
   return context;
