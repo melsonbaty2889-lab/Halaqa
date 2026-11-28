@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { useAcademy } from '@/context/AcademyContext';
 import AuthLayout, { APP_SUBTITLES } from './AuthLayout';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import { PrimaryButton } from '@/components/UI/AuthButtons';
@@ -12,6 +13,7 @@ import { LogOut, Building2, KeyRound, AlertCircle } from 'lucide-react';
 export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
   const { t, i18n } = useTranslation();
   const { toastState, showToast, hideToast } = useToast();
+  const { profile, userRole } = useAcademy() || {};
 
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,6 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
     setErrorMsg('');
 
     try {
-      // 1. البحث عن الأكاديمية بواسطة الـ slug أو الـ id عبر دالة RPC
       const { data: academyList, error: academyError } = await supabase
         .rpc('get_academy_by_code', { search_code: cleanCode });
 
@@ -50,7 +51,17 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('auth.session_error', 'عفواً، لم نتمكن من التحقق من الجلسة'));
 
-      // 2. تحديث academy_id في بروفايل المستخدم
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('full_name, phone, role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const effectiveRole = (userProfile?.role || profile?.role || userRole || 'student')
+        .toString()
+        .toLowerCase()
+        .trim();
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ academy_id: academyData.id, updated_at: new Date().toISOString() })
@@ -58,58 +69,55 @@ export default function JoinAcademy({ onLogout, onJoinedAcademy }) {
 
       if (updateError) throw updateError;
 
-      // 3. التحقق أو إنشاء سجل في جدول teachers للمعلم الحالي
-      let { data: existingTeacher } = await supabase
-        .from('teachers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let teacherRecordId = existingTeacher?.id;
-
-      if (!teacherRecordId) {
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('full_name, phone')
-          .eq('id', user.id)
+      if (effectiveRole === 'teacher') {
+        let { data: existingTeacher } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('user_id', user.id)
           .maybeSingle();
 
-        const { data: newTeacher, error: createTeacherErr } = await supabase
-          .from('teachers')
-          .insert({
-            user_id: user.id,
-            academy_id: academyData.id,
-            email: user.email,
-            name: userProfile?.full_name || user.email?.split('@')[0],
-            phone: userProfile?.phone || '',
-            is_active: true
-          })
-          .select('id')
-          .single();
+        let teacherRecordId = existingTeacher?.id;
 
-        if (!createTeacherErr && newTeacher) {
-          teacherRecordId = newTeacher.id;
+        if (!teacherRecordId) {
+          const { data: newTeacher, error: createTeacherErr } = await supabase
+            .from('teachers')
+            .insert({
+              user_id: user.id,
+              academy_id: academyData.id,
+              email: user.email,
+              name: userProfile?.full_name || user.email?.split('@')[0],
+              phone: userProfile?.phone || '',
+              is_active: true,
+            })
+            .select('id')
+            .single();
+
+          if (!createTeacherErr && newTeacher) {
+            teacherRecordId = newTeacher.id;
+          }
+        } else {
+          await supabase
+            .from('teachers')
+            .update({ academy_id: academyData.id })
+            .eq('id', teacherRecordId);
         }
-      } else {
-        await supabase
-          .from('teachers')
-          .update({ academy_id: academyData.id })
-          .eq('id', teacherRecordId);
-      }
 
-      // 4. ربط المعلم بالأكاديمية في جدول academy_teachers
-      if (teacherRecordId) {
-        await supabase
-          .from('academy_teachers')
-          .upsert({
-            academy_id: academyData.id,
-            teacher_id: teacherRecordId,
-            is_active: true
-          }, { onConflict: 'academy_id,teacher_id' });
+        if (teacherRecordId) {
+          await supabase
+            .from('academy_teachers')
+            .upsert(
+              {
+                academy_id: academyData.id,
+                teacher_id: teacherRecordId,
+                is_active: true,
+              },
+              { onConflict: 'academy_id,teacher_id' }
+            );
+        }
       }
 
       showToast(t('join_academy.success', 'تم الانضمام للأكاديمية بنجاح!'), 'success');
-      
+
       if (onJoinedAcademy) {
         await onJoinedAcademy(academyData);
       }
