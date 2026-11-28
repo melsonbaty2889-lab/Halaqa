@@ -51,10 +51,11 @@ export default function MainContent() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEarlyUpgrade, setShowEarlyUpgrade] = useState(false);
 
-  const cachedSlug = typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
+  const cachedSlug =
+    typeof window !== 'undefined' ? localStorage.getItem('current_academy_slug') : null;
 
-  // التحقق الفوري مما إذا كان المستخدم يفتح مسار تحديث كلمة المرور
-  const isUpdatePasswordRoute = location.pathname === '/update-password' || authView === 'update_password';
+  const isUpdatePasswordRoute =
+    location.pathname === '/update-password' || authView === 'update_password';
 
   useEffect(() => {
     let subscription = null;
@@ -66,7 +67,7 @@ export default function MainContent() {
         subscription = res?.data?.subscription;
       }
     } catch (err) {
-      console.error("Supabase Auth listener error:", err);
+      console.error('Supabase Auth listener error:', err);
     }
     return () => {
       if (subscription?.unsubscribe) subscription.unsubscribe();
@@ -74,7 +75,11 @@ export default function MainContent() {
   }, []);
 
   useEffect(() => {
-    if ((appState === 'NO_ACADEMY' || appState === 'JOIN_ACADEMY' || appState === 'FULLY_ACTIVE') && cachedSlug && !academy?.id) {
+    if (
+      (appState === 'NO_ACADEMY' || appState === 'JOIN_ACADEMY' || appState === 'FULLY_ACTIVE') &&
+      cachedSlug &&
+      !academy?.id
+    ) {
       refreshStatus?.();
     }
   }, [appState, cachedSlug, academy?.id, refreshStatus]);
@@ -97,7 +102,13 @@ export default function MainContent() {
 
   const getSuspensionReason = useCallback(() => {
     const reason = academy?.suspension_reason || academy?.status_reason;
-    if (!reason) return getText(t, 'suspension.default_reason', 'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.');
+    if (!reason) {
+      return getText(
+        t,
+        'suspension.default_reason',
+        'تم إيقاف هذه الأكاديمية مؤقتاً من قبل إدارة المنصة.'
+      );
+    }
 
     if (typeof reason === 'object' && reason !== null) {
       return reason.ar || reason.en || Object.values(reason)[0] || JSON.stringify(reason);
@@ -106,19 +117,23 @@ export default function MainContent() {
   }, [academy, t]);
 
   const activeRole = userRole || profile?.role || user?.user_metadata?.role;
-  const isExplicitRoleRoute = typeof window !== 'undefined' && window.location.pathname === '/select-role';
-  const isNeedsRoleSelection = !activeRole && !!user && (appState === 'ROLE_SELECTION' || isExplicitRoleRoute);
+  const isExplicitRoleRoute =
+    typeof window !== 'undefined' && window.location.pathname === '/select-role';
+  const isNeedsRoleSelection =
+    !activeRole && !!user && (appState === 'ROLE_SELECTION' || isExplicitRoleRoute);
 
   return (
-    <Suspense fallback={<FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />}>
-      
-      {/* إعطاء الأولوية المطلقة لصفحة تحديث كلمة المرور عند طلبها */}
+    <Suspense
+      fallback={
+        <FullPageLoader label={getText(t, 'system.loading', 'جاري تحميل المنظومة...')} />
+      }
+    >
       {isUpdatePasswordRoute ? (
-        <UpdatePassword 
+        <UpdatePassword
           onSuccess={() => {
             setAuthView('login');
             window.location.href = '/';
-          }} 
+          }}
         />
       ) : (
         <>
@@ -129,23 +144,18 @@ export default function MainContent() {
           {appState === 'UNAUTHENTICATED' && !isNeedsRoleSelection && (
             <div className="bg-transparent min-h-screen">
               {authView === 'login' && (
-                <LoginPage 
+                <LoginPage
                   initialEmail={prefilledEmail}
-                  onSwitchToSignUp={() => setAuthView('signup')} 
+                  onSwitchToSignUp={() => setAuthView('signup')}
                   onForgotPassword={() => setAuthView('forgot')}
                   onLoginSuccess={() => refreshStatus?.()}
                 />
               )}
-              {authView === 'signup' && (
-                <SignUpPage onSwitchToLogin={handleSwitchToLogin} />
-              )}
-              {authView === 'forgot' && (
-                <ForgotPassword onBackToLogin={() => setAuthView('login')} />
-              )}
+              {authView === 'signup' && <SignUpPage onSwitchToLogin={handleSwitchToLogin} />}
+              {authView === 'forgot' && <ForgotPassword onBackToLogin={() => setAuthView('login')} />}
             </div>
           )}
 
-          {/* شاشة اختيار الدور */}
           {isNeedsRoleSelection && (
             <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
           )}
@@ -158,24 +168,30 @@ export default function MainContent() {
                   {getText(t, 'approval.pending_title', 'طلبك قيد المراجعة')}
                 </h2>
                 <p className="text-semantic-textSecondary mb-6 leading-relaxed">
-                  {getText(t, 'approval.pending_desc', 'حسابك وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.')}
+                  {getText(
+                    t,
+                    'approval.pending_desc',
+                    'حسابك وأكاديميتك قيد التدقيق والموافقة من قبل الإدارة العامة للمنصة.'
+                  )}
                 </p>
                 <div className="flex gap-3 justify-center flex-wrap">
-                  <button 
+                  <button
                     type="button"
-                    onClick={handleManualRefresh} 
+                    onClick={handleManualRefresh}
                     disabled={isRefreshing}
                     aria-label={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
                     title={getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
                     className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50"
                   >
                     <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                    {isRefreshing ? getText(t, 'common.checking', 'جاري الفحص...') : getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
+                    {isRefreshing
+                      ? getText(t, 'common.checking', 'جاري الفحص...')
+                      : getText(t, 'approval.refresh_status', 'تحديث حالة الطلب')}
                   </button>
 
-                  <button 
+                  <button
                     type="button"
-                    onClick={logout} 
+                    onClick={logout}
                     aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                     title={getText(t, 'common.logout', 'تسجيل الخروج')}
                     className="px-5 min-h-[44px] bg-transparent text-semantic-danger border border-semantic-danger rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
@@ -206,21 +222,23 @@ export default function MainContent() {
                   </p>
                 </div>
                 <div className="flex gap-3 justify-center flex-wrap">
-                  <button 
+                  <button
                     type="button"
-                    onClick={handleManualRefresh} 
+                    onClick={handleManualRefresh}
                     disabled={isRefreshing}
                     aria-label={getText(t, 'common.refresh', 'إعادة التحديث')}
                     title={getText(t, 'common.refresh', 'إعادة التحديث')}
                     className="px-5 min-h-[44px] bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99] disabled:opacity-50"
                   >
                     <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                    {isRefreshing ? getText(t, 'common.checking', 'جاري التحقق...') : getText(t, 'common.refresh', 'إعادة التحديث')}
+                    {isRefreshing
+                      ? getText(t, 'common.checking', 'جاري التحقق...')
+                      : getText(t, 'common.refresh', 'إعادة التحديث')}
                   </button>
 
-                  <button 
+                  <button
                     type="button"
-                    onClick={logout} 
+                    onClick={logout}
                     aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
                     title={getText(t, 'common.logout', 'تسجيل الخروج')}
                     className="px-5 min-h-[44px] bg-transparent text-semantic-danger border border-semantic-danger rounded-lg font-bold flex items-center gap-2 cursor-pointer transition-all active:scale-[0.99]"
@@ -239,104 +257,120 @@ export default function MainContent() {
             </ProtectedRoute>
           )}
 
-          {/* 1. شاشة إنشاء الأكاديمية */}
-          {appState === 'NO_ACADEMY' && !academy && !profile?.academy_id && appState !== 'SUPER_ADMIN' && !isNeedsRoleSelection && (
-            <CreateAcademy 
-              onLogout={logout} 
-              onSubmitAcademy={async (createdAcademyData) => {
-                if (createdAcademyData?.slug) {
-                  localStorage.setItem('current_academy_slug', createdAcademyData.slug);
-                }
-                if (refreshStatus) await refreshStatus();
-              }} 
-            />
-          )}
+          {appState === 'NO_ACADEMY' &&
+            !academy &&
+            !profile?.academy_id &&
+            appState !== 'SUPER_ADMIN' &&
+            !isNeedsRoleSelection && (
+              <CreateAcademy
+                onLogout={logout}
+                onSubmitAcademy={async (createdAcademyData) => {
+                  if (createdAcademyData?.slug) {
+                    localStorage.setItem('current_academy_slug', createdAcademyData.slug);
+                  }
+                  if (refreshStatus) await refreshStatus();
+                }}
+              />
+            )}
 
-          {/* شاشة الانضمام لأكاديمية */}
           {appState === 'JOIN_ACADEMY' && !isNeedsRoleSelection && (
-            <JoinAcademy 
-              onLogout={logout} 
+            <JoinAcademy
+              onLogout={logout}
               onJoinedAcademy={async () => {
                 if (refreshStatus) await refreshStatus();
-              }} 
+              }}
             />
           )}
 
-          {/* 2. التطبيق الأساسي (الداشبورد والمحتوى) - يعمل بثبات بدون أي شروط مسارات معلقة */}
           {appState !== 'NO_ACADEMY' && !isNeedsRoleSelection && (
             <Routes>
-              <Route 
-                path="/select-role" 
+              <Route
+                path="/select-role"
                 element={
                   activeRole ? (
                     <Navigate to={`/${academy?.slug || cachedSlug || 'dashboard'}`} replace />
                   ) : (
                     <RoleSelectionPage onRoleSelected={() => refreshStatus?.()} />
                   )
-                } 
+                }
               />
-              <Route 
-                path="/subscription" 
+              <Route
+                path="/subscription"
                 element={
                   <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
                     <SubscriptionPage />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/:slug/*" 
+              <Route
+                path="/:slug/*"
                 element={
                   <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
-                    <MainApp 
-                      session={user ? { user } : null} 
-                      userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
+                    <MainApp
+                      session={user ? { user } : null}
+                      userRole={(activeRole || 'student').toString().toLowerCase().trim()}
                       setShowEarlyUpgrade={setShowEarlyUpgrade}
                     />
-                    <InlineUpgradeModal 
-                      isOpen={showEarlyUpgrade} 
-                      onClose={() => setShowEarlyUpgrade(false)} 
+                    <InlineUpgradeModal
+                      isOpen={showEarlyUpgrade}
+                      onClose={() => setShowEarlyUpgrade(false)}
                       academyName={academy?.name}
                     />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/*" 
+              <Route
+                path="/*"
                 element={
                   <ProtectedRoute allowedRoles={Object.values(ROLES || {})}>
-                    <MainApp 
-                      session={user ? { user } : null} 
-                      userRole={(activeRole || 'student').toString().toLowerCase().trim()} 
+                    <MainApp
+                      session={user ? { user } : null}
+                      userRole={(activeRole || 'student').toString().toLowerCase().trim()}
                       setShowEarlyUpgrade={setShowEarlyUpgrade}
                     />
-                    <InlineUpgradeModal 
-                      isOpen={showEarlyUpgrade} 
-                      onClose={() => setShowEarlyUpgrade(false)} 
+                    <InlineUpgradeModal
+                      isOpen={showEarlyUpgrade}
+                      onClose={() => setShowEarlyUpgrade(false)}
                       academyName={academy?.name}
                     />
                   </ProtectedRoute>
-                } 
+                }
               />
             </Routes>
           )}
 
-          {/* معالجة الحالات غير المعرفة */}
-          {!['LOADING', 'UNAUTHENTICATED', 'ROLE_SELECTION', 'PENDING_APPROVAL', 'SUSPENDED', 'SUPER_ADMIN', 'NO_ACADEMY', 'JOIN_ACADEMY', 'FULLY_ACTIVE'].includes(appState) && !isNeedsRoleSelection && (
-            <div className="bg-transparent min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
-              <AlertTriangle size={40} className="text-semantic-danger mb-4" />
-              <h2 className="mb-2 text-xl font-bold">{getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}</h2>
-              <p className="text-semantic-textSecondary mb-2">App State: <strong className="text-semantic-actionPrimary">{appState || 'NULL'}</strong></p>
-              <button 
-                type="button"
-                onClick={logout} 
-                aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
-                title={getText(t, 'common.logout', 'تسجيل الخروج')}
-                className="bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary px-6 min-h-[44px] border-none rounded-md cursor-pointer font-bold transition-all active:scale-[0.99]"
-              >
-                {getText(t, 'common.logout', 'تسجيل الخروج')}
-              </button>
-            </div>
-          )}
+          {![
+            'LOADING',
+            'UNAUTHENTICATED',
+            'ROLE_SELECTION',
+            'PENDING_APPROVAL',
+            'SUSPENDED',
+            'SUPER_ADMIN',
+            'NO_ACADEMY',
+            'JOIN_ACADEMY',
+            'FULLY_ACTIVE',
+          ].includes(appState) &&
+            !isNeedsRoleSelection && (
+              <div className="bg-transparent min-h-screen flex flex-col justify-center items-center text-semantic-textPrimary font-['Cairo',system-ui,sans-serif] p-5 text-center">
+                <AlertTriangle size={40} className="text-semantic-danger mb-4" />
+                <h2 className="mb-2 text-xl font-bold">
+                  {getText(t, 'system.unknown_state_title', 'عذراً، حالة النظام غير معرفة')}
+                </h2>
+                <p className="text-semantic-textSecondary mb-2">
+                  App State:{' '}
+                  <strong className="text-semantic-actionPrimary">{appState || 'NULL'}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={logout}
+                  aria-label={getText(t, 'common.logout', 'تسجيل الخروج')}
+                  title={getText(t, 'common.logout', 'تسجيل الخروج')}
+                  className="bg-gradient-to-b from-[#E67E00] to-[#D97706] text-semantic-textPrimary px-6 min-h-[44px] border-none rounded-md cursor-pointer font-bold transition-all active:scale-[0.99]"
+                >
+                  {getText(t, 'common.logout', 'تسجيل الخروج')}
+                </button>
+              </div>
+            )}
         </>
       )}
     </Suspense>
