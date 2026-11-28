@@ -77,6 +77,8 @@ export default function CreateAcademy({ onSubmitAcademy }) {
     return latinPart ? `${latinPart}-xxxxx` : 'academy-xxxxx';
   };
 
+  const currentHost = typeof window !== 'undefined' ? window.location.host : 'localhost';
+
   if (isSuccess) {
     return (
       <AuthLayout langBtn={<LanguageSwitcher />} subtitle={appSubtitle}>
@@ -158,7 +160,7 @@ export default function CreateAcademy({ onSubmitAcademy }) {
             >
               <Globe size={11} style={{ color: C?.amber?.DEFAULT }} />
               <span className="truncate" dir="ltr">
-                {window.location.host}/{generateSlugPreview(academyData.name)}
+                {currentHost}/{generateSlugPreview(academyData.name)}
               </span>
             </div>
           </div>
